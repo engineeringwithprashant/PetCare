@@ -37,7 +37,7 @@ import com.prash.petcare.data.local.entity.User
         CareTask::class,
         Expense::class
     ],
-    version = 2,
+    version = 3,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -79,6 +79,21 @@ abstract class PetCareDatabase : RoomDatabase() {
         }
 
         /**
+         * Version 2 to 3: adds the scheduling and supplies fields to the `care_tasks` table.
+         *
+         * Both columns are nullable with no default, which is exactly how Room maps `Int?` and
+         * `String?`. That matters: Room compares the declared default against the real one when it
+         * opens the file, so adding `NOT NULL DEFAULT 0` here would not match the entity and the
+         * app would refuse to start.
+         */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE care_tasks ADD COLUMN timeOfDayMinutes INTEGER")
+                db.execSQL("ALTER TABLE care_tasks ADD COLUMN requiredSupplies TEXT")
+            }
+        }
+
+        /**
          * The one shared instance.
          *
          * `@Volatile` means a write here is immediately visible to every thread, which stops one
@@ -108,7 +123,7 @@ abstract class PetCareDatabase : RoomDatabase() {
                     // Every upgrade path must be listed here. Note there is deliberately no
                     // .fallbackToDestructiveMigration(): that flag wipes all user data whenever
                     // the schema version changes, so any future version adds a Migration instead.
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
                     .also { INSTANCE = it }
             }

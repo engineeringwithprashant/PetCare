@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentHomeBinding
 import com.prash.petcare.ui.pet.AddEditPetFragment
+import com.prash.petcare.ui.pet.PetDetailFragment
 import com.prash.petcare.ui.pet.PetViewModel
 import kotlinx.coroutines.launch
 
@@ -54,7 +55,7 @@ class HomeFragment : Fragment() {
      * A new adapter would discard the previous list, so DiffUtil would have nothing to compare
      * against and every row would be redrawn.
      */
-    private val petAdapter = PetAdapter(onPetClick = { pet -> openPetForm(pet.id) })
+    private val petAdapter = PetAdapter(onPetClick = { pet -> openPetDetail(pet.id) })
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -86,24 +87,32 @@ class HomeFragment : Fragment() {
     }
 
     private fun setUpClickListeners() {
-        // No pet id means the form opens ready to create one.
-        binding.addPetFab.setOnClickListener { openPetForm(PetViewModel.NO_PET_ID) }
+        binding.addPetFab.setOnClickListener { openNewPetForm() }
     }
 
-    /**
-     * Opens the add/edit pet form.
-     *
-     * The same destination covers both cases: [PetViewModel.NO_PET_ID] opens an empty form, and a
-     * real id opens that pet with its fields already filled in.
-     */
-    private fun openPetForm(petId: Long) {
+    /** Opens an empty pet form. [PetViewModel.NO_PET_ID] is what tells it to create rather than edit. */
+    private fun openNewPetForm() {
         findNavController().navigate(
             R.id.action_home_to_add_edit_pet,
             bundleOf(
-                AddEditPetFragment.ARG_PET_ID to petId,
+                AddEditPetFragment.ARG_PET_ID to PetViewModel.NO_PET_ID,
                 // The form needs the owner so a newly created pet can be attached to this account.
                 AddEditPetFragment.ARG_OWNER_ID to userId
             )
+        )
+    }
+
+    /**
+     * Opens a pet's detail screen.
+     *
+     * Tapping a pet shows it rather than opening the edit form directly: the detail screen is also
+     * the way in to that pet's care routines and today's checklist, and editing is one option from
+     * there rather than the only thing a tap can mean.
+     */
+    private fun openPetDetail(petId: Long) {
+        findNavController().navigate(
+            R.id.action_home_to_pet_detail,
+            bundleOf(PetDetailFragment.ARG_PET_ID to petId)
         )
     }
 

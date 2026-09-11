@@ -20,7 +20,9 @@ import androidx.room.PrimaryKey
  * @property petId Foreign key to [Pet.id] — the animal this routine cares for.
  * @property title Short label such as "Morning walk", shown in lists.
  * @property description Optional longer explanation, e.g. dosage instructions.
- * @property category What kind of care this is — see [TaskCategory].
+ * @property category Broad kind of care, defaulted and not currently set by the routine form.
+ *   Each [CareTask] carries its own category and that is what the checklist groups by, so a
+ *   routine covering a mix of feeding and grooming does not need to claim a single one.
  * @property repeatInterval How many [repeatUnit]s pass between occurrences; must be at least 1.
  * @property repeatUnit The unit that [repeatInterval] counts.
  * @property startDate The first occurrence, as epoch milliseconds. Later due dates are worked
@@ -48,7 +50,7 @@ data class CareRoutine(
     val petId: Long,
     val title: String,
     val description: String? = null,
-    val category: TaskCategory,
+    val category: TaskCategory = TaskCategory.OTHER,
     val repeatInterval: Int = 1,
     val repeatUnit: RepeatUnit = RepeatUnit.DAY,
     val startDate: Long,

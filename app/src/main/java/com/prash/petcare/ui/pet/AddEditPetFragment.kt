@@ -22,12 +22,10 @@ import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.local.entity.PetSpecies
 import com.prash.petcare.databinding.FragmentAddEditPetBinding
+import com.prash.petcare.ui.common.formatStoredDate
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.util.PetPhotoStorage
 import kotlinx.coroutines.launch
-import java.text.DateFormat
-import java.util.Date
-import java.util.TimeZone
 
 /**
  * Form for creating a new pet or editing an existing one.
@@ -238,7 +236,7 @@ class AddEditPetFragment : Fragment() {
         // `false` stops the dropdown treating this as typed input and filtering its own list.
         binding.speciesInput.setText(getString(state.species.labelRes()), false)
 
-        binding.dateOfBirthInput.setText(state.dateOfBirth?.let { formatDate(it) }.orEmpty())
+        binding.dateOfBirthInput.setText(state.dateOfBirth?.let { formatStoredDate(it) }.orEmpty())
 
         binding.choosePhotoButton.setText(
             if (state.photoPath != null) R.string.pet_photo_change else R.string.pet_photo_choose
@@ -309,22 +307,6 @@ class AddEditPetFragment : Fragment() {
         binding.dietaryNotesInput.setText(pet.dietaryNotes.orEmpty())
         binding.allergiesInput.setText(pet.allergies.orEmpty())
         binding.favouriteToysInput.setText(pet.favouriteToys.orEmpty())
-    }
-
-    /**
-     * Formats a stored birth date for display.
-     *
-     * The formatter is fixed to UTC on purpose. [MaterialDatePicker] returns midnight UTC for the
-     * chosen day, so formatting in the device's local time zone would shift the value backwards for
-     * anyone west of Greenwich and show the previous day.
-     *
-     * [DateFormat.getDateInstance] follows the device's locale, so the same date reads as
-     * "5 Mar 2026" or "Mar 5, 2026" depending on the user's settings.
-     */
-    private fun formatDate(millis: Long): String {
-        val formatter = DateFormat.getDateInstance(DateFormat.MEDIUM)
-        formatter.timeZone = TimeZone.getTimeZone("UTC")
-        return formatter.format(Date(millis))
     }
 
     override fun onDestroyView() {

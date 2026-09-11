@@ -113,8 +113,89 @@
     <string name="error_pet_not_found">That pet could not be found</string>
     <string name="error_photo_save_failed">That photo could not be saved</string>
 
+    <!-- Routine and task errors. -->
+    <string name="error_routine_name_required">Please enter a routine name</string>
+    <string name="error_routine_not_found">That routine could not be found</string>
+    <string name="error_task_title_required">Please enter a task title</string>
+    <string name="error_task_time_required">Please choose a time of day</string>
+
+    <!-- ============================== Care categories ==============================
+         Display names for the TaskCategory enum. The constants themselves (VET_VISIT) are
+         database values and must never be shown to the user. -->
+    <string name="category_feeding">Feeding</string>
+    <string name="category_walk">Walk</string>
+    <string name="category_grooming">Grooming</string>
+    <string name="category_medication">Medication</string>
+    <string name="category_vet_visit">Vet visit</string>
+    <string name="category_training">Training</string>
+    <string name="category_play">Play</string>
+    <string name="category_other">Other</string>
+
+    <!-- ============================= Routine schedules =============================
+         Display names for the RepeatUnit enum, worded as the user would say them. -->
+    <string name="schedule_daily">Every day</string>
+    <string name="schedule_weekly">Every week</string>
+    <string name="schedule_monthly">Every month</string>
+    <string name="schedule_yearly">Every year</string>
+
+    <!-- ============================= Pet detail screen ============================= -->
+    <string name="pet_detail_edit">Edit pet</string>
+    <string name="pet_detail_checklist">Today\'s checklist</string>
+    <string name="pet_detail_routines_title">Care routines</string>
+    <string name="pet_detail_no_routines_title">No care routines yet</string>
+    <string name="pet_detail_no_routines_message">Create a routine to schedule this pet\'s regular care.</string>
+    <string name="pet_detail_dob_label">Date of birth</string>
+    <string name="pet_detail_weight_label">Weight</string>
+    <string name="pet_detail_dietary_label">Dietary notes</string>
+    <string name="pet_detail_allergies_label">Allergies</string>
+    <string name="pet_detail_toys_label">Favourite toys</string>
+    <!-- %1$s is the weight value; the unit is kept out of the number so it can be translated. -->
+    <string name="pet_detail_weight_format">%1$s kg</string>
+    <!-- Marks a routine the user has switched off. %1$s is its schedule, e.g. "Every day". -->
+    <string name="routine_paused_format">%1$s · Paused</string>
+
+    <!-- ============================ Create routine screen ============================ -->
+    <string name="add_routine_title">New care routine</string>
+    <string name="routine_name_label">Routine name</string>
+    <string name="routine_schedule_label">How often does it repeat?</string>
+    <string name="routine_toggle_daily">Daily</string>
+    <string name="routine_toggle_weekly">Weekly</string>
+    <string name="routine_save">Create routine</string>
+
+    <!-- ============================ Routine detail screen ============================ -->
+    <string name="routine_detail_tasks_title">Tasks in this routine</string>
+    <string name="routine_detail_no_tasks_title">No tasks yet</string>
+    <string name="routine_detail_no_tasks_message">Add the care tasks that make up this routine.</string>
+
+    <!-- ============================== Add task screen ============================== -->
+    <string name="add_task_title">New care task</string>
+    <string name="task_title_label">Task title</string>
+    <string name="task_category_label">Category</string>
+    <string name="task_time_label">Time of day</string>
+    <string name="task_supplies_label">Required supplies</string>
+    <string name="task_notes_label">Notes</string>
+    <string name="task_save">Add task</string>
+    <string name="task_time_picker_title">Select time of day</string>
+    <!-- Prefixes the supplies line in task lists. %1$s is what the user recorded. -->
+    <string name="task_supplies_format">Needs: %1$s</string>
+
+    <!-- =============================== Checklist screen =============================== -->
+    <!-- %1$s is the pet's name. -->
+    <string name="checklist_title_format">Today for %1$s</string>
+    <string name="checklist_empty_title">Nothing due today</string>
+    <string name="checklist_empty_message">This pet has no care scheduled for today.</string>
+    <!-- Plural because the wording changes with the count, and which forms exist varies by
+         language. %1$d is the completed count and %2$d the total. -->
+    <plurals name="checklist_progress">
+        <item quantity="one">%1$d of %2$d task done</item>
+        <item quantity="other">%1$d of %2$d tasks done</item>
+    </plurals>
+
     <!-- =========================== Accessibility labels ===========================
          contentDescription values, read aloud by TalkBack for users who cannot see the icon. -->
     <string name="cd_add_pet">Add a pet</string>
     <string name="cd_pet_photo">Pet photo</string>
+    <string name="cd_add_routine">Add a care routine</string>
+    <string name="cd_add_task">Add a care task</string>
+    <string name="cd_task_done">Mark task as done</string>
 </resources>

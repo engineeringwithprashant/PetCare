@@ -72,12 +72,99 @@
             android:name="userId"
             app:argType="long" />
 
-        <!-- One action serves both adding and editing: the home screen passes petId = -1 from the
-             floating action button, or a real id when a pet in the list is tapped. A second action
-             pointing at the same destination would add nothing. -->
+        <!-- The floating action button goes straight to an empty form, passing petId = -1. -->
         <action
             android:id="@+id/action_home_to_add_edit_pet"
             app:destination="@id/addEditPetFragment" />
+
+        <!-- Tapping a pet opens its detail screen rather than the edit form: viewing an animal and
+             changing its record are different intentions, and the detail screen is also the way in
+             to that pet's routines and checklist. -->
+        <action
+            android:id="@+id/action_home_to_pet_detail"
+            app:destination="@id/petDetailFragment" />
+    </fragment>
+
+    <!-- A single pet: its details, plus the care routines set up for it. -->
+    <fragment
+        android:id="@+id/petDetailFragment"
+        android:name="com.prash.petcare.ui.pet.PetDetailFragment"
+        android:label="@string/pet_detail_routines_title"
+        tools:layout="@layout/fragment_pet_detail">
+
+        <argument
+            android:name="petId"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_pet_detail_to_edit_pet"
+            app:destination="@id/addEditPetFragment" />
+
+        <action
+            android:id="@+id/action_pet_detail_to_add_routine"
+            app:destination="@id/addRoutineFragment" />
+
+        <action
+            android:id="@+id/action_pet_detail_to_routine_detail"
+            app:destination="@id/routineDetailFragment" />
+
+        <action
+            android:id="@+id/action_pet_detail_to_checklist"
+            app:destination="@id/checklistFragment" />
+    </fragment>
+
+    <!-- Create a care routine for a pet. -->
+    <fragment
+        android:id="@+id/addRoutineFragment"
+        android:name="com.prash.petcare.ui.routine.AddRoutineFragment"
+        android:label="@string/add_routine_title"
+        tools:layout="@layout/fragment_add_routine">
+
+        <argument
+            android:name="petId"
+            app:argType="long" />
+    </fragment>
+
+    <!-- A single routine and the care tasks inside it. -->
+    <fragment
+        android:id="@+id/routineDetailFragment"
+        android:name="com.prash.petcare.ui.routine.RoutineDetailFragment"
+        android:label="@string/routine_detail_tasks_title"
+        tools:layout="@layout/fragment_routine_detail">
+
+        <argument
+            android:name="routineId"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_routine_detail_to_add_task"
+            app:destination="@id/addTaskFragment" />
+    </fragment>
+
+    <!-- Add a care task to a routine. -->
+    <fragment
+        android:id="@+id/addTaskFragment"
+        android:name="com.prash.petcare.ui.task.AddTaskFragment"
+        android:label="@string/add_task_title"
+        tools:layout="@layout/fragment_add_task">
+
+        <!-- Only the routine is passed. The pet is read from that routine, so the two can never
+             disagree about which animal a task belongs to. -->
+        <argument
+            android:name="routineId"
+            app:argType="long" />
+    </fragment>
+
+    <!-- Today's care checklist for one pet. -->
+    <fragment
+        android:id="@+id/checklistFragment"
+        android:name="com.prash.petcare.ui.checklist.ChecklistFragment"
+        android:label="@string/home_title"
+        tools:layout="@layout/fragment_checklist">
+
+        <argument
+            android:name="petId"
+            app:argType="long" />
     </fragment>
 
     <!-- Create or edit a pet. -->

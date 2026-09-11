@@ -6,25 +6,42 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * A single thing to do for a [Pet] at a particular time, which the user can tick off.
+ * One item of care within a [CareRoutine] — "Morning meal", "Evening walk", "Brush coat".
  *
- * A task has **two** parents, and they behave differently:
- *  - [petId] is required. Every task is for exactly one pet, and deleting the pet deletes it.
- *  - [routineId] is optional. A task either came from a repeating [CareRoutine] or was added as
- *    a one-off. Deleting the routine must *not* delete the task history, so that link is broken
- *    rather than cascaded — see the SET_NULL rule below.
+ * A task is a **repeating template, not a single dated event**. It says *what* to do and *at what
+ * time of day*; the parent routine says *which days* it applies to. One "Morning meal" row
+ * therefore covers every day the routine runs, rather than the database filling up with a new row
+ * per day.
+ *
+ * **How "done today" works.** Because the same row reappears each day, a plain done/not-done flag
+ * would stay ticked forever. Instead [completedAt] records *when* it was last ticked, and the
+ * checklist treats a task as done only if that timestamp falls inside today. Completion therefore
+ * clears itself overnight with no scheduled job to reset it.
+ *
+ * A task has two parents:
+ *  - [petId] is required — every task is for exactly one pet, and deleting the pet deletes it.
+ *  - [routineId] points at the owning routine. It is nullable only because the foreign key uses
+ *    SET_NULL (see below); tasks created through the app always have one.
  *
  * @property id Primary key, assigned by SQLite on insert.
  * @property petId Foreign key to [Pet.id] — the animal this task is for.
- * @property routineId Foreign key to [CareRoutine.id], or null for a one-off task.
+ * @property routineId Foreign key to [CareRoutine.id] — the routine this task belongs to.
  * @property title Short label such as "Evening meal", shown in lists.
  * @property notes Optional extra detail the user typed.
- * @property category What kind of care this is — see [TaskCategory].
- * @property dueAt When the task should be done, as epoch milliseconds. Indexed, because the
- *   home screen's "what is due today" query sorts and filters on this column constantly.
- * @property isCompleted Whether the user has ticked the task off.
- * @property completedAt When it was ticked off, or null while outstanding. Kept separately from
- *   [isCompleted] so the app can show *when* care actually happened, not just that it did.
+ * @property requiredSupplies Optional list of what is needed to carry the task out — food brand,
+ *   brush, medication. Kept apart from [notes] so a sitter can see at a glance what to bring.
+ * @property category What kind of care this is — see [TaskCategory]. The checklist groups by it.
+ * @property timeOfDayMinutes When in the day this happens, as minutes since midnight, so 450 is
+ *   07:30. Storing a time of day rather than a full timestamp is what lets one row repeat: a
+ *   timestamp would pin the task to a single date. Nullable only so the column could be added to
+ *   an existing table without a default; tasks created through the app always set it.
+ * @property dueAt Epoch milliseconds of this task's *first* occurrence — the owning routine's
+ *   start date at [timeOfDayMinutes]. Later occurrences are derived from the routine's schedule
+ *   rather than stored.
+ * @property isCompleted Whether the task was ticked off the last time it was actioned. Read
+ *   alongside [completedAt], which is what decides whether that tick counts for today.
+ * @property completedAt When it was last ticked off, or null if never. This is the field the
+ *   checklist actually tests, because it carries the date as well as the fact.
  * @property createdAt When the task was created, as epoch milliseconds.
  */
 @Entity(
@@ -55,7 +72,9 @@ data class CareTask(
     val routineId: Long? = null,
     val title: String,
     val notes: String? = null,
+    val requiredSupplies: String? = null,
     val category: TaskCategory,
+    val timeOfDayMinutes: Int? = null,
     val dueAt: Long,
     val isCompleted: Boolean = false,
     val completedAt: Long? = null,

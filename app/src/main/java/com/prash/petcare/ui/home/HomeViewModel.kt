@@ -10,11 +10,11 @@ import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.util.CareSchedule
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import java.util.Calendar
 
 /**
  * Everything the home screen displays, gathered into one object.
@@ -76,7 +76,11 @@ class HomeViewModel(
     val uiState: StateFlow<HomeUiState> = combine(
         userRepository.observeUser(userId),
         petRepository.observePetsForOwner(userId),
-        careTaskRepository.observeTasksForOwnerBetween(userId, startOfToday, endOfToday)
+        careTaskRepository.observeTasksForOwnerBetween(
+            userId,
+            CareSchedule.startOfToday(),
+            CareSchedule.endOfToday()
+        )
     ) { user, pets, todayTasks ->
         HomeUiState(
             userName = user?.fullName.orEmpty(),
@@ -111,39 +115,5 @@ class HomeViewModel(
                 )
             }
         }
-
-        /**
-         * Midnight at the start of the current day, in the device's own time zone.
-         *
-         * [Calendar] is used rather than `java.time` because the app supports minSdk 24 and
-         * `java.time` only arrived on API 26 without extra library desugaring.
-         *
-         * Note this is evaluated once, when the ViewModel is created. An app left open across
-         * midnight will keep showing the previous day's summary until the screen is recreated —
-         * acceptable here, and the point at which a real scheduler would take over.
-         */
-        private val startOfToday: Long
-            get() = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-
-        /**
-         * The last millisecond of the current day.
-         *
-         * Reached by adding one day to midnight and stepping back a millisecond, rather than
-         * adding a fixed 24 hours. On the days clocks change, a day is 23 or 25 hours long, and
-         * [Calendar.add] accounts for that where plain arithmetic would not.
-         */
-        private val endOfToday: Long
-            get() = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-                add(Calendar.DAY_OF_MONTH, 1)
-            }.timeInMillis - 1
     }
 }

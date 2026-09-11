@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Pet detail screen: the animal's recorded information, and the care routines set up for it.
+
+    The whole screen scrolls as one, so the routine list is a RecyclerView with wrap_content height
+    and nestedScrollingEnabled="false" inside a NestedScrollView. That hands scrolling to the parent
+    and lets the list render in full rather than becoming a small scrolling box inside a scrolling
+    page. The trade-off is that every routine row is inflated at once instead of being recycled,
+    which is fine for the handful of routines a pet realistically has.
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.pet.PetDetailFragment">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="96dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Material3.CardView.Filled"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                app:cardCornerRadius="16dp">
+
+                <ImageView
+                    android:id="@+id/petPhotoImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/cd_pet_photo"
+                    android:padding="24dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_pet_placeholder" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/petNameText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Bella" />
+
+            <TextView
+                android:id="@+id/petSubtitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Dog · Labrador" />
+
+            <!-- Recorded details. Each block is hidden by the fragment when its field is empty, so
+                 a pet with only a name does not show a column of blank headings. -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/detailsCard"
+                style="@style/Widget.Material3.CardView.Filled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/dobBlock"
+                        style="@style/PetCare.DetailBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            style="@style/PetCare.DetailLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pet_detail_dob_label" />
+
+                        <TextView
+                            android:id="@+id/dobValueText"
+                            style="@style/PetCare.DetailValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="4 Mar 2021" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/weightBlock"
+                        style="@style/PetCare.DetailBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            style="@style/PetCare.DetailLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pet_detail_weight_label" />
+
+                        <TextView
+                            android:id="@+id/weightValueText"
+                            style="@style/PetCare.DetailValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="24.5 kg" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/dietaryBlock"
+                        style="@style/PetCare.DetailBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            style="@style/PetCare.DetailLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pet_detail_dietary_label" />
+
+                        <TextView
+                            android:id="@+id/dietaryValueText"
+                            style="@style/PetCare.DetailValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="Two cups of dry food, morning and evening" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/allergiesBlock"
+                        style="@style/PetCare.DetailBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            style="@style/PetCare.DetailLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pet_detail_allergies_label" />
+
+                        <TextView
+                            android:id="@+id/allergiesValueText"
+                            style="@style/PetCare.DetailValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="Chicken" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/toysBlock"
+                        style="@style/PetCare.DetailBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            style="@style/PetCare.DetailLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pet_detail_toys_label" />
+
+                        <TextView
+                            android:id="@+id/toysValueText"
+                            style="@style/PetCare.DetailValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="Rope toy, tennis ball" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/checklistButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/pet_detail_checklist" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/editPetButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/pet_detail_edit" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/pet_detail_routines_title"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnSurface" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/routinesRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false"
+                tools:itemCount="2"
+                tools:listitem="@layout/item_routine" />
+
+            <LinearLayout
+                android:id="@+id/emptyRoutinesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pet_detail_no_routines_title"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:text="@string/pet_detail_no_routines_message"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addRoutineFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:contentDescription="@string/cd_add_routine"
+        app:srcCompat="@drawable/ic_add" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

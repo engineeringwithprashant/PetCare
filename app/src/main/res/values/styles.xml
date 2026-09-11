@@ -1,0 +1,38 @@
+<!--
+    Reusable widget styles.
+
+    These exist so the repeated label-and-value pairs on the pet detail screen are described once
+    rather than having the same four attributes copied onto every TextView. Changing the look of a
+    detail row then means editing one style instead of hunting through the layout.
+
+    They are kept apart from themes.xml on purpose: that file defines the app's *theme* (the palette
+    and typography the whole app inherits), whereas these style individual widgets.
+-->
+<resources>
+
+    <!--
+        Each style below sets parent="" on purpose. A dot in a style name is Android's shorthand for
+        inheritance, so "PetCare.DetailBlock" would otherwise be taken as extending a style called
+        "PetCare" — which does not exist, and the build fails looking for it. An explicit empty
+        parent says these names are just namespacing and inherit from nothing.
+    -->
+
+    <!-- Wrapper around one label-and-value pair, so the two can be shown or hidden as a unit. -->
+    <style name="PetCare.DetailBlock" parent="">
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_marginTop">12dp</item>
+    </style>
+
+    <!-- The quieter heading above a value, e.g. "Date of birth". -->
+    <style name="PetCare.DetailLabel" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- The recorded value itself. -->
+    <style name="PetCare.DetailValue" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+</resources>
