@@ -71,6 +71,35 @@
         <argument
             android:name="userId"
             app:argType="long" />
+
+        <!-- One action serves both adding and editing: the home screen passes petId = -1 from the
+             floating action button, or a real id when a pet in the list is tapped. A second action
+             pointing at the same destination would add nothing. -->
+        <action
+            android:id="@+id/action_home_to_add_edit_pet"
+            app:destination="@id/addEditPetFragment" />
+    </fragment>
+
+    <!-- Create or edit a pet. -->
+    <fragment
+        android:id="@+id/addEditPetFragment"
+        android:name="com.prash.petcare.ui.pet.AddEditPetFragment"
+        android:label="@string/add_pet_title"
+        tools:layout="@layout/fragment_add_edit_pet">
+
+        <!-- Which pet to edit. The default of -1 means "none", which is how the screen knows it is
+             creating a new pet rather than changing one. Long literals in a nav graph need the L
+             suffix, or the value is parsed as an Int and rejected. -->
+        <argument
+            android:name="petId"
+            android:defaultValue="-1L"
+            app:argType="long" />
+
+        <!-- Who will own a newly created pet. Required, with no default: a pet with no owner
+             would violate the foreign key on the pets table. -->
+        <argument
+            android:name="ownerId"
+            app:argType="long" />
     </fragment>
 
 </navigation>

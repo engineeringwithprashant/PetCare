@@ -4,15 +4,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentHomeBinding
+import com.prash.petcare.ui.pet.AddEditPetFragment
+import com.prash.petcare.ui.pet.PetViewModel
 import kotlinx.coroutines.launch
 
 /**
@@ -51,7 +54,7 @@ class HomeFragment : Fragment() {
      * A new adapter would discard the previous list, so DiffUtil would have nothing to compare
      * against and every row would be redrawn.
      */
-    private val petAdapter = PetAdapter()
+    private val petAdapter = PetAdapter(onPetClick = { pet -> openPetForm(pet.id) })
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -83,15 +86,25 @@ class HomeFragment : Fragment() {
     }
 
     private fun setUpClickListeners() {
-        binding.addPetFab.setOnClickListener {
-            // Placeholder until the add-pet screen exists. It is wired up now so the button is
-            // never silently dead, and so the navigation call has an obvious home later.
-            Snackbar.make(
-                binding.root,
-                getString(R.string.home_add_pet_coming_soon),
-                Snackbar.LENGTH_SHORT
-            ).show()
-        }
+        // No pet id means the form opens ready to create one.
+        binding.addPetFab.setOnClickListener { openPetForm(PetViewModel.NO_PET_ID) }
+    }
+
+    /**
+     * Opens the add/edit pet form.
+     *
+     * The same destination covers both cases: [PetViewModel.NO_PET_ID] opens an empty form, and a
+     * real id opens that pet with its fields already filled in.
+     */
+    private fun openPetForm(petId: Long) {
+        findNavController().navigate(
+            R.id.action_home_to_add_edit_pet,
+            bundleOf(
+                AddEditPetFragment.ARG_PET_ID to petId,
+                // The form needs the owner so a newly created pet can be attached to this account.
+                AddEditPetFragment.ARG_OWNER_ID to userId
+            )
+        )
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.prash.petcare.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -19,9 +20,15 @@ import androidx.room.PrimaryKey
  * @property dateOfBirth Optional birth date as epoch milliseconds. Null when the owner does not
  *   know it, which is common for rescue animals.
  * @property weightKg Optional most recent recorded weight, used by the health screens.
- * @property photoUri Optional `content://` URI for a photo the user picked. Only the URI is
- *   stored — copying the image bytes into SQLite would bloat the database badly.
- * @property notes Optional free text for anything the fixed fields above do not cover.
+ * @property photoPath Optional absolute path to a photo copied into the app's internal storage.
+ *   Only the path is stored — putting image bytes in SQLite would bloat the database badly. The
+ *   picked image is copied rather than referenced, because the `content://` URI the photo picker
+ *   hands over only grants temporary read access and would stop working after a restart.
+ * @property notes Optional free text for anything the fixed fields do not cover.
+ * @property dietaryNotes Optional feeding instructions — food brand, portion sizes, meal times.
+ * @property allergies Optional known allergies or reactions, kept separate from [dietaryNotes]
+ *   because it is safety information a vet or sitter needs to find immediately.
+ * @property favouriteToys Optional list of toys and games the pet enjoys.
  * @property createdAt When the pet was added, as epoch milliseconds.
  */
 @Entity(
@@ -49,7 +56,14 @@ data class Pet(
     val breed: String? = null,
     val dateOfBirth: Long? = null,
     val weightKg: Double? = null,
-    val photoUri: String? = null,
+    // The column keeps its original name while the Kotlin property is renamed to describe what is
+    // actually stored. Renaming the column instead would need the whole table rebuilt, since
+    // SQLite only gained RENAME COLUMN in a version newer than this app's minSdk 24 guarantees.
+    @ColumnInfo(name = "photoUri")
+    val photoPath: String? = null,
     val notes: String? = null,
+    val dietaryNotes: String? = null,
+    val allergies: String? = null,
+    val favouriteToys: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

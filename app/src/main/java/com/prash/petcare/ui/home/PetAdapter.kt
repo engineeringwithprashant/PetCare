@@ -2,14 +2,13 @@ package com.prash.petcare.ui.home
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.annotation.StringRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Pet
-import com.prash.petcare.data.local.entity.PetSpecies
 import com.prash.petcare.databinding.ItemPetBinding
+import com.prash.petcare.ui.common.labelRes
 
 /**
  * Displays the user's pets in the home screen's RecyclerView.
@@ -19,8 +18,14 @@ import com.prash.petcare.databinding.ItemPetBinding
  * thread, then animates only the rows that actually changed. Calling `notifyDataSetChanged` by
  * hand instead would redraw every visible row on each database update and lose scroll position
  * and animations.
+ *
+ * @property onPetClick Called with the tapped pet. Passed in as a lambda rather than having the
+ *   adapter navigate by itself, which keeps navigation decisions in the fragment and leaves this
+ *   adapter reusable on any screen that lists pets.
  */
-class PetAdapter : ListAdapter<Pet, PetAdapter.PetViewHolder>(PetDiffCallback) {
+class PetAdapter(
+    private val onPetClick: (Pet) -> Unit
+) : ListAdapter<Pet, PetAdapter.PetViewHolder>(PetDiffCallback) {
 
     /**
      * Creates a row. Called only when there is no recycled view to reuse, which is why inflation
@@ -33,7 +38,7 @@ class PetAdapter : ListAdapter<Pet, PetAdapter.PetViewHolder>(PetDiffCallback) {
             // false: the RecyclerView attaches the view itself once it has measured it.
             false
         )
-        return PetViewHolder(binding)
+        return PetViewHolder(binding, onPetClick)
     }
 
     /** Fills a (possibly recycled) row with the pet at [position]. */
@@ -49,11 +54,16 @@ class PetAdapter : ListAdapter<Pet, PetAdapter.PetViewHolder>(PetDiffCallback) {
      * view hierarchy again.
      */
     class PetViewHolder(
-        private val binding: ItemPetBinding
+        private val binding: ItemPetBinding,
+        private val onPetClick: (Pet) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(pet: Pet) {
             val context = binding.root.context
+
+            // Re-set on every bind, not just at creation: rows are recycled, so a listener left
+            // over from a previous bind would open whichever pet used to occupy this row.
+            binding.root.setOnClickListener { onPetClick(pet) }
 
             binding.petNameText.text = pet.name
 
@@ -92,25 +102,4 @@ class PetAdapter : ListAdapter<Pet, PetAdapter.PetViewHolder>(PetDiffCallback) {
         override fun areContentsTheSame(oldItem: Pet, newItem: Pet): Boolean =
             oldItem == newItem
     }
-}
-
-/**
- * Maps a [PetSpecies] to its user-facing label.
- *
- * Kept in the UI layer, not on the enum itself, so the data layer stays free of Android resource
- * references and remains testable on a plain JVM.
- *
- * The `when` has no `else` branch on purpose: Kotlin then requires every constant to be listed, so
- * adding a species to the enum will not compile until a label is written for it. An `else` would
- * silently show the wrong name instead.
- */
-@StringRes
-private fun PetSpecies.labelRes(): Int = when (this) {
-    PetSpecies.DOG -> R.string.species_dog
-    PetSpecies.CAT -> R.string.species_cat
-    PetSpecies.BIRD -> R.string.species_bird
-    PetSpecies.RABBIT -> R.string.species_rabbit
-    PetSpecies.FISH -> R.string.species_fish
-    PetSpecies.REPTILE -> R.string.species_reptile
-    PetSpecies.OTHER -> R.string.species_other
 }

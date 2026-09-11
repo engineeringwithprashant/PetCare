@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.prash.petcare.data.local.converter.Converters
 import com.prash.petcare.data.local.dao.CareRoutineDao
 import com.prash.petcare.data.local.dao.CareTaskDao
@@ -35,7 +37,7 @@ import com.prash.petcare.data.local.entity.User
         CareTask::class,
         Expense::class
     ],
-    version = 1,
+    version = 2,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -55,6 +57,26 @@ abstract class PetCareDatabase : RoomDatabase() {
     companion object {
 
         private const val DATABASE_NAME = "petcare.db"
+
+        /**
+         * Version 1 to 2: adds the detailed care fields to the `pets` table.
+         *
+         * A migration describes, in SQL, how to reshape an existing database so it matches the new
+         * schema. Without one Room refuses to open a file created by an older version, because the
+         * alternative — silently deleting the user's pets — would be far worse.
+         *
+         * Three plain ADD COLUMN statements are enough here. SQLite can append a column to an
+         * existing table cheaply, so no data is copied and nothing is at risk. The columns are
+         * nullable TEXT with no default, which is exactly how Room maps a `String?` property, and
+         * rows created before this upgrade simply have null in the new fields.
+         */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE pets ADD COLUMN dietaryNotes TEXT")
+                db.execSQL("ALTER TABLE pets ADD COLUMN allergies TEXT")
+                db.execSQL("ALTER TABLE pets ADD COLUMN favouriteToys TEXT")
+            }
+        }
 
         /**
          * The one shared instance.
@@ -83,9 +105,10 @@ abstract class PetCareDatabase : RoomDatabase() {
                     PetCareDatabase::class.java,
                     DATABASE_NAME
                 )
-                    // No .fallbackToDestructiveMigration() here: that flag wipes all user data
-                    // whenever the schema version changes. Any future version must add a proper
-                    // Migration instead.
+                    // Every upgrade path must be listed here. Note there is deliberately no
+                    // .fallbackToDestructiveMigration(): that flag wipes all user data whenever
+                    // the schema version changes, so any future version adds a Migration instead.
+                    .addMigrations(MIGRATION_1_2)
                     .build()
                     .also { INSTANCE = it }
             }

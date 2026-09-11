@@ -63,8 +63,33 @@
     <string name="species_reptile">Reptile</string>
     <string name="species_other">Other</string>
 
-    <!-- Placeholder shown by the add-pet button until that screen is built. -->
-    <string name="home_add_pet_coming_soon">Adding pets is coming next.</string>
+    <!-- ============================ Add / edit pet screen ============================ -->
+    <!-- The same screen serves both modes, so it has two possible titles. -->
+    <string name="add_pet_title">Add a pet</string>
+    <string name="edit_pet_title">Edit pet</string>
+
+    <string name="pet_name_label">Name</string>
+    <string name="pet_species_label">Species</string>
+    <string name="pet_breed_label">Breed</string>
+    <string name="pet_dob_label">Date of birth</string>
+    <string name="pet_weight_label">Weight (kg)</string>
+    <string name="pet_dietary_label">Dietary notes</string>
+    <string name="pet_allergies_label">Allergies</string>
+    <string name="pet_toys_label">Favourite toys</string>
+
+    <string name="pet_photo_choose">Choose photo</string>
+    <string name="pet_photo_change">Change photo</string>
+    <string name="pet_dob_picker_title">Select date of birth</string>
+    <string name="pet_save">Save</string>
+    <string name="pet_delete">Delete pet</string>
+
+    <!-- Confirmation before a destructive action. The message spells out the knock-on effect,
+         because deleting a pet also removes its care history through the database's cascade
+         rules and that is not obvious from the button alone. %1$s is the pet's name. -->
+    <string name="delete_pet_dialog_title">Delete pet?</string>
+    <string name="delete_pet_dialog_message">%1$s will be permanently deleted, along with all of their care tasks, routines and expenses. This cannot be undone.</string>
+    <string name="delete_pet_dialog_confirm">Delete</string>
+    <string name="delete_pet_dialog_cancel">Cancel</string>
 
     <!-- ============================= Validation errors =============================
          Referenced by AuthViewModel as string resource ids, then resolved to text by the
@@ -82,7 +107,14 @@
          who has an account. -->
     <string name="error_invalid_credentials">Incorrect email or password</string>
 
+    <!-- Add / edit pet errors. -->
+    <string name="error_pet_name_required">Please enter a name</string>
+    <string name="error_pet_weight_invalid">Enter a weight greater than 0</string>
+    <string name="error_pet_not_found">That pet could not be found</string>
+    <string name="error_photo_save_failed">That photo could not be saved</string>
+
     <!-- =========================== Accessibility labels ===========================
          contentDescription values, read aloud by TalkBack for users who cannot see the icon. -->
     <string name="cd_add_pet">Add a pet</string>
+    <string name="cd_pet_photo">Pet photo</string>
 </resources>
