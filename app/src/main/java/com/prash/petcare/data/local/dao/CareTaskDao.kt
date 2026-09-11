@@ -67,6 +67,28 @@ interface CareTaskDao {
     ): Flow<List<CareTask>>
 
     /**
+     * Every task for an owner inside a time window, completed or not.
+     *
+     * Separate from [observePendingForOwnerBetween] because the home screen's daily summary needs
+     * to report progress ("2 of 5 done"), which requires the completed tasks as well — filtering
+     * them out in SQL would make the total impossible to calculate.
+     */
+    @Query(
+        """
+        SELECT care_tasks.* FROM care_tasks
+        INNER JOIN pets ON pets.id = care_tasks.petId
+        WHERE pets.ownerId = :ownerId
+          AND care_tasks.dueAt BETWEEN :fromMillis AND :toMillis
+        ORDER BY care_tasks.dueAt ASC
+        """
+    )
+    fun observeForOwnerBetween(
+        ownerId: Long,
+        fromMillis: Long,
+        toMillis: Long
+    ): Flow<List<CareTask>>
+
+    /**
      * Tasks that are still not done and whose due time has already passed.
      *
      * Feeds the overdue banner, which is why it is a separate query from the "due today" one —

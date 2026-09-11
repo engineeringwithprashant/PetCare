@@ -31,7 +31,40 @@
     <string name="home_title">Your pets</string>
     <!-- %1$s is replaced with the signed-in user's name, read back out of the database. -->
     <string name="home_welcome">Welcome, %1$s</string>
-    <string name="home_placeholder_message">You are signed in. Pet management is coming next.</string>
+
+    <!-- Shown in place of the list when the user has not added any pets yet. -->
+    <string name="home_empty_title">No pets yet</string>
+    <string name="home_empty_message">Add your first pet to start tracking their care.</string>
+
+    <!-- Today's care summary. -->
+    <string name="home_tasks_none">No care tasks due today</string>
+    <!--
+        A plurals resource, not a plain string: the wording has to change with the count, and
+        which forms exist differs by language. Android picks the right entry from the quantity
+        passed to getQuantityString, so the code never has to test for "is it 1?" itself.
+        %1$d is the completed count and %2$d the total.
+    -->
+    <plurals name="home_tasks_summary">
+        <item quantity="one">%1$d of %2$d task done today</item>
+        <item quantity="other">%1$d of %2$d tasks done today</item>
+    </plurals>
+
+    <!-- ============================== Pet list item ============================== -->
+    <!-- Joins species and breed into one subtitle, e.g. "Dog · Labrador". -->
+    <string name="pet_species_and_breed">%1$s · %2$s</string>
+
+    <!-- Display names for the PetSpecies enum. The enum constants themselves (DOG, CAT) are
+         database values and must never be shown to the user. -->
+    <string name="species_dog">Dog</string>
+    <string name="species_cat">Cat</string>
+    <string name="species_bird">Bird</string>
+    <string name="species_rabbit">Rabbit</string>
+    <string name="species_fish">Fish</string>
+    <string name="species_reptile">Reptile</string>
+    <string name="species_other">Other</string>
+
+    <!-- Placeholder shown by the add-pet button until that screen is built. -->
+    <string name="home_add_pet_coming_soon">Adding pets is coming next.</string>
 
     <!-- ============================= Validation errors =============================
          Referenced by AuthViewModel as string resource ids, then resolved to text by the
@@ -48,4 +81,8 @@
          "no account with that email" would let someone test addresses one at a time to discover
          who has an account. -->
     <string name="error_invalid_credentials">Incorrect email or password</string>
+
+    <!-- =========================== Accessibility labels ===========================
+         contentDescription values, read aloud by TalkBack for users who cannot see the icon. -->
+    <string name="cd_add_pet">Add a pet</string>
 </resources>

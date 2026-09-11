@@ -12,6 +12,7 @@ room = "2.8.5"
 navigation = "2.10.1"
 lifecycle = "2.11.0"
 fragmentKtx = "1.9.0"
+recyclerview = "1.4.0"
 # KSP is versioned independently of the Kotlin compiler from 2.3.0 onwards, so this no longer
 # has to be kept in lock-step with a Kotlin release.
 ksp = "2.3.12"
@@ -40,6 +41,10 @@ androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifec
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 # fragment-ktx supplies the `by viewModels()` delegate used to obtain ViewModels.
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
+# RecyclerView arrives transitively with Material, but the app uses it directly (ListAdapter,
+# LinearLayoutManager), so it is declared explicitly rather than relying on another library's
+# dependency that could change version without warning.
+androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

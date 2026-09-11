@@ -1,48 +1,139 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Placeholder landing screen shown after a successful sign-in.
+    Home screen: a greeting, a summary of today's care tasks, and the user's pets.
 
-    It exists so the authentication flow has somewhere real to navigate to and can be tested end
-    to end. The pet list, care tasks and expense summary will replace this content in the next
-    stage of the app.
+    The root is a CoordinatorLayout because it is what lets the floating action button and any
+    Snackbar cooperate — a Snackbar sliding up from the bottom automatically lifts the FAB rather
+    than covering it, which a plain ConstraintLayout root would not do.
+
+    Inside it, a single ConstraintLayout positions everything in one flat hierarchy instead of
+    nesting layouts inside each other, which keeps measuring cheap.
 -->
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
     tools:context=".ui.home.HomeFragment">
 
-    <!-- Centred in the parent by constraining all four sides to it: opposing constraints pull
-         equally, which is how ConstraintLayout centres a view. -->
-    <TextView
-        android:id="@+id/welcomeText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall"
-        android:textColor="?attr/colorOnSurface"
-        app:layout_constraintBottom_toTopOf="@id/placeholderText"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed"
-        tools:text="Welcome, Alex" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/placeholderText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:gravity="center"
-        android:text="@string/home_placeholder_message"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/welcomeText" />
+        <TextView
+            android:id="@+id/welcomeText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="24dp"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textColor="?attr/colorOnSurface"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Welcome, Alex" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Today's care summary. Uses the Material 3 "filled" card so it reads as a distinct
+             tinted surface, separating it from the plain background behind the list. -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/todaySummaryCard"
+            style="@style/Widget.Material3.CardView.Filled"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="24dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/welcomeText">
+
+            <TextView
+                android:id="@+id/todaySummaryText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="2 of 5 tasks done today" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!--
+            The pet list fills whatever height is left: layout_height="0dp" with the top pinned
+            under the summary card and the bottom to the parent is how ConstraintLayout expresses
+            "stretch to fit the remaining space".
+
+            clipToPadding="false" with a large bottom padding lets the final card scroll clear of
+            the floating action button instead of finishing underneath it, while still allowing
+            items to be drawn through that padding as they scroll.
+        -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/petsRecyclerView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="24dp"
+            android:clipToPadding="false"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="96dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/todaySummaryCard"
+            tools:listitem="@layout/item_pet" />
+
+        <!--
+            Shown instead of the list when the user has no pets. It occupies the same region as
+            the RecyclerView above, and the fragment toggles which of the two is visible.
+
+            visibility="gone" by default so it neither shows nor takes up space until needed.
+        -->
+        <LinearLayout
+            android:id="@+id/emptyStateContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/petsRecyclerView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/petsRecyclerView"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/home_empty_title"
+                android:textAppearance="?attr/textAppearanceTitleLarge"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="@string/home_empty_message"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- The add-pet button. contentDescription is required on an icon-only control: without it
+         TalkBack would announce nothing useful to a user who cannot see the plus symbol. -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addPetFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:contentDescription="@string/cd_add_pet"
+        app:srcCompat="@drawable/ic_add" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

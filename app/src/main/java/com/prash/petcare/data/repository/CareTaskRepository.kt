@@ -37,6 +37,18 @@ class CareTaskRepository(private val careTaskDao: CareTaskDao) {
     ): Flow<List<CareTask>> =
         careTaskDao.observePendingForOwnerBetween(ownerId, fromMillis, toMillis)
 
+    /**
+     * Observes all of an owner's tasks in a time window, completed ones included.
+     *
+     * Used for the home screen's "done so far today" summary, which needs the full picture rather
+     * than only what is outstanding.
+     */
+    fun observeTasksForOwnerBetween(
+        ownerId: Long,
+        fromMillis: Long,
+        toMillis: Long
+    ): Flow<List<CareTask>> = careTaskDao.observeForOwnerBetween(ownerId, fromMillis, toMillis)
+
     /** Observes tasks whose due time has passed and which are still not done. */
     fun observeOverdueTasksForOwner(
         ownerId: Long,
