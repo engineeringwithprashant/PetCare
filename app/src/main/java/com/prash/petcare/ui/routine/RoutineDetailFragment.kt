@@ -11,10 +11,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
+import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.databinding.FragmentRoutineDetailBinding
+import com.prash.petcare.ui.common.SwipeActionCallback
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.task.AddEditTaskFragment
 import com.prash.petcare.ui.task.CareTaskViewModel
@@ -55,6 +59,7 @@ class RoutineDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpRecyclerView()
+        setUpSwipeGestures()
         setUpClickListeners()
         observeViewModel()
     }
@@ -65,6 +70,54 @@ class RoutineDetailFragment : Fragment() {
             adapter = taskAdapter
             setHasFixedSize(true)
         }
+    }
+
+    /**
+     * Attaches swipe-to-delete to the task list.
+     *
+     * This is the screen where tasks are managed — added, opened for editing, and now removed — so
+     * it is where a delete gesture belongs. The checklist screen deliberately does not offer one:
+     * a task is a repeating template, so deleting it from a view of *today* would quietly remove it
+     * from every future day as well.
+     *
+     * Only swipe-left is permitted. Swipe-right means "mark done" elsewhere in the app, and
+     * completion is a property of a particular day, which this template list has no concept of.
+     */
+    private fun setUpSwipeGestures() {
+        val callback = SwipeActionCallback(
+            context = requireContext(),
+            // Every row here is a task, so all of them are swipeable — unlike the checklist, which
+            // mixes in category headings.
+            allowedDirections = { ItemTouchHelper.LEFT },
+            onSwipe = { position, _ ->
+                // `currentList` is what the adapter is actually showing, which is what the swiped
+                // position refers to. Reading from ViewModel state instead could disagree with it
+                // mid-update and delete the wrong task.
+                taskAdapter.currentList.getOrNull(position)?.let { task -> onSwipedToDelete(task) }
+            }
+        )
+
+        ItemTouchHelper(callback).attachToRecyclerView(binding.tasksRecyclerView)
+    }
+
+    /**
+     * Deletes a swiped task, offering an undo rather than a confirmation.
+     *
+     * The row disappears on its own: the deletion reaches Room, the routine's task query re-emits,
+     * and DiffUtil animates it out. Nothing here has to touch the adapter.
+     */
+    private fun onSwipedToDelete(task: CareTask) {
+        viewModel.deleteTask(task)
+
+        Snackbar.make(
+            binding.root,
+            getString(R.string.swipe_task_deleted, task.title),
+            Snackbar.LENGTH_LONG
+        )
+            // The whole task object is captured, so undo puts it back exactly as it was rather
+            // than recreating something similar.
+            .setAction(R.string.action_undo) { viewModel.restoreTask(task) }
+            .show()
     }
 
     private fun setUpClickListeners() {

@@ -19,13 +19,16 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentChecklistBinding
+import com.prash.petcare.ui.common.SwipeActionCallback
 import com.prash.petcare.util.ContactLookup
 import com.prash.petcare.util.ContactReader
+import com.prash.petcare.util.ShakeDetector
 import com.prash.petcare.util.SmsSender
 import kotlinx.coroutines.launch
 
@@ -72,6 +75,21 @@ class ChecklistFragment : Fragment() {
      * dialog is simply shown again from that state.
      */
     private var previewDialog: AlertDialog? = null
+
+    /**
+     * The shake-to-reset confirmation, held for the same reason as [previewDialog] and also so a
+     * continued shake cannot stack a second copy on top of the first.
+     */
+    private var resetDialog: AlertDialog? = null
+
+    /**
+     * Watches the accelerometer for a shake.
+     *
+     * Started in [onResume] and stopped in [onPause]: a registered sensor listener keeps hardware
+     * powered, so leaving it running while the screen is in the background would drain the battery
+     * for readings nobody is waiting on.
+     */
+    private val shakeDetector = ShakeDetector { onShakeDetected() }
 
     /**
      * Launchers for the trips out of this screen.
@@ -127,8 +145,19 @@ class ChecklistFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpRecyclerView()
+        setUpSwipeGestures()
         setUpClickListeners()
         observeViewModel()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        shakeDetector.start(requireContext())
+    }
+
+    override fun onPause() {
+        super.onPause()
+        shakeDetector.stop()
     }
 
     private fun setUpRecyclerView() {
@@ -138,6 +167,94 @@ class ChecklistFragment : Fragment() {
             // Deliberately not setHasFixedSize(true): headers and task rows are different heights,
             // so the list's own size changes as categories appear and disappear.
         }
+    }
+
+    /**
+     * Attaches swipe-to-complete to the checklist.
+     *
+     * Only swipe-right is offered here. Swipe-left means delete across the app, and a checklist row
+     * is a repeating template rather than a one-day copy — deleting it from a view of *today* would
+     * quietly remove it from every future day too. Task deletion therefore lives on the routine
+     * detail screen, which is where tasks are managed.
+     *
+     * [ItemTouchHelper] does the gesture detection and animation;
+     * [com.prash.petcare.ui.common.SwipeActionCallback] draws the background and calls back here.
+     */
+    private fun setUpSwipeGestures() {
+        val callback = SwipeActionCallback(
+            context = requireContext(),
+            allowedDirections = { position ->
+                // `currentList` is what the adapter is actually showing, which is what the swiped
+                // position refers to. Reading from ViewModel state instead could disagree with it
+                // mid-update and act on the wrong row.
+                val item = checklistAdapter.currentList.getOrNull(position)
+
+                // Category headings cannot be completed, and neither can a task already ticked off
+                // today — offering the gesture there would imply something would happen.
+                if (item is ChecklistItem.TaskRow && !item.isDoneToday) {
+                    ItemTouchHelper.RIGHT
+                } else {
+                    0
+                }
+            },
+            onSwipe = { position, _ ->
+                val row = checklistAdapter.currentList.getOrNull(position)
+                if (row is ChecklistItem.TaskRow) {
+                    onSwipedToComplete(position, row)
+                }
+            }
+        )
+
+        ItemTouchHelper(callback).attachToRecyclerView(binding.checklistRecyclerView)
+    }
+
+    /**
+     * Swiped right: mark the task done.
+     *
+     * The row stays on the checklist, now ticked, so its swiped-away view has to be put back.
+     * ItemTouchHelper leaves a swiped row translated off-screen on the assumption it is about to be
+     * removed; rebinding the position resets that. Without this the row would simply vanish until
+     * the next time the list was rebuilt.
+     */
+    private fun onSwipedToComplete(position: Int, row: ChecklistItem.TaskRow) {
+        viewModel.setTaskDone(row.task.id, true)
+        checklistAdapter.notifyItemChanged(position)
+    }
+
+    /**
+     * Reacts to the phone being shaken.
+     *
+     * The gesture only ever asks a question — it never resets anything on its own. A shake can
+     * happen by accident in a pocket or a bag, and silently wiping a morning's worth of ticked-off
+     * care would be no small thing to undo by hand.
+     */
+    private fun onShakeDetected() {
+        // Already asking; a continued shake should not stack dialogs.
+        if (resetDialog != null) return
+
+        // Nothing ticked off means nothing to reset, so the question would be pointless.
+        if (viewModel.uiState.value.doneCount == 0) return
+
+        showResetConfirmation()
+    }
+
+    /** Confirms before clearing the day's progress. */
+    private fun showResetConfirmation() {
+        val petName = viewModel.uiState.value.petName
+
+        resetDialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.reset_dialog_title)
+            .setMessage(getString(R.string.reset_dialog_message, petName))
+            // Cancel is listed first and does nothing, so the safe choice is the easy one.
+            .setNegativeButton(R.string.reset_dialog_cancel, null)
+            .setPositiveButton(R.string.reset_dialog_confirm) { _, _ ->
+                viewModel.resetTodaysChecklist()
+                showMessage(getString(R.string.reset_done))
+            }
+            // Fires however the dialog closes, so the reference is always released and a later
+            // shake can ask again.
+            .setOnDismissListener { resetDialog = null }
+            .show()
     }
 
     private fun setUpClickListeners() {
@@ -449,10 +566,13 @@ class ChecklistFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Detaches the dialog from the window being destroyed. The flow's stage lives in the
-        // ViewModel, so the dialog reappears from that state once the view is rebuilt.
+        // Detaches the dialogs from the window being destroyed. The delegation stage lives in the
+        // ViewModel, so that dialog reappears from state once the view is rebuilt; the reset
+        // confirmation is transient and simply asked again on the next shake.
         previewDialog?.dismiss()
         previewDialog = null
+        resetDialog?.dismiss()
+        resetDialog = null
         _binding = null
     }
 

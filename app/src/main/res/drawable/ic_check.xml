@@ -1,0 +1,18 @@
+<!--
+    Tick icon drawn behind a checklist row as it is swiped right to mark a task done.
+
+    Drawn onto the RecyclerView's canvas by ChecklistSwipeCallback rather than placed in a layout,
+    which is why it carries no tint here — the callback tints it from the Material 3 theme so it
+    reads correctly against the swipe background in both light and dark mode.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41,-1.41z" />
+
+</vector>

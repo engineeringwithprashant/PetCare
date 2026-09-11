@@ -1,0 +1,13 @@
+<!--
+    Shared dimensions.
+
+    Values needed by Kotlin code live here rather than as constants in the source, so they are
+    expressed in density-independent pixels and scaled for the device automatically — a hard-coded
+    pixel figure would be a different physical size on every screen.
+-->
+<resources>
+
+    <!-- Gap between the edge of a checklist row and the icon revealed behind it while swiping. -->
+    <dimen name="checklist_swipe_icon_margin">24dp</dimen>
+
+</resources>

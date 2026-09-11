@@ -27,6 +27,15 @@
         android:required="false" />
 
     <!--
+        The shake-to-reset gesture needs an accelerometer, but it is only a shortcut — every task
+        can still be un-ticked by hand — so the feature is not required. Without this declaration
+        Google Play would hide the app from the handful of devices that have no accelerometer.
+    -->
+    <uses-feature
+        android:name="android.hardware.sensor.accelerometer"
+        android:required="false" />
+
+    <!--
         android:name points at the custom Application class, which creates the Room database and
         the repositories. Without this attribute Android would use the default Application and
         none of that wiring would exist.

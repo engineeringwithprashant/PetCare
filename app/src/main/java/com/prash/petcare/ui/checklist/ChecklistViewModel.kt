@@ -134,7 +134,7 @@ class ChecklistViewModel(
     petRepository: PetRepository,
     careRoutineRepository: CareRoutineRepository,
     private val careTaskRepository: CareTaskRepository,
-    petId: Long
+    private val petId: Long
 ) : ViewModel() {
 
     val uiState: StateFlow<ChecklistUiState> = combine(
@@ -179,6 +179,22 @@ class ChecklistViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = ChecklistUiState()
     )
+
+    /**
+     * Clears every task ticked off today, so the checklist starts over.
+     *
+     * The tasks themselves are untouched — only their completion is cleared, and only for today.
+     * Anything completed on an earlier day keeps its record.
+     */
+    fun resetTodaysChecklist() {
+        viewModelScope.launch {
+            careTaskRepository.clearCompletionsForPet(
+                petId = petId,
+                fromMillis = CareSchedule.startOfToday(),
+                toMillis = CareSchedule.endOfToday()
+            )
+        }
+    }
 
     // Delegation runs alongside the checklist rather than being folded into its state, because it
     // is driven by the user rather than derived from the database — combining it into the query

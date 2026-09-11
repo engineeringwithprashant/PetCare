@@ -81,6 +81,13 @@ class CareTaskRepository(private val careTaskDao: CareTaskDao) {
     suspend fun deleteTasksForRoutine(routineId: Long) = careTaskDao.deleteByRoutine(routineId)
 
     /**
+     * Clears every completion a pet recorded inside a time window, leaving the tasks themselves
+     * untouched. Used to start a day's checklist over.
+     */
+    suspend fun clearCompletionsForPet(petId: Long, fromMillis: Long, toMillis: Long) =
+        careTaskDao.clearCompletionsForPet(petId, fromMillis, toMillis)
+
+    /**
      * Ticks a task off, or clears it again.
      *
      * The completion timestamp is decided here rather than by the UI so that every screen

@@ -151,6 +151,24 @@ interface CareTaskDao {
     @Query("UPDATE care_tasks SET isCompleted = :isCompleted, completedAt = :completedAt WHERE id = :taskId")
     suspend fun setCompleted(taskId: Long, isCompleted: Boolean, completedAt: Long?)
 
+    /**
+     * Un-ticks every task a pet completed within a time window.
+     *
+     * Used to reset a day's checklist in one go. A single UPDATE rather than a write per task, so
+     * the whole reset either happens or does not — clearing half a checklist would be worse than
+     * clearing none of it.
+     *
+     * Matching on `completedAt` rather than `isCompleted` is what scopes this to the chosen day: a
+     * task ticked off last week stays as it was.
+     */
+    @Query(
+        """
+        UPDATE care_tasks SET isCompleted = 0, completedAt = NULL
+        WHERE petId = :petId AND completedAt BETWEEN :fromMillis AND :toMillis
+        """
+    )
+    suspend fun clearCompletionsForPet(petId: Long, fromMillis: Long, toMillis: Long)
+
     /** Count of outstanding tasks for a pet, for the badge on the pet list. */
     @Query("SELECT COUNT(*) FROM care_tasks WHERE petId = :petId AND isCompleted = 0")
     fun observePendingCountByPet(petId: Long): Flow<Int>

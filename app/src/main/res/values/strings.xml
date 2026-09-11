@@ -202,6 +202,19 @@
     <!-- =============================== Checklist screen =============================== -->
     <!-- %1$s is the pet's name. -->
     <string name="checklist_title_format">Today for %1$s</string>
+    <!-- ============================== Checklist gestures ==============================
+         Swipe a row to complete or delete it; shake the phone to start the day over. -->
+    <!-- %1$s is the deleted task's title. -->
+    <string name="swipe_task_deleted">%1$s deleted</string>
+    <string name="action_undo">Undo</string>
+    <string name="reset_dialog_title">Start today over?</string>
+    <!-- Spells out both what is cleared and what is not, since a shake is easy to trigger by
+         accident and the wording is the only chance to reassure. %1$s is the pet's name. -->
+    <string name="reset_dialog_message">This clears every task ticked off today for %1$s, so the checklist starts over. The tasks themselves are not deleted.</string>
+    <string name="reset_dialog_confirm">Start over</string>
+    <string name="reset_dialog_cancel">Cancel</string>
+    <string name="reset_done">Today\'s checklist has been reset</string>
+
     <string name="checklist_empty_title">Nothing due today</string>
     <string name="checklist_empty_message">This pet has no care scheduled for today.</string>
     <!-- Plural because the wording changes with the count, and which forms exist varies by

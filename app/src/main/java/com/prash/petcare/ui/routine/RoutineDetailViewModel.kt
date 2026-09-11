@@ -93,6 +93,32 @@ class RoutineDetailViewModel(
     }
 
     /**
+     * Deletes a single task from this routine, as the swipe-left gesture does.
+     *
+     * No confirmation here: the caller offers an undo instead. A swipe is easy to trigger by
+     * accident, but a dialog on every one would make the shortcut slower than opening the task and
+     * using its delete button — which remains the deliberate, screen-reader-reachable route.
+     */
+    fun deleteTask(task: CareTask) {
+        viewModelScope.launch {
+            careTaskRepository.deleteTask(task)
+        }
+    }
+
+    /**
+     * Puts back a task removed by [deleteTask], for the undo action.
+     *
+     * Re-inserting the original object restores its id as well as its contents, because Room only
+     * generates a new primary key when the one it is given is zero. Keeping the id matters: the row
+     * returns exactly as it was rather than as a lookalike copy with a new identity.
+     */
+    fun restoreTask(task: CareTask) {
+        viewModelScope.launch {
+            careTaskRepository.addTask(task)
+        }
+    }
+
+    /**
      * Deletes the routine and every task inside it.
      *
      * The tasks are removed first, deliberately. The foreign key on `routineId` is SET_NULL, so
