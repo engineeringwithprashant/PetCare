@@ -46,6 +46,44 @@
             app:layout_constraintTop_toBottomOf="@id/routineTitleText"
             tools:text="Every day" />
 
+        <!--
+            Pause switch. A switch rather than a button because it shows a state as well as
+            changing it — the user can see at a glance whether this routine is currently running,
+            which a button labelled "Pause" could not convey.
+
+            Switching it off is the reversible alternative to deleting: the routine and its tasks
+            stay intact but stop appearing on checklists.
+        -->
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/activeSwitch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="24dp"
+            android:text="@string/routine_active_label"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/routineScheduleText" />
+
+        <!-- Coloured with the theme's error role, the Material 3 signal for a destructive action,
+             so it reads differently from every other control on the screen. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteRoutineButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="24dp"
+            android:text="@string/routine_delete"
+            android:textColor="?attr/colorError"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/activeSwitch"
+            app:strokeColor="?attr/colorError" />
+
         <TextView
             android:id="@+id/tasksHeaderText"
             android:layout_width="0dp"
@@ -58,7 +96,7 @@
             android:textColor="?attr/colorOnSurface"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/routineScheduleText" />
+            app:layout_constraintTop_toBottomOf="@id/deleteRoutineButton" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/tasksRecyclerView"

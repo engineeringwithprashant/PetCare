@@ -35,6 +35,19 @@ interface CareTaskDao {
     @Delete
     suspend fun delete(task: CareTask)
 
+    /**
+     * Removes every task belonging to one routine.
+     *
+     * Needed because the foreign key on `routineId` uses SET_NULL rather than CASCADE, so deleting
+     * a routine would otherwise leave its tasks behind with a null link. Under the current model
+     * that makes them unreachable: a task's days come from its routine, so one with no routine can
+     * never appear on a checklist again — it would just sit in the database invisibly.
+     *
+     * A single DELETE rather than removing rows one at a time, so the work is one statement.
+     */
+    @Query("DELETE FROM care_tasks WHERE routineId = :routineId")
+    suspend fun deleteByRoutine(routineId: Long)
+
     /** Observes every task for one pet, soonest due first. */
     @Query("SELECT * FROM care_tasks WHERE petId = :petId ORDER BY dueAt ASC")
     fun observeByPet(petId: Long): Flow<List<CareTask>>

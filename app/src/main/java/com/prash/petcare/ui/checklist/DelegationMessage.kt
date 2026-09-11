@@ -20,8 +20,10 @@ import java.util.Date
  * @param context Needed to resolve string resources and the device's time format, so the message
  *   is written in the user's own language and clock convention.
  * @param petName Whose checklist this is.
- * @param items The checklist exactly as displayed, headers included, so the message groups by
- *   category in the same order the user just saw on screen.
+ * @param items The **outstanding** part of the checklist, headers included, so the message groups
+ *   by category in the same order shown on screen. Tasks already done are excluded by the caller:
+ *   the purpose of delegating is to tell someone what still needs doing, and listing finished work
+ *   alongside it invites a dose or a feed being repeated.
  */
 fun buildDelegationMessage(
     context: Context,
@@ -58,12 +60,6 @@ fun buildDelegationMessage(
                         context.getString(R.string.delegate_message_task_no_time, task.title)
                     }
                 )
-
-                // Marking what is already done stops the carer repeating a feed or a dose, which
-                // for medication matters rather more than convenience.
-                if (item.isDoneToday) {
-                    append(context.getString(R.string.delegate_message_done_marker))
-                }
 
                 task.requiredSupplies?.takeIf { it.isNotBlank() }?.let { supplies ->
                     append("\n")

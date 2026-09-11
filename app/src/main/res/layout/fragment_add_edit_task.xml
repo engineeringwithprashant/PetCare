@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Form for adding a care task to a routine.
+    Add / edit care task form.
+
+    One layout serves both modes. The fragment changes the title and shows or hides the delete
+    button; every field is otherwise identical, so a second near-duplicate layout would only be
+    another file to keep in step.
 
     A task records what to do and when in the day, but never on which date — the routine it belongs
     to decides that. There is therefore a time field here but no date field.
@@ -11,7 +15,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    tools:context=".ui.task.AddTaskFragment">
+    tools:context=".ui.task.AddEditTaskFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,11 +24,12 @@
         android:padding="24dp">
 
         <TextView
+            android:id="@+id/screenTitleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/add_task_title"
             android:textAppearance="?attr/textAppearanceHeadlineMedium"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="?attr/colorOnSurface"
+            tools:text="@string/add_task_title" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/taskTitleInputLayout"
@@ -123,6 +128,20 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="@string/task_save" />
+
+        <!-- Only shown in edit mode. Coloured with the theme's error role, the Material 3 signal
+             for a destructive action, so it reads differently from the save button above. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteTaskButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/task_delete"
+            android:textColor="?attr/colorError"
+            android:visibility="gone"
+            app:strokeColor="?attr/colorError"
+            tools:visibility="visible" />
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/progressIndicator"

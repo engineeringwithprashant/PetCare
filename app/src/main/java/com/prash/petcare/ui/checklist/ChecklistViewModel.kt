@@ -59,6 +59,10 @@ sealed interface ChecklistItem {
  *
  * @property petName Whose checklist this is, shown in the heading.
  * @property items Headers and task rows already interleaved in display order.
+ * @property outstandingItems The same structure but covering only tasks still to be done. Held
+ *   separately because delegation sends this rather than [items]: the point of handing a checklist
+ *   to someone is telling them what is left, so anything already done is left out — along with any
+ *   category heading whose tasks are all finished, which would otherwise appear empty.
  * @property doneCount How many of today's tasks are ticked off.
  * @property totalCount How many are due today in total.
  * @property isLoading True until the first database results arrive.
@@ -66,12 +70,24 @@ sealed interface ChecklistItem {
 data class ChecklistUiState(
     val petName: String = "",
     val items: List<ChecklistItem> = emptyList(),
+    val outstandingItems: List<ChecklistItem> = emptyList(),
     val doneCount: Int = 0,
     val totalCount: Int = 0,
     val isLoading: Boolean = true
 ) {
     /** True when the "nothing due today" message should replace the list. */
     val hasNothingDue: Boolean get() = !isLoading && totalCount == 0
+
+    /** How many of today's tasks are still to be done. */
+    val outstandingCount: Int get() = totalCount - doneCount
+
+    /**
+     * True when there is care due today and all of it is finished.
+     *
+     * Deliberately distinct from [hasNothingDue]: "nothing was scheduled" and "everything has been
+     * done" both leave nothing to delegate, but they are different things to tell the user.
+     */
+    val isAllDone: Boolean get() = !isLoading && totalCount > 0 && outstandingCount == 0
 }
 
 /** The person a checklist is being delegated to. */
@@ -150,6 +166,10 @@ class ChecklistViewModel(
         ChecklistUiState(
             petName = pet?.name.orEmpty(),
             items = buildGroupedItems(rows),
+            // Grouped again from the outstanding tasks alone, rather than filtering the finished
+            // list afterwards — that would leave behind headings for categories whose tasks are
+            // all done.
+            outstandingItems = buildGroupedItems(rows.filterNot { it.isDoneToday }),
             doneCount = rows.count { it.isDoneToday },
             totalCount = rows.size,
             isLoading = false

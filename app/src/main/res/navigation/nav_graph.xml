@@ -136,22 +136,31 @@
             android:name="routineId"
             app:argType="long" />
 
+        <!-- One action serves both adding and editing: the floating action button passes
+             taskId = -1, and tapping a task in the list passes its real id. -->
         <action
-            android:id="@+id/action_routine_detail_to_add_task"
-            app:destination="@id/addTaskFragment" />
+            android:id="@+id/action_routine_detail_to_add_edit_task"
+            app:destination="@id/addEditTaskFragment" />
     </fragment>
 
-    <!-- Add a care task to a routine. -->
+    <!-- Create or edit a care task within a routine. -->
     <fragment
-        android:id="@+id/addTaskFragment"
-        android:name="com.prash.petcare.ui.task.AddTaskFragment"
+        android:id="@+id/addEditTaskFragment"
+        android:name="com.prash.petcare.ui.task.AddEditTaskFragment"
         android:label="@string/add_task_title"
-        tools:layout="@layout/fragment_add_task">
+        tools:layout="@layout/fragment_add_edit_task">
 
-        <!-- Only the routine is passed. The pet is read from that routine, so the two can never
+        <!-- The pet is read from the routine rather than passed separately, so the two can never
              disagree about which animal a task belongs to. -->
         <argument
             android:name="routineId"
+            app:argType="long" />
+
+        <!-- Which task to edit. The default of -1 means "none", which is how the screen knows it
+             is creating a new task rather than changing one. -->
+        <argument
+            android:name="taskId"
+            android:defaultValue="-1L"
             app:argType="long" />
     </fragment>
 

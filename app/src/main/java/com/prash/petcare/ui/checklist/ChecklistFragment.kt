@@ -183,8 +183,15 @@ class ChecklistFragment : Fragment() {
         binding.emptyChecklistContainer.visibility =
             if (state.hasNothingDue) View.VISIBLE else View.GONE
 
-        // Nothing due means nothing worth texting anyone about.
-        binding.delegateFab.visibility = if (state.hasNothingDue) View.GONE else View.VISIBLE
+        // Shown only when there was care due and it has all been finished — not when nothing was
+        // scheduled in the first place, which the empty state already explains.
+        binding.allDoneText.visibility = if (state.isAllDone) View.VISIBLE else View.GONE
+
+        // Delegating means telling someone what still needs doing, so with nothing outstanding
+        // there is nothing to send. The button is disabled rather than hidden: a control that
+        // vanishes leaves the user wondering where it went, whereas a greyed-out one alongside the
+        // "everything is done" message explains itself.
+        binding.delegateFab.isEnabled = state.outstandingCount > 0
     }
 
     /** Builds the "2 of 5 tasks done" line, or nothing at all when there is no care due. */
@@ -210,8 +217,15 @@ class ChecklistFragment : Fragment() {
     private fun startDelegation() {
         val state = viewModel.uiState.value
 
-        if (state.totalCount == 0) {
-            showMessage(getString(R.string.delegate_nothing_to_send))
+        // The button is already disabled in this case; this is a guard against the state changing
+        // between the tap and this running — a task ticked off on another screen, say.
+        if (state.outstandingCount == 0) {
+            showMessage(
+                getString(
+                    if (state.isAllDone) R.string.checklist_all_done
+                    else R.string.delegate_nothing_to_send
+                )
+            )
             return
         }
 
@@ -306,7 +320,16 @@ class ChecklistFragment : Fragment() {
     /** Step 4: show the exact message for confirmation before anything is sent. */
     private fun showPreviewDialog(recipient: DelegationRecipient) {
         val state = viewModel.uiState.value
-        val message = buildDelegationMessage(requireContext(), state.petName, state.items)
+        val message = outstandingMessage(state)
+
+        // Summarises what is being handed over, so the user can sanity-check the scope at a glance
+        // without reading the whole message body — "4 remaining tasks for Max".
+        val summary = resources.getQuantityString(
+            R.plurals.delegate_outstanding_summary,
+            state.outstandingCount,
+            state.outstandingCount,
+            state.petName
+        )
 
         val partCount = SmsSender.partCount(requireContext(), message)
         val partNote = resources.getQuantityString(
@@ -319,7 +342,7 @@ class ChecklistFragment : Fragment() {
         // text to a real person, and the cost in messages is stated alongside it.
         previewDialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.delegate_preview_title, recipient.name))
-            .setMessage("$message\n\n$partNote")
+            .setMessage("$summary\n\n$message\n\n$partNote")
             .setNegativeButton(R.string.delegate_cancel) { _, _ -> viewModel.onDelegationFinished() }
             .setPositiveButton(R.string.delegate_send) { _, _ -> onSendConfirmed() }
             // Back button or a tap outside counts as cancelling, so the flow does not sit half-done.
@@ -351,8 +374,7 @@ class ChecklistFragment : Fragment() {
         val recipient = (viewModel.delegationStage.value as? DelegationStage.Sending)?.recipient
             ?: return
 
-        val state = viewModel.uiState.value
-        val message = buildDelegationMessage(requireContext(), state.petName, state.items)
+        val message = outstandingMessage(viewModel.uiState.value)
 
         val wasSent = SmsSender.send(requireContext(), recipient.phoneNumber, message)
 
@@ -366,6 +388,15 @@ class ChecklistFragment : Fragment() {
 
         viewModel.onDelegationFinished()
     }
+
+    /**
+     * Builds the message body from the outstanding tasks only.
+     *
+     * Used for both the preview and the send, from the one place, so the text confirmed on screen
+     * is guaranteed to be the text that goes out.
+     */
+    private fun outstandingMessage(state: ChecklistUiState): String =
+        buildDelegationMessage(requireContext(), state.petName, state.outstandingItems)
 
     // ---------------------------------------------------------------------------------------
     // Permission helpers

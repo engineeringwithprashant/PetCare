@@ -73,6 +73,14 @@ class CareTaskRepository(private val careTaskDao: CareTaskDao) {
     suspend fun deleteTask(task: CareTask) = careTaskDao.delete(task)
 
     /**
+     * Removes every task belonging to a routine, used when that routine is being deleted.
+     *
+     * See [com.prash.petcare.data.local.dao.CareTaskDao.deleteByRoutine] for why this is explicit
+     * rather than left to the database's own cascade rules.
+     */
+    suspend fun deleteTasksForRoutine(routineId: Long) = careTaskDao.deleteByRoutine(routineId)
+
+    /**
      * Ticks a task off, or clears it again.
      *
      * The completion timestamp is decided here rather than by the UI so that every screen

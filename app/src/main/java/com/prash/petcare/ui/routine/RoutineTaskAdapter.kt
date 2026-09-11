@@ -18,9 +18,14 @@ import com.prash.petcare.ui.common.labelRes
  * This is the routine's running order — what happens, and when in the day — rather than a tickable
  * list. Ticking things off happens on the checklist screen, which is scoped to today; a routine
  * shows the template itself, which has no notion of a particular day.
+ *
+ * @property onTaskClick Called with the tapped task, which opens it for editing. Passed in as a
+ *   lambda rather than having the adapter navigate itself, keeping navigation decisions in the
+ *   fragment.
  */
-class RoutineTaskAdapter :
-    ListAdapter<CareTask, RoutineTaskAdapter.TaskViewHolder>(TaskDiffCallback) {
+class RoutineTaskAdapter(
+    private val onTaskClick: (CareTask) -> Unit
+) : ListAdapter<CareTask, RoutineTaskAdapter.TaskViewHolder>(TaskDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
         val binding = ItemRoutineTaskBinding.inflate(
@@ -28,7 +33,7 @@ class RoutineTaskAdapter :
             parent,
             false
         )
-        return TaskViewHolder(binding)
+        return TaskViewHolder(binding, onTaskClick)
     }
 
     override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
@@ -36,11 +41,16 @@ class RoutineTaskAdapter :
     }
 
     class TaskViewHolder(
-        private val binding: ItemRoutineTaskBinding
+        private val binding: ItemRoutineTaskBinding,
+        private val onTaskClick: (CareTask) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(task: CareTask) {
             val context = binding.root.context
+
+            // Re-set on every bind: rows are recycled, so a listener left from a previous bind
+            // would open whichever task used to occupy this row.
+            binding.root.setOnClickListener { onTaskClick(task) }
 
             binding.taskTitleText.text = task.title
             binding.taskCategoryText.text = context.getString(task.category.labelRes())

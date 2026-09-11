@@ -118,6 +118,7 @@
     <string name="error_routine_not_found">That routine could not be found</string>
     <string name="error_task_title_required">Please enter a task title</string>
     <string name="error_task_time_required">Please choose a time of day</string>
+    <string name="error_task_not_found">That task could not be found</string>
 
     <!-- ============================== Care categories ==============================
          Display names for the TaskCategory enum. The constants themselves (VET_VISIT) are
@@ -164,11 +165,30 @@
 
     <!-- ============================ Routine detail screen ============================ -->
     <string name="routine_detail_tasks_title">Tasks in this routine</string>
+    <!-- Label on the pause/resume switch. Worded as the state it controls rather than as an
+         action, which is the convention for a switch: "Active" is on, off means paused. -->
+    <string name="routine_active_label">Active</string>
+    <string name="routine_delete">Delete routine</string>
+    <!-- Confirmation before a destructive action. The message states the knock-on effect, because
+         deleting a routine also removes the tasks inside it and that is not obvious from the
+         button. %1$s is the routine's name. -->
+    <string name="delete_routine_dialog_title">Delete routine?</string>
+    <string name="delete_routine_dialog_message">%1$s will be permanently deleted, along with every care task in it. This cannot be undone. To stop it temporarily instead, switch it to inactive.</string>
+    <string name="delete_routine_dialog_confirm">Delete</string>
+    <string name="delete_routine_dialog_cancel">Cancel</string>
     <string name="routine_detail_no_tasks_title">No tasks yet</string>
     <string name="routine_detail_no_tasks_message">Add the care tasks that make up this routine.</string>
 
     <!-- ============================== Add task screen ============================== -->
+    <!-- The same screen serves both modes, so it has two possible titles. -->
     <string name="add_task_title">New care task</string>
+    <string name="edit_task_title">Edit care task</string>
+    <string name="task_delete">Delete task</string>
+    <!-- Confirmation before a destructive action. %1$s is the task's title. -->
+    <string name="delete_task_dialog_title">Delete task?</string>
+    <string name="delete_task_dialog_message">%1$s will be permanently removed from this routine. This cannot be undone.</string>
+    <string name="delete_task_dialog_confirm">Delete</string>
+    <string name="delete_task_dialog_cancel">Cancel</string>
     <string name="task_title_label">Task title</string>
     <string name="task_category_label">Category</string>
     <string name="task_time_label">Time of day</string>
@@ -195,6 +215,16 @@
          Texting a pet's checklist to someone who is looking after them. -->
     <string name="checklist_delegate">Delegate</string>
     <string name="delegate_nothing_to_send">There is no care due today to delegate</string>
+    <!-- Shown on the checklist when every task due today has been ticked off, explaining why the
+         delegate action is unavailable rather than leaving it greyed out with no reason given. -->
+    <string name="checklist_all_done">Everything is done for today — there is nothing left to delegate.</string>
+    <!-- Headline of the confirmation preview, summarising what is about to be sent. Plural because
+         the wording changes with the count. %1$d is the number of outstanding tasks, %2$s the
+         pet's name. -->
+    <plurals name="delegate_outstanding_summary">
+        <item quantity="one">%1$d remaining task for %2$s</item>
+        <item quantity="other">%1$d remaining tasks for %2$s</item>
+    </plurals>
     <string name="delegate_no_sms_support">This device cannot send text messages</string>
     <!-- %1$s is the chosen contact's name. -->
     <string name="delegate_preview_title">Send to %1$s?</string>
@@ -214,15 +244,14 @@
 
     <!-- The SMS body itself. Built up piece by piece by DelegationMessage.kt. The message has to
          make sense on its own in someone else's inbox, with no access to this app. -->
-    <!-- %1$s is the pet's name, %2$s today's date. -->
-    <string name="delegate_message_header">Care checklist for %1$s (%2$s)</string>
+    <!-- %1$s is the pet's name, %2$s today's date. Worded as "remaining" because only outstanding
+         tasks are sent — anything already done is left out. -->
+    <string name="delegate_message_header">Remaining care for %1$s (%2$s)</string>
     <!-- %1$s is the task title, %2$s its time of day. -->
     <string name="delegate_message_task">- %1$s at %2$s</string>
     <string name="delegate_message_task_no_time">- %1$s</string>
     <string name="delegate_message_supplies">  Needs: %1$s</string>
     <string name="delegate_message_notes">  Note: %1$s</string>
-    <!-- Appended to a task already ticked off, so the carer does not repeat a feed or a dose. -->
-    <string name="delegate_message_done_marker"> [already done]</string>
 
     <!-- ============================ Permission rationale ============================
          Shown before each runtime permission request. The wording states what is accessed, why it

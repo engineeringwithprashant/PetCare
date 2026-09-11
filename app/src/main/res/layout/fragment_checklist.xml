@@ -50,6 +50,24 @@
             app:layout_constraintTop_toBottomOf="@id/checklistTitleText"
             tools:text="2 of 5 tasks done" />
 
+        <!-- Explains why the delegate action is unavailable once everything has been ticked off.
+             Hidden the rest of the time, so it takes up no space and does not push the list down. -->
+        <TextView
+            android:id="@+id/allDoneText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="24dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorPrimary"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checklistProgressText"
+            tools:text="@string/checklist_all_done"
+            tools:visibility="visible" />
+
         <!-- The generous bottom padding, with clipToPadding="false", lets the last row scroll clear
              of the delegate button instead of finishing underneath it. -->
         <androidx.recyclerview.widget.RecyclerView
@@ -64,7 +82,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/checklistProgressText"
+            app:layout_constraintTop_toBottomOf="@id/allDoneText"
             tools:listitem="@layout/item_checklist_task" />
 
         <!-- Occupies the same region as the list; the fragment shows exactly one of the two. -->
