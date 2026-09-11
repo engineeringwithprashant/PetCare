@@ -191,6 +191,55 @@
         <item quantity="other">%1$d of %2$d tasks done</item>
     </plurals>
 
+    <!-- ============================== Care delegation ==============================
+         Texting a pet's checklist to someone who is looking after them. -->
+    <string name="checklist_delegate">Delegate</string>
+    <string name="delegate_nothing_to_send">There is no care due today to delegate</string>
+    <string name="delegate_no_sms_support">This device cannot send text messages</string>
+    <!-- %1$s is the chosen contact's name. -->
+    <string name="delegate_preview_title">Send to %1$s?</string>
+    <string name="delegate_send">Send</string>
+    <string name="delegate_cancel">Cancel</string>
+    <string name="delegate_sent">Checklist sent to %1$s</string>
+    <string name="delegate_failed">The message could not be sent</string>
+    <string name="delegate_contact_unreadable">That contact could not be read</string>
+    <!-- %1$s is the contact's name. -->
+    <string name="delegate_contact_no_number">%1$s has no phone number saved</string>
+    <!-- Warns what the message will cost to send. Plural because the wording changes with the
+         count, and SMS is normally billed per part. %1$d is the number of parts. -->
+    <plurals name="delegate_part_count">
+        <item quantity="one">This will send as %1$d text message.</item>
+        <item quantity="other">This will send as %1$d text messages.</item>
+    </plurals>
+
+    <!-- The SMS body itself. Built up piece by piece by DelegationMessage.kt. The message has to
+         make sense on its own in someone else's inbox, with no access to this app. -->
+    <!-- %1$s is the pet's name, %2$s today's date. -->
+    <string name="delegate_message_header">Care checklist for %1$s (%2$s)</string>
+    <!-- %1$s is the task title, %2$s its time of day. -->
+    <string name="delegate_message_task">- %1$s at %2$s</string>
+    <string name="delegate_message_task_no_time">- %1$s</string>
+    <string name="delegate_message_supplies">  Needs: %1$s</string>
+    <string name="delegate_message_notes">  Note: %1$s</string>
+    <!-- Appended to a task already ticked off, so the carer does not repeat a feed or a dose. -->
+    <string name="delegate_message_done_marker"> [already done]</string>
+
+    <!-- ============================ Permission rationale ============================
+         Shown before each runtime permission request. The wording states what is accessed, why it
+         is needed, and what the app will not do with it — a request with no explanation is far
+         more likely to be refused, and rightly so. -->
+    <string name="permission_contacts_title">Choose a contact?</string>
+    <string name="permission_contacts_message">PetCare needs access to your contacts so you can pick who to send this checklist to. Only the contact you choose is read, and your contacts are never uploaded or shared.</string>
+    <string name="permission_sms_title">Send a text message?</string>
+    <string name="permission_sms_message">PetCare needs permission to send text messages so it can deliver the checklist. You will always see the exact message and confirm it before anything is sent. Standard message rates apply.</string>
+    <string name="permission_continue">Continue</string>
+    <string name="permission_not_now">Not now</string>
+    <string name="permission_contacts_denied">Without contacts access, PetCare cannot look up who to send the checklist to.</string>
+    <string name="permission_sms_denied">Without SMS permission, PetCare cannot send the checklist.</string>
+    <!-- Offered when a permission has been permanently refused, since asking again will no longer
+         show a prompt and the only way back is the system settings screen. -->
+    <string name="permission_open_settings">Settings</string>
+
     <!-- =========================== Accessibility labels ===========================
          contentDescription values, read aloud by TalkBack for users who cannot see the icon. -->
     <string name="cd_add_pet">Add a pet</string>

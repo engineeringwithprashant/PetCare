@@ -12,8 +12,10 @@ import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.util.CareSchedule
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -70,6 +72,32 @@ data class ChecklistUiState(
 ) {
     /** True when the "nothing due today" message should replace the list. */
     val hasNothingDue: Boolean get() = !isLoading && totalCount == 0
+}
+
+/** The person a checklist is being delegated to. */
+data class DelegationRecipient(val name: String, val phoneNumber: String)
+
+/**
+ * How far through the delegation flow the user is.
+ *
+ * This is held as state rather than left to the fragment because the flow spans several trips out
+ * of the app — the contact picker, then possibly a permission prompt — and each of those can
+ * destroy and recreate the screen. Keeping the stage here means a rotation mid-flow resumes where
+ * it left off instead of silently starting over.
+ *
+ * Distinguishing [Preview] from [Sending] is what stops the preview dialog reappearing after the
+ * user has already tapped Send and moved on to the permission prompt.
+ */
+sealed interface DelegationStage {
+
+    /** Nothing in progress. */
+    data object Idle : DelegationStage
+
+    /** A recipient has been chosen; the message is waiting to be confirmed. */
+    data class Preview(val recipient: DelegationRecipient) : DelegationStage
+
+    /** The user confirmed; the message is being sent. */
+    data class Sending(val recipient: DelegationRecipient) : DelegationStage
 }
 
 /**
@@ -131,6 +159,36 @@ class ChecklistViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = ChecklistUiState()
     )
+
+    // Delegation runs alongside the checklist rather than being folded into its state, because it
+    // is driven by the user rather than derived from the database — combining it into the query
+    // above would mean rebuilding the whole list every time the flow moved a step.
+    private val _delegationStage = MutableStateFlow<DelegationStage>(DelegationStage.Idle)
+    val delegationStage: StateFlow<DelegationStage> = _delegationStage.asStateFlow()
+
+    /** Records the contact the user picked, moving the flow on to the confirmation preview. */
+    fun onRecipientChosen(name: String, phoneNumber: String) {
+        _delegationStage.value = DelegationStage.Preview(
+            DelegationRecipient(name = name, phoneNumber = phoneNumber)
+        )
+    }
+
+    /**
+     * Records that the user confirmed the message.
+     *
+     * Moving out of [DelegationStage.Preview] immediately is deliberate: sending may still need an
+     * SMS permission prompt, and while that is on screen the checklist can be recreated. Were the
+     * stage still Preview, the confirmation dialog would pop up again behind the prompt.
+     */
+    fun onSendConfirmed() {
+        val recipient = (_delegationStage.value as? DelegationStage.Preview)?.recipient ?: return
+        _delegationStage.value = DelegationStage.Sending(recipient)
+    }
+
+    /** Returns to idle, whether the message was sent, cancelled or failed. */
+    fun onDelegationFinished() {
+        _delegationStage.value = DelegationStage.Idle
+    }
 
     /**
      * Interleaves category headers with their tasks, in display order.

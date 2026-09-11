@@ -3,6 +3,30 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--
+        Permissions for the care delegation feature, which texts a pet's checklist to someone the
+        user picks from their contacts.
+
+        Declaring them here is only half the job: both are "dangerous" permissions, so on API 23
+        and above the app must also ask for them at runtime and keep working if the user says no.
+        ChecklistFragment does that, showing a rationale dialog before each request.
+
+        READ_CONTACTS is needed to look up the chosen contact's phone number, and SEND_SMS to
+        deliver the message. Nothing is read or sent until the user has picked a recipient and
+        confirmed the exact message on a preview screen.
+    -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+
+    <!--
+        The app is useful without a SIM — only delegation needs telephony — so the feature is
+        declared as not required. Without this, Google Play would hide the app from tablets and
+        other devices that cannot send SMS.
+    -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <!--
         android:name points at the custom Application class, which creates the Room database and
         the repositories. Without this attribute Android would use the default Application and
         none of that wiring would exist.
