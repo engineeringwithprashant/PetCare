@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    The single Activity layout for the whole app.
+
+    It contains almost nothing itself: the FragmentContainerView below acts as the NavHostFragment,
+    the window that the Navigation Component swaps screens into. Every actual screen is a fragment
+    declared in res/navigation/nav_graph.xml, which is the single-Activity architecture the
+    Navigation Component is designed around.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -7,13 +16,23 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:defaultNavHost="true"
+        app:navGraph="@navigation/nav_graph" />
+
+    <!--
+        app:defaultNavHost="true" lets this host intercept the system back button, so back moves
+        through the navigation history instead of closing the app straight away.
+
+        app:navGraph points at the graph, which is what tells the host which screen to show first.
+    -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

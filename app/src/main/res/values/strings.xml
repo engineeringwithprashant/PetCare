@@ -1,3 +1,51 @@
+<!--
+    All user-facing text lives here rather than being hard-coded in layouts or Kotlin.
+    Keeping it centralised means a wording change happens in one place, and the app can be
+    translated later by adding a values-<language> folder without touching any other file.
+-->
 <resources>
     <string name="app_name">PetCare</string>
+
+    <!-- ============================ Registration screen ============================ -->
+    <string name="register_title">Create your account</string>
+    <string name="register_subtitle">Set up a profile to start tracking your pets\' care.</string>
+    <string name="register_full_name_label">Full name</string>
+    <string name="register_email_label">Email address</string>
+    <string name="register_password_label">Password</string>
+    <string name="register_confirm_password_label">Confirm password</string>
+    <!-- %1$d is replaced at runtime with AuthViewModel.MIN_PASSWORD_LENGTH, so the rule stated
+         to the user can never drift out of step with the rule the code enforces. -->
+    <string name="register_password_helper">At least %1$d characters</string>
+    <string name="register_submit">Create account</string>
+    <string name="register_have_account">Already have an account? Sign in</string>
+
+    <!-- =============================== Login screen =============================== -->
+    <string name="login_title">Welcome back</string>
+    <string name="login_subtitle">Sign in to continue caring for your pets.</string>
+    <string name="login_email_label">Email address</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_submit">Sign in</string>
+    <string name="login_no_account">New here? Create an account</string>
+
+    <!-- ================================ Home screen ================================ -->
+    <string name="home_title">Your pets</string>
+    <!-- %1$s is replaced with the signed-in user's name, read back out of the database. -->
+    <string name="home_welcome">Welcome, %1$s</string>
+    <string name="home_placeholder_message">You are signed in. Pet management is coming next.</string>
+
+    <!-- ============================= Validation errors =============================
+         Referenced by AuthViewModel as string resource ids, then resolved to text by the
+         fragments. -->
+    <string name="error_name_required">Please enter your name</string>
+    <string name="error_email_required">Please enter your email address</string>
+    <string name="error_email_invalid">Enter a valid email address</string>
+    <string name="error_email_taken">An account already uses this email address</string>
+    <string name="error_password_required">Please enter your password</string>
+    <string name="error_password_too_short">Password must be at least 8 characters</string>
+    <string name="error_confirm_password_required">Please confirm your password</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <!-- Deliberately vague: it does not reveal whether the email exists. A message such as
+         "no account with that email" would let someone test addresses one at a time to discover
+         who has an account. -->
+    <string name="error_invalid_credentials">Incorrect email or password</string>
 </resources>

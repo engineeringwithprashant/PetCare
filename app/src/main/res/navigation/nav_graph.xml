@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The app's navigation graph: a single place describing every screen and every route between
+    them. The NavHostFragment in activity_main.xml hosts this graph and swaps fragments in and
+    out, which is why the app needs only one Activity.
+
+    Declaring routes here rather than calling FragmentTransactions by hand means the back stack,
+    animations and argument passing are all handled consistently, and the whole flow can be seen
+    at a glance in Android Studio's design view.
+
+    app:startDestination is the screen shown when the app opens — the login screen.
+-->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <!-- Sign-in screen. Entry point of the app. -->
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.prash.petcare.ui.auth.LoginFragment"
+        android:label="@string/login_title"
+        tools:layout="@layout/fragment_login">
+
+        <!-- "New here? Create an account" — an ordinary forward navigation, so pressing back
+             returns to the login screen. -->
+        <action
+            android:id="@+id/action_login_to_register"
+            app:destination="@id/registerFragment" />
+
+        <!-- Successful sign-in.
+
+             popUpTo the graph itself with popUpToInclusive removes every auth screen from the
+             back stack. Without it, pressing back from the home screen would return the user to
+             the login form they have just completed, which looks like being signed out. -->
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Account creation screen. Always reached from the login screen, so its "already have an
+         account" link simply navigates back up rather than needing an action of its own. -->
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.prash.petcare.ui.auth.RegisterFragment"
+        android:label="@string/register_title"
+        tools:layout="@layout/fragment_register">
+
+        <!-- Successful sign-up signs the new user straight in, clearing the auth stack for the
+             same reason as the login action above. -->
+        <action
+            android:id="@+id/action_register_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Placeholder landing screen shown once the user is authenticated. Pet management will be
+         built here next. -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.prash.petcare.ui.home.HomeFragment"
+        android:label="@string/home_title"
+        tools:layout="@layout/fragment_home">
+
+        <!-- Which account is signed in. Declaring it here makes the requirement explicit: the
+             home screen cannot be reached without someone supplying a user id. -->
+        <argument
+            android:name="userId"
+            app:argType="long" />
+    </fragment>
+
+</navigation>

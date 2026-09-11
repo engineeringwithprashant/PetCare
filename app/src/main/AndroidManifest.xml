@@ -2,7 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+        android:name points at the custom Application class, which creates the Room database and
+        the repositories. Without this attribute Android would use the default Application and
+        none of that wiring would exist.
+    -->
     <application
+        android:name=".PetCareApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
