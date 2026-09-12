@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Today's checklist for one pet: the care due today, grouped under category headings, each row
-    tickable, plus an action to text the whole list to someone else.
+    tickable, plus an action to hand the whole list to someone else by text message or email.
 
     The screen's title — "Today for Bella" — is set on the app bar by the fragment, so it is not
     repeated here.
@@ -109,11 +109,13 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!--
-        Hands this pet's checklist to someone else by text message.
+        Hands this pet's checklist to someone else. Tapping it asks which channel to use — text
+        message or email — rather than the screen carrying a button for each: the two are the same
+        action sent two ways, and a second floating button would imply two different jobs.
 
-        An extended floating action button rather than a plain one: sending a text costs money and
-        messages a real person, so the action carries a written label instead of leaving an icon to
-        be guessed at.
+        An extended floating action button rather than a plain one: the action messages a real
+        person, and a text costs money to send, so it carries a written label instead of leaving an
+        icon to be guessed at.
     -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/delegateFab"

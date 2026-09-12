@@ -8,11 +8,16 @@ import java.text.DateFormat
 import java.util.Date
 
 /**
- * Turns a pet's checklist into the plain-text body of a delegation SMS.
+ * Turns a pet's checklist into the plain-text body of a delegation message.
  *
- * The message has to stand on its own in someone else's messaging app, with no access to the app
- * that produced it, so it repeats everything a carer would need: which pet, which day, and for each
- * task its category, time, supplies and notes.
+ * The message has to stand on its own in someone else's inbox, with no access to the app that
+ * produced it, so it repeats everything a carer would need: which pet, which day, and for each task
+ * its category, time, supplies and notes.
+ *
+ * The same text serves both delegation channels — it is sent as the body of a text message, or as
+ * the body of an email — so the two channels can never describe the same checklist differently.
+ * Plain text with no markup is what makes that possible: an SMS has no formatting to lose, and a
+ * mail app is happy to compose a plain-text body.
  *
  * Kept out of the fragment and the ViewModel: it is pure formatting, and isolating it means the
  * exact text can be checked without a screen or a database.
@@ -74,3 +79,18 @@ fun buildDelegationMessage(
         }
     }
 }
+
+/**
+ * The subject line for a delegation email.
+ *
+ * A text message has no subject, so this is used by the email channel alone. It lives here beside
+ * [buildDelegationMessage] rather than in the fragment because the two are one piece of writing:
+ * the subject names the pet and the body then opens with the same wording, and keeping them
+ * together is what stops one being reworded without the other.
+ *
+ * The pet's name is what makes the mail findable later — a carer looking after two animals will
+ * have two of these sitting in their inbox, and "Remaining care" alone would not tell them apart in
+ * a message list.
+ */
+fun buildDelegationSubject(context: Context, petName: String): String =
+    context.getString(R.string.delegate_email_subject, petName)

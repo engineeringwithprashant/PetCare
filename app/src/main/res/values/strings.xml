@@ -238,9 +238,17 @@
     </plurals>
 
     <!-- ============================== Care delegation ==============================
-         Texting a pet's checklist to someone who is looking after them. -->
+         Handing a pet's checklist to someone who is looking after them, either as a text message
+         sent by the app itself or as an email drafted in the user's own mail app. -->
     <string name="checklist_delegate">Delegate</string>
     <string name="delegate_nothing_to_send">There is no care due today to delegate</string>
+
+    <!-- The channel chooser, shown first so the user picks how the checklist travels before the app
+         asks for anything. The two options are worded as the things themselves rather than as
+         "Send by…", since the dialog's title already asks the question. -->
+    <string name="delegate_channel_title">How should this be sent?</string>
+    <string name="delegate_channel_sms">Text message</string>
+    <string name="delegate_channel_email">Email</string>
     <!-- Shown on the checklist when every task due today has been ticked off, explaining why the
          delegate action is unavailable rather than leaving it greyed out with no reason given. -->
     <string name="checklist_all_done">Everything is done for today — there is nothing left to delegate.</string>
@@ -268,8 +276,18 @@
         <item quantity="other">This will send as %1$d text messages.</item>
     </plurals>
 
-    <!-- The SMS body itself. Built up piece by piece by DelegationMessage.kt. The message has to
-         make sense on its own in someone else's inbox, with no access to this app. -->
+    <!-- Email delegation. Nothing is sent by the app here — the checklist is handed to whichever
+         mail app the user picks, and they address it and send it themselves. -->
+    <string name="delegate_email_chooser_title">Send checklist with</string>
+    <!-- The email's subject line. %1$s is the pet's name, which is what makes the message findable
+         in an inbox holding checklists for more than one animal. Worded to match the opening line
+         of the body. -->
+    <string name="delegate_email_subject">Remaining care for %1$s</string>
+    <string name="delegate_no_email_app">No email app is set up on this device</string>
+
+    <!-- The message body itself, shared by both channels. Built up piece by piece by
+         DelegationMessage.kt. The message has to make sense on its own in someone else's inbox,
+         with no access to this app. -->
     <!-- %1$s is the pet's name, %2$s today's date. Worded as "remaining" because only outstanding
          tasks are sent — anything already done is left out. -->
     <string name="delegate_message_header">Remaining care for %1$s (%2$s)</string>

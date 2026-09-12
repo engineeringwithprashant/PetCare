@@ -29,28 +29,53 @@ import com.prash.petcare.ui.common.SwipeActionCallback
 import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.util.ContactLookup
 import com.prash.petcare.util.ContactReader
+import com.prash.petcare.util.EmailComposer
 import com.prash.petcare.util.ShakeDetector
 import com.prash.petcare.util.SmsSender
 import kotlinx.coroutines.launch
 
 /**
+ * The ways a checklist can be handed over, in the order they are offered in the chooser.
+ *
+ * An enum rather than two bare positions in a string array: the dialog's list and the branch that
+ * acts on what the user tapped are both built from these entries, so they cannot drift out of step
+ * with one another — and a third channel would be a single entry here rather than a new index to
+ * thread through two places.
+ *
+ * Private to this file because it is a piece of this screen's presentation. Nothing below the UI
+ * layer knows or cares how a checklist travels: the message itself is identical either way.
+ *
+ * @property labelRes What the user sees for this channel.
+ */
+private enum class DelegationChannel(@param:StringRes val labelRes: Int) {
+    SMS(R.string.delegate_channel_sms),
+    EMAIL(R.string.delegate_channel_email)
+}
+
+/**
  * Today's care checklist for one pet, grouped by category, with each task tickable — and the
- * ability to text the whole list to someone looking after the animal.
+ * ability to hand the whole list to someone looking after the animal, by text message or by email.
  *
  * The list is worked out rather than stored: tasks are repeating templates, so [ChecklistViewModel]
  * decides which of them fall due today before grouping them. Ticking a box writes straight back to
  * the database and the list re-emits from Room as a result.
  *
- * **The delegation flow**, which is most of this class, runs in strict order and can stop at any
- * step without leaving anything half-done:
- *  1. the user taps Delegate;
- *  2. a rationale dialog explains why contacts access is needed, then the permission is requested;
- *  3. the system contact picker opens and the chosen contact's number is looked up;
- *  4. the exact message is shown for confirmation, with how many texts it will cost;
- *  5. a second rationale dialog explains the SMS permission, which is then requested;
- *  6. only then is anything sent.
+ * **The delegation flow**, which is most of this class, starts by asking which channel to use. The
+ * two branches are deliberately very different lengths, because they differ in who does the sending.
  *
- * Nothing is read or sent without the user having asked for it and confirmed it.
+ * *Text message* — the app sends it, so every step is the app's responsibility. It runs in strict
+ * order and can stop at any step without leaving anything half-done:
+ *  1. a rationale dialog explains why contacts access is needed, then the permission is requested;
+ *  2. the system contact picker opens and the chosen contact's number is looked up;
+ *  3. the exact message is shown for confirmation, with how many texts it will cost;
+ *  4. a second rationale dialog explains the SMS permission, which is then requested;
+ *  5. only then is anything sent.
+ *
+ * *Email* — the app sends nothing. The checklist is handed to the user's own mail app as a draft,
+ * and they address it and send it from there, so there is no permission to ask for, no recipient to
+ * look up and no preview to show: the compose window they land in is the preview.
+ *
+ * Either way nothing is read or sent without the user having asked for it and confirmed it.
  */
 class ChecklistFragment : Fragment() {
 
@@ -76,6 +101,16 @@ class ChecklistFragment : Fragment() {
      * dialog is simply shown again from that state.
      */
     private var previewDialog: AlertDialog? = null
+
+    /**
+     * The "text message or email?" chooser, held so it can be dismissed if the screen is destroyed.
+     *
+     * Unlike [previewDialog] this is not backed by ViewModel state, and does not need to be: it is
+     * answered in a single tap without leaving the app, so there is no trip out of the app that
+     * could destroy the screen mid-question. A rotation simply closes it and the user taps Delegate
+     * again, having lost nothing.
+     */
+    private var channelDialog: AlertDialog? = null
 
     /**
      * The shake-to-reset confirmation, held for the same reason as [previewDialog] and also so a
@@ -331,7 +366,7 @@ class ChecklistFragment : Fragment() {
     // Delegation flow
     // ---------------------------------------------------------------------------------------
 
-    /** Step 1: the user tapped Delegate. */
+    /** The user tapped Delegate: check there is something to hand over, then ask how to send it. */
     private fun startDelegation() {
         val state = viewModel.uiState.value
 
@@ -347,8 +382,48 @@ class ChecklistFragment : Fragment() {
             return
         }
 
-        // Checked before any permission is requested: prompting for SMS access on a device that
-        // cannot send texts would ask the user for something that could never work.
+        showChannelChooser()
+    }
+
+    /**
+     * Asks whether to send the checklist as a text message or as an email.
+     *
+     * Both options are always offered, and whether a channel is actually usable is checked only
+     * once it has been chosen. Filtering the list beforehand would leave the user with a single
+     * unexplained option on a tablet, whereas choosing "Text message" there gets them a sentence
+     * saying why it is unavailable.
+     *
+     * `setItems` rather than two buttons: a dialog's positive and negative buttons carry a sense of
+     * "do it" and "don't", which is wrong for two equal choices where either one goes ahead.
+     */
+    private fun showChannelChooser() {
+        val channels = DelegationChannel.entries
+
+        // Built from the enum in its own order, so the label the user taps and the branch that runs
+        // are guaranteed to be the same channel.
+        val labels = channels.map { getString(it.labelRes) }.toTypedArray()
+
+        channelDialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.delegate_channel_title)
+            .setItems(labels) { _, index ->
+                when (channels[index]) {
+                    DelegationChannel.SMS -> startSmsDelegation()
+                    DelegationChannel.EMAIL -> startEmailDelegation()
+                }
+            }
+            // Backing out does nothing at all, so changing one's mind costs nothing.
+            .setNegativeButton(R.string.delegate_cancel, null)
+            .setOnDismissListener { channelDialog = null }
+            .show()
+    }
+
+    /**
+     * SMS branch, step 1: make sure the device can text at all, then ask for contacts access.
+     *
+     * The telephony check comes before any permission is requested: prompting for SMS access on a
+     * tablet or a Wi-Fi-only device would ask the user for something that could never work.
+     */
+    private fun startSmsDelegation() {
         if (!SmsSender.isSmsSupported(requireContext())) {
             showMessage(getString(R.string.delegate_no_sms_support))
             return
@@ -367,7 +442,38 @@ class ChecklistFragment : Fragment() {
     }
 
     /**
-     * Step 2: explain, then ask.
+     * The email branch, in full — it is this short because the app does not do the sending.
+     *
+     * [EmailComposer] opens a draft in the user's mail app and PetCare's part is over. There is no
+     * preview dialog here, unlike the SMS branch, and that is not an omission: showing the message
+     * for confirmation and then immediately handing it to a compose window that shows the very same
+     * text would be asking the same question twice. Nothing leaves the device unless the user
+     * addresses the draft and sends it themselves.
+     *
+     * The body comes from the same builder the text message uses, so both channels describe the
+     * checklist identically; only the subject line is particular to email.
+     */
+    private fun startEmailDelegation() {
+        val state = viewModel.uiState.value
+
+        val wasOpened = EmailComposer.compose(
+            context = requireContext(),
+            subject = buildDelegationSubject(requireContext(), state.petName),
+            body = outstandingMessage(state),
+            chooserTitle = getString(R.string.delegate_email_chooser_title)
+        )
+
+        // A device with no mail app set up is a situation to explain, not an error: the checklist
+        // itself is untouched and the text message channel is still there.
+        if (!wasOpened) {
+            showMessage(getString(R.string.delegate_no_email_app))
+        }
+    }
+
+    /**
+     * Explains why a permission is needed, then requests it.
+     *
+     * Shared by both points in the SMS branch that need one — contacts at step 1, SMS at step 4.
      *
      * The rationale is shown every time rather than only when
      * `shouldShowRequestPermissionRationale` returns true. That helper is false on the very first
@@ -389,12 +495,12 @@ class ChecklistFragment : Fragment() {
             .show()
     }
 
-    /** Step 3: open the system contact picker. */
+    /** SMS branch, step 2: open the system contact picker. */
     private fun launchContactPicker() {
         pickContactLauncher.launch(null)
     }
 
-    /** Step 3b: read the chosen contact's name and number. */
+    /** SMS branch, step 2b: read the chosen contact's name and number. */
     private fun loadChosenContact(contactUri: Uri) {
         val appContext = requireContext().applicationContext
 
@@ -419,6 +525,10 @@ class ChecklistFragment : Fragment() {
      *
      * Driven entirely by ViewModel state, so a rotation part-way through the flow puts the
      * confirmation dialog back rather than losing the chosen recipient.
+     *
+     * Only the SMS branch has stages to track. The email branch leaves and returns in one step, and
+     * the draft it produced is held by the mail app rather than by this screen, so there is nothing
+     * for it to restore.
      */
     private fun renderDelegation(stage: DelegationStage) {
         when (stage) {
@@ -435,7 +545,7 @@ class ChecklistFragment : Fragment() {
         }
     }
 
-    /** Step 4: show the exact message for confirmation before anything is sent. */
+    /** SMS branch, step 3: show the exact message for confirmation before anything is sent. */
     private fun showPreviewDialog(recipient: DelegationRecipient) {
         val state = viewModel.uiState.value
         val message = outstandingMessage(state)
@@ -471,7 +581,7 @@ class ChecklistFragment : Fragment() {
             .show()
     }
 
-    /** Step 5: the user confirmed; make sure there is permission to send. */
+    /** SMS branch, step 4: the user confirmed; make sure there is permission to send. */
     private fun onSendConfirmed() {
         viewModel.onSendConfirmed()
 
@@ -487,7 +597,7 @@ class ChecklistFragment : Fragment() {
         }
     }
 
-    /** Step 6: send. */
+    /** SMS branch, step 5: send. */
     private fun sendPendingChecklist() {
         val recipient = (viewModel.delegationStage.value as? DelegationStage.Sending)?.recipient
             ?: return
@@ -510,8 +620,9 @@ class ChecklistFragment : Fragment() {
     /**
      * Builds the message body from the outstanding tasks only.
      *
-     * Used for both the preview and the send, from the one place, so the text confirmed on screen
-     * is guaranteed to be the text that goes out.
+     * Every route out of this screen goes through here — the SMS preview, the SMS send, and the
+     * email draft — so the text confirmed on screen is guaranteed to be the text that goes out, and
+     * a carer gets the same checklist whichever way it reaches them.
      */
     private fun outstandingMessage(state: ChecklistUiState): String =
         buildDelegationMessage(requireContext(), state.petName, state.outstandingItems)
@@ -568,10 +679,12 @@ class ChecklistFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         // Detaches the dialogs from the window being destroyed. The delegation stage lives in the
-        // ViewModel, so that dialog reappears from state once the view is rebuilt; the reset
-        // confirmation is transient and simply asked again on the next shake.
+        // ViewModel, so that dialog reappears from state once the view is rebuilt; the channel
+        // chooser and the reset confirmation are transient and simply asked again next time.
         previewDialog?.dismiss()
         previewDialog = null
+        channelDialog?.dismiss()
+        channelDialog = null
         resetDialog?.dismiss()
         resetDialog = null
         _binding = null
