@@ -1,9 +1,13 @@
 package com.prash.petcare.ui.home
 
 import android.os.Bundle
+import android.text.format.DateUtils
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.AttrRes
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -13,6 +17,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
+import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.databinding.FragmentHomeBinding
 import com.prash.petcare.ui.pet.AddEditPetFragment
 import com.prash.petcare.ui.pet.PetDetailFragment
@@ -20,11 +25,17 @@ import com.prash.petcare.ui.pet.PetViewModel
 import kotlinx.coroutines.launch
 
 /**
- * The screen shown once a user is signed in: a greeting, today's care summary, and their pets.
+ * The screen shown once a user is signed in: a greeting, the backup status, today's care summary,
+ * and their pets.
  *
  * In MVVM this is the **View**. It renders whatever [HomeViewModel] publishes and forwards taps
  * back — it performs no queries and calculates nothing itself, which is what allows it to be
  * destroyed and rebuilt on rotation without losing or duplicating work.
+ *
+ * The pets and the summary come from Room, exactly as they did before the app gained a Firestore
+ * sync layer. This screen shows how that sync is getting on but never reads anything from it: the
+ * database remains the only thing the UI reads, and a pet pulled down from Firestore reaches this
+ * list by being written into Room like any other row.
  */
 class HomeFragment : Fragment() {
 
@@ -127,10 +138,89 @@ class HomeFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state -> render(state) }
+                // Two collectors in their own coroutines: collect() never returns, so calling the
+                // second after the first would mean it never ran. They are separate rather than one
+                // combined state because the screen's data and the sync's progress change on
+                // completely different rhythms — see HomeViewModel.syncStatus.
+                launch {
+                    viewModel.uiState.collect { state -> render(state) }
+                }
+                launch {
+                    viewModel.syncStatus.collect { status -> renderSyncStatus(status) }
+                }
             }
         }
     }
+
+    /**
+     * Shows how the backup is getting on, or nothing at all when there is nothing to say.
+     *
+     * The line is hidden rather than emptied in the idle state, so it takes up no space before the
+     * first sync has had a chance to run — a blank line above the care summary would read as
+     * something that had failed to load.
+     */
+    private fun renderSyncStatus(status: SyncStatus) {
+        val text = when (status) {
+            is SyncStatus.Idle -> null
+
+            is SyncStatus.Syncing -> getString(R.string.sync_status_syncing)
+
+            // getQuantityString picks the right plural form for the device's language. The first
+            // argument selects the form; the second fills the placeholder.
+            is SyncStatus.Pending -> resources.getQuantityString(
+                R.plurals.sync_status_pending,
+                status.changeCount,
+                status.changeCount
+            )
+
+            is SyncStatus.Synced ->
+                getString(R.string.sync_status_synced, relativeTime(status.atMillis))
+
+            is SyncStatus.Offline -> getString(R.string.sync_status_offline)
+        }
+
+        binding.syncStatusText.text = text.orEmpty()
+        binding.syncStatusText.visibility = if (text != null) View.VISIBLE else View.GONE
+
+        // Anything still waiting is worth noticing; everything else is background information the
+        // user should be able to glance past. The colour is the only difference — a warning icon or
+        // a bright red would overstate it, since nothing has gone wrong and nothing is lost.
+        val colourAttr = if (status is SyncStatus.Pending) {
+            com.google.android.material.R.attr.colorPrimary
+        } else {
+            com.google.android.material.R.attr.colorOnSurfaceVariant
+        }
+        binding.syncStatusText.setTextColor(resolveThemeColour(colourAttr))
+    }
+
+    /**
+     * Reads a colour from the current Material theme.
+     *
+     * Resolved from the theme rather than taken from colors.xml so the indicator keeps step with
+     * light and dark mode, which swap what these roles point at. Looking up a fixed colour would
+     * leave the text correct in one mode and barely readable in the other.
+     */
+    private fun resolveThemeColour(@AttrRes attribute: Int): Int {
+        val typedValue = TypedValue()
+        requireContext().theme.resolveAttribute(attribute, typedValue, true)
+        return ContextCompat.getColor(requireContext(), typedValue.resourceId)
+    }
+
+    /**
+     * Turns a moment into wording like "2 minutes ago".
+     *
+     * [DateUtils] is used rather than a formatted timestamp because a bare clock time invites the
+     * user to work out the difference themselves, and because it produces the phrase already
+     * translated into the device's language — which a hand-built string could not.
+     *
+     * The minimum resolution means anything under a minute reads as "0 minutes ago" rather than
+     * counting seconds, which would have the line rewriting itself while being looked at.
+     */
+    private fun relativeTime(millis: Long): CharSequence = DateUtils.getRelativeTimeSpanString(
+        millis,
+        System.currentTimeMillis(),
+        DateUtils.MINUTE_IN_MILLIS
+    )
 
     /** Applies the current state to the views. */
     private fun render(state: HomeUiState) {

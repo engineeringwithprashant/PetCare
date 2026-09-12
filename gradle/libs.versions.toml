@@ -16,6 +16,18 @@ recyclerview = "1.4.0"
 # KSP is versioned independently of the Kotlin compiler from 2.3.0 onwards, so this no longer
 # has to be kept in lock-step with a Kotlin release.
 ksp = "2.3.12"
+# Firebase is versioned through a Bill of Materials rather than per-library: the BoM pins one
+# tested-together set of versions, so firebase-firestore below deliberately carries no version of
+# its own and takes whatever this BoM says. That is what stops two Firebase libraries being
+# resolved to versions that were never released as a pair.
+firebaseBom = "34.19.0"
+# The Gradle plugin that reads app/google-services.json and turns it into the resources the
+# Firebase SDK looks up at runtime. Versioned separately from the BoM — it is a build tool, not a
+# library the app links against.
+googleServices = "4.4.4"
+# Adds `await()` for Google Play services Task objects, which is what the Firestore API returns.
+# Without it every Firestore call would have to be wrapped in a callback by hand.
+coroutinesPlayServices = "1.10.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,8 +57,14 @@ androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", ve
 # LinearLayoutManager), so it is declared explicitly rather than relying on another library's
 # dependency that could change version without warning.
 androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+# Firebase. The BoM is declared as a platform dependency in app/build.gradle.kts; firestore then
+# has no version of its own on purpose, so the BoM decides it.
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 

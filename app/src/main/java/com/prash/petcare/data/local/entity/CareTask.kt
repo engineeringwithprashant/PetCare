@@ -43,6 +43,11 @@ import androidx.room.PrimaryKey
  * @property completedAt When it was last ticked off, or null if never. This is the field the
  *   checklist actually tests, because it carries the date as well as the fact.
  * @property createdAt When the task was created, as epoch milliseconds.
+ * @property updatedAt When this row was last changed, as epoch milliseconds. See [Pet.updatedAt].
+ *   Ticking a task off counts as a change, so completing care on one device is what carries that
+ *   fact to another.
+ * @property isPendingSync True while this row has local changes not yet confirmed as uploaded.
+ *   See [Pet.isPendingSync].
  */
 @Entity(
     tableName = "care_tasks",
@@ -78,5 +83,7 @@ data class CareTask(
     val dueAt: Long,
     val isCompleted: Boolean = false,
     val completedAt: Long? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isPendingSync: Boolean = false
 )

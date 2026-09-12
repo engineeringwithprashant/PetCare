@@ -10,6 +10,8 @@ import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.data.sync.SyncManager
+import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.util.CareSchedule
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -51,14 +53,44 @@ data class HomeUiState(
  * @param userRepository Source of the signed-in user's profile.
  * @param petRepository Source of the pet list.
  * @param careTaskRepository Source of today's care tasks.
+ * @param syncManager The background sync. This screen is the only one that touches it, for the two
+ *   reasons described in [syncStatus] and the `init` block below. It is a data-layer object holding
+ *   no Android view types, so depending on it here does not compromise what makes a ViewModel
+ *   testable and rotation-proof.
  * @param userId Which account to show, passed in as a navigation argument.
  */
 class HomeViewModel(
     userRepository: UserRepository,
     petRepository: PetRepository,
     careTaskRepository: CareTaskRepository,
+    syncManager: SyncManager,
     userId: Long
 ) : ViewModel() {
+
+    /**
+     * Tells the sync layer which account is now signed in.
+     *
+     * This screen is where a session effectively begins: the app keeps no persisted login, so it
+     * opens on the sign-in screen and the home screen is the first place the account is known. From
+     * here the sync runs on its own.
+     *
+     * In `init` rather than in the fragment because a ViewModel is created once per screen and
+     * survives rotation, whereas the fragment is rebuilt — so this happens exactly once per visit
+     * rather than every time the device is turned.
+     */
+    init {
+        syncManager.onUserSignedIn(userId)
+    }
+
+    /**
+     * What the sync is doing, passed straight through for the indicator to display.
+     *
+     * Kept out of [uiState] on purpose. That state is assembled from database queries and describes
+     * the user's pets; sync progress describes the app itself, changes on a completely different
+     * rhythm, and folding it in would mean rebuilding the whole pet list every time the status
+     * moved from "syncing" to "synced".
+     */
+    val syncStatus: StateFlow<SyncStatus> = syncManager.status
 
     /**
      * The full state of the home screen.
@@ -111,6 +143,7 @@ class HomeViewModel(
                     userRepository = application.userRepository,
                     petRepository = application.petRepository,
                     careTaskRepository = application.careTaskRepository,
+                    syncManager = application.syncManager,
                     userId = userId
                 )
             }

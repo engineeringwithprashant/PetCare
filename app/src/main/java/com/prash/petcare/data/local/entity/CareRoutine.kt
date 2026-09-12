@@ -30,6 +30,10 @@ import androidx.room.PrimaryKey
  * @property isActive Whether the routine still generates tasks. Pausing sets this to false
  *   instead of deleting the row, so previously generated tasks keep their history intact.
  * @property createdAt When the routine was created, as epoch milliseconds.
+ * @property updatedAt When this row was last changed, as epoch milliseconds. See [Pet.updatedAt] —
+ *   it exists for the same reason and is stamped the same way.
+ * @property isPendingSync True while this row has local changes not yet confirmed as uploaded.
+ *   See [Pet.isPendingSync].
  */
 @Entity(
     tableName = "care_routines",
@@ -55,5 +59,7 @@ data class CareRoutine(
     val repeatUnit: RepeatUnit = RepeatUnit.DAY,
     val startDate: Long,
     val isActive: Boolean = true,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isPendingSync: Boolean = false
 )

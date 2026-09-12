@@ -1,7 +1,10 @@
 package com.prash.petcare.data.repository
 
 import com.prash.petcare.data.local.dao.CareTaskDao
+import com.prash.petcare.data.local.dao.SyncDeletionDao
 import com.prash.petcare.data.local.entity.CareTask
+import com.prash.petcare.data.local.entity.SyncDeletion
+import com.prash.petcare.data.local.entity.SyncEntityType
 import com.prash.petcare.data.local.relation.TaskReminder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -9,11 +12,16 @@ import kotlinx.coroutines.flow.first
 /**
  * Supplies care tasks to the ViewModel layer.
  *
- * See [UserRepository] for why this layer exists and how it fits the MVVM chain.
+ * See [UserRepository] for why this layer exists and how it fits the MVVM chain, and
+ * [PetRepository] for why the sync timestamps and tombstones are maintained in this layer.
  *
  * @property careTaskDao Injected through the constructor so tests can substitute a fake.
+ * @property syncDeletionDao Where deletions are recorded for the sync layer to send on.
  */
-class CareTaskRepository(private val careTaskDao: CareTaskDao) {
+class CareTaskRepository(
+    private val careTaskDao: CareTaskDao,
+    private val syncDeletionDao: SyncDeletionDao
+) {
 
     /** Observes every task for one pet, soonest due first. */
     fun observeTasksForPet(petId: Long): Flow<List<CareTask>> = careTaskDao.observeByPet(petId)
@@ -83,29 +91,68 @@ class CareTaskRepository(private val careTaskDao: CareTaskDao) {
 
     suspend fun getTask(taskId: Long): CareTask? = careTaskDao.getById(taskId)
 
-    suspend fun addTask(task: CareTask): Long = careTaskDao.insert(task)
+    suspend fun addTask(task: CareTask): Long = careTaskDao.insert(
+        task.copy(updatedAt = System.currentTimeMillis(), isPendingSync = true)
+    )
 
     /** Adds several tasks in one transaction — used when a routine generates its occurrences. */
-    suspend fun addTasks(tasks: List<CareTask>): List<Long> = careTaskDao.insertAll(tasks)
+    suspend fun addTasks(tasks: List<CareTask>): List<Long> {
+        // One timestamp for the whole batch rather than one per row: they are being written by a
+        // single action, and reading the clock repeatedly would give rows from the same save
+        // slightly different "last changed" moments for no reason.
+        val now = System.currentTimeMillis()
+        return careTaskDao.insertAll(
+            tasks.map { it.copy(updatedAt = now, isPendingSync = true) }
+        )
+    }
 
-    suspend fun updateTask(task: CareTask) = careTaskDao.update(task)
+    suspend fun updateTask(task: CareTask) = careTaskDao.update(
+        task.copy(updatedAt = System.currentTimeMillis(), isPendingSync = true)
+    )
 
-    suspend fun deleteTask(task: CareTask) = careTaskDao.delete(task)
+    /** Deletes a task, recording a tombstone first so the deletion can be synced. */
+    suspend fun deleteTask(task: CareTask) {
+        syncDeletionDao.insert(
+            SyncDeletion(entityType = SyncEntityType.CARE_TASK, entityId = task.id)
+        )
+        careTaskDao.delete(task)
+    }
 
     /**
      * Removes every task belonging to a routine, used when that routine is being deleted.
      *
      * See [com.prash.petcare.data.local.dao.CareTaskDao.deleteByRoutine] for why this is explicit
      * rather than left to the database's own cascade rules.
+     *
+     * Because the rows are removed by a single DELETE rather than one at a time, their ids have to
+     * be read first — afterwards there is nothing left to record. Each gets its own tombstone,
+     * unlike the children of a deleted pet: those are covered by the pet's tombstone, but a task
+     * whose routine is deleted has no deleted parent to be covered by, since the routine's own
+     * removal does not imply the pet has gone anywhere.
      */
-    suspend fun deleteTasksForRoutine(routineId: Long) = careTaskDao.deleteByRoutine(routineId)
+    suspend fun deleteTasksForRoutine(routineId: Long) {
+        val taskIds = careTaskDao.getIdsByRoutine(routineId)
+
+        if (taskIds.isNotEmpty()) {
+            syncDeletionDao.insertAll(
+                taskIds.map { SyncDeletion(entityType = SyncEntityType.CARE_TASK, entityId = it) }
+            )
+        }
+
+        careTaskDao.deleteByRoutine(routineId)
+    }
 
     /**
      * Clears every completion a pet recorded inside a time window, leaving the tasks themselves
      * untouched. Used to start a day's checklist over.
      */
     suspend fun clearCompletionsForPet(petId: Long, fromMillis: Long, toMillis: Long) =
-        careTaskDao.clearCompletionsForPet(petId, fromMillis, toMillis)
+        careTaskDao.clearCompletionsForPet(
+            petId = petId,
+            fromMillis = fromMillis,
+            toMillis = toMillis,
+            updatedAt = System.currentTimeMillis()
+        )
 
     /**
      * Ticks a task off, or clears it again.
@@ -115,7 +162,36 @@ class CareTaskRepository(private val careTaskDao: CareTaskDao) {
      * a stale "completed at" behind on an outstanding task.
      */
     suspend fun setTaskCompleted(taskId: Long, isCompleted: Boolean) {
-        val completedAt = if (isCompleted) System.currentTimeMillis() else null
-        careTaskDao.setCompleted(taskId, isCompleted, completedAt)
+        val now = System.currentTimeMillis()
+        // completedAt is cleared when un-ticking, but updatedAt still moves: the row changed, and
+        // that is what the sync layer is asking about.
+        val completedAt = if (isCompleted) now else null
+        careTaskDao.setCompleted(taskId, isCompleted, completedAt, now)
     }
+
+    // -------------------------------------------------------------------------------------------
+    // Used by the sync layer — see the equivalent section of PetRepository.
+    // -------------------------------------------------------------------------------------------
+
+    /** Every task belonging to an owner, as a one-off read. */
+    suspend fun getTasksForOwner(ownerId: Long): List<CareTask> = careTaskDao.getByOwner(ownerId)
+
+    /** The sync layer's change signal — see [PetDao.observeLatestUpdateForOwner]. */
+    fun observeLatestTaskUpdate(ownerId: Long): Flow<Long?> =
+        careTaskDao.observeLatestUpdateForOwner(ownerId)
+
+    /** Task ids another account on this device owns — see [PetDao.getIdsNotOwnedBy]. */
+    suspend fun getTaskIdsNotOwnedBy(ownerId: Long): Set<Long> =
+        careTaskDao.getIdsNotOwnedBy(ownerId).toSet()
+
+    /** Marks tasks as uploaded once Firestore has them — see [PetDao.clearPendingSync]. */
+    suspend fun clearPendingTaskSync(ownerId: Long, syncedUpTo: Long) =
+        careTaskDao.clearPendingSync(ownerId, syncedUpTo)
+
+    /** How many tasks are still waiting to be uploaded, for the sync indicator. */
+    fun observePendingTaskCount(ownerId: Long): Flow<Int> =
+        careTaskDao.observePendingSyncCount(ownerId)
+
+    /** Writes tasks pulled from Firestore into Room, keeping the timestamps they arrived with. */
+    suspend fun upsertTasksFromSync(tasks: List<CareTask>) = careTaskDao.upsertAll(tasks)
 }

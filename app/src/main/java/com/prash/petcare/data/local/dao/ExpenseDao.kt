@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.prash.petcare.data.local.entity.Expense
 import com.prash.petcare.data.local.entity.ExpenseCategory
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,60 @@ interface ExpenseDao {
 
     @Delete
     suspend fun delete(expense: Expense)
+
+    /** Applies expenses pulled from Firestore — see [PetDao.upsertAll] for why [Upsert]. */
+    @Upsert
+    suspend fun upsertAll(expenses: List<Expense>)
+
+    /** One snapshot of every expense belonging to an owner, for the sync layer. */
+    @Query(
+        """
+        SELECT expenses.* FROM expenses
+        INNER JOIN pets ON pets.id = expenses.petId
+        WHERE pets.ownerId = :ownerId
+        """
+    )
+    suspend fun getByOwner(ownerId: Long): List<Expense>
+
+    /** The sync layer's change signal for expenses — see [PetDao.observeLatestUpdateForOwner]. */
+    @Query(
+        """
+        SELECT MAX(expenses.updatedAt) FROM expenses
+        INNER JOIN pets ON pets.id = expenses.petId
+        WHERE pets.ownerId = :ownerId
+        """
+    )
+    fun observeLatestUpdateForOwner(ownerId: Long): Flow<Long?>
+
+    /** Expenses belonging to another account on this device — see [PetDao.getIdsNotOwnedBy]. */
+    @Query(
+        """
+        SELECT expenses.id FROM expenses
+        INNER JOIN pets ON pets.id = expenses.petId
+        WHERE pets.ownerId != :ownerId
+        """
+    )
+    suspend fun getIdsNotOwnedBy(ownerId: Long): List<Long>
+
+    /** Marks this owner's expenses as uploaded — see [PetDao.clearPendingSync]. */
+    @Query(
+        """
+        UPDATE expenses SET isPendingSync = 0
+        WHERE isPendingSync = 1 AND updatedAt <= :syncedUpTo
+          AND petId IN (SELECT id FROM pets WHERE ownerId = :ownerId)
+        """
+    )
+    suspend fun clearPendingSync(ownerId: Long, syncedUpTo: Long)
+
+    /** How many of this owner's expenses are still waiting to be uploaded. */
+    @Query(
+        """
+        SELECT COUNT(*) FROM expenses
+        INNER JOIN pets ON pets.id = expenses.petId
+        WHERE pets.ownerId = :ownerId AND expenses.isPendingSync = 1
+        """
+    )
+    fun observePendingSyncCount(ownerId: Long): Flow<Int>
 
     /** Observes a pet's spending history, most recently incurred first. */
     @Query("SELECT * FROM expenses WHERE petId = :petId ORDER BY incurredOn DESC")

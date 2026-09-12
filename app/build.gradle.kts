@@ -3,6 +3,11 @@ plugins {
     // KSP runs Room's annotation processor, which generates the DAO and database
     // implementations from the @Dao and @Database declarations at build time.
     alias(libs.plugins.ksp)
+    // Reads app/google-services.json at build time and generates the string resources
+    // (project id, API key, application id) that FirebaseApp reads when it initialises itself on
+    // app start. Without this plugin the JSON file is just an unused file in the module and every
+    // Firebase call would fail with "Default FirebaseApp is not initialized".
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -57,6 +62,20 @@ dependencies {
     // Navigation Component: every screen change in the app goes through the nav graph.
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+
+    // Firebase Firestore: the remote half of the offline-first sync layer. Room remains the app's
+    // source of truth — see data.sync.SyncManager — and this is only ever written to and read from
+    // by the data layer, never by a screen.
+    //
+    // `platform(...)` is what makes the BoM work: it contributes no code itself, it publishes a set
+    // of versions for the Firebase libraries declared after it. That is why firestore is listed
+    // with no version at all.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+    // Firestore's API returns Play services `Task` objects. This adds the `await()` extension that
+    // suspends until one completes, letting the sync code read as ordinary sequential coroutine
+    // code rather than as nested success/failure listeners.
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // Lifecycle-aware ViewModels and flow collection.
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

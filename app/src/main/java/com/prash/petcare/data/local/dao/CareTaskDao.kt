@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.relation.TaskReminder
 import kotlinx.coroutines.flow.Flow
@@ -33,8 +34,71 @@ interface CareTaskDao {
     @Update
     suspend fun update(task: CareTask)
 
+    /** Applies tasks pulled from Firestore — see [PetDao.upsertAll] for why [Upsert]. */
+    @Upsert
+    suspend fun upsertAll(tasks: List<CareTask>)
+
+    /** One snapshot of every task belonging to an owner, for the sync layer. */
+    @Query(
+        """
+        SELECT care_tasks.* FROM care_tasks
+        INNER JOIN pets ON pets.id = care_tasks.petId
+        WHERE pets.ownerId = :ownerId
+        """
+    )
+    suspend fun getByOwner(ownerId: Long): List<CareTask>
+
+    /** The sync layer's change signal for tasks — see [PetDao.observeLatestUpdateForOwner]. */
+    @Query(
+        """
+        SELECT MAX(care_tasks.updatedAt) FROM care_tasks
+        INNER JOIN pets ON pets.id = care_tasks.petId
+        WHERE pets.ownerId = :ownerId
+        """
+    )
+    fun observeLatestUpdateForOwner(ownerId: Long): Flow<Long?>
+
+    /** Tasks belonging to another account on this device — see [PetDao.getIdsNotOwnedBy]. */
+    @Query(
+        """
+        SELECT care_tasks.id FROM care_tasks
+        INNER JOIN pets ON pets.id = care_tasks.petId
+        WHERE pets.ownerId != :ownerId
+        """
+    )
+    suspend fun getIdsNotOwnedBy(ownerId: Long): List<Long>
+
+    /** Marks this owner's tasks as uploaded — see [PetDao.clearPendingSync]. */
+    @Query(
+        """
+        UPDATE care_tasks SET isPendingSync = 0
+        WHERE isPendingSync = 1 AND updatedAt <= :syncedUpTo
+          AND petId IN (SELECT id FROM pets WHERE ownerId = :ownerId)
+        """
+    )
+    suspend fun clearPendingSync(ownerId: Long, syncedUpTo: Long)
+
+    /** How many of this owner's tasks are still waiting to be uploaded. */
+    @Query(
+        """
+        SELECT COUNT(*) FROM care_tasks
+        INNER JOIN pets ON pets.id = care_tasks.petId
+        WHERE pets.ownerId = :ownerId AND care_tasks.isPendingSync = 1
+        """
+    )
+    fun observePendingSyncCount(ownerId: Long): Flow<Int>
+
     @Delete
     suspend fun delete(task: CareTask)
+
+    /**
+     * The ids of every task in a routine.
+     *
+     * Read before [deleteByRoutine] runs, so each of those rows can have a tombstone recorded for
+     * it — once they are gone there is nothing left to say what was deleted.
+     */
+    @Query("SELECT id FROM care_tasks WHERE routineId = :routineId")
+    suspend fun getIdsByRoutine(routineId: Long): List<Long>
 
     /**
      * Removes every task belonging to one routine.
@@ -148,9 +212,25 @@ interface CareTaskDao {
      * Both columns move together in one statement so they can never disagree: a completed task
      * always has a timestamp, and an outstanding one always has null. The caller passes null as
      * [completedAt] when un-ticking.
+     *
+     * [updatedAt] moves with them so the sync layer sees the tick — see
+     * [CareRoutineDao.setActive] for why it belongs in this statement rather than a second one.
+     * It is a separate parameter from [completedAt] because un-ticking sets that to null while
+     * still being a change that happened just now.
      */
-    @Query("UPDATE care_tasks SET isCompleted = :isCompleted, completedAt = :completedAt WHERE id = :taskId")
-    suspend fun setCompleted(taskId: Long, isCompleted: Boolean, completedAt: Long?)
+    @Query(
+        """
+        UPDATE care_tasks SET isCompleted = :isCompleted, completedAt = :completedAt,
+            updatedAt = :updatedAt, isPendingSync = 1
+        WHERE id = :taskId
+        """
+    )
+    suspend fun setCompleted(
+        taskId: Long,
+        isCompleted: Boolean,
+        completedAt: Long?,
+        updatedAt: Long
+    )
 
     /**
      * Un-ticks every task a pet completed within a time window.
@@ -164,11 +244,17 @@ interface CareTaskDao {
      */
     @Query(
         """
-        UPDATE care_tasks SET isCompleted = 0, completedAt = NULL
+        UPDATE care_tasks SET isCompleted = 0, completedAt = NULL, updatedAt = :updatedAt,
+            isPendingSync = 1
         WHERE petId = :petId AND completedAt BETWEEN :fromMillis AND :toMillis
         """
     )
-    suspend fun clearCompletionsForPet(petId: Long, fromMillis: Long, toMillis: Long)
+    suspend fun clearCompletionsForPet(
+        petId: Long,
+        fromMillis: Long,
+        toMillis: Long,
+        updatedAt: Long
+    )
 
     /**
      * Every task that can carry a reminder, with the pet and schedule details a notification needs.

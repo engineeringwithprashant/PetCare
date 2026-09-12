@@ -42,6 +42,17 @@
         discards every registered alarm on reboot, so without this the reminders would quietly stop
         for good the first time the user restarted their phone.
     -->
+    <!--
+        Lets the app see whether the device is online, which the Firestore sync uses to retry the
+        moment connectivity returns — see data.sync.NetworkMonitor. Without it, a change made with
+        no signal would wait for the user to edit something else or reopen the app.
+
+        A normal permission rather than a dangerous one: it is granted at install and there is
+        nothing to ask the user at runtime, because it reveals whether there is a connection, not
+        anything about what travels over it.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

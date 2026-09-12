@@ -22,6 +22,10 @@ import androidx.room.PrimaryKey
  *   reports must group by when it happened, not when it was typed in.
  * @property notes Optional extra detail, e.g. which clinic.
  * @property createdAt When the record was entered, as epoch milliseconds.
+ * @property updatedAt When this row was last changed, as epoch milliseconds. See [Pet.updatedAt] —
+ *   it exists for the same reason and is stamped the same way.
+ * @property isPendingSync True while this row has local changes not yet confirmed as uploaded.
+ *   See [Pet.isPendingSync].
  */
 @Entity(
     tableName = "expenses",
@@ -44,5 +48,7 @@ data class Expense(
     val category: ExpenseCategory,
     val incurredOn: Long,
     val notes: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isPendingSync: Boolean = false
 )

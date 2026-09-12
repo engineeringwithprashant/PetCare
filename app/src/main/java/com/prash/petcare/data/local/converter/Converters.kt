@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import com.prash.petcare.data.local.entity.ExpenseCategory
 import com.prash.petcare.data.local.entity.PetSpecies
 import com.prash.petcare.data.local.entity.RepeatUnit
+import com.prash.petcare.data.local.entity.SyncEntityType
 import com.prash.petcare.data.local.entity.TaskCategory
 
 /**
@@ -48,4 +49,10 @@ class Converters {
 
     @TypeConverter
     fun toExpenseCategory(value: String): ExpenseCategory = ExpenseCategory.valueOf(value)
+
+    @TypeConverter
+    fun fromSyncEntityType(type: SyncEntityType): String = type.name
+
+    @TypeConverter
+    fun toSyncEntityType(value: String): SyncEntityType = SyncEntityType.valueOf(value)
 }

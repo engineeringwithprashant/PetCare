@@ -30,6 +30,19 @@ import androidx.room.PrimaryKey
  *   because it is safety information a vet or sitter needs to find immediately.
  * @property favouriteToys Optional list of toys and games the pet enjoys.
  * @property createdAt When the pet was added, as epoch milliseconds.
+ * @property updatedAt When this row was last changed, as epoch milliseconds. Unlike [createdAt]
+ *   this moves every time the pet is edited, and it is what the Firestore sync layer compares to
+ *   decide which copy of a row wins — see
+ *   [com.prash.petcare.data.sync.SyncManager]. The repository stamps it on every write, so no
+ *   screen has to remember to; a row saved without it moving would be invisible to the sync.
+ * @property isPendingSync True while this row has local changes that have not been confirmed as
+ *   uploaded. Set by the repository alongside [updatedAt] and cleared only once Firestore has
+ *   accepted the row, so an edit made with no connection stays marked until it genuinely goes up.
+ *
+ *   It is what makes "is anything waiting to sync?" answerable **without a network**, which is both
+ *   how the home screen can say so while offline and how the app knows what to send the moment
+ *   connectivity returns. Deliberately never uploaded — whether a row has been sent is this
+ *   device's business and means nothing to another one.
  */
 @Entity(
     tableName = "pets",
@@ -65,5 +78,9 @@ data class Pet(
     val dietaryNotes: String? = null,
     val allergies: String? = null,
     val favouriteToys: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    // Defaults to false so a row rebuilt from a Firestore document is not immediately considered
+    // unsent; the repositories set it to true explicitly on every local write.
+    val isPendingSync: Boolean = false
 )

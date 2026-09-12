@@ -12,11 +12,13 @@ import com.prash.petcare.data.local.dao.CareRoutineDao
 import com.prash.petcare.data.local.dao.CareTaskDao
 import com.prash.petcare.data.local.dao.ExpenseDao
 import com.prash.petcare.data.local.dao.PetDao
+import com.prash.petcare.data.local.dao.SyncDeletionDao
 import com.prash.petcare.data.local.dao.UserDao
 import com.prash.petcare.data.local.entity.CareRoutine
 import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.entity.Expense
 import com.prash.petcare.data.local.entity.Pet
+import com.prash.petcare.data.local.entity.SyncDeletion
 import com.prash.petcare.data.local.entity.User
 
 /**
@@ -35,9 +37,10 @@ import com.prash.petcare.data.local.entity.User
         Pet::class,
         CareRoutine::class,
         CareTask::class,
-        Expense::class
+        Expense::class,
+        SyncDeletion::class
     ],
-    version = 3,
+    version = 5,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -53,6 +56,7 @@ abstract class PetCareDatabase : RoomDatabase() {
     abstract fun careRoutineDao(): CareRoutineDao
     abstract fun careTaskDao(): CareTaskDao
     abstract fun expenseDao(): ExpenseDao
+    abstract fun syncDeletionDao(): SyncDeletionDao
 
     companion object {
 
@@ -94,6 +98,82 @@ abstract class PetCareDatabase : RoomDatabase() {
         }
 
         /**
+         * Version 3 to 4: adds the Firestore sync layer's bookkeeping.
+         *
+         * Two separate changes, both needed before any syncing can happen:
+         *
+         * **`updatedAt` on the four synced tables.** This is the timestamp last-write-wins compares,
+         * so every synced row needs one. `NOT NULL DEFAULT 0` is what lets the column be added to a
+         * table that already has rows in it — SQLite has to put *something* in the existing rows,
+         * and a NOT NULL column with no default would leave it no choice but to refuse.
+         *
+         * The `UPDATE` after each `ALTER` is the part that matters for correctness. Left at 0, every
+         * pre-existing row would claim it was last changed in 1970 and the first sync would treat
+         * the remote copy of anything as newer, quietly overwriting data the user has on their
+         * device. Seeding from `createdAt` says "as far as this device knows, the row has not
+         * changed since it was made", which is both true and safe.
+         *
+         * Note the entity properties deliberately declare no `@ColumnInfo(defaultValue = ...)`. Room
+         * only validates a column's default when the *entity* states one, so the `DEFAULT 0` written
+         * here satisfies SQLite without making the migrated schema disagree with a freshly created
+         * one.
+         *
+         * **The `sync_deletions` table.** Created by hand to match exactly what Room generates from
+         * [SyncDeletion] — same column types, the same `NOT NULL`s, and the index named the way Room
+         * names it (`index_<table>_<columns>`). Room compares the file against the entities every
+         * time it opens the database and refuses to start on any difference, so a migration that
+         * creates a table has to reproduce it precisely rather than approximately.
+         */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                listOf("pets", "care_routines", "care_tasks", "expenses").forEach { table ->
+                    db.execSQL("ALTER TABLE $table ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
+                    db.execSQL("UPDATE $table SET updatedAt = createdAt")
+                }
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `sync_deletions` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `entityType` TEXT NOT NULL,
+                        `entityId` INTEGER NOT NULL,
+                        `deletedAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS `index_sync_deletions_entityType_entityId`
+                    ON `sync_deletions` (`entityType`, `entityId`)
+                    """.trimIndent()
+                )
+            }
+        }
+
+        /**
+         * Version 4 to 5: adds the `isPendingSync` flag to the four synced tables.
+         *
+         * This is what stops a change made with no connection from being forgotten. Before it, the
+         * only record that a row still needed uploading was the fact that a sync had failed — which
+         * lives in memory and is gone the moment the app closes.
+         *
+         * **Existing rows are marked pending (`DEFAULT 1`), not clean.** The two choices are not
+         * equally risky. Marking them clean would assume every row already reached Firestore, and
+         * any row that had not — the exact rows this column exists to rescue — would be stranded
+         * for good. Marking them pending costs one extra upload of data that is probably already
+         * there, which last-write-wins makes harmless.
+         */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                listOf("pets", "care_routines", "care_tasks", "expenses").forEach { table ->
+                    db.execSQL(
+                        "ALTER TABLE $table ADD COLUMN isPendingSync INTEGER NOT NULL DEFAULT 1"
+                    )
+                }
+            }
+        }
+
+        /**
          * The one shared instance.
          *
          * `@Volatile` means a write here is immediately visible to every thread, which stops one
@@ -123,7 +203,12 @@ abstract class PetCareDatabase : RoomDatabase() {
                     // Every upgrade path must be listed here. Note there is deliberately no
                     // .fallbackToDestructiveMigration(): that flag wipes all user data whenever
                     // the schema version changes, so any future version adds a Migration instead.
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3,
+                        MIGRATION_3_4,
+                        MIGRATION_4_5
+                    )
                     .build()
                     .also { INSTANCE = it }
             }

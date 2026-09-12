@@ -38,6 +38,34 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Welcome, Alex" />
 
+        <!--
+            How the Firestore backup is getting on.
+
+            Sits directly under the greeting, in the app's secondary text colour and one step down
+            in size, because it is status rather than content: it should be findable when the user
+            wonders about it and easy to ignore the rest of the time. Putting it above the care
+            summary rather than beside the pet list keeps it out of the way of anything scrollable.
+
+            Hidden entirely when there is nothing to report — visibility="gone" rather than
+            "invisible", so the summary card below moves up to meet the greeting instead of leaving
+            a gap where a message might have been.
+        -->
+        <TextView
+            android:id="@+id/syncStatusText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_padding"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:layout_marginEnd="@dimen/screen_padding"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/welcomeText"
+            tools:text="@string/sync_status_syncing"
+            tools:visibility="visible" />
+
         <!-- Today's care summary. The Material 3 "filled" card reads as a distinct tinted surface,
              separating it from the plain background behind the list. -->
         <com.google.android.material.card.MaterialCardView
@@ -50,7 +78,7 @@
             android:layout_marginEnd="@dimen/screen_padding"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/welcomeText">
+            app:layout_constraintTop_toBottomOf="@id/syncStatusText">
 
             <TextView
                 android:id="@+id/todaySummaryText"

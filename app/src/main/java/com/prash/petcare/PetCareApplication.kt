@@ -1,12 +1,17 @@
 package com.prash.petcare
 
 import android.app.Application
+import com.google.firebase.firestore.FirebaseFirestore
 import com.prash.petcare.data.local.PetCareDatabase
+import com.prash.petcare.data.remote.FirestoreSyncService
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
 import com.prash.petcare.data.repository.PetRepository
+import com.prash.petcare.data.repository.SyncDeletionRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.data.sync.NetworkMonitor
+import com.prash.petcare.data.sync.SyncManager
 import com.prash.petcare.reminder.ReminderManager
 import com.prash.petcare.reminder.ReminderNotifier
 import com.prash.petcare.reminder.ReminderScheduler
@@ -43,18 +48,57 @@ class PetCareApplication : Application() {
 
     val userRepository: UserRepository by lazy { UserRepository(database.userDao()) }
 
-    val petRepository: PetRepository by lazy { PetRepository(database.petDao()) }
+    /**
+     * The queue of deleted rows waiting to be removed from Firestore.
+     *
+     * The four repositories below each take the same DAO, because every one of them can delete
+     * something — see [PetRepository] for why recording a deletion belongs in that layer.
+     */
+    val syncDeletionRepository: SyncDeletionRepository by lazy {
+        SyncDeletionRepository(database.syncDeletionDao())
+    }
+
+    val petRepository: PetRepository by lazy {
+        PetRepository(database.petDao(), database.syncDeletionDao())
+    }
 
     val careRoutineRepository: CareRoutineRepository by lazy {
-        CareRoutineRepository(database.careRoutineDao())
+        CareRoutineRepository(database.careRoutineDao(), database.syncDeletionDao())
     }
 
     val careTaskRepository: CareTaskRepository by lazy {
-        CareTaskRepository(database.careTaskDao())
+        CareTaskRepository(database.careTaskDao(), database.syncDeletionDao())
     }
 
     val expenseRepository: ExpenseRepository by lazy {
-        ExpenseRepository(database.expenseDao())
+        ExpenseRepository(database.expenseDao(), database.syncDeletionDao())
+    }
+
+    /**
+     * Mirrors the signed-in account's data between Room and Firestore.
+     *
+     * Public because the home screen's ViewModel needs two things from it: to say who has signed
+     * in, and to observe the status shown in the indicator. Nothing else in the app refers to it —
+     * screens read from Room exactly as they did before this layer existed.
+     *
+     * `FirebaseFirestore.getInstance()` is safe to call at this point: the google-services Gradle
+     * plugin turns app/google-services.json into resources that FirebaseApp reads through its own
+     * content provider, which the system runs before this class is even constructed. There is
+     * therefore no initialisation call to make here.
+     */
+    val syncManager: SyncManager by lazy {
+        SyncManager(
+            userRepository = userRepository,
+            petRepository = petRepository,
+            careRoutineRepository = careRoutineRepository,
+            careTaskRepository = careTaskRepository,
+            expenseRepository = expenseRepository,
+            syncDeletionRepository = syncDeletionRepository,
+            firestoreSyncService = FirestoreSyncService(FirebaseFirestore.getInstance()),
+            // `this` is the Application, so the network callback it registers lives as long as the
+            // process rather than as long as whichever screen happened to be open.
+            networkMonitor = NetworkMonitor(this)
+        )
     }
 
     /**
@@ -112,5 +156,11 @@ class PetCareApplication : Application() {
         // ReminderManager for why reminders are derived from the data rather than updated by hand at
         // each place a task is saved.
         reminderManager.startObserving(applicationScope)
+
+        // The sync watches the data the same way, and for the same reason. It does nothing at all
+        // until someone signs in — there is no account yet whose data could be synced — and from
+        // that moment it uploads and downloads by itself whenever anything changes. Starting it
+        // here rather than from a screen is what lets a sync outlive the screen that triggered it.
+        syncManager.startObserving(applicationScope)
     }
 }
