@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.prash.petcare.data.local.entity.CareTask
+import com.prash.petcare.data.local.relation.TaskReminder
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -168,6 +169,51 @@ interface CareTaskDao {
         """
     )
     suspend fun clearCompletionsForPet(petId: Long, fromMillis: Long, toMillis: Long)
+
+    /**
+     * Every task that can carry a reminder, with the pet and schedule details a notification needs.
+     *
+     * Returns a flat [TaskReminder] projection rather than entities: Room matches the column
+     * aliases below to that class's properties. See [TaskReminder] for why the reminder code reads
+     * eight columns instead of three whole rows.
+     *
+     * Two conditions decide what can be reminded about, and both are applied in SQL so the work
+     * never leaves the database:
+     *  - the routine must be active, because a paused routine should go quiet rather than keep
+     *    buzzing;
+     *  - the task must have a time of day, because a reminder with no time has no moment to fire
+     *    at. This is also what lets [TaskReminder.timeOfDayMinutes] be non-null.
+     *
+     * The INNER JOIN on `care_routines` quietly enforces a third: a task orphaned by its routine
+     * being deleted has a null `routineId`, matches nothing, and so drops out — which is right,
+     * since without a routine there is no schedule to say when it next comes round.
+     *
+     * Exposed as a [Flow] rather than a one-shot read so the scheduler can re-plan by itself
+     * whenever the underlying data changes. Room re-runs the query on any write to the three tables
+     * involved, which means adding a task, editing its time, pausing a routine, renaming a pet or
+     * deleting any of them all reach the alarms with nothing having to remember to call anything.
+     * A caller wanting a single snapshot takes the first emission — see
+     * [com.prash.petcare.data.repository.CareTaskRepository.getReminders].
+     */
+    @Query(
+        """
+        SELECT care_tasks.id AS taskId,
+               care_tasks.title AS taskTitle,
+               care_tasks.timeOfDayMinutes AS timeOfDayMinutes,
+               pets.id AS petId,
+               pets.name AS petName,
+               care_routines.startDate AS routineStartDate,
+               care_routines.repeatInterval AS repeatInterval,
+               care_routines.repeatUnit AS repeatUnit
+        FROM care_tasks
+        INNER JOIN pets ON pets.id = care_tasks.petId
+        INNER JOIN care_routines ON care_routines.id = care_tasks.routineId
+        WHERE care_routines.isActive = 1
+          AND care_tasks.timeOfDayMinutes IS NOT NULL
+        ORDER BY care_tasks.id ASC
+        """
+    )
+    fun observeReminders(): Flow<List<TaskReminder>>
 
     /** Count of outstanding tasks for a pet, for the badge on the pet list. */
     @Query("SELECT COUNT(*) FROM care_tasks WHERE petId = :petId AND isCompleted = 0")

@@ -18,6 +18,30 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
 
     <!--
+        Permissions for the care reminder feature, which sets an alarm for each task's time of day
+        and posts a notification when it comes due.
+
+        POST_NOTIFICATIONS became a runtime permission in Android 13 (API 33). Below that, declaring
+        it here is all that is needed and notifications work at install time; from 33 the user must
+        also grant it, or notify() is silently ignored. AddEditTaskFragment asks for it at the moment
+        the user first gives a task a time, which is the point at which a reminder starts to make
+        sense to them.
+
+        SCHEDULE_EXACT_ALARM lets a reminder fire at the exact minute it is due. It is granted
+        automatically on Android 12, and from Android 13 the user can revoke it, so
+        ReminderScheduler checks before every use and falls back to an inexact alarm rather than
+        failing. Google reserves the always-granted USE_EXACT_ALARM for clock and calendar apps, so
+        it is deliberately not requested here.
+
+        RECEIVE_BOOT_COMPLETED is what allows BootReceiver to be started after a restart. The system
+        discards every registered alarm on reboot, so without this the reminders would quietly stop
+        for good the first time the user restarted their phone.
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!--
         The app is useful without a SIM — only delegation needs telephony — so the feature is
         declared as not required. Without this, Google Play would hide the app from tablets and
         other devices that cannot send SMS.
@@ -37,8 +61,9 @@
 
     <!--
         android:name points at the custom Application class, which creates the Room database and
-        the repositories. Without this attribute Android would use the default Application and
-        none of that wiring would exist.
+        the repositories, and starts the care reminders. Without this attribute Android would use
+        the default Application and none of that wiring would exist — which would also mean the
+        reminder receivers below had nothing to hand their work to.
     -->
     <application
         android:name=".PetCareApplication"
@@ -60,6 +85,48 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+            Receives a care task's alarm when it comes due, shows the notification and schedules the
+            next occurrence.
+
+            Declared here rather than registered in code with registerReceiver, and that distinction
+            is the whole point: a manifest-declared receiver can be started by the system when the
+            app is not running, which is the normal case for a reminder. A code-registered one only
+            exists while the component that registered it is alive, so every reminder would be
+            missed the moment the user left the app.
+
+            exported="false" because only this app's own alarms ever target it. Leaving a receiver
+            exported would let any other app on the device fire fake reminders at the user.
+        -->
+        <receiver
+            android:name=".reminder.ReminderReceiver"
+            android:exported="false" />
+
+        <!--
+            Re-registers every reminder after an event that invalidates the app's alarms.
+
+            exported="true" is required here, unlike above: these broadcasts come from the system
+            rather than from this app, and a receiver that is not exported cannot be sent one. It is
+            still not open to other apps — the intent filter only matches protected system
+            broadcasts, which ordinary apps are not allowed to send.
+
+            BOOT_COMPLETED covers a restart and MY_PACKAGE_REPLACED an app update, both of which
+            clear every registered alarm. TIMEZONE_CHANGED and TIME_SET cover the alarms surviving
+            but now pointing at the wrong moment: a task due at 07:30 means 07:30 wherever the user
+            is, so the times have to be recalculated against the new clock.
+        -->
+        <receiver
+            android:name=".reminder.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

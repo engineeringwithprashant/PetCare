@@ -1,0 +1,22 @@
+<!--
+    Bell icon used as the small icon on a care reminder notification.
+
+    A notification's small icon is drawn by the *system* status bar, not by this app, and Android
+    treats it as a stencil: from API 21 onwards every non-transparent pixel is recoloured, so only
+    the alpha channel survives. That is why the path is a solid opaque silhouette with no detail
+    picked out in a second colour and no tint declared here — any colour set on it would be thrown
+    away, and an outline-style icon would come back as a filled blob.
+
+    Kept at 24dp, the standard notification icon size, so the system never has to rescale it.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.9,2 2,2zM18,16v-5c0,-3.07 -1.64,-5.64 -4.5,-6.32L13.5,4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5v0.68C7.63,5.36 6,7.92 6,11v5l-2,2v1h16v-1l-2,-2z" />
+
+</vector>

@@ -1,10 +1,19 @@
 package com.prash.petcare.ui.task
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -34,7 +43,14 @@ import kotlinx.coroutines.launch
  *
  * As the **View** in MVVM it owns no logic: validation, persistence and the scheduling arithmetic
  * all live in [CareTaskViewModel]. What it owns are the things that genuinely need a Context or a
- * view — the time picker and the confirmation dialog.
+ * view — the time picker, the confirmation dialog, and the notification permission prompt.
+ *
+ * **Why the notification permission is asked for here.** A task's time of day is what a reminder
+ * fires at, so the moment the user first picks one is the moment a reminder becomes a thing they
+ * might want — and the moment the prompt explains itself. Asking on the home screen instead would
+ * mean a cold request before the user has anything to be reminded about, which is the surest way to
+ * have it refused. Nothing about saving the task depends on the answer: the alarm is scheduled
+ * either way, and only the notification is lost if it is refused.
  */
 class AddEditTaskFragment : Fragment() {
 
@@ -51,6 +67,31 @@ class AddEditTaskFragment : Fragment() {
     private val viewModel: CareTaskViewModel by viewModels {
         CareTaskViewModel.factory(routineId, taskId)
     }
+
+    /**
+     * Whether the notification permission has already been raised on this screen.
+     *
+     * Stops the rationale reappearing every time the user reopens the time picker to adjust the
+     * minutes. Deliberately not persisted across a rotation: the flag lives only as long as the
+     * fragment instance, and the prompt is only reached by picking a time again, so at worst the
+     * user is asked once more after turning their phone — which is a far smaller annoyance than
+     * carrying state around to prevent it.
+     */
+    private var hasOfferedReminders = false
+
+    /**
+     * Handles the result of the notification permission request.
+     *
+     * Registered as a property because `registerForActivityResult` must be called while the fragment
+     * is being created — the callback has to be in place before a fragment recreated behind the
+     * system prompt can be handed the pending result.
+     */
+    private val requestNotificationPermissionLauncher: ActivityResultLauncher<String> =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            // Granted needs no acknowledgement — the next reminder simply arrives. A refusal is
+            // explained, because otherwise the silence would look like the feature was broken.
+            if (!isGranted) onNotificationPermissionDenied()
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -126,9 +167,107 @@ class AddEditTaskFragment : Fragment() {
             // The chosen values are read back off the picker itself, which is how its API reports
             // the selection.
             viewModel.onTimeSelected(picker.hour, picker.minute)
+
+            // The task now has a moment to be reminded at, so this is where asking to notify makes
+            // sense to the user. Nothing below depends on the answer.
+            offerReminderNotifications()
         }
 
         picker.show(childFragmentManager, TIME_PICKER_TAG)
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Reminder notification permission
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * Offers to turn reminder notifications on, if that is still an open question.
+     *
+     * Returns without doing anything in the three cases where asking would be pointless:
+     *  - **before Android 13**, where `POST_NOTIFICATIONS` does not exist as a runtime permission
+     *    and notifications work from the manifest declaration alone;
+     *  - when it has **already been granted**, since re-requesting a held permission does nothing;
+     *  - when this screen has **already asked once**, so adjusting the time twice does not mean
+     *    being nagged twice.
+     *
+     * A permanent refusal is handled by the system rather than here: once the user has chosen "don't
+     * allow" twice, the launcher below returns denied immediately without showing anything, and
+     * [onNotificationPermissionDenied] points them at the settings screen instead.
+     */
+    private fun offerReminderNotifications() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (hasOfferedReminders) return
+        if (hasNotificationPermission()) return
+
+        hasOfferedReminders = true
+        showReminderRationale()
+    }
+
+    /**
+     * Explains what the notification is for, then asks.
+     *
+     * Shown unconditionally rather than only when `shouldShowRequestPermissionRationale` suggests
+     * it, for the reason set out in
+     * [com.prash.petcare.ui.checklist.ChecklistFragment.showRationaleThenRequest]: that helper
+     * returns false on the very first request, which is exactly when the user has least idea why
+     * they are being asked.
+     */
+    private fun showReminderRationale() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.permission_notifications_title)
+            .setMessage(R.string.permission_notifications_message)
+            // "Not now" does nothing at all, so declining costs the user nothing and the task still
+            // saves normally.
+            .setNegativeButton(R.string.permission_not_now, null)
+            .setPositiveButton(R.string.permission_continue) { _, _ ->
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            .show()
+    }
+
+    /**
+     * Says what a refusal means, and offers a way back if it was permanent.
+     *
+     * Never treated as an error: the task, its time and its alarm are all still saved, and only the
+     * notification is lost — so this is a brief note rather than anything that blocks the form.
+     *
+     * After a request has been refused, `shouldShowRequestPermissionRationale` returning false means
+     * the user chose not to be asked again. The system will no longer show a prompt, so requesting
+     * once more would do nothing at all and the only remaining route is the app's settings screen.
+     */
+    private fun onNotificationPermissionDenied() {
+        // A permission result can arrive after the view has gone — the system prompt is another
+        // window, and the fragment behind it can be destroyed and recreated while it is up. Read
+        // through the nullable binding rather than the `!!` accessor so that case is a no-op instead
+        // of a crash.
+        val root = _binding?.root ?: return
+
+        val snackbar = Snackbar.make(
+            root,
+            getString(R.string.permission_notifications_denied),
+            Snackbar.LENGTH_LONG
+        )
+
+        if (!shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+            snackbar.setAction(R.string.permission_open_settings) { openAppSettings() }
+        }
+
+        snackbar.show()
+    }
+
+    private fun hasNotificationPermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+
+    /** Opens this app's entry in system settings, where a refused permission can be granted. */
+    private fun openAppSettings() {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", requireContext().packageName, null)
+        )
+        startActivity(intent)
     }
 
     /**

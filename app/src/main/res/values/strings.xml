@@ -379,4 +379,30 @@
     <string name="error_expense_amount_invalid">Enter an amount greater than 0</string>
     <string name="error_expense_date_required">Please choose the date it was spent</string>
     <string name="error_expense_not_found">That expense could not be found</string>
+
+    <!-- ========================= Care reminders =========================
+         Text for the notification a care task's alarm posts, and for the permission that lets it
+         appear at all. -->
+
+    <!-- Names the notification channel in the system settings screen, where the user can silence
+         these notifications without turning the app's off altogether. Worded from their point of
+         view — what the notifications are — rather than after the code that posts them. -->
+    <string name="reminder_channel_name">Care reminders</string>
+    <string name="reminder_channel_description">Reminds you when a pet\'s care task is due</string>
+
+    <!-- The notification itself. Pet and task are both in the title because a collapsed or grouped
+         notification may show nothing else, and "Morning meal" alone would not say which animal.
+         %1$s is the pet's name, %2$s the task's title. -->
+    <string name="reminder_notification_title">%1$s: %2$s</string>
+    <!-- %1$s is the task's time of day, formatted to the device's 12- or 24-hour setting. -->
+    <string name="reminder_notification_text">Due at %1$s</string>
+
+    <!-- Shown before the Android 13+ notification permission prompt, so the user is asked for
+         something they have just been given a reason to want. See ChecklistFragment for why a
+         rationale is always shown rather than only when the system suggests one. -->
+    <string name="permission_notifications_title">Get reminded?</string>
+    <string name="permission_notifications_message">PetCare can send you a notification when this task is due, so nothing gets forgotten. Tapping it opens the pet\'s checklist.</string>
+    <!-- Refusal is explained, not treated as an error: the task and its schedule are saved either
+         way, and only the notification is lost. -->
+    <string name="permission_notifications_denied">Reminders are off, so this task won\'t notify you. Its schedule is still saved.</string>
 </resources>
