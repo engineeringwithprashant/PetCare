@@ -6,6 +6,14 @@
 <resources>
     <string name="app_name">PetCare</string>
 
+    <!-- ============================= Top app bar titles =============================
+         Used as the android:label on navigation destinations, which NavigationUI puts into the
+         toolbar automatically. Screens whose title depends on their data — a pet's name, a
+         routine's name — replace these in code; the label is what shows for the instant before
+         that data loads, so it has to read sensibly on its own. -->
+    <string name="nav_label_pet">Pet</string>
+    <string name="nav_label_routine">Care routine</string>
+
     <!-- ============================ Registration screen ============================ -->
     <string name="register_title">Create your account</string>
     <string name="register_subtitle">Set up a profile to start tracking your pets\' care.</string>
@@ -14,8 +22,13 @@
     <string name="register_password_label">Password</string>
     <string name="register_confirm_password_label">Confirm password</string>
     <!-- %1$d is replaced at runtime with AuthViewModel.MIN_PASSWORD_LENGTH, so the rule stated
-         to the user can never drift out of step with the rule the code enforces. -->
-    <string name="register_password_helper">At least %1$d characters</string>
+         to the user can never drift out of step with the rule the code enforces. A plural because
+         a minimum of one character would otherwise read "At least 1 characters", and which plural
+         forms exist differs by language. -->
+    <plurals name="register_password_helper">
+        <item quantity="one">At least %1$d character</item>
+        <item quantity="other">At least %1$d characters</item>
+    </plurals>
     <string name="register_submit">Create account</string>
     <string name="register_have_account">Already have an account? Sign in</string>
 
@@ -289,4 +302,81 @@
     <string name="cd_add_routine">Add a care routine</string>
     <string name="cd_add_task">Add a care task</string>
     <string name="cd_task_done">Mark task as done</string>
+    <string name="cd_add_expense">Record an expense</string>
+
+    <!-- ============================ Spending categories ============================
+         Display names for the ExpenseCategory enum. Kept separate from the care categories above
+         even where a name is repeated, because the two enums are independent: renaming one must
+         not silently rename the other. The constants themselves are database values and must never
+         be shown to the user. -->
+    <string name="expense_category_food">Food</string>
+    <string name="expense_category_vet">Vet</string>
+    <string name="expense_category_medication">Medication</string>
+    <string name="expense_category_grooming">Grooming</string>
+    <string name="expense_category_toys">Toys</string>
+    <string name="expense_category_accessories">Accessories</string>
+    <string name="expense_category_insurance">Insurance</string>
+    <string name="expense_category_training">Training</string>
+    <string name="expense_category_other">Other</string>
+
+    <!-- ============================== Expenses screen ============================== -->
+    <string name="nav_label_expenses">Expenses</string>
+    <string name="pet_detail_expenses">Expenses</string>
+    <!-- %1$s is the pet's name. -->
+    <string name="expenses_title_format">Spending on %1$s</string>
+
+    <string name="expenses_total_label">Total spent</string>
+    <!-- Sits under the total to say how many records it is made up of. A plurals resource, not a
+         plain string: the wording changes with the count, and which forms exist differs by
+         language. %1$d is the number of expenses. -->
+    <plurals name="expenses_total_caption">
+        <item quantity="one">across %1$d expense</item>
+        <item quantity="other">across %1$d expenses</item>
+    </plurals>
+
+    <!-- Section headings. Worded as questions the user is actually asking rather than as labels
+         for the data structures beneath them. -->
+    <string name="expenses_breakdown_title">Where the money went</string>
+    <string name="expenses_all_title">All expenses</string>
+    <!-- One category's share of the total, e.g. "48%". %1$d is the percentage. The literal percent
+         sign is doubled because a single one starts a format specifier. -->
+    <string name="expenses_category_share_format">%1$d%%</string>
+
+    <!-- Joins an expense's category and date into one line, e.g. "Vet · 4 Mar 2026". -->
+    <string name="expenses_row_subtitle_format">%1$s · %2$s</string>
+
+    <string name="expenses_empty_title">No expenses yet</string>
+    <string name="expenses_empty_message">Record what you spend on this pet to see the total and where the money goes.</string>
+
+    <!-- Confirms a swipe-delete and offers the undo. %1$s is the expense's title. -->
+    <string name="expense_deleted_format">%1$s deleted</string>
+
+    <!-- ========================= Add / edit expense screen =========================
+         The same screen serves both modes, so it has two possible titles. -->
+    <string name="add_expense_title">Record an expense</string>
+    <string name="edit_expense_title">Edit expense</string>
+
+    <string name="expense_title_label">What was it for?</string>
+    <string name="expense_amount_label">Amount</string>
+    <string name="expense_category_label">Category</string>
+    <string name="expense_date_label">Date</string>
+    <string name="expense_notes_label">Notes</string>
+    <string name="expense_save">Save expense</string>
+    <string name="expense_delete">Delete expense</string>
+    <string name="expense_date_picker_title">Select the date it was spent</string>
+
+    <!-- Confirmation before a destructive action. The message states the knock-on effect, because
+         removing an expense also changes the pet's total and its breakdown. %1$s is the expense's
+         title. -->
+    <string name="delete_expense_dialog_title">Delete expense?</string>
+    <string name="delete_expense_dialog_message">%1$s will be permanently deleted and removed from this pet\'s spending total. This cannot be undone.</string>
+    <string name="delete_expense_dialog_confirm">Delete</string>
+    <string name="delete_expense_dialog_cancel">Cancel</string>
+
+    <!-- Expense validation errors, referenced by AddEditExpenseViewModel as resource ids. -->
+    <string name="error_expense_title_required">Please say what the expense was for</string>
+    <string name="error_expense_amount_required">Please enter an amount</string>
+    <string name="error_expense_amount_invalid">Enter an amount greater than 0</string>
+    <string name="error_expense_date_required">Please choose the date it was spent</string>
+    <string name="error_expense_not_found">That expense could not be found</string>
 </resources>

@@ -1,26 +1,63 @@
 <!--
     Reusable widget styles.
 
-    These exist so the repeated label-and-value pairs on the pet detail screen are described once
-    rather than having the same four attributes copied onto every TextView. Changing the look of a
-    detail row then means editing one style instead of hunting through the layout.
+    A style is a named bundle of attributes applied to one widget. These exist so a piece of the
+    app's look is described once rather than having the same three or four attributes copied onto
+    every TextView that plays the same part — and so changing how, say, a section heading looks
+    means editing one block here instead of hunting through a dozen layouts.
 
-    They are kept apart from themes.xml on purpose: that file defines the app's *theme* (the palette
-    and typography the whole app inherits), whereas these style individual widgets.
+    Kept apart from themes.xml on purpose: that file defines the app-wide *theme* (the palette every
+    widget inherits), whereas these style individual widgets.
+
+    Every one of them takes its colours and text sizes from theme attributes rather than fixed
+    values, so they follow the Material 3 type scale and adapt to dark mode automatically.
+
+    Each also sets parent="" explicitly. A dot in a style name is Android's shorthand for
+    inheritance, so "PetCare.SectionHeader" would otherwise be read as extending a style called
+    "PetCare", which does not exist and fails the build. An empty parent says the dots are just
+    namespacing.
 -->
 <resources>
 
-    <!--
-        Each style below sets parent="" on purpose. A dot in a style name is Android's shorthand for
-        inheritance, so "PetCare.DetailBlock" would otherwise be taken as extending a style called
-        "PetCare" — which does not exist, and the build fails looking for it. An explicit empty
-        parent says these names are just namespacing and inherit from nothing.
-    -->
+    <!-- ================================= Typography =================================
+         Four roles cover the whole app. Using a named role rather than picking a text appearance
+         per screen is what keeps headings the same size everywhere. -->
 
-    <!-- Wrapper around one label-and-value pair, so the two can be shown or hidden as a unit. -->
+    <!-- A heading introducing a group within a screen, e.g. "Care routines". -->
+    <style name="PetCare.SectionHeader" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Supporting text under a heading: quieter than the body it explains. -->
+    <style name="PetCare.Subtitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- The primary line of a list row — a pet's name, a task's title. -->
+    <style name="PetCare.ListTitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- The supporting line beneath a list row's title. -->
+    <style name="PetCare.ListSubtitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- ============================== Pet detail rows ==============================
+         The repeated label-and-value pairs on the pet detail screen. -->
+
+    <!-- Wrapper around one pair, so the two can be shown or hidden as a unit. -->
     <style name="PetCare.DetailBlock" parent="">
         <item name="android:orientation">vertical</item>
-        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:layout_marginTop">@dimen/card_spacing</item>
     </style>
 
     <!-- The quieter heading above a value, e.g. "Date of birth". -->
@@ -33,6 +70,41 @@
     <style name="PetCare.DetailValue" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- ================================ Empty states ================================
+         Shown when a list has nothing in it. An icon, a short heading and a sentence saying what
+         to do next — far more use than a bare line of grey text, which leaves the user unsure
+         whether the screen is empty or still loading. -->
+
+    <!-- The column holding the icon, heading and message. -->
+    <style name="PetCare.EmptyState" parent="">
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">@dimen/spacing_xl</item>
+        <item name="android:paddingEnd">@dimen/spacing_xl</item>
+    </style>
+
+    <!-- The illustration. Tinted to a muted role so it frames the message rather than shouting
+         over it. -->
+    <style name="PetCare.EmptyStateIcon" parent="">
+        <item name="android:layout_width">@dimen/empty_state_icon_size</item>
+        <item name="android:layout_height">@dimen/empty_state_icon_size</item>
+        <item name="android:alpha">0.6</item>
+    </style>
+
+    <style name="PetCare.EmptyStateTitle" parent="">
+        <item name="android:layout_marginTop">@dimen/spacing_md</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="PetCare.EmptyStateMessage" parent="">
+        <item name="android:layout_marginTop">@dimen/spacing_sm</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:gravity">center</item>
     </style>
 
 </resources>

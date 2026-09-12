@@ -1,13 +1,67 @@
 <!--
-    Shared dimensions.
+    The app's spacing scale.
 
-    Values needed by Kotlin code live here rather than as constants in the source, so they are
-    expressed in density-independent pixels and scaled for the device automatically — a hard-coded
-    pixel figure would be a different physical size on every screen.
+    Every gap in the app is one of these values rather than a number typed into a layout. Two
+    reasons: a shared scale keeps rhythm consistent between screens that were written weeks apart,
+    and values declared in dp are scaled per device, where a raw pixel figure would be a different
+    physical size on every screen.
+
+    The scale is a familiar 4dp grid — each step roughly doubling — which is what Material's own
+    layouts are built on. Picking from a short list also removes the temptation to nudge a gap to
+    18dp because it looked slightly better on one device.
 -->
 <resources>
 
-    <!-- Gap between the edge of a checklist row and the icon revealed behind it while swiping. -->
+    <!-- ================================ Spacing scale ================================ -->
+    <!-- Hairline gaps: between a label and the value directly beneath it. -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <!-- Tight gaps: between closely related lines of text, or stacked buttons. -->
+    <dimen name="spacing_sm">8dp</dimen>
+    <!-- The default gap: between form fields, and between cards in a list. -->
+    <dimen name="spacing_md">16dp</dimen>
+    <!-- Section gaps: around a screen's edges, and between distinct blocks of content. -->
+    <dimen name="spacing_lg">24dp</dimen>
+    <!-- Major breaks: above a screen's primary action, or around an empty state. -->
+    <dimen name="spacing_xl">32dp</dimen>
+
+    <!-- ============================== Screen structure ============================== -->
+    <!-- Side padding applied to the content of every screen, so nothing ever sits flush to the
+         edge and all screens line up with each other. -->
+    <dimen name="screen_padding">24dp</dimen>
+
+    <!-- Bottom padding on a scrolling list that has a floating action button over it, so the last
+         row can scroll clear of the button rather than finishing underneath it. Sized for the
+         button plus its margin. -->
+    <dimen name="list_padding_bottom_fab">96dp</dimen>
+
+    <!-- ================================= Components ================================= -->
+    <!-- Gap between cards in a vertical list. -->
+    <dimen name="card_spacing">12dp</dimen>
+    <!-- Padding inside a card, between its edge and its content. -->
+    <dimen name="card_padding">16dp</dimen>
+    <!-- Corner radius on the larger image cards, matching Material 3's "large" shape. -->
+    <dimen name="image_card_corner_radius">16dp</dimen>
+    <!-- Height of the photo panel on the pet form and pet detail screens. -->
+    <dimen name="pet_photo_height">180dp</dimen>
+
+    <!-- Size of a category icon beside a heading or a list row. -->
+    <dimen name="category_icon_size">20dp</dimen>
+    <!-- Size of the illustration at the top of an empty state. Large enough to read as an
+         illustration rather than as a stray icon. -->
+    <dimen name="empty_state_icon_size">72dp</dimen>
+
+    <!-- Gap between the edge of a list row and the icon revealed behind it while swiping. -->
     <dimen name="checklist_swipe_icon_margin">24dp</dimen>
+
+    <!-- ============================ Spending breakdown ============================
+         The bar showing one category's share of a pet's total spending. -->
+    <!-- Thicker than the default progress track: this is being read as a bar chart rather than
+         glanced at as a loading indicator, so the lengths need to be comparable down a column. -->
+    <dimen name="share_bar_thickness">8dp</dimen>
+    <!-- Rounded ends, matching Material 3's treatment of progress tracks. -->
+    <dimen name="share_bar_corner_radius">4dp</dimen>
+    <!-- Reserved width for the percentage beside each bar. Fixing it keeps every bar the same
+         length, so "7%" and "100%" do not produce bars that cannot be compared. -->
+    <dimen name="share_percent_min_width">40dp</dimen>
 
 </resources>

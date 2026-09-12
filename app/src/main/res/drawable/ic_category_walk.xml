@@ -1,0 +1,26 @@
+<!--
+    Paw print, marking the WALK task category — the app's exercise grouping.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Four toes. -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M4.5,11.5m-2,0a2,2.5 0,1 1,4 0a2,2.5 0,1 1,-4 0" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9,6.5m-2,0a2,2.5 0,1 1,4 0a2,2.5 0,1 1,-4 0" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M15,6.5m-2,0a2,2.5 0,1 1,4 0a2,2.5 0,1 1,-4 0" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M19.5,11.5m-2,0a2,2.5 0,1 1,4 0a2,2.5 0,1 1,-4 0" />
+    <!-- The main pad. -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,12.5c-2.5,0 -5,2 -5,4.5c0,2 1.5,3.5 3.5,3.5h3c2,0 3.5,-1.5 3.5,-3.5c0,-2.5 -2.5,-4.5 -5,-4.5z" />
+</vector>

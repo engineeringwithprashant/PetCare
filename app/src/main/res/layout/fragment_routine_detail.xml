@@ -2,9 +2,11 @@
 <!--
     Routine detail screen: the tasks that make up one routine, in the order they happen.
 
-    Unlike the pet detail screen, the task list here is the whole point of the page, so it gets a
-    proper scrolling RecyclerView constrained to the remaining height rather than being nested in a
-    scroll view. That keeps rows recycling however many tasks a routine grows to.
+    The routine's name is set on the app bar by the fragment, so only its schedule appears here.
+
+    Unlike the pet detail screen, the task list is the whole point of the page, so it gets a proper
+    scrolling RecyclerView constrained to the remaining height rather than being nested in a scroll
+    view. That keeps rows recycling however many tasks a routine grows to.
 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -19,31 +21,17 @@
         android:layout_height="match_parent">
 
         <TextView
-            android:id="@+id/routineTitleText"
+            android:id="@+id/routineScheduleText"
+            style="@style/PetCare.Subtitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="24dp"
-            android:textAppearance="?attr/textAppearanceHeadlineMedium"
-            android:textColor="?attr/colorOnSurface"
+            android:layout_marginStart="@dimen/screen_padding"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:layout_marginEnd="@dimen/screen_padding"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="Morning care" />
-
-        <TextView
-            android:id="@+id/routineScheduleText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginEnd="24dp"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/routineTitleText"
             tools:text="Every day" />
 
         <!--
@@ -58,9 +46,9 @@
             android:id="@+id/activeSwitch"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginStart="@dimen/screen_padding"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:layout_marginEnd="@dimen/screen_padding"
             android:text="@string/routine_active_label"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             app:layout_constraintEnd_toEndOf="parent"
@@ -74,9 +62,9 @@
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginStart="@dimen/screen_padding"
+            android:layout_marginTop="@dimen/card_spacing"
+            android:layout_marginEnd="@dimen/screen_padding"
             android:text="@string/routine_delete"
             android:textColor="?attr/colorError"
             app:layout_constraintEnd_toEndOf="parent"
@@ -86,14 +74,13 @@
 
         <TextView
             android:id="@+id/tasksHeaderText"
+            style="@style/PetCare.SectionHeader"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginStart="@dimen/screen_padding"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:layout_marginEnd="@dimen/screen_padding"
             android:text="@string/routine_detail_tasks_title"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorOnSurface"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/deleteRoutineButton" />
@@ -102,11 +89,11 @@
             android:id="@+id/tasksRecyclerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/card_spacing"
             android:clipToPadding="false"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:paddingBottom="96dp"
+            android:paddingStart="@dimen/screen_padding"
+            android:paddingEnd="@dimen/screen_padding"
+            android:paddingBottom="@dimen/list_padding_bottom_fab"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -116,12 +103,9 @@
         <!-- Occupies the same region as the list; the fragment shows exactly one of the two. -->
         <LinearLayout
             android:id="@+id/emptyTasksContainer"
+            style="@style/PetCare.EmptyState"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
-            android:gravity="center"
-            android:orientation="vertical"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/tasksRecyclerView"
             app:layout_constraintEnd_toEndOf="parent"
@@ -129,21 +113,22 @@
             app:layout_constraintTop_toTopOf="@id/tasksRecyclerView"
             tools:visibility="visible">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/routine_detail_no_tasks_title"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                android:textColor="?attr/colorOnSurface" />
+            <ImageView
+                style="@style/PetCare.EmptyStateIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_empty_tasks" />
 
             <TextView
+                style="@style/PetCare.EmptyStateTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:text="@string/routine_detail_no_tasks_message"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:text="@string/routine_detail_no_tasks_title" />
+
+            <TextView
+                style="@style/PetCare.EmptyStateMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/routine_detail_no_tasks_message" />
 
         </LinearLayout>
 
@@ -154,7 +139,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="24dp"
+        android:layout_margin="@dimen/screen_padding"
         android:contentDescription="@string/cd_add_task"
         app:srcCompat="@drawable/ic_add" />
 

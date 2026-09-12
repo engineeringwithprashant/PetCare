@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The headline card at the top of the expenses screen: everything spent on this pet.
+
+    This is the one figure the screen exists to answer, so it is given the largest type on the page
+    and its own card, with the record count beneath it as quieter supporting text.
+
+    An Elevated card rather than the Filled style used by the list rows below, so the summary lifts
+    off the page and reads as a header instead of as the first item in the list.
+-->
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.Material3.CardView.Elevated"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/spacing_sm">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_lg">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/expenses_total_label"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <!-- The total. Given a display-scale text appearance because it is the number the user
+             opened this screen to see; everything else on the page supports it. -->
+        <TextView
+            android:id="@+id/totalAmountText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorPrimary"
+            tools:text="£248.50" />
+
+        <!-- How many records make up that total, e.g. "across 12 expenses". -->
+        <TextView
+            android:id="@+id/totalCaptionText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="across 12 expenses" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

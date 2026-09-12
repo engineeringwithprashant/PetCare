@@ -1,0 +1,21 @@
+<!--
+    Brush, marking the GROOMING task category.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Handle. -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M10.5,2h3v9h-3z" />
+    <!-- Brush head. -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M6,11h12c0.55,0 1,0.45 1,1v3c0,0.55 -0.45,1 -1,1H6c-0.55,0 -1,-0.45 -1,-1v-3c0,-0.55 0.45,-1 1,-1z" />
+    <!-- Bristles. -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M7,17h1.5v4H7zM11.25,17h1.5v4h-1.5zM15.5,17H17v4h-1.5z" />
+</vector>

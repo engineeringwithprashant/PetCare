@@ -20,6 +20,7 @@ import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.databinding.FragmentRoutineDetailBinding
 import com.prash.petcare.ui.common.SwipeActionCallback
 import com.prash.petcare.ui.common.labelRes
+import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.task.AddEditTaskFragment
 import com.prash.petcare.ui.task.CareTaskViewModel
 import kotlinx.coroutines.launch
@@ -190,7 +191,8 @@ class RoutineDetailFragment : Fragment() {
     /** Applies the current state to the views. */
     private fun render(state: RoutineDetailUiState) {
         state.routine?.let { routine ->
-            binding.routineTitleText.text = routine.title
+            // The routine's name is the screen's title, so it goes in the app bar.
+            setToolbarTitle(routine.title)
 
             val scheduleLabel = getString(routine.repeatUnit.labelRes())
             binding.routineScheduleText.text = if (routine.isActive) {

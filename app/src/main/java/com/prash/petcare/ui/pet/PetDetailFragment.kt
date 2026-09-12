@@ -20,6 +20,8 @@ import com.prash.petcare.databinding.FragmentPetDetailBinding
 import com.prash.petcare.ui.checklist.ChecklistFragment
 import com.prash.petcare.ui.common.formatStoredDate
 import com.prash.petcare.ui.common.labelRes
+import com.prash.petcare.ui.common.setToolbarTitle
+import com.prash.petcare.ui.expense.ExpensesFragment
 import com.prash.petcare.ui.routine.AddRoutineFragment
 import com.prash.petcare.ui.routine.RoutineAdapter
 import com.prash.petcare.ui.routine.RoutineDetailFragment
@@ -30,8 +32,9 @@ import kotlinx.coroutines.launch
  * Shows one pet's recorded details and the care routines set up for it.
  *
  * This is the hub for everything to do with a single animal: from here the user can edit the pet,
- * open today's checklist, create a routine, or open a routine to manage its tasks. It is read-only
- * itself — every change happens on the screen it sends the user to.
+ * open today's checklist, review what has been spent on it, create a routine, or open a routine to
+ * manage its tasks. It is read-only itself — every change happens on the screen it sends the user
+ * to.
  */
 class PetDetailFragment : Fragment() {
 
@@ -92,6 +95,13 @@ class PetDetailFragment : Fragment() {
             )
         }
 
+        binding.expensesButton.setOnClickListener {
+            findNavController().navigate(
+                R.id.action_pet_detail_to_expenses,
+                bundleOf(ExpensesFragment.ARG_PET_ID to petId)
+            )
+        }
+
         binding.editPetButton.setOnClickListener {
             // The owner comes from the loaded pet rather than being passed down from the home
             // screen, so the two can never disagree about who owns this animal. If the pet has not
@@ -139,7 +149,9 @@ class PetDetailFragment : Fragment() {
 
     /** Fills in the pet's header and detail blocks. */
     private fun bindPet(pet: Pet) {
-        binding.petNameText.text = pet.name
+        // The name is the screen's title, so it goes in the app bar rather than being repeated as
+        // a heading in the content beneath it.
+        setToolbarTitle(pet.name)
 
         val speciesLabel = getString(pet.species.labelRes())
         val breed = pet.breed?.takeIf { it.isNotBlank() }

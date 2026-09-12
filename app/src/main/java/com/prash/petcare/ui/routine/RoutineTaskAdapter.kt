@@ -10,6 +10,7 @@ import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.databinding.ItemRoutineTaskBinding
 import com.prash.petcare.ui.common.formatTimeOfDay
+import com.prash.petcare.ui.common.iconRes
 import com.prash.petcare.ui.common.labelRes
 
 /**
@@ -54,6 +55,7 @@ class RoutineTaskAdapter(
 
             binding.taskTitleText.text = task.title
             binding.taskCategoryText.text = context.getString(task.category.labelRes())
+            binding.taskCategoryIcon.setImageResource(task.category.iconRes())
 
             // Every task created through the app has a time, but the column is nullable, so a row
             // written another way still renders rather than showing "null".

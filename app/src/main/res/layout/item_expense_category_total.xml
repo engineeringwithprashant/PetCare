@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One category's share of a pet's spending, in the breakdown section.
+
+    Each row answers two questions at once: how much went on this category, and how that compares to
+    everything else. The amount and percentage give the precise figures, and the progress bar makes
+    the comparison readable at a glance — comparing bar lengths down a column is far quicker than
+    comparing numbers.
+
+    No card around it, unlike the expense rows below. The breakdown is a compact table meant to be
+    scanned as a block, and boxing each line would break it into unrelated-looking fragments.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/spacing_sm"
+    android:paddingBottom="@dimen/spacing_sm">
+
+    <!--
+        Category name, with its icon as a compound drawable rather than as a separate ImageView.
+        That is one view instead of two in a recycled row, and it keeps icon and label aligned
+        automatically. "Relative" placement means the icon moves to the right-hand side by itself in
+        a right-to-left language. The adapter chooses which icon.
+
+        Width 0dp with start and end constraints is ConstraintLayout's "match constraints": the
+        label takes whatever horizontal space is left once the amount beside it has been measured,
+        so a long category name truncates instead of pushing the amount off the screen.
+    -->
+    <TextView
+        android:id="@+id/categoryNameText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:drawablePadding="@dimen/spacing_sm"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textColor="?attr/colorOnSurface"
+        app:drawableTint="?attr/colorPrimary"
+        app:layout_constraintEnd_toStartOf="@id/categoryAmountText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:drawableStart="@drawable/ic_category_vet"
+        tools:text="Vet" />
+
+    <!-- Constrained to the parent's end so every amount in the breakdown lines up in one column,
+         which is what makes the figures comparable down the page. -->
+    <TextView
+        android:id="@+id/categoryAmountText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_sm"
+        android:textAppearance="?attr/textAppearanceTitleSmall"
+        android:textColor="?attr/colorOnSurface"
+        app:layout_constraintBaseline_toBaselineOf="@id/categoryNameText"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="£120.00" />
+
+    <!--
+        The share as a bar. A determinate LinearProgressIndicator is being used as a plain bar chart
+        rather than as a progress readout, which is exactly what its max/progress pair describes:
+        this category's fraction of 100.
+
+        It carries no contentDescription because the percentage beside it already states the same
+        value in words, and a screen reader announcing both would simply repeat itself.
+    -->
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/categoryShareBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_xs"
+        android:importantForAccessibility="no"
+        android:max="100"
+        app:layout_constraintEnd_toStartOf="@id/categoryShareText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/categoryNameText"
+        app:trackCornerRadius="@dimen/share_bar_corner_radius"
+        app:trackThickness="@dimen/share_bar_thickness"
+        tools:progress="48" />
+
+    <TextView
+        android:id="@+id/categoryShareText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_sm"
+        android:minWidth="@dimen/share_percent_min_width"
+        android:textAlignment="viewEnd"
+        android:textAppearance="?attr/textAppearanceLabelSmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        app:layout_constraintBottom_toBottomOf="@id/categoryShareBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/categoryShareBar"
+        tools:text="48%" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

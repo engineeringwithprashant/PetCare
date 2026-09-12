@@ -1,38 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The single Activity layout for the whole app.
+    The single Activity layout for the whole app: a top app bar above the window that every screen
+    is swapped into.
 
-    It contains almost nothing itself: the FragmentContainerView below acts as the NavHostFragment,
-    the window that the Navigation Component swaps screens into. Every actual screen is a fragment
-    declared in res/navigation/nav_graph.xml, which is the single-Activity architecture the
-    Navigation Component is designed around.
+    Having one toolbar here rather than one per fragment means the title and the back arrow are
+    handled in a single place, by NavigationUI, from the labels already declared in
+    res/navigation/nav_graph.xml. Nine fragments each managing their own bar would be nine chances
+    for them to drift apart.
+
+    The bar is deliberately fixed rather than scrolling away with the content: the app's screens are
+    short forms and lists, and a title that disappears on a flick is more distracting than useful at
+    that size.
 -->
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
+    <!-- AppBarLayout provides the elevation and surface treatment Material 3 expects behind a top
+         app bar. MainActivity hides the whole thing on the sign-in screens, which carry their own
+         large headings and need no navigation chrome. -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/topAppBar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:titleTextAppearance="?attr/textAppearanceTitleLarge" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!--
+        The NavHostFragment: the window the Navigation Component swaps screens into. Every actual
+        screen is a fragment declared in res/navigation/nav_graph.xml.
+
+        layout_height="0dp" with layout_weight="1" makes it take all the room the toolbar does not.
+
+        app:defaultNavHost="true" lets this host intercept the system back button, so back moves
+        through the navigation history rather than closing the app straight away.
+    -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_weight="1"
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph" />
 
-    <!--
-        app:defaultNavHost="true" lets this host intercept the system back button, so back moves
-        through the navigation history instead of closing the app straight away.
-
-        app:navGraph points at the graph, which is what tells the host which screen to show first.
-    -->
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

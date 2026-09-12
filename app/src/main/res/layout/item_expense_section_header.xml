@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A section heading inside the expenses list ("Where the money went", "All expenses").
+
+    A row in the RecyclerView rather than a fixed TextView above it, because the headings have to
+    scroll away with the content they introduce. The adapter sets the text from the string resource
+    carried by the item.
+
+    A single TextView with no wrapper: this layout is inflated and recycled as the list scrolls, and
+    a ViewGroup around one child would be a whole extra measure and layout pass for nothing.
+-->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sectionHeaderText"
+    style="@style/PetCare.SectionHeader"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_sm"
+    tools:text="Where the money went" />

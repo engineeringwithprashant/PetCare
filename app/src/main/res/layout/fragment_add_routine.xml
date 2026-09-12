@@ -17,21 +17,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/add_routine_title"
-            android:textAppearance="?attr/textAppearanceHeadlineMedium"
-            android:textColor="?attr/colorOnSurface" />
+        android:padding="@dimen/screen_padding">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/routineNameInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
             android:hint="@string/routine_name_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -44,12 +36,11 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
+            style="@style/PetCare.SectionHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/routine_schedule_label"
-            android:textAppearance="?attr/textAppearanceTitleSmall"
-            android:textColor="?attr/colorOnSurface" />
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:text="@string/routine_schedule_label" />
 
         <!--
             MaterialButtonToggleGroup with singleSelection="true" behaves like a set of radio
@@ -61,7 +52,7 @@
             android:id="@+id/scheduleToggleGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/card_spacing"
             app:selectionRequired="true"
             app:singleSelection="true">
 
@@ -87,7 +78,7 @@
             android:id="@+id/saveRoutineButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="@dimen/spacing_xl"
             android:text="@string/routine_save" />
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
@@ -95,7 +86,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:indeterminate="true"
             android:visibility="gone" />
 

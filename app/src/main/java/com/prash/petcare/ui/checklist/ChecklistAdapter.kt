@@ -10,6 +10,7 @@ import com.prash.petcare.R
 import com.prash.petcare.databinding.ItemChecklistHeaderBinding
 import com.prash.petcare.databinding.ItemChecklistTaskBinding
 import com.prash.petcare.ui.common.formatTimeOfDay
+import com.prash.petcare.ui.common.iconRes
 import com.prash.petcare.ui.common.labelRes
 
 /**
@@ -68,6 +69,15 @@ class ChecklistAdapter(
 
         fun bind(item: ChecklistItem.CategoryHeader) {
             binding.categoryHeaderText.setText(item.category.labelRes())
+            // The icon repeats what the label says, which is the point: a symbol is read far
+            // faster than a word when scanning a list for the next thing to do.
+            //
+            // Set as a compound drawable on the label rather than as a separate ImageView, which
+            // keeps this row to a single view. "Relative" places it at the start, so it moves to
+            // the right-hand side automatically in a right-to-left language.
+            binding.categoryHeaderText.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                item.category.iconRes(), 0, 0, 0
+            )
         }
     }
 

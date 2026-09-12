@@ -2,12 +2,15 @@
 <!--
     Home screen: a greeting, a summary of today's care tasks, and the user's pets.
 
-    The root is a CoordinatorLayout because it is what lets the floating action button and any
-    Snackbar cooperate — a Snackbar sliding up from the bottom automatically lifts the FAB rather
-    than covering it, which a plain ConstraintLayout root would not do.
+    The screen's title lives in the app bar, so the heading here is a greeting rather than a repeat
+    of it.
 
-    Inside it, a single ConstraintLayout positions everything in one flat hierarchy instead of
-    nesting layouts inside each other, which keeps measuring cheap.
+    The root is a CoordinatorLayout because it is what lets the floating action button and any
+    Snackbar cooperate — a Snackbar sliding up from the bottom lifts the button rather than covering
+    it. Inside, one flat ConstraintLayout positions everything, which keeps measuring cheap.
+
+    All spacing comes from the shared scale in dimens.xml and all text from the roles in styles.xml,
+    so this screen keeps step with every other one.
 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -25,9 +28,9 @@
             android:id="@+id/welcomeText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginStart="@dimen/screen_padding"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:layout_marginEnd="@dimen/screen_padding"
             android:textAppearance="?attr/textAppearanceHeadlineSmall"
             android:textColor="?attr/colorOnSurface"
             app:layout_constraintEnd_toEndOf="parent"
@@ -35,16 +38,16 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Welcome, Alex" />
 
-        <!-- Today's care summary. Uses the Material 3 "filled" card so it reads as a distinct
-             tinted surface, separating it from the plain background behind the list. -->
+        <!-- Today's care summary. The Material 3 "filled" card reads as a distinct tinted surface,
+             separating it from the plain background behind the list. -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/todaySummaryCard"
             style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginStart="@dimen/screen_padding"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:layout_marginEnd="@dimen/screen_padding"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/welcomeText">
@@ -53,7 +56,7 @@
                 android:id="@+id/todaySummaryText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp"
+                android:padding="@dimen/card_padding"
                 android:textAppearance="?attr/textAppearanceBodyLarge"
                 android:textColor="?attr/colorOnSurface"
                 tools:text="2 of 5 tasks done today" />
@@ -73,11 +76,11 @@
             android:id="@+id/petsRecyclerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/spacing_lg"
             android:clipToPadding="false"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:paddingBottom="96dp"
+            android:paddingStart="@dimen/screen_padding"
+            android:paddingEnd="@dimen/screen_padding"
+            android:paddingBottom="@dimen/list_padding_bottom_fab"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -85,19 +88,18 @@
             tools:listitem="@layout/item_pet" />
 
         <!--
-            Shown instead of the list when the user has no pets. It occupies the same region as
-            the RecyclerView above, and the fragment toggles which of the two is visible.
+            Shown instead of the list when the user has no pets. It occupies the same region as the
+            RecyclerView, and the fragment toggles which of the two is visible.
 
-            visibility="gone" by default so it neither shows nor takes up space until needed.
+            An icon and a sentence saying what to do next, rather than a bare line of grey text —
+            an empty screen with one short message leaves the user unsure whether there is nothing
+            here or it simply has not loaded.
         -->
         <LinearLayout
             android:id="@+id/emptyStateContainer"
+            style="@style/PetCare.EmptyState"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
-            android:gravity="center"
-            android:orientation="vertical"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/petsRecyclerView"
             app:layout_constraintEnd_toEndOf="parent"
@@ -105,21 +107,22 @@
             app:layout_constraintTop_toTopOf="@id/petsRecyclerView"
             tools:visibility="visible">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/home_empty_title"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                android:textColor="?attr/colorOnSurface" />
+            <ImageView
+                style="@style/PetCare.EmptyStateIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_pet_placeholder" />
 
             <TextView
+                style="@style/PetCare.EmptyStateTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:text="@string/home_empty_message"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:text="@string/home_empty_title" />
+
+            <TextView
+                style="@style/PetCare.EmptyStateMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/home_empty_message" />
 
         </LinearLayout>
 
@@ -132,7 +135,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="24dp"
+        android:layout_margin="@dimen/screen_padding"
         android:contentDescription="@string/cd_add_pet"
         app:srcCompat="@drawable/ic_add" />
 

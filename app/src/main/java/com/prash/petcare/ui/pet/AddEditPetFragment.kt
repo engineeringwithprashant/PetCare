@@ -1,5 +1,6 @@
 package com.prash.petcare.ui.pet
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -24,6 +25,7 @@ import com.prash.petcare.data.local.entity.PetSpecies
 import com.prash.petcare.databinding.FragmentAddEditPetBinding
 import com.prash.petcare.ui.common.formatStoredDate
 import com.prash.petcare.ui.common.labelRes
+import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.util.PetPhotoStorage
 import kotlinx.coroutines.launch
 
@@ -121,6 +123,11 @@ class AddEditPetFragment : Fragment() {
             )
         }
 
+        // The field is focusable so it can be reached by keyboard, D-pad or switch access —
+        // with focusable="false" the picker could only ever be opened by touch. Suppressing the
+        // soft keyboard keeps focusing it from popping one up for a field nobody types into. This
+        // has no public XML attribute, so it is set here.
+        binding.dateOfBirthInput.showSoftInputOnFocus = false
         binding.dateOfBirthInput.setOnClickListener { showDatePicker() }
 
         binding.saveButton.setOnClickListener {
@@ -223,8 +230,9 @@ class AddEditPetFragment : Fragment() {
 
     /** Applies the current state to the views. */
     private fun render(state: PetFormState) {
-        binding.screenTitleText.setText(
-            if (state.isEditMode) R.string.edit_pet_title else R.string.add_pet_title
+        // Which mode the form is in is the screen's title, so it goes in the app bar.
+        setToolbarTitle(
+            getString(if (state.isEditMode) R.string.edit_pet_title else R.string.add_pet_title)
         )
 
         // Only an existing pet can be deleted, so the button has no meaning in add mode.
@@ -298,7 +306,14 @@ class AddEditPetFragment : Fragment() {
      * into an EditText the user is typing in would move their cursor and undo their edits. After a
      * rotation these fields restore themselves from Android's own saved instance state, so there is
      * nothing to repeat.
+     *
+     * The weight is written with a plain `toString`, which SetTextI18n would normally flag as
+     * ignoring locale — hence the suppression. It is deliberate: this value is read back and parsed
+     * with `toDoubleOrNull` on save, and that expects a full stop as the decimal separator. Writing
+     * "24,5" here in a locale that uses a comma would make the pet's own weight fail validation the
+     * next time the form was saved.
      */
+    @SuppressLint("SetTextI18n")
     private fun prefillForm(pet: Pet) {
         binding.nameInput.setText(pet.name)
         binding.breedInput.setText(pet.breed.orEmpty())

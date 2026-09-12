@@ -1,5 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    The app's colour palette.
+
+    These are raw colour values only. They are never referenced from a layout directly — themes.xml
+    maps them onto Material 3 *role* attributes (colorPrimary, colorSurface and so on), and layouts
+    use those roles via ?attr/. That indirection is what makes dark mode work: the roles stay the
+    same, and only the values behind them change.
+
+    **The scheme.** Material 3 builds a palette from one source colour. PetCare's is a warm honey
+    amber — friendly and animal-adjacent rather than the clinical blue most apps default to, and
+    distinctive enough that the app is recognisable at a glance. A muted olive green serves as the
+    tertiary accent, reading as health and wellbeing, with a warm neutral grey for surfaces so the
+    whole app feels warm rather than stark.
+
+    **Naming.** Each name states its scheme and role: md_theme_light_primaryContainer is the
+    "primary container" role in the light scheme. The pairing matters — every "on" colour is the
+    one guaranteed to be legible on top of the role it names, so text placed on colorPrimary must
+    use colorOnPrimary and nothing else.
+-->
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+
+    <!-- ============================== Light scheme ============================== -->
+
+    <!-- Primary: the honey amber. Carries the main actions — filled buttons, the FAB, switches. -->
+    <color name="md_theme_light_primary">#855300</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <!-- The muted variant, used behind content: cards, swipe backgrounds, chips. -->
+    <color name="md_theme_light_primaryContainer">#FFDDB0</color>
+    <color name="md_theme_light_onPrimaryContainer">#2A1800</color>
+
+    <!-- Secondary: a warm sand, for supporting elements that should not compete with primary. -->
+    <color name="md_theme_light_secondary">#705B41</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#FCDEBC</color>
+    <color name="md_theme_light_onSecondaryContainer">#281905</color>
+
+    <!-- Tertiary: olive green, the health accent. Used sparingly for contrast against the amber. -->
+    <color name="md_theme_light_tertiary">#53643E</color>
+    <color name="md_theme_light_onTertiary">#FFFFFF</color>
+    <color name="md_theme_light_tertiaryContainer">#D6EABA</color>
+    <color name="md_theme_light_onTertiaryContainer">#121F02</color>
+
+    <!-- Error: reserved for destructive actions and validation failures. Kept close to the
+         Material default red, because a warning that looks like the brand stops reading as a
+         warning. -->
+    <color name="md_theme_light_error">#BA1A1A</color>
+    <color name="md_theme_light_onError">#FFFFFF</color>
+    <color name="md_theme_light_errorContainer">#FFDAD6</color>
+    <color name="md_theme_light_onErrorContainer">#410002</color>
+
+    <!-- Neutrals. Very slightly warm rather than pure white, so the app feels of a piece with the
+         amber rather than sitting on a cold background. -->
+    <color name="md_theme_light_background">#FFF8F4</color>
+    <color name="md_theme_light_onBackground">#201B13</color>
+    <color name="md_theme_light_surface">#FFF8F4</color>
+    <color name="md_theme_light_onSurface">#201B13</color>
+    <color name="md_theme_light_surfaceVariant">#F0E0CF</color>
+    <color name="md_theme_light_onSurfaceVariant">#4F4539</color>
+    <color name="md_theme_light_outline">#817567</color>
+    <color name="md_theme_light_outlineVariant">#D3C4B4</color>
+
+    <!-- Inverse roles: used by Snackbars, which sit on a surface opposite to the rest of the app
+         so they read as temporary and layered above it. -->
+    <color name="md_theme_light_inverseSurface">#352F27</color>
+    <color name="md_theme_light_inverseOnSurface">#FAEFE7</color>
+    <color name="md_theme_light_inversePrimary">#FFB95C</color>
+
+    <!-- =============================== Dark scheme ===============================
+         Not simply the light scheme inverted. In dark mode the primary becomes a *lighter* amber,
+         because a dark saturated colour on a dark background would be unreadable, and the
+         containers become dark with light text. The role pairings are unchanged, which is exactly
+         why layouts need no dark-mode variants of their own. -->
+
+    <color name="md_theme_dark_primary">#FFB95C</color>
+    <color name="md_theme_dark_onPrimary">#472A00</color>
+    <color name="md_theme_dark_primaryContainer">#653E00</color>
+    <color name="md_theme_dark_onPrimaryContainer">#FFDDB0</color>
+
+    <color name="md_theme_dark_secondary">#DFC2A2</color>
+    <color name="md_theme_dark_onSecondary">#3F2D17</color>
+    <color name="md_theme_dark_secondaryContainer">#57432B</color>
+    <color name="md_theme_dark_onSecondaryContainer">#FCDEBC</color>
+
+    <color name="md_theme_dark_tertiary">#BACE9F</color>
+    <color name="md_theme_dark_onTertiary">#263514</color>
+    <color name="md_theme_dark_tertiaryContainer">#3C4C29</color>
+    <color name="md_theme_dark_onTertiaryContainer">#D6EABA</color>
+
+    <color name="md_theme_dark_error">#FFB4AB</color>
+    <color name="md_theme_dark_onError">#690005</color>
+    <color name="md_theme_dark_errorContainer">#93000A</color>
+    <color name="md_theme_dark_onErrorContainer">#FFDAD6</color>
+
+    <color name="md_theme_dark_background">#181310</color>
+    <color name="md_theme_dark_onBackground">#ECE0D4</color>
+    <color name="md_theme_dark_surface">#181310</color>
+    <color name="md_theme_dark_onSurface">#ECE0D4</color>
+    <color name="md_theme_dark_surfaceVariant">#4F4539</color>
+    <color name="md_theme_dark_onSurfaceVariant">#D3C4B4</color>
+    <color name="md_theme_dark_outline">#9C8F80</color>
+    <color name="md_theme_dark_outlineVariant">#4F4539</color>
+
+    <color name="md_theme_dark_inverseSurface">#ECE0D4</color>
+    <color name="md_theme_dark_inverseOnSurface">#352F27</color>
+    <color name="md_theme_dark_inversePrimary">#855300</color>
+
 </resources>

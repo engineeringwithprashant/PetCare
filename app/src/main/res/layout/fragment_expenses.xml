@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Expenses screen: one pet's total spending, a breakdown by category, and every recorded expense.
+
+    The pet's name is set on the app bar by the fragment, so there is no heading here.
+
+    There is deliberately only one scrolling view on this screen. The total and the breakdown are
+    rows inside the same RecyclerView as the expenses, not cards stacked above it, so everything
+    scrolls as one page while the expenses below still recycle — a spending history only ever grows,
+    and inflating every receipt at once inside a scroll view would get slower every month.
+
+    CoordinatorLayout is the root purely so the floating action button can float over the list and
+    so a Snackbar knows to lift clear of it rather than covering it.
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.expense.ExpensesFragment">
+
+    <!--
+        clipToPadding="false" with bottom padding is the standard pairing for a list under a
+        floating action button: the padding lets the last row scroll clear of the button, and
+        switching off clipping means rows are still drawn as they pass through that padding rather
+        than being cut off at its edge.
+    -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/expensesRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/screen_padding"
+        android:paddingTop="@dimen/spacing_md"
+        android:paddingEnd="@dimen/screen_padding"
+        android:paddingBottom="@dimen/list_padding_bottom_fab"
+        tools:listitem="@layout/item_expense" />
+
+    <!-- Occupies the same region as the list; the fragment shows exactly one of the two. -->
+    <LinearLayout
+        android:id="@+id/emptyExpensesContainer"
+        style="@style/PetCare.EmptyState"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <ImageView
+            style="@style/PetCare.EmptyStateIcon"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_empty_expenses" />
+
+        <TextView
+            style="@style/PetCare.EmptyStateTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/expenses_empty_title" />
+
+        <TextView
+            style="@style/PetCare.EmptyStateMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/expenses_empty_message" />
+
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addExpenseFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/screen_padding"
+        android:contentDescription="@string/cd_add_expense"
+        app:srcCompat="@drawable/ic_add" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

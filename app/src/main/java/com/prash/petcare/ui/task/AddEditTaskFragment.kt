@@ -22,6 +22,7 @@ import com.prash.petcare.data.local.entity.TaskCategory
 import com.prash.petcare.databinding.FragmentAddEditTaskBinding
 import com.prash.petcare.ui.common.formatTimeOfDay
 import com.prash.petcare.ui.common.labelRes
+import com.prash.petcare.ui.common.setToolbarTitle
 import kotlinx.coroutines.launch
 
 /**
@@ -84,6 +85,10 @@ class AddEditTaskFragment : Fragment() {
     }
 
     private fun setUpClickListeners() {
+        // Focusable so it can be reached by keyboard, D-pad or switch access, with the soft
+        // keyboard suppressed so focusing does not pop one up for a field nobody types into. See
+        // AddEditPetFragment for the same treatment of its date field.
+        binding.timeInput.showSoftInputOnFocus = false
         binding.timeInput.setOnClickListener { showTimePicker() }
 
         binding.saveTaskButton.setOnClickListener {
@@ -159,8 +164,9 @@ class AddEditTaskFragment : Fragment() {
 
     /** Applies the current state to the views. */
     private fun render(state: CareTaskFormState) {
-        binding.screenTitleText.setText(
-            if (state.isEditMode) R.string.edit_task_title else R.string.add_task_title
+        // Which mode the form is in is the screen's title, so it goes in the app bar.
+        setToolbarTitle(
+            getString(if (state.isEditMode) R.string.edit_task_title else R.string.add_task_title)
         )
 
         // Only an existing task can be deleted, so the button has no meaning in add mode.

@@ -26,6 +26,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentChecklistBinding
 import com.prash.petcare.ui.common.SwipeActionCallback
+import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.util.ContactLookup
 import com.prash.petcare.util.ContactReader
 import com.prash.petcare.util.ShakeDetector
@@ -282,11 +283,11 @@ class ChecklistFragment : Fragment() {
 
     /** Applies the current checklist state to the views. */
     private fun render(state: ChecklistUiState) {
-        binding.checklistTitleText.text = if (state.petName.isNotEmpty()) {
-            getString(R.string.checklist_title_format, state.petName)
-        } else {
-            // Blank rather than a half-finished title while the name is still being read.
-            ""
+        // The pet's name only arrives once the database read finishes. Until then the app bar
+        // keeps the destination's own label, which reads sensibly on its own — better than
+        // blanking the title and having it appear a moment later.
+        if (state.petName.isNotEmpty()) {
+            setToolbarTitle(getString(R.string.checklist_title_format, state.petName))
         }
 
         binding.checklistProgressText.text = progressText(state)

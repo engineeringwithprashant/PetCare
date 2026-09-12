@@ -12,21 +12,18 @@
     style="@style/Widget.Material3.CardView.Filled"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp">
+    android:layout_marginBottom="@dimen/card_spacing">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="@dimen/card_padding">
 
         <TextView
             android:id="@+id/taskTitleText"
+            style="@style/PetCare.ListTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorOnSurface"
             app:layout_constraintEnd_toStartOf="@id/taskTimeText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -39,36 +36,48 @@
             android:id="@+id/taskTimeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="@dimen/spacing_sm"
             android:textAppearance="?attr/textAppearanceLabelLarge"
             android:textColor="?attr/colorPrimary"
             app:layout_constraintBaseline_toBaselineOf="@id/taskTitleText"
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="07:30" />
 
-        <TextView
-            android:id="@+id/taskCategoryText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            app:layout_constraintEnd_toEndOf="parent"
+        <!-- The category's icon, tinted to the same muted role as the label it sits beside. -->
+        <ImageView
+            android:id="@+id/taskCategoryIcon"
+            android:layout_width="@dimen/category_icon_size"
+            android:layout_height="@dimen/category_icon_size"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:contentDescription="@null"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/taskTitleText"
+            app:tint="?attr/colorOnSurfaceVariant"
+            tools:src="@drawable/ic_category_feeding" />
+
+        <TextView
+            android:id="@+id/taskCategoryText"
+            style="@style/PetCare.ListSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
+            app:layout_constraintBottom_toBottomOf="@id/taskCategoryIcon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/taskCategoryIcon"
+            app:layout_constraintTop_toTopOf="@id/taskCategoryIcon"
             tools:text="Feeding" />
 
         <TextView
             android:id="@+id/taskSuppliesText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/spacing_sm"
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/taskCategoryText"
+            app:layout_constraintTop_toBottomOf="@id/taskCategoryIcon"
             tools:text="Needs: dry food, measuring cup"
             tools:visibility="visible" />
 

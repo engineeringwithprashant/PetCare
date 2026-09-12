@@ -1,6 +1,7 @@
 package com.prash.petcare.ui.common
 
 import android.content.Context
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.RepeatUnit
@@ -29,6 +30,28 @@ fun TaskCategory.labelRes(): Int = when (this) {
     TaskCategory.TRAINING -> R.string.category_training
     TaskCategory.PLAY -> R.string.category_play
     TaskCategory.OTHER -> R.string.category_other
+}
+
+/**
+ * Icon for a care category.
+ *
+ * Pairs with [labelRes] so a category can be shown as a symbol alongside its name. An icon is read
+ * far faster than a word when scanning a checklist, and it keeps the grouping legible at a glance
+ * once several categories are on screen at once.
+ *
+ * Like the labels, this `when` has no `else`, so adding a category will not compile until an icon
+ * has been chosen for it.
+ */
+@DrawableRes
+fun TaskCategory.iconRes(): Int = when (this) {
+    TaskCategory.FEEDING -> R.drawable.ic_category_feeding
+    TaskCategory.WALK -> R.drawable.ic_category_walk
+    TaskCategory.GROOMING -> R.drawable.ic_category_grooming
+    TaskCategory.MEDICATION -> R.drawable.ic_category_medication
+    TaskCategory.VET_VISIT -> R.drawable.ic_category_vet
+    TaskCategory.TRAINING -> R.drawable.ic_category_training
+    TaskCategory.PLAY -> R.drawable.ic_category_play
+    TaskCategory.OTHER -> R.drawable.ic_category_other
 }
 
 /**

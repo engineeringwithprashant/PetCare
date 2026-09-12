@@ -2,6 +2,9 @@
 <!--
     Pet detail screen: the animal's recorded information, and the care routines set up for it.
 
+    The pet's name is set on the app bar by the fragment, so only the species and breed line appears
+    beneath the photo here.
+
     The whole screen scrolls as one, so the routine list is a RecyclerView with wrap_content height
     and nestedScrollingEnabled="false" inside a NestedScrollView. That hands scrolling to the parent
     and lets the list render in full rather than becoming a small scrolling box inside a scrolling
@@ -20,47 +23,38 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingBottom="96dp">
+        android:paddingBottom="@dimen/list_padding_bottom_fab">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="@dimen/screen_padding">
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.Material3.CardView.Filled"
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
-                app:cardCornerRadius="16dp">
+                android:layout_height="@dimen/pet_photo_height"
+                app:cardCornerRadius="@dimen/image_card_corner_radius">
 
                 <ImageView
                     android:id="@+id/petPhotoImage"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:contentDescription="@string/cd_pet_photo"
-                    android:padding="24dp"
+                    android:padding="@dimen/spacing_lg"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_pet_placeholder" />
 
             </com.google.android.material.card.MaterialCardView>
 
             <TextView
-                android:id="@+id/petNameText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                android:textColor="?attr/colorOnSurface"
-                tools:text="Bella" />
-
-            <TextView
                 android:id="@+id/petSubtitleText"
+                style="@style/PetCare.Subtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="@dimen/spacing_md"
                 android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="Dog · Labrador" />
 
             <!-- Recorded details. Each block is hidden by the fragment when its field is empty, so
@@ -70,13 +64,13 @@
                 style="@style/Widget.Material3.CardView.Filled"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="@dimen/spacing_md">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/card_padding">
 
                     <LinearLayout
                         android:id="@+id/dobBlock"
@@ -185,59 +179,69 @@
                 android:id="@+id/checklistButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/spacing_md"
                 android:text="@string/pet_detail_checklist" />
+
+            <!-- Outlined rather than filled, like the edit button below it: the checklist above is
+                 this screen's primary action, and two filled buttons in a row would give the user
+                 no steer on which to reach for. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/expensesButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/pet_detail_expenses" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/editPetButton"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/spacing_sm"
                 android:text="@string/pet_detail_edit" />
 
             <TextView
+                style="@style/PetCare.SectionHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/pet_detail_routines_title"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="?attr/colorOnSurface" />
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:text="@string/pet_detail_routines_title" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/routinesRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="@dimen/card_spacing"
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="2"
                 tools:listitem="@layout/item_routine" />
 
             <LinearLayout
                 android:id="@+id/emptyRoutinesContainer"
+                style="@style/PetCare.EmptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:gravity="center"
-                android:orientation="vertical"
+                android:layout_marginTop="@dimen/spacing_md"
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/pet_detail_no_routines_title"
-                    android:textAppearance="?attr/textAppearanceTitleSmall"
-                    android:textColor="?attr/colorOnSurface" />
+                <ImageView
+                    style="@style/PetCare.EmptyStateIcon"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_empty_routines" />
 
                 <TextView
+                    style="@style/PetCare.EmptyStateTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:gravity="center"
-                    android:text="@string/pet_detail_no_routines_message"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:text="@string/pet_detail_no_routines_title" />
+
+                <TextView
+                    style="@style/PetCare.EmptyStateMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pet_detail_no_routines_message" />
 
             </LinearLayout>
 
@@ -249,7 +253,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="24dp"
+        android:layout_margin="@dimen/screen_padding"
         android:contentDescription="@string/cd_add_routine"
         app:srcCompat="@drawable/ic_add" />
 

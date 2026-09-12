@@ -56,8 +56,13 @@ class RegisterFragment : Fragment() {
      * the rule shown to the user can never drift out of step with the rule actually enforced.
      */
     private fun setUpHelperText() {
-        binding.passwordInputLayout.helperText =
-            getString(R.string.register_password_helper, AuthViewModel.MIN_PASSWORD_LENGTH)
+        // getQuantityString picks the right plural form for the device's language. The first
+        // argument selects the form; the one after it fills the placeholder.
+        binding.passwordInputLayout.helperText = resources.getQuantityString(
+            R.plurals.register_password_helper,
+            AuthViewModel.MIN_PASSWORD_LENGTH,
+            AuthViewModel.MIN_PASSWORD_LENGTH
+        )
     }
 
     /** Wires the buttons and text fields to the ViewModel. */

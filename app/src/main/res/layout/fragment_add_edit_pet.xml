@@ -21,32 +21,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="@dimen/screen_padding">
 
-        <TextView
-            android:id="@+id/screenTitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceHeadlineMedium"
-            android:textColor="?attr/colorOnSurface"
-            tools:text="@string/add_pet_title" />
-
-        <!-- Photo preview. Wrapped in a card so the image gets rounded corners, which an ImageView
-             cannot produce on its own. -->
+        <!-- Photo preview. Wrapped in a card so the image gets rounded corners, which an
+             ImageView cannot produce on its own. -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/photoCard"
             style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:layout_marginTop="24dp"
-            app:cardCornerRadius="16dp">
+            android:layout_height="@dimen/pet_photo_height"
+            app:cardCornerRadius="@dimen/image_card_corner_radius">
 
             <ImageView
                 android:id="@+id/petPhotoImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/cd_pet_photo"
-                android:padding="24dp"
+                android:padding="@dimen/spacing_lg"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_pet_placeholder" />
 
@@ -57,7 +48,7 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/spacing_sm"
             android:text="@string/pet_photo_choose" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -65,7 +56,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:hint="@string/pet_name_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -90,7 +81,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:hint="@string/pet_species_label">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -105,7 +96,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:hint="@string/pet_breed_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -127,7 +118,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:hint="@string/pet_dob_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -136,7 +127,7 @@
                 android:layout_height="wrap_content"
                 android:clickable="true"
                 android:cursorVisible="false"
-                android:focusable="false"
+                android:focusable="true"
                 android:inputType="none"
                 android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -148,7 +139,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:hint="@string/pet_weight_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -167,7 +158,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:hint="@string/pet_dietary_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -184,7 +175,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:hint="@string/pet_allergies_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -201,7 +192,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:hint="@string/pet_toys_label">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -218,7 +209,7 @@
             android:id="@+id/saveButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/spacing_lg"
             android:text="@string/pet_save" />
 
         <!-- Only shown in edit mode. Coloured with the theme's error role, the Material 3 signal
@@ -228,7 +219,7 @@
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/spacing_sm"
             android:text="@string/pet_delete"
             android:textColor="?attr/colorError"
             android:visibility="gone"
@@ -240,7 +231,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:indeterminate="true"
             android:visibility="gone" />
 

@@ -89,7 +89,7 @@
     <fragment
         android:id="@+id/petDetailFragment"
         android:name="com.prash.petcare.ui.pet.PetDetailFragment"
-        android:label="@string/pet_detail_routines_title"
+        android:label="@string/nav_label_pet"
         tools:layout="@layout/fragment_pet_detail">
 
         <argument
@@ -111,6 +111,50 @@
         <action
             android:id="@+id/action_pet_detail_to_checklist"
             app:destination="@id/checklistFragment" />
+
+        <action
+            android:id="@+id/action_pet_detail_to_expenses"
+            app:destination="@id/expensesFragment" />
+    </fragment>
+
+    <!-- One pet's spending: the total, the breakdown by category, and every recorded expense. -->
+    <fragment
+        android:id="@+id/expensesFragment"
+        android:name="com.prash.petcare.ui.expense.ExpensesFragment"
+        android:label="@string/nav_label_expenses"
+        tools:layout="@layout/fragment_expenses">
+
+        <argument
+            android:name="petId"
+            app:argType="long" />
+
+        <!-- One action serves both recording and editing: the floating action button passes
+             expenseId = -1, and tapping an expense in the list passes its real id. -->
+        <action
+            android:id="@+id/action_expenses_to_add_edit_expense"
+            app:destination="@id/addEditExpenseFragment" />
+    </fragment>
+
+    <!-- Record a new expense against a pet, or change an existing one. -->
+    <fragment
+        android:id="@+id/addEditExpenseFragment"
+        android:name="com.prash.petcare.ui.expense.AddEditExpenseFragment"
+        android:label="@string/add_expense_title"
+        tools:layout="@layout/fragment_add_edit_expense">
+
+        <!-- Required, with no default: an expense with no pet would violate the foreign key on the
+             expenses table. -->
+        <argument
+            android:name="petId"
+            app:argType="long" />
+
+        <!-- Which expense to edit. The default of -1 means "none", which is how the screen knows it
+             is recording a new expense rather than changing one. Long literals in a nav graph need
+             the L suffix, or the value is parsed as an Int and rejected. -->
+        <argument
+            android:name="expenseId"
+            android:defaultValue="-1L"
+            app:argType="long" />
     </fragment>
 
     <!-- Create a care routine for a pet. -->
@@ -129,7 +173,7 @@
     <fragment
         android:id="@+id/routineDetailFragment"
         android:name="com.prash.petcare.ui.routine.RoutineDetailFragment"
-        android:label="@string/routine_detail_tasks_title"
+        android:label="@string/nav_label_routine"
         tools:layout="@layout/fragment_routine_detail">
 
         <argument
@@ -168,7 +212,7 @@
     <fragment
         android:id="@+id/checklistFragment"
         android:name="com.prash.petcare.ui.checklist.ChecklistFragment"
-        android:label="@string/home_title"
+        android:label="@string/pet_detail_checklist"
         tools:layout="@layout/fragment_checklist">
 
         <argument
