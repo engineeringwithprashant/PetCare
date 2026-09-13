@@ -6,6 +6,11 @@
     app means editing this one file. values-night/themes.xml declares the same roles with the dark
     values, which is the entire mechanism behind dark mode: no layout knows which is in use.
 
+    The theme also sets the app's **default component styles** — materialCardViewStyle,
+    bottomNavigationStyle and the shape scale. That is what makes the redesign hold: a card added to
+    a new screen next month is rounded, white and softly shadowed because the theme says every card
+    is, not because whoever wrote it remembered to name a style.
+
     The parent is Theme.Material3.DayNight.NoActionBar. "NoActionBar" is required because the app
     supplies its own MaterialToolbar in activity_main.xml — with the platform action bar still in
     place there would be two title bars stacked on top of each other.
@@ -14,7 +19,8 @@
 
     <style name="Base.Theme.PetCare" parent="Theme.Material3.DayNight.NoActionBar">
 
-        <!-- Primary: main actions — filled buttons, the FAB, switches, the selected toggle. -->
+        <!-- Primary: the bright yellow accent. Carries the main actions — the FAB, filled buttons,
+             the selected navigation tab. -->
         <item name="colorPrimary">@color/md_theme_light_primary</item>
         <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_light_primaryContainer</item>
@@ -39,13 +45,28 @@
         <item name="colorOnErrorContainer">@color/md_theme_light_onErrorContainer</item>
 
         <!-- Surfaces: the backgrounds content sits on, and the text colours guaranteed legible
-             against them. -->
+             against them.
+
+             colorBackground (cream) and colorSurface (white) are deliberately *different* values
+             here. That one separation is the backbone of the redesign: it is what lets a white card
+             read as lifted off the page before its shadow is even drawn. -->
         <item name="android:colorBackground">@color/md_theme_light_background</item>
         <item name="colorOnBackground">@color/md_theme_light_onBackground</item>
         <item name="colorSurface">@color/md_theme_light_surface</item>
         <item name="colorOnSurface">@color/md_theme_light_onSurface</item>
         <item name="colorSurfaceVariant">@color/md_theme_light_surfaceVariant</item>
         <item name="colorOnSurfaceVariant">@color/md_theme_light_onSurfaceVariant</item>
+
+        <!-- Material 3 tints an elevated surface towards the primary colour to signal height — the
+             "elevation overlay". With a yellow primary that turns every raised card faintly
+             mustard, which fights the clean cream-and-white scheme. Switching it off leaves depth
+             to be carried by the shadow alone, which is what the reference direction asks for.
+
+             Safe to disable in *both* themes only because this app's palette already separates the
+             page from the cards by colour — see colors.xml. In a scheme where background and
+             surface were the same value, the overlay is the only thing making a raised card
+             visible in dark mode, and turning it off would flatten the whole app. -->
+        <item name="elevationOverlayEnabled">false</item>
 
         <!-- Outlines: text field borders and the stroke on outlined buttons. -->
         <item name="colorOutline">@color/md_theme_light_outline</item>
@@ -55,6 +76,42 @@
         <item name="colorSurfaceInverse">@color/md_theme_light_inverseSurface</item>
         <item name="colorOnSurfaceInverse">@color/md_theme_light_inverseOnSurface</item>
         <item name="colorPrimaryInverse">@color/md_theme_light_inversePrimary</item>
+
+        <!-- The accent as a foreground colour. Deeper than colorPrimary so it is legible as text —
+             see attrs.xml for why this role has to exist at all. -->
+        <item name="colorAccentText">@color/accent_text_light</item>
+
+        <!-- ======================== Pastel stat pill roles ========================
+             The app's own colour roles, declared in attrs.xml. See the note there for why a stat
+             pill needs a family of *equal* colours that the Material roles cannot express. -->
+        <item name="colorPillMint">@color/pill_light_mint</item>
+        <item name="colorOnPillMint">@color/pill_light_on_mint</item>
+        <item name="colorPillSky">@color/pill_light_sky</item>
+        <item name="colorOnPillSky">@color/pill_light_on_sky</item>
+        <item name="colorPillLilac">@color/pill_light_lilac</item>
+        <item name="colorOnPillLilac">@color/pill_light_on_lilac</item>
+        <item name="colorPillPeach">@color/pill_light_peach</item>
+        <item name="colorOnPillPeach">@color/pill_light_on_peach</item>
+
+        <!-- ============================== Shape scale ==============================
+             Material components read their corner radius from these three attributes. Overriding
+             them here rounds *everything* — dialogs, menus, text fields, bottom sheets — in one
+             move, rather than each layout setting a radius the next screen forgets to match. -->
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.PetCare.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.PetCare.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.PetCare.Large</item>
+
+        <!-- ========================== Default component styles ==========================
+             Pointing these theme attributes at the app's own styles is what applies the redesign
+             to every instance of a component without a single layout naming a style. -->
+        <item name="materialCardViewStyle">@style/PetCare.Card</item>
+        <item name="bottomNavigationStyle">@style/PetCare.BottomNav</item>
+
+        <!-- The status and navigation bar icons. The app's page is a light cream in this theme, so
+             the system icons drawn over it must be dark to be visible at all. The night theme sets
+             both to false for the same reason in reverse. -->
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
     </style>
 
     <style name="Theme.PetCare" parent="Base.Theme.PetCare" />

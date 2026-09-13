@@ -14,6 +14,22 @@
     <string name="nav_label_pet">Pet</string>
     <string name="nav_label_routine">Care routine</string>
 
+    <!-- ========================== Bottom navigation tabs ==========================
+         Each of these is used twice, and has to work in both places: as the label under a tab's
+         icon, and as the app bar title for the screen that tab leads to. That is why they are
+         single words — a longer phrase would be truncated in the bar even if it read well at the
+         top of the screen. -->
+    <string name="nav_home">Home</string>
+    <string name="nav_pets">Pets</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_expenses">Expenses</string>
+
+    <!-- ======================== Top app bar overflow menu ========================
+         The account actions. "Sign out" rather than "Log out" to match the sign-in screen's own
+         wording — an app that invites you to sign in should not then offer to log you out. -->
+    <string name="menu_profile">Profile</string>
+    <string name="menu_sign_out">Sign out</string>
+
     <!-- ============================ Registration screen ============================ -->
     <string name="register_title">Create your account</string>
     <string name="register_subtitle">Set up a profile to start tracking your pets\' care.</string>
@@ -40,27 +56,69 @@
     <string name="login_submit">Sign in</string>
     <string name="login_no_account">New here? Create an account</string>
 
-    <!-- ================================ Home screen ================================ -->
-    <string name="home_title">Your pets</string>
-    <!-- %1$s is replaced with the signed-in user's name, read back out of the database. -->
-    <string name="home_welcome">Welcome, %1$s</string>
+    <!-- ============================== Home dashboard ==============================
+         The screen the app opens on once signed in: a greeting, a card per pet, today's care as a
+         checklist, and the vet visits coming up. -->
 
-    <!-- Shown in place of the list when the user has not added any pets yet. -->
+    <!-- %1$s is replaced with the signed-in user's name, read back out of the database. -->
+    <string name="home_welcome">Hello, %1$s</string>
+    <!-- Shown in the greeting's place until the name has been read from the database. A neutral
+         greeting rather than a blank line, so the screen never opens with a gap at the top where
+         its largest piece of text will shortly appear. -->
+    <string name="home_welcome_generic">Hello</string>
+
+    <!-- Section headings on the dashboard. Worded as the user's own things rather than as the data
+         behind them — "Your pets", not "Pet list". -->
+    <string name="home_pets_title">Your pets</string>
+    <string name="home_today_title">Today\'s care</string>
+    <string name="home_appointments_title">Upcoming appointments</string>
+
+    <!-- Shown in place of the whole dashboard when the user has not added any pets yet. -->
     <string name="home_empty_title">No pets yet</string>
     <string name="home_empty_message">Add your first pet to start tracking their care.</string>
+    <string name="home_empty_action">Add a pet</string>
 
-    <!-- Today's care summary. -->
-    <string name="home_tasks_none">No care tasks due today</string>
     <!--
+        Today's care summary, shown beside the "Today's care" heading.
+
         A plurals resource, not a plain string: the wording has to change with the count, and
         which forms exist differs by language. Android picks the right entry from the quantity
         passed to getQuantityString, so the code never has to test for "is it 1?" itself.
         %1$d is the completed count and %2$d the total.
+
+        There is deliberately no wording for a count of zero: the card's own empty line already
+        says nothing is due, and "0 of 0 done" beside it would say the same thing twice.
     -->
     <plurals name="home_tasks_summary">
-        <item quantity="one">%1$d of %2$d task done today</item>
-        <item quantity="other">%1$d of %2$d tasks done today</item>
+        <item quantity="one">%1$d of %2$d done</item>
+        <item quantity="other">%1$d of %2$d done</item>
     </plurals>
+
+    <!-- The pastel pill on a pet's dashboard card, reporting that pet's own day. Three different
+         messages because "3 left", "all done" and "nothing scheduled" are genuinely different
+         things to tell someone, and a single count would blur the last two into "0". -->
+    <plurals name="home_pet_tasks_left">
+        <item quantity="one">%1$d left today</item>
+        <item quantity="other">%1$d left today</item>
+    </plurals>
+    <string name="home_pet_all_done">All done today</string>
+    <string name="home_pet_nothing_due">Nothing due today</string>
+
+    <!-- Shown inside the "Today's care" card when there is genuinely no care scheduled. Phrased as
+         reassurance rather than as an error, because an empty day is a perfectly good day. -->
+    <string name="home_today_empty">No care is scheduled for today. Enjoy the quiet.</string>
+
+    <!-- Shown inside the "Upcoming appointments" card when no vet visits are scheduled. -->
+    <string name="home_appointments_empty">No vet visits coming up.</string>
+    <!-- Joins a pet's name to an appointment's date, e.g. "Bella · Tomorrow, 09:30". %1$s is the
+         pet, %2$s the moment — produced by the device so it arrives already translated. -->
+    <string name="home_appointment_subtitle">%1$s · %2$s</string>
+
+    <!-- Prefixes a dashboard checklist row with the animal it belongs to, since the dashboard mixes
+         every pet's care into one list. %1$s is the pet's name, %2$s the time of day. -->
+    <string name="home_task_subtitle">%1$s · %2$s</string>
+    <!-- The same, for a task with no time of day recorded. -->
+    <string name="home_task_subtitle_no_time">%1$s</string>
 
     <!-- ============================== Sync indicator ==============================
          A single line on the home screen saying how the Firestore backup is getting on. Worded
@@ -88,9 +146,24 @@
          and nothing for the user to do. -->
     <string name="sync_status_offline">Offline — nothing waiting to upload</string>
 
+    <!-- ================================ Pets tab ================================
+         The second bottom-navigation tab: every pet the user has. -->
+    <string name="pets_empty_title">No pets yet</string>
+    <string name="pets_empty_message">Add your first pet to start tracking their care, routines and spending.</string>
+
     <!-- ============================== Pet list item ============================== -->
     <!-- Joins species and breed into one subtitle, e.g. "Dog · Labrador". -->
     <string name="pet_species_and_breed">%1$s · %2$s</string>
+
+    <!-- ============================== The pet picker ==============================
+         The row of chips at the top of the Tasks and Expenses tabs. Those two screens show one
+         pet at a time, and the chips are how that pet is chosen — see the note at the top of
+         nav_graph.xml on why one screen serves both the tab and the per-pet route into it. -->
+    <string name="pet_picker_label">Showing care for</string>
+    <string name="pet_picker_label_expenses">Showing spending for</string>
+    <!-- Shown in place of either screen when there is no pet to pick. -->
+    <string name="pet_picker_empty_title">No pets to show</string>
+    <string name="pet_picker_empty_message">Add a pet from the Pets tab, and their care will appear here.</string>
 
     <!-- Display names for the PetSpecies enum. The enum constants themselves (DOG, CAT) are
          database values and must never be shown to the user. -->
@@ -179,13 +252,31 @@
     <string name="schedule_yearly">Every year</string>
 
     <!-- ============================= Pet detail screen ============================= -->
+    <!-- The three pastel stat pills under the pet's name. Each is one fact at a glance, so each is
+         as short as it can be while staying unambiguous. -->
+    <!-- %1$d is the pet's age in whole years, worked out from its date of birth. A plurals resource
+         because the wording changes with the count. -->
+    <plurals name="pet_detail_age_years">
+        <item quantity="one">%1$d year old</item>
+        <item quantity="other">%1$d years old</item>
+    </plurals>
+    <!-- For an animal not yet a year old, where "0 years old" would be both wrong-sounding and
+         much less informative than the months. %1$d is the age in whole months. -->
+    <plurals name="pet_detail_age_months">
+        <item quantity="one">%1$d month old</item>
+        <item quantity="other">%1$d months old</item>
+    </plurals>
+    <!-- Section headings on the redesigned detail screen, each introducing one card. -->
+    <string name="pet_detail_about_title">About</string>
+
     <string name="pet_detail_edit">Edit pet</string>
     <string name="pet_detail_checklist">Today\'s checklist</string>
     <string name="pet_detail_routines_title">Care routines</string>
     <string name="pet_detail_no_routines_title">No care routines yet</string>
     <string name="pet_detail_no_routines_message">Create a routine to schedule this pet\'s regular care.</string>
     <string name="pet_detail_dob_label">Date of birth</string>
-    <string name="pet_detail_weight_label">Weight</string>
+    <!-- No "Weight" label: weight is shown as a pastel pill on the detail screen rather than as a
+         labelled row, and a pill carries its own unit ("24.5 kg") without needing one. -->
     <string name="pet_detail_dietary_label">Dietary notes</string>
     <string name="pet_detail_allergies_label">Allergies</string>
     <string name="pet_detail_toys_label">Favourite toys</string>
@@ -339,6 +430,25 @@
          show a prompt and the only way back is the system settings screen. -->
     <string name="permission_open_settings">Settings</string>
 
+    <!-- ================================ Profile screen ================================
+         Reached from the top app bar's overflow menu. Read-only: it reports who is signed in and
+         how their data is being backed up, and offers the way out. -->
+    <string name="profile_account_title">Your account</string>
+    <string name="profile_name_label">Name</string>
+    <string name="profile_email_label">Email address</string>
+    <string name="profile_member_since_label">Member since</string>
+    <string name="profile_backup_title">Backup</string>
+    <!-- Explains what the sync status line beneath it means, so the profile screen answers "is my
+         data safe?" rather than merely restating the dashboard's indicator. -->
+    <string name="profile_backup_message">Your pets, care and spending are saved on this device first, and uploaded whenever you are online.</string>
+    <string name="profile_sign_out">Sign out</string>
+    <!-- Confirmation before signing out. It says what is *not* lost, because the main worry at this
+         point is whether signing out discards anything. -->
+    <string name="profile_sign_out_dialog_title">Sign out?</string>
+    <string name="profile_sign_out_dialog_message">You will be returned to the sign-in screen. Nothing is deleted — your pets and their care will be here when you sign back in.</string>
+    <string name="profile_sign_out_dialog_confirm">Sign out</string>
+    <string name="profile_sign_out_dialog_cancel">Cancel</string>
+
     <!-- =========================== Accessibility labels ===========================
          contentDescription values, read aloud by TalkBack for users who cannot see the icon. -->
     <string name="cd_add_pet">Add a pet</string>
@@ -347,6 +457,11 @@
     <string name="cd_add_task">Add a care task</string>
     <string name="cd_task_done">Mark task as done</string>
     <string name="cd_add_expense">Record an expense</string>
+    <!-- The category symbol beside a dashboard task. %1$s is the category's own name, so TalkBack
+         reads "Feeding" rather than announcing an unnamed image. -->
+    <string name="cd_task_category">%1$s</string>
+    <!-- The chevron on a card that opens another screen. -->
+    <string name="cd_open_pet">Open this pet</string>
 
     <!-- ============================ Spending categories ============================
          Display names for the ExpenseCategory enum. Kept separate from the care categories above
@@ -364,7 +479,6 @@
     <string name="expense_category_other">Other</string>
 
     <!-- ============================== Expenses screen ============================== -->
-    <string name="nav_label_expenses">Expenses</string>
     <string name="pet_detail_expenses">Expenses</string>
     <!-- %1$s is the pet's name. -->
     <string name="expenses_title_format">Spending on %1$s</string>

@@ -1,14 +1,14 @@
 <!--
-    The app's spacing scale.
+    The app's spacing, shape and elevation scale.
 
-    Every gap in the app is one of these values rather than a number typed into a layout. Two
-    reasons: a shared scale keeps rhythm consistent between screens that were written weeks apart,
-    and values declared in dp are scaled per device, where a raw pixel figure would be a different
-    physical size on every screen.
+    Every gap, corner and shadow in the app is one of these values rather than a number typed into a
+    layout. Two reasons: a shared scale keeps rhythm consistent between screens that were written
+    weeks apart, and values declared in dp are scaled per device, where a raw pixel figure would be
+    a different physical size on every screen.
 
-    The scale is a familiar 4dp grid — each step roughly doubling — which is what Material's own
-    layouts are built on. Picking from a short list also removes the temptation to nudge a gap to
-    18dp because it looked slightly better on one device.
+    The spacing scale is a familiar 4dp grid — each step roughly doubling — which is what Material's
+    own layouts are built on. Picking from a short list also removes the temptation to nudge a gap
+    to 18dp because it looked slightly better on one device.
 -->
 <resources>
 
@@ -24,28 +24,77 @@
     <!-- Major breaks: above a screen's primary action, or around an empty state. -->
     <dimen name="spacing_xl">32dp</dimen>
 
-    <!-- ============================== Screen structure ============================== -->
-    <!-- Side padding applied to the content of every screen, so nothing ever sits flush to the
-         edge and all screens line up with each other. -->
-    <dimen name="screen_padding">24dp</dimen>
+    <!-- ============================== Screen structure ==============================
+         The redesign settles on a uniform 16dp gutter everywhere, replacing the 24dp the app used
+         before. The change is deliberate: cards now carry their own 16dp of internal padding, so a
+         24dp gutter on top of that pushed content 40dp from the screen edge and left the cards
+         looking narrow on a phone. 16dp outside and 16dp inside reads as one consistent rhythm. -->
+    <dimen name="screen_padding">16dp</dimen>
+
+    <!-- Breathing room above the first item on a screen, under the app bar. -->
+    <dimen name="content_top_padding">12dp</dimen>
 
     <!-- Bottom padding on a scrolling list that has a floating action button over it, so the last
          row can scroll clear of the button rather than finishing underneath it. Sized for the
-         button plus its margin. -->
-    <dimen name="list_padding_bottom_fab">96dp</dimen>
+         button plus its margin — and now also for the bottom navigation bar sitting below that. -->
+    <dimen name="list_padding_bottom_fab">104dp</dimen>
+
+    <!-- Bottom padding for a scrolling list on a screen with no floating action button. Only the
+         navigation bar has to be cleared. -->
+    <dimen name="list_padding_bottom">24dp</dimen>
+
+    <!-- ================================ Shape scale ================================
+         The redesign's rounded-corner language, in three steps. Everything the user perceives as a
+         "card" lands in the 16–20dp band; anything smaller is a detail *inside* a card and takes
+         the small radius, so the two never look like they are competing to be the same thing. -->
+
+    <!-- Small: pills, chips, tiny inner tiles. -->
+    <dimen name="corner_radius_sm">12dp</dimen>
+    <!-- Medium: list-row cards — one pet, one expense, one task. -->
+    <dimen name="corner_radius_md">16dp</dimen>
+    <!-- Large: full-width feature cards and the photo header on the pet detail screen. -->
+    <dimen name="corner_radius_lg">20dp</dimen>
+
+    <!-- ============================== Elevation scale ==============================
+         Deliberately shallow. A soft, barely-there shadow is what separates a white card from a
+         cream page; a heavy one on a light background reads as dirt rather than as depth. -->
+
+    <!-- Resting elevation for an ordinary card. -->
+    <dimen name="card_elevation">2dp</dimen>
+    <!-- A card that should read as the most important thing on the screen. -->
+    <dimen name="card_elevation_raised">4dp</dimen>
 
     <!-- ================================= Components ================================= -->
     <!-- Gap between cards in a vertical list. -->
     <dimen name="card_spacing">12dp</dimen>
-    <!-- Padding inside a card, between its edge and its content. -->
+    <!-- Padding inside a card, between its edge and its content. Matches the screen gutter. -->
     <dimen name="card_padding">16dp</dimen>
-    <!-- Corner radius on the larger image cards, matching Material 3's "large" shape. -->
-    <dimen name="image_card_corner_radius">16dp</dimen>
-    <!-- Height of the photo panel on the pet form and pet detail screens. -->
-    <dimen name="pet_photo_height">180dp</dimen>
+
+    <!-- ============================== Pastel stat pills ==============================
+         The soft tinted chips carrying one fact each — age, weight, species. -->
+    <!-- Fully rounded ends. Any value at least half the pill's height produces a capsule, so this
+         is set well above it rather than being kept in step with the pill's exact height. -->
+    <dimen name="pill_corner_radius">100dp</dimen>
+    <dimen name="pill_padding_horizontal">12dp</dimen>
+    <dimen name="pill_padding_vertical">6dp</dimen>
+    <dimen name="pill_spacing">8dp</dimen>
+
+    <!-- ================================ Pet imagery ================================ -->
+    <!-- Height of the photo header on the pet detail screen. Tall enough to be the first thing the
+         eye lands on, short enough that the name and stats below it stay above the fold. -->
+    <dimen name="pet_photo_height">220dp</dimen>
+    <!-- Height of the photo panel on the add/edit pet form, where the photo is an input rather than
+         the subject of the screen. -->
+    <dimen name="pet_photo_form_height">180dp</dimen>
+    <!-- The round thumbnail on a dashboard or Pets-tab card. Its corners are not listed here: the
+         circle comes from a shape appearance using a 50% corner size, which works at any size — see
+         ShapeAppearance.PetCare.Circle in styles.xml. -->
+    <dimen name="pet_thumb_size">64dp</dimen>
 
     <!-- Size of a category icon beside a heading or a list row. -->
     <dimen name="category_icon_size">20dp</dimen>
+    <!-- The tinted circle a category icon sits inside on a dashboard task row. -->
+    <dimen name="category_badge_size">36dp</dimen>
     <!-- Size of the illustration at the top of an empty state. Large enough to read as an
          illustration rather than as a stray icon. -->
     <dimen name="empty_state_icon_size">72dp</dimen>

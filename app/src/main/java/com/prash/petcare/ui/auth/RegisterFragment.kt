@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,7 +15,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentRegisterBinding
-import com.prash.petcare.ui.home.HomeFragment
+import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
 /**
@@ -32,6 +32,9 @@ class RegisterFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: AuthViewModel by viewModels { AuthViewModel.Factory }
+
+    /** The Activity-wide account holder — see the equivalent note in [LoginFragment]. */
+    private val sessionViewModel: SessionViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -123,12 +126,12 @@ class RegisterFragment : Fragment() {
     private fun handleEvent(event: AuthEvent) {
         when (event) {
             is AuthEvent.Authenticated -> {
-                // A new account is signed in straight away, so registration lands on the same
-                // destination as a successful login.
-                findNavController().navigate(
-                    R.id.action_register_to_home,
-                    bundleOf(HomeFragment.ARG_USER_ID to event.userId)
-                )
+                // A new account is signed in straight away, so registration records the session and
+                // lands on the same destination as a successful login — see the fuller note in
+                // LoginFragment on why the account is recorded rather than passed as an argument.
+                sessionViewModel.signIn(event.userId)
+
+                findNavController().navigate(R.id.action_register_to_home)
             }
 
             is AuthEvent.Error -> {

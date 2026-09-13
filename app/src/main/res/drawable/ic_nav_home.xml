@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Home tab in the bottom navigation bar: a house.
+
+    No android:tint here, unlike most of the app's icons. A bottom-navigation item tints its own
+    icon from the bar's itemIconTint — a colour state list that changes with selection, see
+    res/color/bottom_nav_item_tint.xml — and a tint baked into the drawable would override it,
+    leaving every tab looking identically selected.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Roof drawn as two diagonals from the apex, then the walls and the doorway cut out of the
+         middle — one closed outline rather than separate shapes, so the icon stays a single path. -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M10,20v-6h4v6h5v-8h3L12,3 2,12h3v8z" />
+
+</vector>

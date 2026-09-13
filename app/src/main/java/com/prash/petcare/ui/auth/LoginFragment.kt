@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,7 +15,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentLoginBinding
-import com.prash.petcare.ui.home.HomeFragment
+import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
 /**
@@ -51,6 +51,15 @@ class LoginFragment : Fragment() {
      * progress — survives a screen rotation instead of restarting.
      */
     private val viewModel: AuthViewModel by viewModels { AuthViewModel.Factory }
+
+    /**
+     * Where the signed-in account is recorded once the credentials check out.
+     *
+     * `by activityViewModels` rather than `by viewModels`, so this is the Activity's instance — the
+     * very same object every screen after sign-in reads the account from. Scoping it to this
+     * fragment would give the login screen a private copy that died with it.
+     */
+    private val sessionViewModel: SessionViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -135,12 +144,17 @@ class LoginFragment : Fragment() {
     private fun handleEvent(event: AuthEvent) {
         when (event) {
             is AuthEvent.Authenticated -> {
-                // Pass the signed-in account's id on to the home screen, matching the `userId`
-                // argument declared for that destination in nav_graph.xml.
-                findNavController().navigate(
-                    R.id.action_login_to_home,
-                    bundleOf(HomeFragment.ARG_USER_ID to event.userId)
-                )
+                // Record the account *before* navigating, not as an argument alongside it. The four
+                // screens the bottom navigation bar leads to all need to know who is signed in, and
+                // a bottom bar navigates by destination id with no arguments attached — so the
+                // account is held above the screens instead. See SessionViewModel.
+                //
+                // The ordering matters: the home screen's ViewModel is constructed as part of the
+                // navigation below and asks for the account immediately, so it has to be there
+                // first.
+                sessionViewModel.signIn(event.userId)
+
+                findNavController().navigate(R.id.action_login_to_home)
             }
 
             is AuthEvent.Error -> {

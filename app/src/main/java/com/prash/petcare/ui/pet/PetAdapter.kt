@@ -1,6 +1,7 @@
-package com.prash.petcare.ui.home
+package com.prash.petcare.ui.pet
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -8,10 +9,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.databinding.ItemPetBinding
+import com.prash.petcare.ui.common.formatAge
 import com.prash.petcare.ui.common.labelRes
+import com.prash.petcare.ui.common.loadPetPhoto
+import kotlinx.coroutines.CoroutineScope
 
 /**
- * Displays the user's pets in the home screen's RecyclerView.
+ * Displays the user's pets in the Pets tab.
  *
  * Extends [ListAdapter] rather than the plain `RecyclerView.Adapter`. ListAdapter takes a whole
  * new list via `submitList` and works out the difference against the previous one on a background
@@ -19,11 +23,15 @@ import com.prash.petcare.ui.common.labelRes
  * hand instead would redraw every visible row on each database update and lose scroll position
  * and animations.
  *
+ * @property photoScope The coroutine scope photo loads run in. Passed in rather than created here,
+ *   because an adapter has no lifecycle of its own: the fragment hands it
+ *   `viewLifecycleOwner.lifecycleScope`, so leaving the screen cancels every decode still in flight.
  * @property onPetClick Called with the tapped pet. Passed in as a lambda rather than having the
  *   adapter navigate by itself, which keeps navigation decisions in the fragment and leaves this
  *   adapter reusable on any screen that lists pets.
  */
 class PetAdapter(
+    private val photoScope: CoroutineScope,
     private val onPetClick: (Pet) -> Unit
 ) : ListAdapter<Pet, PetAdapter.PetViewHolder>(PetDiffCallback) {
 
@@ -38,7 +46,7 @@ class PetAdapter(
             // false: the RecyclerView attaches the view itself once it has measured it.
             false
         )
-        return PetViewHolder(binding, onPetClick)
+        return PetViewHolder(binding, photoScope, onPetClick)
     }
 
     /** Fills a (possibly recycled) row with the pet at [position]. */
@@ -55,6 +63,7 @@ class PetAdapter(
      */
     class PetViewHolder(
         private val binding: ItemPetBinding,
+        private val photoScope: CoroutineScope,
         private val onPetClick: (Pet) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
@@ -80,6 +89,40 @@ class PetAdapter(
             } else {
                 speciesLabel
             }
+
+            bindPills(pet)
+
+            // Asynchronous, and careful about recycling — see ui/common/PetPhotoBinder.kt.
+            binding.petPhotoImage.loadPetPhoto(pet.photoPath, photoScope)
+        }
+
+        /**
+         * Fills the age and weight pills, hiding whichever facts were never recorded.
+         *
+         * Hidden rather than filled with a placeholder: a rescue animal's birthday is often
+         * genuinely unknown, and a pill reading "Age unknown" would take up the same space as a real
+         * fact while telling the user nothing.
+         *
+         * When neither is known, the whole row goes — otherwise the card would carry a band of empty
+         * padding under the breed that looks like something failed to load.
+         *
+         * Every visibility is set explicitly both ways, because this row may be recycled from a pet
+         * that recorded a fact this one does not.
+         */
+        private fun bindPills(pet: Pet) {
+            val context = binding.root.context
+
+            val age = pet.dateOfBirth?.let { formatAge(context, it) }
+            binding.agePill.text = age.orEmpty()
+            binding.agePill.visibility = if (age != null) View.VISIBLE else View.GONE
+
+            val weight = pet.weightKg
+                ?.let { context.getString(R.string.pet_detail_weight_format, it.toString()) }
+            binding.weightPill.text = weight.orEmpty()
+            binding.weightPill.visibility = if (weight != null) View.VISIBLE else View.GONE
+
+            binding.pillRow.visibility =
+                if (age != null || weight != null) View.VISIBLE else View.GONE
         }
     }
 
@@ -88,7 +131,8 @@ class PetAdapter(
      *
      * The two checks answer different questions, and both are needed:
      *  - [areItemsTheSame] asks "is this the same pet?", compared by id. This is how a row that
-     *    moved is recognised as a move rather than a delete plus an insert.
+     *    moved is recognised as a move rather than a delete plus an insert — which matters here
+     *    because a delete-plus-insert would re-decode the photo.
      *  - [areContentsTheSame] asks "does it still look the same?", deciding whether that row needs
      *    redrawing at all.
      */

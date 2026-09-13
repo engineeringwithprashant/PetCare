@@ -24,7 +24,7 @@
     android:drawablePadding="@dimen/spacing_sm"
     android:gravity="center_vertical"
     android:textAppearance="?attr/textAppearanceTitleSmall"
-    android:textColor="?attr/colorPrimary"
-    app:drawableTint="?attr/colorPrimary"
+    android:textColor="?attr/colorAccentText"
+    app:drawableTint="?attr/colorAccentText"
     tools:drawableStart="@drawable/ic_category_feeding"
     tools:text="Feeding" />

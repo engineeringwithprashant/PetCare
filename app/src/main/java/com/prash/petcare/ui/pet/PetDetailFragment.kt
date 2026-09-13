@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -18,14 +18,15 @@ import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.databinding.FragmentPetDetailBinding
 import com.prash.petcare.ui.checklist.ChecklistFragment
+import com.prash.petcare.ui.common.formatAge
 import com.prash.petcare.ui.common.formatStoredDate
 import com.prash.petcare.ui.common.labelRes
+import com.prash.petcare.ui.common.loadPetPhoto
 import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.expense.ExpensesFragment
 import com.prash.petcare.ui.routine.AddRoutineFragment
 import com.prash.petcare.ui.routine.RoutineAdapter
 import com.prash.petcare.ui.routine.RoutineDetailFragment
-import com.prash.petcare.util.PetPhotoStorage
 import kotlinx.coroutines.launch
 
 /**
@@ -141,39 +142,69 @@ class PetDetailFragment : Fragment() {
 
         // The list and the empty message occupy the same slot, so exactly one shows. Both stay
         // hidden while loading, which stops "No routines yet" flashing up before the first result.
-        binding.routinesRecyclerView.visibility =
-            if (state.routines.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.emptyRoutinesContainer.visibility =
-            if (state.hasNoRoutines) View.VISIBLE else View.GONE
+        binding.routinesRecyclerView.isVisible = state.routines.isNotEmpty()
+        binding.emptyRoutinesContainer.isVisible = state.hasNoRoutines
     }
 
-    /** Fills in the pet's header and detail blocks. */
+    /** Fills in the pet's header, stat pills and detail blocks. */
     private fun bindPet(pet: Pet) {
-        // The name is the screen's title, so it goes in the app bar rather than being repeated as
-        // a heading in the content beneath it.
+        // The name appears twice, and deliberately so: in the app bar, which is what identifies the
+        // screen once the photo has scrolled away, and as the heading below the photo, which is
+        // part of the introduction the photo begins.
         setToolbarTitle(pet.name)
+        binding.petNameText.text = pet.name
 
-        val speciesLabel = getString(pet.species.labelRes())
+        // Breed alone here, since the species has a pill of its own. Hidden when none was recorded
+        // rather than leaving an empty line between the name and the pills — breed is not
+        // meaningful for every species, so this is a common case rather than an edge one.
         val breed = pet.breed?.takeIf { it.isNotBlank() }
-        binding.petSubtitleText.text = if (breed != null) {
-            getString(R.string.pet_species_and_breed, speciesLabel, breed)
-        } else {
-            speciesLabel
-        }
+        binding.petBreedText.text = breed.orEmpty()
+        binding.petBreedText.isVisible = breed != null
 
+        bindPills(pet)
         renderPhoto(pet.photoPath)
+        bindDetailCard(pet)
+    }
 
-        // Each block hides itself when its field was never filled in, so the card shows only what
-        // the owner actually recorded rather than a column of empty headings.
+    /**
+     * Fills the three pastel pills — age, weight and species.
+     *
+     * Each hides itself when its fact was never recorded, so the row shows only what is actually
+     * known. Species is the one that is always present, since it is a required field on the form,
+     * which means the row can never end up empty and does not need hiding as a whole.
+     *
+     * Age is derived from the date of birth rather than stored — see ui.common.formatAge — while the
+     * exact date stays in the card below. The two are complementary: the pill answers "how old is
+     * this animal?" at a glance, and the date is what a vet form asks for.
+     */
+    private fun bindPills(pet: Pet) {
+        val age = pet.dateOfBirth?.let { formatAge(requireContext(), it) }
+        binding.agePill.text = age.orEmpty()
+        binding.agePill.isVisible = age != null
+
+        val weight = pet.weightKg
+            ?.let { getString(R.string.pet_detail_weight_format, it.toString()) }
+        binding.weightPill.text = weight.orEmpty()
+        binding.weightPill.isVisible = weight != null
+
+        // The species enum stores database values (DOG, CAT), so it is translated to a readable
+        // label before display.
+        binding.speciesPill.text = getString(pet.species.labelRes())
+    }
+
+    /**
+     * Fills the "About" card — the things a sitter or a vet would need to be told.
+     *
+     * Each block hides itself when its field was never filled in, so the card shows only what the
+     * owner actually recorded rather than a column of empty headings. Weight is absent from this
+     * card because it is a pill instead: it is glanced at rather than read, which is what a pill is
+     * for.
+     */
+    private fun bindDetailCard(pet: Pet) {
         val hasDob = bindDetailBlock(
             binding.dobBlock,
             binding.dobValueText,
             pet.dateOfBirth?.let { formatStoredDate(it) }
-        )
-        val hasWeight = bindDetailBlock(
-            binding.weightBlock,
-            binding.weightValueText,
-            pet.weightKg?.let { getString(R.string.pet_detail_weight_format, it.toString()) }
         )
         val hasDietary =
             bindDetailBlock(binding.dietaryBlock, binding.dietaryValueText, pet.dietaryNotes)
@@ -182,9 +213,9 @@ class PetDetailFragment : Fragment() {
         val hasToys =
             bindDetailBlock(binding.toysBlock, binding.toysValueText, pet.favouriteToys)
 
-        // With every block hidden the card would render as an empty rectangle, so it goes too.
-        val hasAnyDetail = hasDob || hasWeight || hasDietary || hasAllergies || hasToys
-        binding.detailsCard.visibility = if (hasAnyDetail) View.VISIBLE else View.GONE
+        // With every block hidden the card would render as a white rectangle holding nothing but
+        // its own heading, so it goes too.
+        binding.detailsCard.isVisible = hasDob || hasDietary || hasAllergies || hasToys
     }
 
     /**
@@ -198,31 +229,25 @@ class PetDetailFragment : Fragment() {
         if (hasValue) {
             valueView.text = value
         }
-        container.visibility = if (hasValue) View.VISIBLE else View.GONE
+        container.isVisible = hasValue
         return hasValue
     }
 
-    /** Loads and shows the pet's photo, or the placeholder when there is none. */
+    /**
+     * Loads and shows the pet's photo, or the placeholder when there is none.
+     *
+     * Guarded against re-decoding the same image: [render] runs on every state emission — a routine
+     * being paused, a task ticked elsewhere — and without this the photo would be read from disk
+     * again each time, for a result identical to what is already on screen.
+     *
+     * The load itself is shared with the list rows, which need the same care about a view being
+     * rebound mid-decode; see ui/common/PetPhotoBinder.kt.
+     */
     private fun renderPhoto(path: String?) {
         if (path == renderedPhotoPath) return
         renderedPhotoPath = path
 
-        if (path == null) {
-            binding.petPhotoImage.setImageResource(R.drawable.ic_pet_placeholder)
-            binding.petPhotoImage.scaleType = ImageView.ScaleType.CENTER_INSIDE
-            return
-        }
-
-        // Decoding touches the disk, so it runs in a coroutine tied to the view's lifecycle and is
-        // cancelled if the screen closes first.
-        viewLifecycleOwner.lifecycleScope.launch {
-            val bitmap = PetPhotoStorage.load(path)
-            if (bitmap != null) {
-                binding.petPhotoImage.setImageBitmap(bitmap)
-                binding.petPhotoImage.scaleType = ImageView.ScaleType.CENTER_CROP
-                binding.petPhotoImage.setPadding(0, 0, 0, 0)
-            }
-        }
+        binding.petPhotoImage.loadPetPhoto(path, viewLifecycleOwner.lifecycleScope)
     }
 
     override fun onDestroyView() {

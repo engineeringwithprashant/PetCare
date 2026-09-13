@@ -7,11 +7,19 @@
     use those roles via ?attr/. That indirection is what makes dark mode work: the roles stay the
     same, and only the values behind them change.
 
-    **The scheme.** Material 3 builds a palette from one source colour. PetCare's is a warm honey
-    amber — friendly and animal-adjacent rather than the clinical blue most apps default to, and
-    distinctive enough that the app is recognisable at a glance. A muted olive green serves as the
-    tertiary accent, reading as health and wellbeing, with a warm neutral grey for surfaces so the
-    whole app feels warm rather than stark.
+    **The scheme.** PetCare is built on warm cream and white with a single bright honey-yellow
+    accent. The reasoning behind each decision:
+
+     - *Cream, not white, as the page.* A pure #FFFFFF background makes every white card on it
+       invisible. Backing the app with a warm cream (#FFFBF3) and giving cards true white lets the
+       cards lift off the page through colour alone, before a single pixel of shadow is drawn.
+     - *Yellow as the accent, used sparingly.* Yellow reads as friendly and animal-adjacent rather
+       than clinical, and nothing else in the app competes with it — so wherever it appears, that is
+       the thing to press. It is a *light* colour, which is why colorOnPrimary here is near-black:
+       white text on this yellow would fail contrast badly.
+     - *Pastel stat pills.* A separate family of soft tinted chips (see the pill section below) used
+       for small facts — a pet's age, weight, species. They are deliberately low-saturation so a row
+       of them reads as information rather than as five competing buttons.
 
     **Naming.** Each name states its scheme and role: md_theme_light_primaryContainer is the
     "primary container" role in the light scheme. The pairing matters — every "on" colour is the
@@ -22,24 +30,27 @@
 
     <!-- ============================== Light scheme ============================== -->
 
-    <!-- Primary: the honey amber. Carries the main actions — filled buttons, the FAB, switches. -->
-    <color name="md_theme_light_primary">#855300</color>
-    <color name="md_theme_light_onPrimary">#FFFFFF</color>
-    <!-- The muted variant, used behind content: cards, swipe backgrounds, chips. -->
-    <color name="md_theme_light_primaryContainer">#FFDDB0</color>
-    <color name="md_theme_light_onPrimaryContainer">#2A1800</color>
+    <!-- Primary: the bright honey yellow. Carries the main actions — the FAB, filled buttons, the
+         selected bottom-navigation tab. Paired with a near-black "on" colour, because this yellow
+         is far too light to sit white text on. -->
+    <color name="md_theme_light_primary">#FFC53D</color>
+    <color name="md_theme_light_onPrimary">#2A1F00</color>
+    <!-- The muted variant, used behind content that should read as *related* to the accent without
+         shouting: the selected tab's pill, highlighted chips. -->
+    <color name="md_theme_light_primaryContainer">#FFEDBF</color>
+    <color name="md_theme_light_onPrimaryContainer">#2A1F00</color>
 
-    <!-- Secondary: a warm sand, for supporting elements that should not compete with primary. -->
-    <color name="md_theme_light_secondary">#705B41</color>
+    <!-- Secondary: a warm taupe, for supporting elements that should not compete with primary. -->
+    <color name="md_theme_light_secondary">#6F6350</color>
     <color name="md_theme_light_onSecondary">#FFFFFF</color>
-    <color name="md_theme_light_secondaryContainer">#FCDEBC</color>
-    <color name="md_theme_light_onSecondaryContainer">#281905</color>
+    <color name="md_theme_light_secondaryContainer">#F7E9D2</color>
+    <color name="md_theme_light_onSecondaryContainer">#261A04</color>
 
-    <!-- Tertiary: olive green, the health accent. Used sparingly for contrast against the amber. -->
-    <color name="md_theme_light_tertiary">#53643E</color>
+    <!-- Tertiary: sage green, the health accent. Used sparingly for contrast against the yellow. -->
+    <color name="md_theme_light_tertiary">#4F6A50</color>
     <color name="md_theme_light_onTertiary">#FFFFFF</color>
-    <color name="md_theme_light_tertiaryContainer">#D6EABA</color>
-    <color name="md_theme_light_onTertiaryContainer">#121F02</color>
+    <color name="md_theme_light_tertiaryContainer">#D3EDD1</color>
+    <color name="md_theme_light_onTertiaryContainer">#0C2010</color>
 
     <!-- Error: reserved for destructive actions and validation failures. Kept close to the
          Material default red, because a warning that looks like the brand stops reading as a
@@ -49,60 +60,126 @@
     <color name="md_theme_light_errorContainer">#FFDAD6</color>
     <color name="md_theme_light_onErrorContainer">#410002</color>
 
-    <!-- Neutrals. Very slightly warm rather than pure white, so the app feels of a piece with the
-         amber rather than sitting on a cold background. -->
-    <color name="md_theme_light_background">#FFF8F4</color>
-    <color name="md_theme_light_onBackground">#201B13</color>
-    <color name="md_theme_light_surface">#FFF8F4</color>
-    <color name="md_theme_light_onSurface">#201B13</color>
-    <color name="md_theme_light_surfaceVariant">#F0E0CF</color>
-    <color name="md_theme_light_onSurfaceVariant">#4F4539</color>
-    <color name="md_theme_light_outline">#817567</color>
-    <color name="md_theme_light_outlineVariant">#D3C4B4</color>
+    <!-- Neutrals — the heart of the redesign.
+
+         background is the warm cream the whole app is laid on; surface is the true white the cards
+         are drawn in. They are deliberately *different* here, where before they were the same
+         value: that single point of separation is what lets a card read as a card. -->
+    <color name="md_theme_light_background">#FFFBF3</color>
+    <color name="md_theme_light_onBackground">#1F1B13</color>
+    <color name="md_theme_light_surface">#FFFFFF</color>
+    <color name="md_theme_light_onSurface">#1F1B13</color>
+    <!-- The quieter surface, for a card that should recede behind the one next to it. -->
+    <color name="md_theme_light_surfaceVariant">#F3EADB</color>
+    <color name="md_theme_light_onSurfaceVariant">#6B6152</color>
+    <color name="md_theme_light_outline">#9C9182</color>
+    <!-- Hairline dividers and card strokes. Very close to the background on purpose: the card's
+         shadow does the separating, and a visible border on top of it would look drawn twice. -->
+    <color name="md_theme_light_outlineVariant">#E8DECB</color>
 
     <!-- Inverse roles: used by Snackbars, which sit on a surface opposite to the rest of the app
          so they read as temporary and layered above it. -->
-    <color name="md_theme_light_inverseSurface">#352F27</color>
-    <color name="md_theme_light_inverseOnSurface">#FAEFE7</color>
-    <color name="md_theme_light_inversePrimary">#FFB95C</color>
+    <color name="md_theme_light_inverseSurface">#34302A</color>
+    <color name="md_theme_light_inverseOnSurface">#F8EFE2</color>
+    <color name="md_theme_light_inversePrimary">#FFD978</color>
 
     <!-- =============================== Dark scheme ===============================
-         Not simply the light scheme inverted. In dark mode the primary becomes a *lighter* amber,
-         because a dark saturated colour on a dark background would be unreadable, and the
-         containers become dark with light text. The role pairings are unchanged, which is exactly
-         why layouts need no dark-mode variants of their own. -->
+         Not simply the light scheme inverted. In dark mode the cream page becomes a warm near-black
+         and the white cards become a *lighter* charcoal, keeping the same relationship: the card is
+         still the lighter of the two, so it still lifts off the page. The yellow softens slightly,
+         because a fully saturated accent on a dark ground glares. The role pairings are unchanged,
+         which is exactly why layouts need no dark-mode variants of their own. -->
 
-    <color name="md_theme_dark_primary">#FFB95C</color>
-    <color name="md_theme_dark_onPrimary">#472A00</color>
-    <color name="md_theme_dark_primaryContainer">#653E00</color>
-    <color name="md_theme_dark_onPrimaryContainer">#FFDDB0</color>
+    <color name="md_theme_dark_primary">#FFCE4F</color>
+    <color name="md_theme_dark_onPrimary">#3D2F00</color>
+    <color name="md_theme_dark_primaryContainer">#57450A</color>
+    <color name="md_theme_dark_onPrimaryContainer">#FFEDBF</color>
 
-    <color name="md_theme_dark_secondary">#DFC2A2</color>
-    <color name="md_theme_dark_onSecondary">#3F2D17</color>
-    <color name="md_theme_dark_secondaryContainer">#57432B</color>
-    <color name="md_theme_dark_onSecondaryContainer">#FCDEBC</color>
+    <color name="md_theme_dark_secondary">#DCCBB2</color>
+    <color name="md_theme_dark_onSecondary">#3C3425</color>
+    <color name="md_theme_dark_secondaryContainer">#544A3A</color>
+    <color name="md_theme_dark_onSecondaryContainer">#F7E9D2</color>
 
-    <color name="md_theme_dark_tertiary">#BACE9F</color>
-    <color name="md_theme_dark_onTertiary">#263514</color>
-    <color name="md_theme_dark_tertiaryContainer">#3C4C29</color>
-    <color name="md_theme_dark_onTertiaryContainer">#D6EABA</color>
+    <color name="md_theme_dark_tertiary">#B7D0B5</color>
+    <color name="md_theme_dark_onTertiary">#223725</color>
+    <color name="md_theme_dark_tertiaryContainer">#384E3A</color>
+    <color name="md_theme_dark_onTertiaryContainer">#D3EDD1</color>
 
     <color name="md_theme_dark_error">#FFB4AB</color>
     <color name="md_theme_dark_onError">#690005</color>
     <color name="md_theme_dark_errorContainer">#93000A</color>
     <color name="md_theme_dark_onErrorContainer">#FFDAD6</color>
 
-    <color name="md_theme_dark_background">#181310</color>
-    <color name="md_theme_dark_onBackground">#ECE0D4</color>
-    <color name="md_theme_dark_surface">#181310</color>
-    <color name="md_theme_dark_onSurface">#ECE0D4</color>
-    <color name="md_theme_dark_surfaceVariant">#4F4539</color>
-    <color name="md_theme_dark_onSurfaceVariant">#D3C4B4</color>
-    <color name="md_theme_dark_outline">#9C8F80</color>
-    <color name="md_theme_dark_outlineVariant">#4F4539</color>
+    <!-- The dark equivalent of the cream-page / white-card split above. -->
+    <color name="md_theme_dark_background">#15120C</color>
+    <color name="md_theme_dark_onBackground">#EAE1D3</color>
+    <color name="md_theme_dark_surface">#221E17</color>
+    <color name="md_theme_dark_onSurface">#EAE1D3</color>
+    <color name="md_theme_dark_surfaceVariant">#2E291F</color>
+    <color name="md_theme_dark_onSurfaceVariant">#CFC5B2</color>
+    <color name="md_theme_dark_outline">#988E7D</color>
+    <color name="md_theme_dark_outlineVariant">#3A342A</color>
 
-    <color name="md_theme_dark_inverseSurface">#ECE0D4</color>
-    <color name="md_theme_dark_inverseOnSurface">#352F27</color>
-    <color name="md_theme_dark_inversePrimary">#855300</color>
+    <color name="md_theme_dark_inverseSurface">#EAE1D3</color>
+    <color name="md_theme_dark_inverseOnSurface">#34302A</color>
+    <color name="md_theme_dark_inversePrimary">#7B6000</color>
+
+    <!-- =============================== Accent text ===============================
+         The colour for text and icons that should read as *accented* — a task's time of day, an
+         expense's amount, a category heading.
+
+         These cannot simply use colorPrimary, and the reason is the whole point of the redesign's
+         palette. The accent is a bright yellow, chosen because it is light and cheerful; light is
+         exactly what text on a white card must not be. #FFC53D on white is roughly 1.6:1, far below
+         the 4.5:1 that ordinary text needs, and a user would be squinting at every amount in the
+         app.
+
+         So the accent has two forms: the bright yellow that *fills* things — buttons, the selected
+         tab, the floating action button, all of which carry dark text on top — and this deeper amber
+         that *is* text. Same hue, so they read as the same accent; very different lightness, so both
+         are legible in the role they play. In dark mode the problem reverses and the yellow itself
+         becomes the legible choice, which is why the dark value below is the primary again.
+
+         Exposed to layouts as ?attr/colorAccentText — see attrs.xml. -->
+    <color name="accent_text_light">#7A5300</color>
+    <color name="accent_text_dark">#FFCE4F</color>
+
+    <!-- ============================== Pastel stat pills ==============================
+         The soft tinted chips that carry a single small fact — a pet's age, its weight, how many
+         tasks are left today.
+
+         These sit outside the Material role system deliberately. The roles answer "how important is
+         this?", and every pill is equally unimportant; what a pill needs instead is a colour that
+         *distinguishes* it from the pill beside it, so a row of three facts can be told apart at a
+         glance without reading the labels. Four hues, each with the text colour guaranteed legible
+         on it, exposed to layouts as theme attributes — see attrs.xml and themes.xml.
+
+         Light-mode pills are pale washes with dark text. Dark-mode pills invert that relationship:
+         a deep, desaturated ground with pale text. Keeping the same *hue* across both is what makes
+         "the mint one is age" stay true in either theme. -->
+
+    <!-- Mint — used for age. -->
+    <color name="pill_light_mint">#D9F2E4</color>
+    <color name="pill_light_on_mint">#0F3D28</color>
+    <color name="pill_dark_mint">#1E3A2C</color>
+    <color name="pill_dark_on_mint">#B5E6CB</color>
+
+    <!-- Sky — used for weight. -->
+    <color name="pill_light_sky">#D9E9F7</color>
+    <color name="pill_light_on_sky">#123247</color>
+    <color name="pill_dark_sky">#1D3344</color>
+    <color name="pill_dark_on_sky">#B3D7EF</color>
+
+    <!-- Lilac — used for species. -->
+    <color name="pill_light_lilac">#E6DFF7</color>
+    <color name="pill_light_on_lilac">#2C2246</color>
+    <color name="pill_dark_lilac">#2F2A43</color>
+    <color name="pill_dark_on_lilac">#CFC2F0</color>
+
+    <!-- Peach — used for outstanding care, where a little warmth is wanted without alarm. -->
+    <color name="pill_light_peach">#FBE3D6</color>
+    <color name="pill_light_on_peach">#4A2513</color>
+    <color name="pill_dark_peach">#43291C</color>
+    <color name="pill_dark_on_peach">#F5C9B0</color>
 
 </resources>

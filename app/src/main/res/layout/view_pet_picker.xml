@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The pet picker: a label and a horizontal row of chips, one per pet.
+
+    Shared by the Tasks and Expenses tabs, which both show one animal at a time. Written once as an
+    includable layout rather than copied into both screens, so the two pickers cannot drift apart —
+    and so a change to how choosing a pet looks is one edit rather than two.
+
+    Included with an id, which is what makes ViewBinding expose it as a nested binding: the host
+    screen reaches these views as `binding.petPicker.petChipGroup` rather than having their ids
+    flattened into its own. The `label` is set in code, because the two screens introduce the same
+    row differently — "Showing care for" against "Showing spending for".
+
+    **Why a HorizontalScrollView around the group.** A ChipGroup wraps onto a second line by
+    default, and a user with six pets would get a block of chips deep enough to push the actual
+    content off the screen. `singleLine` keeps them on one row and the scroll view lets that row
+    slide, so the picker stays exactly one line tall however many animals there are.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/content_top_padding">
+
+    <TextView
+        android:id="@+id/petPickerLabel"
+        style="@style/PetCare.DetailLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/screen_padding"
+        android:layout_marginEnd="@dimen/screen_padding"
+        tools:text="@string/pet_picker_label" />
+
+    <!-- The scroll bar is switched off: the chips themselves show there is more to the side by
+         being cut off at the edge, and a scroll bar under a single row of chips reads as clutter.
+         clipToPadding="false" lets the first and last chip sit inside the screen's gutter while
+         still scrolling past it. -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/screen_padding"
+        android:paddingEnd="@dimen/screen_padding"
+        android:scrollbars="none">
+
+        <!--
+            singleSelection: exactly one pet is showing at a time, so choosing one clears the last.
+
+            selectionRequired: a chip cannot be tapped to *deselect* it, which would otherwise leave
+            the screen showing nobody's care with no obvious way back.
+        -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/petChipGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:chipSpacingHorizontal="@dimen/pill_spacing"
+            app:selectionRequired="true"
+            app:singleLine="true"
+            app:singleSelection="true" />
+
+    </HorizontalScrollView>
+
+</LinearLayout>

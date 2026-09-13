@@ -11,7 +11,7 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/Widget.Material3.CardView.Elevated"
+    style="@style/PetCare.Card.Feature"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/spacing_sm">
@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_xs"
             android:textAppearance="?attr/textAppearanceHeadlineMedium"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="?attr/colorAccentText"
             tools:text="£248.50" />
 
         <!-- How many records make up that total, e.g. "across 12 expenses". -->

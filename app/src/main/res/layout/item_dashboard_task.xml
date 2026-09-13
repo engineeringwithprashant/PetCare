@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One tickable task in the dashboard's "Today's care" checklist.
+
+    Unlike the Tasks tab, this list mixes every pet's care together, so each row has to say which
+    animal it belongs to — that is what the subtitle carries, alongside the time of day.
+
+    **No card here.** These rows sit *inside* the dashboard's "Today's care" card, so giving each
+    one its own card would nest a surface in a surface and produce the stacked, boxed-in look the
+    redesign is getting away from. The row is a plain ConstraintLayout with a ripple background, and
+    the card around the whole list does the containing.
+
+    The columns read: *what kind of care* (the icon badge), *is it done* (the checkbox, at the far
+    end where a thumb reaches), and the task itself between them.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/taskRow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:paddingTop="@dimen/spacing_sm"
+    android:paddingBottom="@dimen/spacing_sm">
+
+    <!-- The category symbol in its tinted circle. A symbol is read far faster than a word when
+         scanning a list for the next thing to do, and the circle gives it enough visual weight to
+         anchor the row's left edge. The adapter sets which icon; PetCare.CategoryBadge supplies the
+         circle, the size and the tint. -->
+    <!-- No contentDescription here: it is set by the adapter to the category's own translated name,
+         which is the only value that could be correct — a fixed string in XML would announce
+         "Feeding" over a vet visit. The lint suppression says exactly that; the attribute is not
+         missing, it is supplied later. -->
+    <ImageView
+        android:id="@+id/categoryIcon"
+        style="@style/PetCare.CategoryBadge"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_category_feeding" />
+
+    <TextView
+        android:id="@+id/taskTitleText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_md"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textColor="?attr/colorOnSurface"
+        app:layout_constraintEnd_toStartOf="@id/taskCheckBox"
+        app:layout_constraintStart_toEndOf="@id/categoryIcon"
+        app:layout_constraintTop_toTopOf="@id/categoryIcon"
+        tools:text="Morning meal" />
+
+    <!-- Which pet, and when. Joined into one line rather than stacked, because two short facts on
+         separate lines would make every row taller than the thing it describes. -->
+    <TextView
+        android:id="@+id/taskSubtitleText"
+        style="@style/PetCare.ListSubtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="@id/taskTitleText"
+        app:layout_constraintStart_toStartOf="@id/taskTitleText"
+        app:layout_constraintTop_toBottomOf="@id/taskTitleText"
+        tools:text="Bella · 07:30" />
+
+    <!-- No text of its own: the labels sit alongside as separate views so they can be styled and
+         truncated independently. The row's own click listener forwards taps to it, giving a much
+         larger target than the box itself. -->
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/taskCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/cd_task_done"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

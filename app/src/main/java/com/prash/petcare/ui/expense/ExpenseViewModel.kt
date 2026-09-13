@@ -13,10 +13,16 @@ import com.prash.petcare.data.local.entity.ExpenseCategory
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.repository.ExpenseRepository
 import com.prash.petcare.data.repository.PetRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -118,18 +124,114 @@ sealed interface ExpenseEvent {
  * Recording and editing an expense belong to the form the user moves on to; what lives here is
  * reading the spending back and the swipe-to-delete shortcut on the list.
  *
- * @param petRepository Source of the pet, for the screen's title.
+ * **Which pet, and the two ways this screen is reached.** Spending is one of the four
+ * bottom-navigation tabs *and* the screen a pet's detail page opens — see the note at the top of
+ * nav_graph.xml on why one destination serves both. The difference is entirely in where the pet
+ * comes from, and it mirrors [com.prash.petcare.ui.checklist.ChecklistViewModel] exactly:
+ *
+ *  - From a pet's detail page, [initialPetId] is that animal and the pet never changes. [pets] is
+ *    empty, so the fragment shows no picker.
+ *  - From the bottom bar, [initialPetId] is [NO_PET_ID]. [pets] then carries the owner's animals
+ *    for the picker chips, and the first of them is selected automatically.
+ *
+ * @param petRepository Source of the pet, for the screen's title, and of the pet list for the
+ *   picker.
  * @param expenseRepository Source of the spending, and where a swipe-delete is written.
- * @param petId Which pet's expenses to show, passed in as a navigation argument.
+ * @param ownerId Whose pets the picker offers. Ignored when a specific pet was passed in.
+ * @param initialPetId The pet to show, or [NO_PET_ID] to offer the picker instead.
  */
 class ExpenseViewModel(
-    petRepository: PetRepository,
+    private val petRepository: PetRepository,
     private val expenseRepository: ExpenseRepository,
-    petId: Long
+    ownerId: Long,
+    initialPetId: Long
 ) : ViewModel() {
 
     /**
-     * The pet, its expenses and its total as one combined state.
+     * True when this screen was opened as a tab rather than for one particular animal, and should
+     * therefore let the user choose between pets.
+     */
+    val showsPetPicker: Boolean = initialPetId == NO_PET_ID
+
+    /**
+     * The pets the picker offers, or empty when this screen is showing one particular animal.
+     *
+     * Queried only in picker mode: subscribing to the owner's pets on a screen that will never show
+     * a picker would keep a query alive to populate a row that is not on screen.
+     */
+    val pets: StateFlow<List<Pet>> =
+        if (showsPetPicker) {
+            petRepository.observePetsForOwner(ownerId).stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
+        } else {
+            MutableStateFlow(emptyList())
+        }
+
+    /** Which pet's spending is currently showing. */
+    private val _selectedPetId = MutableStateFlow(initialPetId)
+    val selectedPetId: StateFlow<Long> = _selectedPetId.asStateFlow()
+
+    /**
+     * Keeps the selection pointing at a pet that actually exists.
+     *
+     * Covers two moments with one rule: choosing the first pet once the list arrives, and moving on
+     * if the selected pet is later deleted — from the Pets tab, or by a sync pulling down its
+     * deletion from another device — rather than leaving the screen showing the spending of an
+     * animal that no longer exists.
+     *
+     * Only runs in picker mode: with a pet passed in explicitly there is nothing to choose, and
+     * reassigning the selection would quietly show a different animal than the one asked for.
+     */
+    init {
+        if (showsPetPicker) {
+            viewModelScope.launch {
+                pets.collect { available ->
+                    if (available.none { it.id == _selectedPetId.value }) {
+                        _selectedPetId.value = available.firstOrNull()?.id ?: NO_PET_ID
+                    }
+                }
+            }
+        }
+    }
+
+    /** Records the pet the user tapped in the picker. */
+    fun selectPet(petId: Long) {
+        _selectedPetId.value = petId
+    }
+
+    /**
+     * The spending of whichever pet is selected.
+     *
+     * [flatMapLatest] is what lets the pet change at runtime: each new selection replaces the
+     * previous pet's queries with the new pet's, and cancels the ones being left so that switching
+     * between animals repeatedly does not leave a subscription behind for each one visited.
+     *
+     * With nothing selected — the moment before the pet list arrives, or a user with no pets at all
+     * — it emits an empty, finished state rather than no state at all. A flow that never emits
+     * would leave the screen on its loading state forever, and the fragment could not tell that
+     * apart from a slow query.
+     *
+     * [stateIn] caches the latest value, so a rotation re-attaches to what is already there instead
+     * of re-querying and flashing the empty state.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<ExpensesUiState> = _selectedPetId.flatMapLatest { petId ->
+        if (petId == NO_PET_ID) {
+            flowOf(ExpensesUiState(isLoading = false))
+        } else {
+            spendingFor(petId)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = ExpensesUiState()
+    )
+
+    /**
+     * Builds the state for one pet: the pet itself, its expenses and its total, combined.
      *
      * Three sources are combined so that any of them changing — renaming the pet, adding a receipt —
      * refreshes the screen, and the values always describe the same moment rather than arriving
@@ -139,11 +241,8 @@ class ExpenseViewModel(
      * That is the point of [ExpenseRepository.observeTotalForPet]: SQLite adds the column without
      * the rows ever leaving the database, and it keeps working if the list is later paged or
      * filtered, when summing what happens to be loaded would quietly report the wrong figure.
-     *
-     * [stateIn] caches the latest value, so a rotation re-attaches to what is already there instead
-     * of re-querying and flashing the empty state.
      */
-    val uiState: StateFlow<ExpensesUiState> = combine(
+    private fun spendingFor(petId: Long): Flow<ExpensesUiState> = combine(
         petRepository.observePet(petId),
         expenseRepository.observeExpensesForPet(petId),
         expenseRepository.observeTotalForPet(petId)
@@ -153,11 +252,7 @@ class ExpenseViewModel(
             items = buildItems(expenses, total),
             isLoading = false
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = ExpensesUiState()
-    )
+    }
 
     private val _events = Channel<ExpenseEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
@@ -259,14 +354,32 @@ class ExpenseViewModel(
     }
 
     companion object {
-        fun factory(petId: Long): ViewModelProvider.Factory = viewModelFactory {
+
+        /**
+         * The pet id meaning "none chosen", matching the app's convention for absent ids and the
+         * default declared on this destination in nav_graph.xml. Its presence is what puts the
+         * screen into picker mode.
+         */
+        const val NO_PET_ID = -1L
+
+        /**
+         * Builds the ViewModel.
+         *
+         * A function rather than a property because neither id is known until runtime: the owner
+         * comes from the session and the pet from the navigation argument.
+         *
+         * @param ownerId Whose pets the picker offers.
+         * @param petId The pet to show, or [NO_PET_ID] to offer the picker instead.
+         */
+        fun factory(ownerId: Long, petId: Long): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PetCareApplication
                 ExpenseViewModel(
                     petRepository = application.petRepository,
                     expenseRepository = application.expenseRepository,
-                    petId = petId
+                    ownerId = ownerId,
+                    initialPetId = petId
                 )
             }
         }

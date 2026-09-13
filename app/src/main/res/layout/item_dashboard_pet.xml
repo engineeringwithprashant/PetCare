@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One pet's card on the dashboard: a round photo, the name and breed, and the pastel pills showing
+    how its day is going.
+
+    The root is a MaterialCardView styled PetCare.Card.Clickable — rounded, white, softly shadowed,
+    and lifting slightly while pressed so it reads as a control rather than a panel. Everything
+    about how it looks comes from that one style; see values/styles.xml.
+
+    Inside is a flat ConstraintLayout. This layout is inflated once per visible row and then recycled
+    as the list scrolls, which is why it must stay shallow — a deep hierarchy here is measured and
+    laid out repeatedly and is the usual cause of janky scrolling.
+
+    The columns read left to right in the order the eye wants them: *which animal* (the photo),
+    *who* (the name), *how are they* (the pills), *is there more* (the chevron).
+-->
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Card.Clickable"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/card_spacing">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/card_padding">
+
+        <!--
+            The photo, clipped to a circle.
+
+            A ShapeableImageView rather than an ImageView inside a rounded card: it clips the bitmap
+            itself to the shape given below, so a rectangular photo becomes a true circle. Wrapping
+            a plain ImageView in a circular container would leave the corners of the photo painted
+            outside it.
+
+            The fragment loads the bitmap into this asynchronously — see ui/common/PetPhotoBinder.kt
+            for why a recycled row needs more care than a single assignment.
+        -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/petPhotoImage"
+            android:layout_width="@dimen/pet_thumb_size"
+            android:layout_height="@dimen/pet_thumb_size"
+            android:background="@drawable/bg_photo_circle"
+            android:contentDescription="@string/cd_pet_photo"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_pet_placeholder"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Circle" />
+
+        <TextView
+            android:id="@+id/petNameText"
+            style="@style/PetCare.ListTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            app:layout_constraintEnd_toStartOf="@id/openIcon"
+            app:layout_constraintStart_toEndOf="@id/petPhotoImage"
+            app:layout_constraintTop_toTopOf="@id/petPhotoImage"
+            tools:text="Bella" />
+
+        <!-- Species, plus breed when one was recorded. Filled in by PetSummaryAdapter. -->
+        <TextView
+            android:id="@+id/petSubtitleText"
+            style="@style/PetCare.ListSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            app:layout_constraintEnd_toEndOf="@id/petNameText"
+            app:layout_constraintStart_toStartOf="@id/petNameText"
+            app:layout_constraintTop_toBottomOf="@id/petNameText"
+            tools:text="Dog · Labrador" />
+
+        <!--
+            The pastel pills: one for the day's outstanding care, one for the pet's age.
+
+            A horizontal LinearLayout rather than two more constrained views, because the second
+            pill has to sit directly after the first *whatever width the first turns out to be* —
+            "All done today" is far wider than "2 left today". Constraining them individually would
+            mean fixing a width or chaining them, and a chain of two is more machinery than a row.
+
+            The age pill is hidden by the adapter when the pet has no recorded date of birth.
+        -->
+        <LinearLayout
+            android:id="@+id/pillRow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@id/petNameText"
+            app:layout_constraintStart_toStartOf="@id/petNameText"
+            app:layout_constraintTop_toBottomOf="@id/petSubtitleText">
+
+            <TextView
+                android:id="@+id/tasksPill"
+                style="@style/PetCare.Pill.Peach"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="2 left today" />
+
+            <TextView
+                android:id="@+id/agePill"
+                style="@style/PetCare.Pill.Mint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/pill_spacing"
+                tools:text="3 years old" />
+
+        </LinearLayout>
+
+        <!-- Says the card opens something, without which a card that happens to be tappable looks
+             exactly like one that is not. -->
+        <ImageView
+            android:id="@+id/openIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="@string/cd_open_pet"
+            android:src="@drawable/ic_chevron_right"
+            app:layout_constraintBottom_toBottomOf="@id/petNameText"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/petNameText" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

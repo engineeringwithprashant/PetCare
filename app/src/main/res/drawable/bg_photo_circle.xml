@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The muted circle behind a round pet thumbnail, seen when the pet has no photo and the paw-print
+    placeholder is showing.
+
+    **Why a shaped drawable rather than `android:background="?attr/colorSurfaceVariant"`.** A
+    ShapeableImageView masks its *image content* to the shape it is given; a flat colour set as the
+    view's background is not part of that content and can be left painted square behind the circle.
+    Giving the background a shape of its own makes the result correct however the mask behaves,
+    which is worth the extra file for something the user would notice immediately.
+
+    Its colour comes from a theme role, so it follows dark mode without a second drawable.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <solid android:color="?attr/colorSurfaceVariant" />
+
+</shape>

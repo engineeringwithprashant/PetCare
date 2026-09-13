@@ -1,36 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One row in the home screen's pet list.
+    One row in the Pets tab's list: a round photo, the pet's name and breed, and pastel pills for
+    the facts worth seeing without opening the animal.
 
-    This layout is inflated once per visible row and then recycled as the list scrolls, which is
-    why it must stay shallow — a deep view hierarchy here is measured and laid out repeatedly and
-    is the usual cause of janky scrolling.
+    Close to item_dashboard_pet.xml by design — the two are the same *kind* of object and should
+    look like it — but not the same file, because they answer different questions. The dashboard
+    card reports today ("2 left today"); this one reports the animal itself (age and weight), since
+    the Pets tab is a directory rather than a to-do list. Sharing one layout would mean a row
+    carrying both sets of pills, most of them empty on any given screen.
 
-    The root is a MaterialCardView so each pet reads as a distinct surface, following Material 3's
-    card guidance.
+    This layout is inflated once per visible row and then recycled as the list scrolls, which is why
+    it must stay shallow — a deep view hierarchy here is measured and laid out repeatedly and is the
+    usual cause of janky scrolling.
 -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Card.Clickable"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/card_spacing"
-    style="@style/Widget.Material3.CardView.Filled">
+    android:layout_marginBottom="@dimen/card_spacing">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/card_padding">
 
+        <!-- The photo, clipped to a circle by the shape overlay rather than by a container around
+             it — see the fuller note in item_dashboard_pet.xml. -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/petPhotoImage"
+            android:layout_width="@dimen/pet_thumb_size"
+            android:layout_height="@dimen/pet_thumb_size"
+            android:background="@drawable/bg_photo_circle"
+            android:contentDescription="@string/cd_pet_photo"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_pet_placeholder"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Circle" />
+
         <TextView
             android:id="@+id/petNameText"
             style="@style/PetCare.ListTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="@dimen/spacing_md"
+            app:layout_constraintEnd_toStartOf="@id/openIcon"
+            app:layout_constraintStart_toEndOf="@id/petPhotoImage"
+            app:layout_constraintTop_toTopOf="@id/petPhotoImage"
             tools:text="Bella" />
 
         <!-- Species, plus breed when one was recorded. Filled in by PetAdapter. -->
@@ -40,10 +61,58 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_xs"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/petNameText"
+            app:layout_constraintStart_toStartOf="@id/petNameText"
             app:layout_constraintTop_toBottomOf="@id/petNameText"
             tools:text="Dog · Labrador" />
+
+        <!--
+            Age and weight as pastel pills. A horizontal LinearLayout rather than two constrained
+            views, because the second has to sit directly after the first whatever width the first
+            turns out to be.
+
+            The adapter hides either pill when its fact was never recorded, and hides the whole row
+            when neither was — which is common for a rescue animal with an unknown birthday and no
+            weight taken yet, and would otherwise leave an empty band of padding under the breed.
+        -->
+        <LinearLayout
+            android:id="@+id/pillRow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@id/petNameText"
+            app:layout_constraintStart_toStartOf="@id/petNameText"
+            app:layout_constraintTop_toBottomOf="@id/petSubtitleText">
+
+            <TextView
+                android:id="@+id/agePill"
+                style="@style/PetCare.Pill.Mint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="3 years old" />
+
+            <TextView
+                android:id="@+id/weightPill"
+                style="@style/PetCare.Pill.Sky"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/pill_spacing"
+                tools:text="24.5 kg" />
+
+        </LinearLayout>
+
+        <!-- Says the card opens something, without which a card that happens to be tappable looks
+             exactly like one that is not. -->
+        <ImageView
+            android:id="@+id/openIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="@string/cd_open_pet"
+            android:src="@drawable/ic_chevron_right"
+            app:layout_constraintBottom_toBottomOf="@id/petNameText"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/petNameText" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

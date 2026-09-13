@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Custom theme attributes for the pastel stat pills.
+
+    **Why these exist.** Material 3 ships a fixed set of colour *roles* — primary, secondary,
+    tertiary, error and the surfaces. Those answer the question "how important is this?", and the
+    app already uses them for exactly that. A stat pill asks a different question: a row showing
+    age, weight and species needs three colours that are *distinguishable from one another*, all
+    equally quiet, none of them implying one fact matters more than the next. There is no Material
+    role for "one of several equal categories", so the app declares its own.
+
+    **Why attributes rather than colours.** A layout could name @color/pill_light_mint directly, but
+    that colour is only correct in light mode — the pill would keep its pale wash on a dark
+    background and the text on it would vanish. Declaring an *attribute* here and giving it a value
+    in both values/themes.xml and values-night/themes.xml means a layout writes
+    ?attr/colorPillMint once and gets the right value in either theme, which is the same mechanism
+    the Material roles themselves use.
+
+    Each pill has a pair: the background, and the text colour guaranteed legible on it. They are
+    always used together — text on colorPillMint must be colorOnPillMint and nothing else.
+-->
+<resources>
+
+    <!--
+        The accent as a *foreground* colour, for text and icons that should read as accented.
+
+        Declared for the same reason as the pills: Material has no role for it. colorPrimary is the
+        accent, but this app's accent is a bright yellow chosen to be filled behind dark text — and
+        it is far too light to *be* text on a white card. colorOnPrimary is the wrong answer too,
+        since that colour is guaranteed legible on the yellow, not on the surface.
+
+        So the app declares its own, a deeper amber of the same hue. See colors.xml for the values
+        and the contrast reasoning.
+    -->
+    <attr name="colorAccentText" format="color" />
+
+    <!-- Mint — the app uses this one for a pet's age. -->
+    <attr name="colorPillMint" format="color" />
+    <attr name="colorOnPillMint" format="color" />
+
+    <!-- Sky — weight. -->
+    <attr name="colorPillSky" format="color" />
+    <attr name="colorOnPillSky" format="color" />
+
+    <!-- Lilac — species. -->
+    <attr name="colorPillLilac" format="color" />
+    <attr name="colorOnPillLilac" format="color" />
+
+    <!-- Peach — outstanding care. -->
+    <attr name="colorPillPeach" format="color" />
+    <attr name="colorOnPillPeach" format="color" />
+
+</resources>

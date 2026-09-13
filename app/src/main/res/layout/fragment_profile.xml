@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Profile: who is signed in, how their data is backed up, and the way out.
+
+    Reached from the top app bar's overflow menu rather than from the bottom navigation bar. It
+    belongs there because it is visited rarely — the four tabs are for the things done constantly —
+    and because a sign-out button one mis-tap away at all times would be a poor arrangement.
+
+    Read-only. The two cards *report*: the account's details, and what is happening to the data.
+    Nothing here can be edited, which is why there is no form and no save button.
+
+    Two cards rather than one list of rows, because they answer different questions: "who am I?" and
+    "is my data safe?". A single card would run the two together under one heading and lose that.
+-->
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="@dimen/list_padding_bottom"
+    tools:context=".ui.profile.ProfileFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_padding"
+        android:paddingTop="@dimen/content_top_padding"
+        android:paddingEnd="@dimen/screen_padding">
+
+        <!-- ============================ The account ============================ -->
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/PetCare.Card.Feature"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <!-- The account glyph, in the same tinted circle the dashboard's category icons
+                     use, so the two screens read as one app. -->
+                <ImageView
+                    style="@style/PetCare.CategoryBadge"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_profile" />
+
+                <TextView
+                    style="@style/PetCare.CardHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:text="@string/profile_account_title" />
+
+                <!-- The same label-and-value blocks the pet detail screen uses, so a field reads
+                     identically wherever it appears in the app. Unlike there, none of these is ever
+                     hidden: name, email and creation date are all required for an account to exist,
+                     so there is no empty case to handle. -->
+                <LinearLayout
+                    style="@style/PetCare.DetailBlock"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        style="@style/PetCare.DetailLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/profile_name_label" />
+
+                    <TextView
+                        android:id="@+id/profileNameText"
+                        style="@style/PetCare.DetailValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        tools:text="Alex Morgan" />
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/PetCare.DetailBlock"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        style="@style/PetCare.DetailLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/profile_email_label" />
+
+                    <TextView
+                        android:id="@+id/profileEmailText"
+                        style="@style/PetCare.DetailValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        tools:text="alex@example.com" />
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/PetCare.DetailBlock"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        style="@style/PetCare.DetailLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/profile_member_since_label" />
+
+                    <TextView
+                        android:id="@+id/profileCreatedText"
+                        style="@style/PetCare.DetailValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        tools:text="12 Jan 2026" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ============================== The backup ==============================
+             The same sync status the dashboard reports, with a sentence explaining what it means.
+             The dashboard's line is a glance; this is where a user who wondered about it comes to
+             find out what "3 changes saved here" actually implies for their data. -->
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/PetCare.Card.Feature"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <TextView
+                    style="@style/PetCare.CardHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/profile_backup_title" />
+
+                <TextView
+                    style="@style/PetCare.Subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="@string/profile_backup_message" />
+
+                <!-- The live status. Filled in by the fragment, and hidden before the first sync has
+                     had a chance to run — an empty line under the explanation would read as
+                     something that had failed to load. -->
+                <TextView
+                    android:id="@+id/profileSyncStatusText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface"
+                    android:visibility="gone"
+                    tools:text="@string/sync_status_syncing"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ============================== Signing out ==============================
+             Outlined rather than filled, and in the app's error colour. Filled would put the yellow
+             accent — which everywhere else in the app means "this is the thing to do" — on the one
+             button that ends the session. Outlined with a red tint says the opposite: available,
+             deliberate, not the default. The confirmation dialog does the rest. -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/signOutButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:text="@string/profile_sign_out"
+            android:textColor="?attr/colorError"
+            app:icon="@drawable/ic_logout"
+            app:iconTint="?attr/colorError"
+            app:strokeColor="?attr/colorError" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

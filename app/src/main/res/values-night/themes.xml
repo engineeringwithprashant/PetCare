@@ -6,9 +6,17 @@
     palette behind them — which is why no layout or Kotlin file needs to know which theme is
     active, and why nothing in the app checks for dark mode.
 
-    The roles are not simply inverted. In dark mode the primary becomes a *lighter* amber and the
-    containers become dark with light text on them, because a dark saturated colour on a dark
-    background would be illegible. See colors.xml for the values themselves.
+    The roles are not simply inverted. Two points are worth spelling out:
+
+     - The cream page becomes a warm near-black and the white cards become a *lighter* charcoal, so
+       the card is still the lighter of the two and still lifts off the page. Inverting the pair
+       instead would leave the cards darker than the background, and every card would read as a
+       hole rather than as a raised surface.
+     - The pastel pills keep their hues but swap which half is pale: a deep desaturated ground with
+       light text on it. The mint pill is still the mint pill, so "the green one is age" holds in
+       either theme.
+
+    See colors.xml for the values themselves.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
 
@@ -41,12 +49,49 @@
         <item name="colorSurfaceVariant">@color/md_theme_dark_surfaceVariant</item>
         <item name="colorOnSurfaceVariant">@color/md_theme_dark_onSurfaceVariant</item>
 
+        <!-- Switched off for the same reason as in the light theme: the app signals depth with the
+             surface/background split and the shadow, not by tinting raised surfaces yellow. This is
+             only safe because the dark palette makes colorSurface genuinely lighter than the
+             background — in a scheme where the two matched, this overlay is the only thing that
+             makes a raised card visible at all in dark mode. -->
+        <item name="elevationOverlayEnabled">false</item>
+
         <item name="colorOutline">@color/md_theme_dark_outline</item>
         <item name="colorOutlineVariant">@color/md_theme_dark_outlineVariant</item>
 
         <item name="colorSurfaceInverse">@color/md_theme_dark_inverseSurface</item>
         <item name="colorOnSurfaceInverse">@color/md_theme_dark_inverseOnSurface</item>
         <item name="colorPrimaryInverse">@color/md_theme_dark_inversePrimary</item>
+
+        <!-- In dark mode the bright yellow *is* the legible foreground, so this lands back on the
+             primary — the light theme's deep amber would disappear into the background. -->
+        <item name="colorAccentText">@color/accent_text_dark</item>
+
+        <!-- The dark half of the app's own pill roles — see attrs.xml. -->
+        <item name="colorPillMint">@color/pill_dark_mint</item>
+        <item name="colorOnPillMint">@color/pill_dark_on_mint</item>
+        <item name="colorPillSky">@color/pill_dark_sky</item>
+        <item name="colorOnPillSky">@color/pill_dark_on_sky</item>
+        <item name="colorPillLilac">@color/pill_dark_lilac</item>
+        <item name="colorOnPillLilac">@color/pill_dark_on_lilac</item>
+        <item name="colorPillPeach">@color/pill_dark_peach</item>
+        <item name="colorOnPillPeach">@color/pill_dark_on_peach</item>
+
+        <!-- The shape scale and the default component styles are identical in both themes: dark
+             mode changes what colour a card is, never how round it is. They are repeated rather
+             than inherited because this style declares its own Material parent, and an Android
+             theme takes nothing from the same-named style in another resource folder. -->
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.PetCare.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.PetCare.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.PetCare.Large</item>
+
+        <item name="materialCardViewStyle">@style/PetCare.Card</item>
+        <item name="bottomNavigationStyle">@style/PetCare.BottomNav</item>
+
+        <!-- False in this theme: the page behind the system bars is now near-black, so their icons
+             have to be light to be visible. -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>
 
 </resources>

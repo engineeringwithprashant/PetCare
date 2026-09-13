@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One pet's chip in the picker row at the top of the Tasks and Expenses tabs.
+
+    A layout file for a single view, which looks like overkill until you try the alternative. A
+    Material component reads most of its appearance from the style applied *at inflation time*, so
+    `Chip(context)` constructed in code comes out with the platform defaults and looks nothing like
+    the rest of the app. Inflating this is how the chip gets PetCare.PetChip — and it keeps the
+    chip's appearance described in XML alongside every other view in the app rather than half in
+    Kotlin.
+
+    A filter chip rather than a plain one: filtering is exactly what it does, and the component
+    brings the checkable behaviour and the selected-state background with it. The text is set by
+    ui/common/PetPicker.kt, which builds one of these per pet.
+-->
+<com.google.android.material.chip.Chip
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.PetChip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:checkable="true"
+    tools:text="Bella" />

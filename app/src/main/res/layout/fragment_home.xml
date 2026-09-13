@@ -1,138 +1,244 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Home screen: a greeting, a summary of today's care tasks, and the user's pets.
+    The dashboard — the screen the app opens on once signed in.
 
-    The screen's title lives in the app bar, so the heading here is a greeting rather than a repeat
-    of it.
+    It answers four questions in the order they are asked: *who am I and is my data safe* (the
+    greeting and sync line), *who are my animals and how are they today* (a card each), *what do I
+    have to do now* (today's care as a checklist), and *what is coming* (the next vet visits).
 
-    The root is a CoordinatorLayout because it is what lets the floating action button and any
-    Snackbar cooperate — a Snackbar sliding up from the bottom lifts the button rather than covering
-    it. Inside, one flat ConstraintLayout positions everything, which keeps measuring cheap.
+    **Why a NestedScrollView with three nested lists rather than one big RecyclerView.** The
+    dashboard is a fixed set of short sections, not an unbounded feed: a user has a handful of pets,
+    a day's care and at most three appointments. Each list is given wrap_content height and
+    nestedScrollingEnabled="false", which hands scrolling to the parent so the whole page moves as
+    one rather than becoming three small scrolling boxes inside a scrolling page. The trade-off is
+    that every row is inflated at once instead of being recycled — which is the right trade at these
+    sizes, and the wrong one on the Expenses screen, where a spending history only ever grows. That
+    screen is built the other way round for exactly that reason.
 
     All spacing comes from the shared scale in dimens.xml and all text from the roles in styles.xml,
-    so this screen keeps step with every other one.
+    so this screen keeps step with every other one. The page sits on the theme's cream background
+    and every card on it is white — see colors.xml for why those two are deliberately different.
 -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dashboardScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="@dimen/list_padding_bottom"
     tools:context=".ui.home.HomeFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_padding"
+        android:paddingTop="@dimen/content_top_padding"
+        android:paddingEnd="@dimen/screen_padding">
+
+        <!-- ============================ Greeting ============================ -->
 
         <TextView
             android:id="@+id/welcomeText"
-            android:layout_width="0dp"
+            style="@style/PetCare.Greeting"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/screen_padding"
-            android:layout_marginTop="@dimen/spacing_lg"
-            android:layout_marginEnd="@dimen/screen_padding"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall"
-            android:textColor="?attr/colorOnSurface"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Welcome, Alex" />
+            android:text="@string/home_welcome_generic"
+            tools:text="Hello, Alex" />
 
         <!--
             How the Firestore backup is getting on.
 
-            Sits directly under the greeting, in the app's secondary text colour and one step down
-            in size, because it is status rather than content: it should be findable when the user
-            wonders about it and easy to ignore the rest of the time. Putting it above the care
-            summary rather than beside the pet list keeps it out of the way of anything scrollable.
+            Sits directly under the greeting, in the app's secondary text colour and much smaller,
+            because it is status rather than content: it should be findable when the user wonders
+            about it and easy to ignore the rest of the time.
 
             Hidden entirely when there is nothing to report — visibility="gone" rather than
-            "invisible", so the summary card below moves up to meet the greeting instead of leaving
-            a gap where a message might have been.
+            "invisible", so the cards below move up to meet the greeting instead of leaving a gap
+            where a message might have been.
         -->
         <TextView
             android:id="@+id/syncStatusText"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/screen_padding"
             android:layout_marginTop="@dimen/spacing_xs"
-            android:layout_marginEnd="@dimen/screen_padding"
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/welcomeText"
             tools:text="@string/sync_status_syncing"
             tools:visibility="visible" />
 
-        <!-- Today's care summary. The Material 3 "filled" card reads as a distinct tinted surface,
-             separating it from the plain background behind the list. -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/todaySummaryCard"
-            style="@style/Widget.Material3.CardView.Filled"
-            android:layout_width="0dp"
+        <!-- ======================= Everything, when there are pets =======================
+             This whole block is hidden as one when the user has no pets, and the empty state below
+             takes its place. Grouping it in a container means the fragment toggles one visibility
+             rather than four, and cannot leave a stray heading behind. -->
+        <LinearLayout
+            android:id="@+id/dashboardContent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/screen_padding"
-            android:layout_marginTop="@dimen/spacing_md"
-            android:layout_marginEnd="@dimen/screen_padding"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/syncStatusText">
+            android:orientation="vertical">
+
+            <!-- ============================ Pet cards ============================ -->
 
             <TextView
-                android:id="@+id/todaySummaryText"
+                style="@style/PetCare.SectionHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="@dimen/card_padding"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOnSurface"
-                tools:text="2 of 5 tasks done today" />
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:text="@string/home_pets_title" />
 
-        </com.google.android.material.card.MaterialCardView>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/petsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                tools:itemCount="2"
+                tools:listitem="@layout/item_dashboard_pet" />
+
+            <!-- ========================== Today's care ==========================
+                 A feature card: the larger radius and slightly more lift mark it as a section of
+                 the page rather than as one more row. The heading and the progress count share a
+                 line, so "Today's care  ·  2 of 5 done" reads as one statement. -->
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/PetCare.Card.Feature"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/card_padding">
+
+                    <!-- The heading row. baselineAligned keeps the title and the count sitting on
+                         the same line despite their different text sizes. -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:baselineAligned="true"
+                        android:orientation="horizontal">
+
+                        <!-- layout_weight="1" on a zero-width view is LinearLayout's "take
+                             everything left over", which pushes the count to the far end. -->
+                        <TextView
+                            style="@style/PetCare.CardHeader"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/home_today_title" />
+
+                        <TextView
+                            android:id="@+id/todayProgressText"
+                            style="@style/PetCare.Subtitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/spacing_sm"
+                            tools:text="2 of 5 done" />
+
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/todayRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:nestedScrollingEnabled="false"
+                        tools:itemCount="3"
+                        tools:listitem="@layout/item_dashboard_task" />
+
+                    <!-- Shown instead of the list when nothing is scheduled. A sentence inside the
+                         card rather than a full empty state with an illustration: the card is one
+                         section of a screen that has plenty else on it, and a large graphic here
+                         would make an uneventful day look like a problem. -->
+                    <TextView
+                        android:id="@+id/todayEmptyText"
+                        style="@style/PetCare.Subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:text="@string/home_today_empty"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ====================== Upcoming appointments ======================
+                 The next few vet visits across every pet. A separate card from today's care on
+                 purpose: one is a list of things to do now and the other a list of things to know
+                 about later, and merging them would bury today's care under next month's. -->
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/PetCare.Card.Feature"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/card_padding">
+
+                    <!-- The heading, with the calendar glyph as a compound drawable rather than as
+                         a separate ImageView — one view instead of two, and the icon stays aligned
+                         to the text automatically. "Relative" places it at the start, so it moves
+                         to the right-hand side in a right-to-left language. -->
+                    <TextView
+                        style="@style/PetCare.CardHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawablePadding="@dimen/spacing_sm"
+                        android:gravity="center_vertical"
+                        android:text="@string/home_appointments_title"
+                        app:drawableStartCompat="@drawable/ic_appointment" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/appointmentsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:nestedScrollingEnabled="false"
+                        tools:itemCount="2"
+                        tools:listitem="@layout/item_appointment" />
+
+                    <TextView
+                        android:id="@+id/appointmentsEmptyText"
+                        style="@style/PetCare.Subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:text="@string/home_appointments_empty"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
 
         <!--
-            The pet list fills whatever height is left: layout_height="0dp" with the top pinned
-            under the summary card and the bottom to the parent is how ConstraintLayout expresses
-            "stretch to fit the remaining space".
+            Shown instead of the whole dashboard when the user has no pets.
 
-            clipToPadding="false" with a large bottom padding lets the final card scroll clear of
-            the floating action button instead of finishing underneath it, while still allowing
-            items to be drawn through that padding as they scroll.
-        -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/petsRecyclerView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="@dimen/spacing_lg"
-            android:clipToPadding="false"
-            android:paddingStart="@dimen/screen_padding"
-            android:paddingEnd="@dimen/screen_padding"
-            android:paddingBottom="@dimen/list_padding_bottom_fab"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/todaySummaryCard"
-            tools:listitem="@layout/item_pet" />
-
-        <!--
-            Shown instead of the list when the user has no pets. It occupies the same region as the
-            RecyclerView, and the fragment toggles which of the two is visible.
-
-            An icon and a sentence saying what to do next, rather than a bare line of grey text —
-            an empty screen with one short message leaves the user unsure whether there is nothing
-            here or it simply has not loaded.
+            An icon, a sentence saying what to do next, and a button that does it — rather than a
+            bare line of grey text. An empty screen with one short message leaves the user unsure
+            whether there is nothing here or it simply has not loaded, and on the very first launch
+            this is the only thing on the screen, so it has to carry the first action too.
         -->
         <LinearLayout
             android:id="@+id/emptyStateContainer"
             style="@style/PetCare.EmptyState"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xl"
             android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/petsRecyclerView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/petsRecyclerView"
             tools:visibility="visible">
 
             <ImageView
@@ -152,19 +258,19 @@
                 android:layout_height="wrap_content"
                 android:text="@string/home_empty_message" />
 
+            <!-- The app's only filled button outside a form, and it is filled because on a screen
+                 with nothing else on it there is no ambiguity to resolve — this is the one thing to
+                 do, so it wears the yellow accent that means exactly that. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/addFirstPetButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:text="@string/home_empty_action"
+                app:icon="@drawable/ic_add" />
+
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
-    <!-- The add-pet button. contentDescription is required on an icon-only control: without it
-         TalkBack would announce nothing useful to a user who cannot see the plus symbol. -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addPetFab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/screen_padding"
-        android:contentDescription="@string/cd_add_pet"
-        app:srcCompat="@drawable/ic_add" />
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.core.widget.NestedScrollView>

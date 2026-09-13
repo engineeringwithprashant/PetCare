@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The four top-level destinations in the bottom navigation bar.
+
+    **Each item's id is deliberately the same as a destination id in nav_graph.xml.** That is not a
+    naming convention, it is the wiring: NavigationUI.setupWithNavController matches them by id, and
+    that single fact is what makes tapping a tab navigate there and makes arriving at a destination
+    highlight the right tab — in both directions, with no click listener anywhere in MainActivity.
+    An id here that matches nothing in the graph produces a tab that silently does nothing.
+
+    Four items is the practical maximum for a bar this size; a fifth would squeeze the labels to the
+    point of truncation, which is why profile and sign-out live in the app bar's overflow menu
+    instead — see top_app_bar_menu.xml.
+
+    Ordered by how often they are reached, left to right: the dashboard first, then the pets it
+    summarises, then the two things the user does to a pet.
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The dashboard: greeting, sync status, pet cards, today's care and upcoming vet visits. -->
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/ic_nav_home"
+        android:title="@string/nav_home" />
+
+    <!-- The full list of the user's pets, and the way in to adding one. -->
+    <item
+        android:id="@+id/petsFragment"
+        android:icon="@drawable/ic_nav_pets"
+        android:title="@string/nav_pets" />
+
+    <!-- Today's care checklist, for whichever pet is chosen at the top of the screen. -->
+    <item
+        android:id="@+id/checklistFragment"
+        android:icon="@drawable/ic_nav_tasks"
+        android:title="@string/nav_tasks" />
+
+    <!-- Spending, again for the pet chosen at the top of the screen. -->
+    <item
+        android:id="@+id/expensesFragment"
+        android:icon="@drawable/ic_nav_expenses"
+        android:title="@string/nav_expenses" />
+
+</menu>

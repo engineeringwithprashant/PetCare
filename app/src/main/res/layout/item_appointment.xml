@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One upcoming vet visit in the dashboard's "Upcoming appointments" card.
+
+    Like the task rows beside it, this carries no card of its own — it sits inside the appointments
+    card, and nesting a surface inside a surface is exactly the boxed-in look the redesign avoids.
+
+    Read-only. An appointment is shown here so the user knows it is coming, not so they can do
+    anything to it from the dashboard; changing one means opening the routine that schedules it.
+    That is why there is no checkbox and no chevron — nothing on this row is pretending to be
+    pressable.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/spacing_sm"
+    android:paddingBottom="@dimen/spacing_sm">
+
+    <!-- The vet category's own medical-cross symbol, in the same tinted circle the checklist rows
+         use, so the two lists below one another read as one family of rows. -->
+    <ImageView
+        android:id="@+id/appointmentIcon"
+        style="@style/PetCare.CategoryBadge"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_category_vet"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/appointmentTitleText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_md"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textColor="?attr/colorOnSurface"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/appointmentIcon"
+        app:layout_constraintTop_toTopOf="@id/appointmentIcon"
+        tools:text="Annual booster" />
+
+    <!-- Which pet, and when — the two facts that make an appointment actionable. The date comes
+         from the device's own formatter so it arrives already translated and in the user's
+         preferred 12- or 24-hour convention. -->
+    <TextView
+        android:id="@+id/appointmentSubtitleText"
+        style="@style/PetCare.ListSubtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="@id/appointmentTitleText"
+        app:layout_constraintStart_toStartOf="@id/appointmentTitleText"
+        app:layout_constraintTop_toBottomOf="@id/appointmentTitleText"
+        tools:text="Bella · Tomorrow, 09:30" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

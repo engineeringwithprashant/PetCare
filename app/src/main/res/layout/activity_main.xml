@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The single Activity layout for the whole app: a top app bar above the window that every screen
-    is swapped into.
+    The single Activity layout for the whole app: a top app bar, the window every screen is swapped
+    into, and a bottom navigation bar.
 
-    Having one toolbar here rather than one per fragment means the title and the back arrow are
-    handled in a single place, by NavigationUI, from the labels already declared in
-    res/navigation/nav_graph.xml. Nine fragments each managing their own bar would be nine chances
-    for them to drift apart.
+    Having one toolbar and one bottom bar here rather than one per fragment means the title, the
+    back arrow and the selected tab are handled in a single place, by NavigationUI, from the labels
+    and ids already declared in res/navigation/nav_graph.xml. Twelve fragments each managing their
+    own chrome would be twelve chances for them to drift apart.
+
+    **Why three siblings in a vertical LinearLayout.** The bar at the top and the bar at the bottom
+    both have to *reserve* their space rather than float over the content: a list scrolling
+    underneath a solid bottom bar would leave its last row permanently unreachable. A LinearLayout
+    with the middle child weighted expresses that directly, and is cheaper to measure than a
+    ConstraintLayout doing the same job with four constraints.
 
     The bar is deliberately fixed rather than scrolling away with the content: the app's screens are
     short forms and lists, and a title that disappears on a flick is more distracting than useful at
@@ -21,14 +27,29 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <!-- AppBarLayout provides the elevation and surface treatment Material 3 expects behind a top
-         app bar. MainActivity hides the whole thing on the sign-in screens, which carry their own
-         large headings and need no navigation chrome. -->
+    <!--
+        AppBarLayout provides the elevation and surface treatment Material 3 expects behind a top
+        app bar. MainActivity hides the whole thing on the sign-in screens, which carry their own
+        large headings and need no navigation chrome.
+
+        Its background is the app's cream page colour rather than a white surface, and its elevation
+        is zero. That is what makes the bar read as part of the window's frame — the content below
+        it is a cream page with white cards on it, and a white bar with a shadow would look like one
+        more card that happened to be stuck to the top.
+    -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="?android:attr/colorBackground"
+        app:elevation="0dp"
+        app:liftOnScroll="false">
 
+        <!-- No app:menu here, deliberately. MainActivity makes this toolbar the Activity's action
+             bar, and the overflow menu is inflated in onCreateOptionsMenu instead — which is what
+             routes taps to onOptionsItemSelected and lets onPrepareOptionsMenu hide the account
+             actions on the sign-in screens. Declaring the menu in both places risks the items being
+             added twice. -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/topAppBar"
             android:layout_width="match_parent"
@@ -41,7 +62,7 @@
         The NavHostFragment: the window the Navigation Component swaps screens into. Every actual
         screen is a fragment declared in res/navigation/nav_graph.xml.
 
-        layout_height="0dp" with layout_weight="1" makes it take all the room the toolbar does not.
+        layout_height="0dp" with layout_weight="1" makes it take all the room the two bars do not.
 
         app:defaultNavHost="true" lets this host intercept the system back button, so back moves
         through the navigation history rather than closing the app straight away.
@@ -54,5 +75,33 @@
         android:layout_weight="1"
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph" />
+
+    <!--
+        The bottom navigation bar: the app's four top-level destinations.
+
+        It carries no click listeners. MainActivity hands it to NavigationUI, which matches each
+        menu item to the destination sharing its id — see the note at the top of bottom_nav_menu.xml
+        — so tapping a tab navigates, and arriving anywhere highlights the right tab, in both
+        directions with no code.
+
+        Everything about how it looks comes from PetCare.BottomNav, wired in as the theme's default
+        bottomNavigationStyle, which is why no style is named here.
+
+        A thin divider above it separates the bar from whatever is scrolling behind it. The bar has
+        no elevation of its own — a shadow pointing *upwards* from the bottom of the screen is the
+        one place Material's depth metaphor reads as wrong — so without the line, a list scrolled to
+        the bottom would appear to run straight into the tabs.
+    -->
+    <View
+        android:id="@+id/bottomNavDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorOutlineVariant" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:menu="@menu/bottom_nav_menu" />
 
 </LinearLayout>

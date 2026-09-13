@@ -7,16 +7,21 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
 import com.prash.petcare.data.local.entity.CareTask
+import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.local.entity.TaskCategory
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.util.CareSchedule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -125,19 +130,119 @@ sealed interface DelegationStage {
  * Doing the work here rather than in SQL keeps the day-and-schedule arithmetic in Kotlin, where it
  * can respect the device's time zone and be unit-tested.
  *
- * @param petRepository Source of the pet's name.
+ * **Which pet, and the two ways this screen is reached.** The checklist is one of the four
+ * bottom-navigation tabs *and* the screen a pet's detail page opens — see the note at the top of
+ * nav_graph.xml on why one destination serves both. The difference is entirely in where the pet
+ * comes from:
+ *
+ *  - From a pet's detail page, [initialPetId] is that animal and the pet never changes. [pets] is
+ *    empty, so the fragment shows no picker.
+ *  - From the bottom bar, [initialPetId] is [NO_PET_ID]. [pets] then carries the owner's animals
+ *    for the picker chips, and the first of them is selected automatically — landing on a tab that
+ *    asked the user to choose before showing anything would be a needless step, since one of them
+ *    has to be shown first anyway.
+ *
+ * @param petRepository Source of the pet's name, and of the pet list for the picker.
  * @param careRoutineRepository Source of the routines that decide what runs today.
  * @param careTaskRepository Source of the tasks, and where completion is written back.
- * @param petId Whose checklist to show.
+ * @param ownerId Whose pets the picker offers. Ignored when a specific pet was passed in.
+ * @param initialPetId The pet to show, or [NO_PET_ID] to offer the picker instead.
  */
 class ChecklistViewModel(
-    petRepository: PetRepository,
-    careRoutineRepository: CareRoutineRepository,
+    private val petRepository: PetRepository,
+    private val careRoutineRepository: CareRoutineRepository,
     private val careTaskRepository: CareTaskRepository,
-    private val petId: Long
+    ownerId: Long,
+    initialPetId: Long
 ) : ViewModel() {
 
-    val uiState: StateFlow<ChecklistUiState> = combine(
+    /**
+     * True when this screen was opened as a tab rather than for one particular animal, and should
+     * therefore let the user choose between pets.
+     *
+     * Fixed for the life of the ViewModel: which of the two jobs this instance is doing is decided
+     * by how it was navigated to and cannot change afterwards.
+     */
+    val showsPetPicker: Boolean = initialPetId == NO_PET_ID
+
+    /**
+     * The pets the picker offers, or empty when this screen is showing one particular animal.
+     *
+     * Queried only in picker mode. Subscribing to the owner's pets on a screen that will never show
+     * a picker would keep a query alive to populate a row that is not on screen.
+     */
+    val pets: StateFlow<List<Pet>> =
+        if (showsPetPicker) {
+            petRepository.observePetsForOwner(ownerId).stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
+        } else {
+            MutableStateFlow(emptyList())
+        }
+
+    /** Which pet the checklist is currently showing. */
+    private val _selectedPetId = MutableStateFlow(initialPetId)
+    val selectedPetId: StateFlow<Long> = _selectedPetId.asStateFlow()
+
+    /**
+     * Keeps the selection pointing at a pet that actually exists.
+     *
+     * This covers two moments with one rule. On arrival the selection is [NO_PET_ID] and the pet
+     * list has not loaded yet, so the first pet to arrive is chosen. Later, if the selected pet is
+     * deleted — from the Pets tab, or by a sync pulling down its deletion from another device — it
+     * vanishes from the list and the same rule moves the screen to whichever pet is now first,
+     * rather than leaving it showing the checklist of an animal that no longer exists.
+     *
+     * Only runs in picker mode: with a pet passed in explicitly there is nothing to choose, and
+     * reassigning the selection would quietly show a different animal than the one asked for.
+     */
+    init {
+        if (showsPetPicker) {
+            viewModelScope.launch {
+                pets.collect { available ->
+                    if (available.none { it.id == _selectedPetId.value }) {
+                        _selectedPetId.value = available.firstOrNull()?.id ?: NO_PET_ID
+                    }
+                }
+            }
+        }
+    }
+
+    /** Records the pet the user tapped in the picker. */
+    fun selectPet(petId: Long) {
+        _selectedPetId.value = petId
+    }
+
+    /**
+     * Today's checklist for whichever pet is selected.
+     *
+     * [flatMapLatest] is what lets the pet change at runtime: each new selection replaces the
+     * previous pet's three queries with the new pet's. "Latest" is the important half of the name —
+     * the queries opened for the pet being left are cancelled, so switching between animals
+     * repeatedly does not leave a subscription behind for each one visited.
+     *
+     * With nothing selected — the moment before the pet list arrives, or a user with no pets at all
+     * — it emits an empty, finished state rather than no state at all. A flow that never emits
+     * would leave the screen on its loading state forever, and the fragment could not tell that
+     * apart from a slow query.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<ChecklistUiState> = _selectedPetId.flatMapLatest { petId ->
+        if (petId == NO_PET_ID) {
+            flowOf(ChecklistUiState(isLoading = false))
+        } else {
+            checklistFor(petId)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = ChecklistUiState()
+    )
+
+    /** Builds the checklist state for one pet. */
+    private fun checklistFor(petId: Long): Flow<ChecklistUiState> = combine(
         petRepository.observePet(petId),
         careRoutineRepository.observeActiveRoutinesForPet(petId),
         careTaskRepository.observeTasksForPet(petId)
@@ -174,11 +279,7 @@ class ChecklistViewModel(
             totalCount = rows.size,
             isLoading = false
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = ChecklistUiState()
-    )
+    }
 
     /**
      * Clears every task ticked off today, so the checklist starts over.
@@ -187,6 +288,12 @@ class ChecklistViewModel(
      * Anything completed on an earlier day keeps its record.
      */
     fun resetTodaysChecklist() {
+        // The pet currently selected, which on the Tasks tab is whichever chip is chosen. Read at
+        // the moment of the reset rather than captured when the screen opened, so a shake always
+        // clears the checklist actually being looked at.
+        val petId = _selectedPetId.value
+        if (petId == NO_PET_ID) return
+
         viewModelScope.launch {
             careTaskRepository.clearCompletionsForPet(
                 petId = petId,
@@ -269,7 +376,25 @@ class ChecklistViewModel(
     }
 
     companion object {
-        fun factory(petId: Long): ViewModelProvider.Factory = viewModelFactory {
+
+        /**
+         * The pet id meaning "none chosen", matching the app's convention for absent ids and the
+         * default declared on this destination in nav_graph.xml. Its presence is what puts the
+         * screen into picker mode.
+         */
+        const val NO_PET_ID = -1L
+
+        /**
+         * Builds the ViewModel.
+         *
+         * A function rather than a property because neither id is known until runtime: the owner
+         * comes from the session and the pet from the navigation argument, and both have to be
+         * captured here to reach the constructor.
+         *
+         * @param ownerId Whose pets the picker offers.
+         * @param petId The pet to show, or [NO_PET_ID] to offer the picker instead.
+         */
+        fun factory(ownerId: Long, petId: Long): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PetCareApplication
@@ -277,7 +402,8 @@ class ChecklistViewModel(
                     petRepository = application.petRepository,
                     careRoutineRepository = application.careRoutineRepository,
                     careTaskRepository = application.careTaskRepository,
-                    petId = petId
+                    ownerId = ownerId,
+                    initialPetId = petId
                 )
             }
         }

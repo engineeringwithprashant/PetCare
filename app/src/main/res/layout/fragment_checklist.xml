@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Today's checklist for one pet: the care due today, grouped under category headings, each row
-    tickable, plus an action to hand the whole list to someone else by text message or email.
+    Today's care checklist: the care due today, grouped under category headings, each row tickable,
+    plus an action to hand the whole list to someone else by text message or email.
 
-    The screen's title — "Today for Bella" — is set on the app bar by the fragment, so it is not
-    repeated here.
+    **This layout serves two screens.** Reached from the bottom navigation bar it is the Tasks tab
+    and shows the pet picker at the top; reached from a pet's detail page it shows that animal alone
+    and the picker is hidden. See the note at the top of nav_graph.xml on why one destination does
+    both jobs. Everything below the picker is identical either way, which is the point — delegation,
+    swipe-to-complete and shake-to-reset exist in exactly one place.
 
     The list mixes two row layouts (headings and tasks) in a single RecyclerView rather than using a
     separate list per category, so the whole page scrolls as one.
@@ -24,38 +27,75 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Running total of what has been ticked off, so progress is visible without counting. -->
-        <TextView
-            android:id="@+id/checklistProgressText"
-            style="@style/PetCare.Subtitle"
+        <!--
+            The pet picker. Included with an id, which is what makes ViewBinding expose it as a
+            nested binding — the fragment reaches its chip group as `binding.petPicker.petChipGroup`
+            rather than having those ids flattened into this layout's own.
+
+            Hidden entirely when the screen is showing one particular pet. `gone` rather than
+            `invisible`, so the progress line below moves up to the top of the screen instead of
+            leaving a band of empty space where a picker might have been.
+        -->
+        <include
+            android:id="@+id/petPicker"
+            layout="@layout/view_pet_picker"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
+
+        <!--
+            The day's progress, in a card of its own.
+
+            A card rather than a bare line of text, because it is the one figure on this screen the
+            user came to check — "how much is left?" — and a white surface on the cream page is what
+            marks it out from the list of rows beneath it.
+        -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/progressCard"
+            style="@style/PetCare.Card.Feature"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/screen_padding"
             android:layout_marginTop="@dimen/spacing_md"
             android:layout_marginEnd="@dimen/screen_padding"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="2 of 5 tasks done" />
+            app:layout_constraintTop_toBottomOf="@id/petPicker">
 
-        <!-- Explains why the delegate action is unavailable once everything has been ticked off.
-             Hidden the rest of the time, so it takes up no space and does not push the list down. -->
-        <TextView
-            android:id="@+id/allDoneText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/screen_padding"
-            android:layout_marginTop="@dimen/spacing_sm"
-            android:layout_marginEnd="@dimen/screen_padding"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorPrimary"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/checklistProgressText"
-            tools:text="@string/checklist_all_done"
-            tools:visibility="visible" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <TextView
+                    android:id="@+id/checklistProgressText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="2 of 5 tasks done" />
+
+                <!-- Explains why the delegate action is unavailable once everything has been ticked
+                     off. Hidden the rest of the time, so it takes up no space and does not make the
+                     card taller than the one line it usually holds. -->
+                <TextView
+                    android:id="@+id/allDoneText"
+                    style="@style/PetCare.Subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:visibility="gone"
+                    tools:text="@string/checklist_all_done"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- The generous bottom padding, with clipToPadding="false", lets the last row scroll clear
              of the delegate button instead of finishing underneath it. -->
@@ -63,7 +103,7 @@
             android:id="@+id/checklistRecyclerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="@dimen/card_spacing"
+            android:layout_marginTop="@dimen/spacing_sm"
             android:clipToPadding="false"
             android:paddingStart="@dimen/screen_padding"
             android:paddingEnd="@dimen/screen_padding"
@@ -71,10 +111,12 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/allDoneText"
+            app:layout_constraintTop_toBottomOf="@id/progressCard"
             tools:listitem="@layout/item_checklist_task" />
 
-        <!-- Occupies the same region as the list; the fragment shows exactly one of the two. -->
+        <!-- Occupies the same region as the list; the fragment shows exactly one of the two. Its
+             wording is set in code, because "nothing due today" and "no pets to show" are different
+             situations that both leave this screen with nothing to draw. -->
         <LinearLayout
             android:id="@+id/emptyChecklistContainer"
             style="@style/PetCare.EmptyState"
@@ -88,17 +130,20 @@
             tools:visibility="visible">
 
             <ImageView
+                android:id="@+id/emptyChecklistIcon"
                 style="@style/PetCare.EmptyStateIcon"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_empty_tasks" />
 
             <TextView
+                android:id="@+id/emptyChecklistTitle"
                 style="@style/PetCare.EmptyStateTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/checklist_empty_title" />
 
             <TextView
+                android:id="@+id/emptyChecklistMessage"
                 style="@style/PetCare.EmptyStateMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

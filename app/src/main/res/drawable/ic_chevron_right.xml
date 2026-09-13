@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The "opens another screen" marker on the end of a tappable card.
+
+    android:autoMirrored is what makes this correct in a right-to-left language: the chevron points
+    in the reading direction, so in Arabic or Hebrew it has to point left. Setting the flag lets
+    Android flip the drawable itself rather than needing a second file in a drawable-ldrtl folder.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:autoMirrored="true"
+    android:tint="?attr/colorOnSurfaceVariant">
+
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M10,6L8.59,7.41 13.17,12l-4.58,4.59L10,18l6,-6z" />
+
+</vector>

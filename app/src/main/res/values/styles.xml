@@ -7,25 +7,115 @@
     means editing one block here instead of hunting through a dozen layouts.
 
     Kept apart from themes.xml on purpose: that file defines the app-wide *theme* (the palette every
-    widget inherits), whereas these style individual widgets.
+    widget inherits), whereas these style individual widgets. The two meet where themes.xml points a
+    *default* attribute such as materialCardViewStyle at a style below — which is how every card in
+    the app picks up the rounded, elevated treatment without a single layout naming it.
 
     Every one of them takes its colours and text sizes from theme attributes rather than fixed
     values, so they follow the Material 3 type scale and adapt to dark mode automatically.
 
-    Each also sets parent="" explicitly. A dot in a style name is Android's shorthand for
-    inheritance, so "PetCare.SectionHeader" would otherwise be read as extending a style called
+    Styles named "PetCare.*" set parent="" explicitly. A dot in a style name is Android's shorthand
+    for inheritance, so "PetCare.SectionHeader" would otherwise be read as extending a style called
     "PetCare", which does not exist and fails the build. An empty parent says the dots are just
-    namespacing.
+    namespacing. Styles that *do* extend a Material style name it as the parent instead, and so are
+    free to use dots normally.
 -->
 <resources>
 
+    <!-- ================================== Shapes ==================================
+         The rounded-corner language, as shape appearances Material components can be pointed at.
+         Declaring them here rather than setting cardCornerRadius per layout means the radius is
+         defined once and a component's ripple, stroke and shadow all follow the same outline —
+         setting a radius directly leaves the ripple square at the corners. -->
+
+    <style name="ShapeAppearance.PetCare.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/corner_radius_sm</item>
+    </style>
+
+    <style name="ShapeAppearance.PetCare.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/corner_radius_md</item>
+    </style>
+
+    <style name="ShapeAppearance.PetCare.Large" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/corner_radius_lg</item>
+    </style>
+
+    <!--
+        A circle, used to clip pet photos on the dashboard cards and the picker chips.
+
+        The corner size is given as a *percentage* rather than in dp, which is what makes this one
+        style work for a 64dp card thumbnail and a 24dp chip icon alike: 50% of the shorter edge is
+        exactly the radius that turns any square into a circle. A fixed dp value would have to be
+        kept in step with every size it is applied at.
+    -->
+    <style name="ShapeAppearance.PetCare.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- =================================== Cards ===================================
+         The app's defining surface. PetCare.Card is wired into the theme as the default
+         materialCardViewStyle, so *every* MaterialCardView in the app is rounded, white and softly
+         shadowed without naming a style — which is what keeps a card added next year looking like
+         the ones added today.
+
+         Elevated rather than filled or outlined. On a cream page a white card with a soft shadow
+         separates itself through depth, which survives dark mode: an outline would have to be
+         redrawn to stay visible against a dark background, and a filled card would need a different
+         tint. The shadow works either way. -->
+
+    <style name="PetCare.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">@dimen/corner_radius_md</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Medium</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <!-- No stroke: the shadow already separates the card from the page, and drawing a border on
+             top of it reads as the same edge described twice. -->
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <!-- A full-width feature card — the dashboard's task list, the appointments panel. Takes the
+         larger radius and a touch more lift, so it reads as a section of the page rather than as
+         one row among several. -->
+    <style name="PetCare.Card.Feature" parent="PetCare.Card">
+        <item name="cardCornerRadius">@dimen/corner_radius_lg</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Large</item>
+        <item name="cardElevation">@dimen/card_elevation_raised</item>
+    </style>
+
+    <!-- A card the user can press. The only difference is the feedback: it lifts while held, which
+         is what tells the user it is a control and not just a panel. Ripple and shadow both follow
+         the rounded outline because the shape comes from the inherited shapeAppearance. -->
+    <style name="PetCare.Card.Clickable" parent="PetCare.Card">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
     <!-- ================================= Typography =================================
-         Four roles cover the whole app. Using a named role rather than picking a text appearance
-         per screen is what keeps headings the same size everywhere. -->
+         A small set of named roles covers the whole app. Using a role rather than picking a text
+         appearance per screen is what keeps headings the same size everywhere. -->
+
+    <!-- The dashboard greeting — the largest text in the app, and the only place it appears. -->
+    <style name="PetCare.Greeting" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceHeadlineMedium</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
 
     <!-- A heading introducing a group within a screen, e.g. "Care routines". -->
     <style name="PetCare.SectionHeader" parent="">
         <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+
+    <!-- A heading *inside* a card. One step quieter than a section header, because the card's own
+         edge is already doing part of the work of saying "a new group starts here". -->
+    <style name="PetCare.CardHeader" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 
@@ -51,6 +141,64 @@
         <item name="android:ellipsize">end</item>
     </style>
 
+    <!-- ============================== Pastel stat pills ==============================
+         A small fact in a soft tinted capsule — "3 years old", "24.5 kg", "Dog".
+
+         Each variant differs only in which pastel pair it uses. The background is a *tint* applied
+         to one shared drawable rather than five separate drawables, so the shape is described once
+         and adding a sixth colour later is one style here, not a new file.
+
+         The pills are plain TextViews rather than Material Chips on purpose: a Chip is an
+         interactive component that carries a touch target, a ripple and a minimum height built for
+         being tapped. These are read, never pressed, and a row of them needs to stay compact. -->
+
+    <style name="PetCare.Pill" parent="">
+        <item name="android:background">@drawable/bg_pill</item>
+        <item name="android:backgroundTint">?attr/colorPillMint</item>
+        <item name="android:textColor">?attr/colorOnPillMint</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:paddingStart">@dimen/pill_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/pill_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/pill_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/pill_padding_vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="PetCare.Pill.Mint" parent="PetCare.Pill">
+        <item name="android:backgroundTint">?attr/colorPillMint</item>
+        <item name="android:textColor">?attr/colorOnPillMint</item>
+    </style>
+
+    <style name="PetCare.Pill.Sky" parent="PetCare.Pill">
+        <item name="android:backgroundTint">?attr/colorPillSky</item>
+        <item name="android:textColor">?attr/colorOnPillSky</item>
+    </style>
+
+    <style name="PetCare.Pill.Lilac" parent="PetCare.Pill">
+        <item name="android:backgroundTint">?attr/colorPillLilac</item>
+        <item name="android:textColor">?attr/colorOnPillLilac</item>
+    </style>
+
+    <style name="PetCare.Pill.Peach" parent="PetCare.Pill">
+        <item name="android:backgroundTint">?attr/colorPillPeach</item>
+        <item name="android:textColor">?attr/colorOnPillPeach</item>
+    </style>
+
+    <!-- ============================= Category icon badge =============================
+         The tinted circle a care-category icon sits in on a dashboard task row. The circle is what
+         turns a 20dp glyph into something with enough visual weight to anchor the row's left edge,
+         and it gives the icon a guaranteed background to be legible against. -->
+    <style name="PetCare.CategoryBadge" parent="">
+        <item name="android:layout_width">@dimen/category_badge_size</item>
+        <item name="android:layout_height">@dimen/category_badge_size</item>
+        <item name="android:background">@drawable/bg_category_badge</item>
+        <item name="android:padding">@dimen/spacing_sm</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="tint">?attr/colorOnPrimaryContainer</item>
+    </style>
+
     <!-- ============================== Pet detail rows ==============================
          The repeated label-and-value pairs on the pet detail screen. -->
 
@@ -60,14 +208,18 @@
         <item name="android:layout_marginTop">@dimen/card_spacing</item>
     </style>
 
-    <!-- The quieter heading above a value, e.g. "Date of birth". -->
+    <!-- The quieter heading above a value, e.g. "Date of birth". Letter-spaced and upper-case, so a
+         column of them reads as a set of field names rather than as more sentences. -->
     <style name="PetCare.DetailLabel" parent="">
-        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
     </style>
 
     <!-- The recorded value itself. -->
     <style name="PetCare.DetailValue" parent="">
+        <item name="android:layout_marginTop">@dimen/spacing_xs</item>
         <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
@@ -105,6 +257,43 @@
         <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:gravity">center</item>
+    </style>
+
+    <!-- =========================== Bottom navigation bar ===========================
+         Wired into the theme as the default bottomNavigationStyle, so activity_main.xml declares
+         the view and inherits all of this.
+
+         The bar sits on the app's cream page colour rather than on a white surface, so it reads as
+         part of the window's frame rather than as another card floating at the bottom. The selected
+         tab is marked by the yellow accent pill Material 3 draws behind the active icon — which is
+         the one place in the app's chrome the accent appears, so "where am I?" is answered by the
+         same colour that answers "what do I press?". -->
+    <style name="PetCare.BottomNav" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">?android:attr/colorBackground</item>
+        <item name="itemActiveIndicatorStyle">@style/PetCare.BottomNav.ActiveIndicator</item>
+        <item name="itemIconTint">@color/bottom_nav_item_tint</item>
+        <item name="itemTextColor">@color/bottom_nav_item_tint</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <!-- The pill drawn behind the selected tab's icon. -->
+    <style name="PetCare.BottomNav.ActiveIndicator"
+        parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">?attr/colorPrimaryContainer</item>
+    </style>
+
+    <!-- ================================== Chips ==================================
+         The pet picker at the top of the Tasks and Expenses tabs. A genuine Material Chip here,
+         unlike the stat pills above, precisely because these *are* pressed: the component brings
+         the touch target, the ripple and the selected state with it. -->
+    <style name="PetCare.PetChip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipCornerRadius">@dimen/pill_corner_radius</item>
+        <!-- The tick Material shows on a selected filter chip is switched off. With only one chip
+             ever selected, the tick is redundant — the filled yellow background already says which
+             pet is showing — and removing it stops every chip changing width as the selection
+             moves, which makes the row jump sideways under the user's finger. -->
+        <item name="checkedIconVisible">false</item>
     </style>
 
 </resources>

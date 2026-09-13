@@ -23,25 +23,24 @@
         android:orientation="vertical"
         android:padding="@dimen/screen_padding">
 
-        <!-- Photo preview. Wrapped in a card so the image gets rounded corners, which an
-             ImageView cannot produce on its own. -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/photoCard"
-            style="@style/Widget.Material3.CardView.Filled"
+        <!--
+            Photo preview.
+
+            A ShapeableImageView rather than an ImageView inside a rounded card: it clips the bitmap
+            itself to the rounded outline, where a card would leave the photo's square corners
+            painted over its own. The same treatment the pet detail screen's header gets, one step
+            shorter, because here the photo is an input rather than the subject of the screen.
+        -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/petPhotoImage"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/pet_photo_height"
-            app:cardCornerRadius="@dimen/image_card_corner_radius">
-
-            <ImageView
-                android:id="@+id/petPhotoImage"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/cd_pet_photo"
-                android:padding="@dimen/spacing_lg"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_pet_placeholder" />
-
-        </com.google.android.material.card.MaterialCardView>
+            android:layout_height="@dimen/pet_photo_form_height"
+            android:background="@drawable/bg_photo_rounded"
+            android:contentDescription="@string/cd_pet_photo"
+            android:padding="@dimen/spacing_lg"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_pet_placeholder"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Large" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/choosePhotoButton"

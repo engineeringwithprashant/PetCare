@@ -16,12 +16,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/Widget.Material3.CardView.Filled"
+    style="@style/PetCare.Card.Clickable"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/spacing_sm"
-    android:clickable="true"
-    android:focusable="true">
+    android:layout_marginBottom="@dimen/spacing_sm">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -49,7 +47,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/spacing_sm"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="?attr/colorAccentText"
             app:layout_constraintBaseline_toBaselineOf="@id/expenseTitleText"
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="£48.00" />

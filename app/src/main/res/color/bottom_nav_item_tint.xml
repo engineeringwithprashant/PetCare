@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Icon and label colour for a bottom-navigation tab, by state.
+
+    A *colour state list* rather than a plain colour: one resource that resolves to a different
+    value depending on what the view is doing. The bottom bar needs exactly that — the selected tab
+    must look different from the other three — and a selector keeps that rule in one file instead of
+    having the Activity set colours by hand on every tab change.
+
+    Order matters. Android walks the list top to bottom and takes the **first** item whose
+    conditions all match, so the selected state has to come first: with the catch-all default above
+    it, every tab would resolve to the unselected colour and nothing would ever look active.
+
+    Both values are theme attributes, so the bar follows light and dark mode automatically.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The active tab. Sits on the yellow accent pill (see PetCare.BottomNav.ActiveIndicator), so
+         it must use the colour guaranteed legible on that container and nothing else. -->
+    <item
+        android:color="?attr/colorOnPrimaryContainer"
+        android:state_checked="true" />
+
+    <!-- Everything else: quiet, so the active tab is the one the eye finds. -->
+    <item android:color="?attr/colorOnSurfaceVariant" />
+
+</selector>

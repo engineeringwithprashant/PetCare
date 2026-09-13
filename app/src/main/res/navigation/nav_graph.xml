@@ -8,13 +8,38 @@
     animations and argument passing are all handled consistently, and the whole flow can be seen
     at a glance in Android Studio's design view.
 
-    app:startDestination is the screen shown when the app opens — the login screen.
+    **The shape of the graph.** It is in two halves.
+
+    *Authentication* — loginFragment and registerFragment. The graph starts here, and both routes
+    out of it clear the whole graph behind them so that "back" from the app cannot return to a form
+    the user has already completed.
+
+    *The signed-in app* — four **top-level** destinations (homeFragment, petsFragment,
+    checklistFragment, expensesFragment), each matching an item in res/menu/bottom_nav_menu.xml by
+    id, plus the detail and form screens reached from them. Top-level here has a precise meaning:
+    these four are peers of one another rather than ancestors, so moving between them is a switch
+    and not a journey — which is why none of them shows a back arrow and why none has an `action`
+    pointing at another. NavigationUI moves between them from the bottom bar alone.
+
+    **Which destinations carry a userId, and which do not.** None of them. The signed-in account
+    used to be a navigation argument on the home screen, but a bottom bar navigates by destination
+    id with no arguments attached, so the four tabs could never have been handed one. The account is
+    held instead by SessionViewModel, scoped to the Activity and therefore shared by every screen —
+    see that class for why it survives both rotation and the process being killed.
+
+    **checklistFragment and expensesFragment serve two jobs each.** Reached from the bottom bar they
+    arrive with no arguments, default `petId` to NO_PET_ID, and show a row of pet chips to choose
+    between. Reached from a pet's detail screen they arrive with a real `petId` and show that pet
+    alone. One screen with a conditional rather than two near-identical ones — which is what keeps
+    delegation, shake-to-reset and swipe-to-delete existing in exactly one place.
 -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/loginFragment">
+
+    <!-- ============================== Authentication ============================== -->
 
     <!-- Sign-in screen. Entry point of the app. -->
     <fragment
@@ -58,32 +83,100 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- Placeholder landing screen shown once the user is authenticated. Pet management will be
-         built here next. -->
+    <!-- ========================= Top-level: the bottom bar =========================
+         These four are the bottom navigation bar's destinations. They are listed here in the same
+         order as res/menu/bottom_nav_menu.xml, and each id matches an item there — see the note at
+         the top of that file for why the ids have to agree. -->
+
+    <!-- Tab 1. The dashboard: greeting and sync status, a card per pet, today's care as a
+         checklist, and the next vet appointments. -->
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.prash.petcare.ui.home.HomeFragment"
-        android:label="@string/home_title"
+        android:label="@string/nav_home"
         tools:layout="@layout/fragment_home">
 
-        <!-- Which account is signed in. Declaring it here makes the requirement explicit: the
-             home screen cannot be reached without someone supplying a user id. -->
-        <argument
-            android:name="userId"
-            app:argType="long" />
+        <!-- Tapping a pet card opens its detail screen. -->
+        <action
+            android:id="@+id/action_home_to_pet_detail"
+            app:destination="@id/petDetailFragment" />
+
+        <!-- The dashboard's empty state offers to add the first pet. -->
+        <action
+            android:id="@+id/action_home_to_add_edit_pet"
+            app:destination="@id/addEditPetFragment" />
+    </fragment>
+
+    <!-- Tab 2. Every pet the user has, and the way in to adding another. -->
+    <fragment
+        android:id="@+id/petsFragment"
+        android:name="com.prash.petcare.ui.pet.PetsFragment"
+        android:label="@string/nav_pets"
+        tools:layout="@layout/fragment_pets">
 
         <!-- The floating action button goes straight to an empty form, passing petId = -1. -->
         <action
-            android:id="@+id/action_home_to_add_edit_pet"
+            android:id="@+id/action_pets_to_add_edit_pet"
             app:destination="@id/addEditPetFragment" />
 
         <!-- Tapping a pet opens its detail screen rather than the edit form: viewing an animal and
              changing its record are different intentions, and the detail screen is also the way in
-             to that pet's routines and checklist. -->
+             to that pet's routines. -->
         <action
-            android:id="@+id/action_home_to_pet_detail"
+            android:id="@+id/action_pets_to_pet_detail"
             app:destination="@id/petDetailFragment" />
     </fragment>
+
+    <!-- Tab 3. Today's care checklist. Also reachable from a pet's detail screen — see the note at
+         the top of this file on why one destination serves both. -->
+    <fragment
+        android:id="@+id/checklistFragment"
+        android:name="com.prash.petcare.ui.checklist.ChecklistFragment"
+        android:label="@string/nav_tasks"
+        tools:layout="@layout/fragment_checklist">
+
+        <!-- Which pet to show. The default of -1 means "none chosen", which is how the screen knows
+             it arrived from the bottom bar and should offer the pet chips. Long literals in a nav
+             graph need the L suffix, or the value is parsed as an Int and rejected. -->
+        <argument
+            android:name="petId"
+            android:defaultValue="-1L"
+            app:argType="long" />
+    </fragment>
+
+    <!-- Tab 4. One pet's spending: the total, the breakdown by category, and every recorded
+         expense. Reached the same two ways as the checklist above. -->
+    <fragment
+        android:id="@+id/expensesFragment"
+        android:name="com.prash.petcare.ui.expense.ExpensesFragment"
+        android:label="@string/nav_expenses"
+        tools:layout="@layout/fragment_expenses">
+
+        <argument
+            android:name="petId"
+            android:defaultValue="-1L"
+            app:argType="long" />
+
+        <!-- One action serves both recording and editing: the floating action button passes
+             expenseId = -1, and tapping an expense in the list passes its real id. -->
+        <action
+            android:id="@+id/action_expenses_to_add_edit_expense"
+            app:destination="@id/addEditExpenseFragment" />
+    </fragment>
+
+    <!-- ============================== Account screens ============================== -->
+
+    <!-- The signed-in account's details, reached from the top app bar's overflow menu. Read-only:
+         it reports who is signed in and how their data is backed up. -->
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.prash.petcare.ui.profile.ProfileFragment"
+        android:label="@string/menu_profile"
+        tools:layout="@layout/fragment_profile" />
+
+    <!-- ========================== Detail and form screens ==========================
+         Everything below is pushed *on top of* a tab rather than being one, so each shows a back
+         arrow and returns to wherever it was opened from. -->
 
     <!-- A single pet: its details, plus the care routines set up for it. -->
     <fragment
@@ -108,6 +201,8 @@
             android:id="@+id/action_pet_detail_to_routine_detail"
             app:destination="@id/routineDetailFragment" />
 
+        <!-- Opens the checklist scoped to this pet, by passing a real petId — which is what
+             suppresses the pet chips the tab version shows. -->
         <action
             android:id="@+id/action_pet_detail_to_checklist"
             app:destination="@id/checklistFragment" />
@@ -115,24 +210,6 @@
         <action
             android:id="@+id/action_pet_detail_to_expenses"
             app:destination="@id/expensesFragment" />
-    </fragment>
-
-    <!-- One pet's spending: the total, the breakdown by category, and every recorded expense. -->
-    <fragment
-        android:id="@+id/expensesFragment"
-        android:name="com.prash.petcare.ui.expense.ExpensesFragment"
-        android:label="@string/nav_label_expenses"
-        tools:layout="@layout/fragment_expenses">
-
-        <argument
-            android:name="petId"
-            app:argType="long" />
-
-        <!-- One action serves both recording and editing: the floating action button passes
-             expenseId = -1, and tapping an expense in the list passes its real id. -->
-        <action
-            android:id="@+id/action_expenses_to_add_edit_expense"
-            app:destination="@id/addEditExpenseFragment" />
     </fragment>
 
     <!-- Record a new expense against a pet, or change an existing one. -->
@@ -149,8 +226,7 @@
             app:argType="long" />
 
         <!-- Which expense to edit. The default of -1 means "none", which is how the screen knows it
-             is recording a new expense rather than changing one. Long literals in a nav graph need
-             the L suffix, or the value is parsed as an Int and rejected. -->
+             is recording a new expense rather than changing one. -->
         <argument
             android:name="expenseId"
             android:defaultValue="-1L"
@@ -205,18 +281,6 @@
         <argument
             android:name="taskId"
             android:defaultValue="-1L"
-            app:argType="long" />
-    </fragment>
-
-    <!-- Today's care checklist for one pet. -->
-    <fragment
-        android:id="@+id/checklistFragment"
-        android:name="com.prash.petcare.ui.checklist.ChecklistFragment"
-        android:label="@string/pet_detail_checklist"
-        tools:layout="@layout/fragment_checklist">
-
-        <argument
-            android:name="petId"
             app:argType="long" />
     </fragment>
 

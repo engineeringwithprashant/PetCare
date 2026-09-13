@@ -14,7 +14,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -24,14 +26,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
+import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.databinding.FragmentChecklistBinding
 import com.prash.petcare.ui.common.SwipeActionCallback
+import com.prash.petcare.ui.common.bindPets
 import com.prash.petcare.ui.common.setToolbarTitle
+import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.util.ContactLookup
 import com.prash.petcare.util.ContactReader
 import com.prash.petcare.util.EmailComposer
 import com.prash.petcare.util.ShakeDetector
 import com.prash.petcare.util.SmsSender
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -83,10 +89,33 @@ class ChecklistFragment : Fragment() {
     private var _binding: FragmentChecklistBinding? = null
     private val binding get() = _binding!!
 
-    private val petId: Long by lazy { requireArguments().getLong(ARG_PET_ID) }
+    /**
+     * Which pet to show, or [ChecklistViewModel.NO_PET_ID] when this screen was opened as the Tasks
+     * tab and should offer the pet picker instead.
+     *
+     * `arguments?` rather than `requireArguments()`: reached from the bottom navigation bar, this
+     * destination is navigated to with no argument bundle at all, so there is genuinely nothing to
+     * require. The default is what puts the screen into picker mode.
+     */
+    private val petId: Long by lazy {
+        arguments?.getLong(ARG_PET_ID, ChecklistViewModel.NO_PET_ID)
+            ?: ChecklistViewModel.NO_PET_ID
+    }
+
+    /**
+     * Which account is signed in, for the pet picker's list.
+     *
+     * Read from the Activity-wide session rather than from a navigation argument: a bottom
+     * navigation bar moves between tabs by destination id and has nowhere to attach one. See
+     * [SessionViewModel].
+     */
+    private val sessionViewModel: SessionViewModel by activityViewModels()
 
     private val viewModel: ChecklistViewModel by viewModels {
-        ChecklistViewModel.factory(petId)
+        ChecklistViewModel.factory(
+            ownerId = sessionViewModel.userId.value,
+            petId = petId
+        )
     }
 
     private val checklistAdapter = ChecklistAdapter(
@@ -126,6 +155,16 @@ class ChecklistFragment : Fragment() {
      * for readings nobody is waiting on.
      */
     private val shakeDetector = ShakeDetector { onShakeDetected() }
+
+    /**
+     * True when the signed-in user has no pets at all, as opposed to a pet with nothing due today.
+     *
+     * Held here rather than in [ChecklistUiState] because it belongs to the picker's list rather
+     * than to any one pet's checklist — and the two arrive on separate flows. The distinction
+     * matters only for the wording of the empty state, which is the one place the screen has to
+     * tell "there is no animal to show" apart from "this animal has a quiet day".
+     */
+    private var hasNoPets: Boolean = false
 
     /**
      * Launchers for the trips out of this screen.
@@ -180,10 +219,25 @@ class ChecklistFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setUpPetPicker()
         setUpRecyclerView()
         setUpSwipeGestures()
         setUpClickListeners()
         observeViewModel()
+    }
+
+    /**
+     * Shows or hides the row of pet chips.
+     *
+     * Only the Tasks tab has one. Opened for a particular animal from its detail page, the pet is
+     * already decided and a picker offering to change it would be offering to leave the screen the
+     * user just asked for.
+     *
+     * The chips themselves are filled in later, once the pet list arrives — see [renderPets].
+     */
+    private fun setUpPetPicker() {
+        binding.petPicker.root.isVisible = viewModel.showsPetPicker
+        binding.petPicker.petPickerLabel.setText(R.string.pet_picker_label)
     }
 
     override fun onResume() {
@@ -300,16 +354,51 @@ class ChecklistFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // Two independent collectors, each in its own coroutine: collect() never returns,
-                // so calling them in sequence would mean the second never ran.
+                // Independent collectors, each in its own coroutine: collect() never returns, so
+                // calling them in sequence would mean only the first ever ran.
                 launch {
                     viewModel.uiState.collect { state -> render(state) }
                 }
                 launch {
                     viewModel.delegationStage.collect { stage -> renderDelegation(stage) }
                 }
+                // The chips and the checklist are separate flows because they change on completely
+                // different rhythms: the pet list moves when an animal is added, the checklist every
+                // time a box is ticked. Combining them would rebuild the chip row on every tick.
+                launch {
+                    // combine here — rather than two more collectors — because a chip's *selected*
+                    // state is a function of both the list and the selection, and binding it from
+                    // whichever of the two emitted last would leave the row briefly showing a
+                    // selection that belongs to the other.
+                    combine(
+                        viewModel.pets,
+                        viewModel.selectedPetId
+                    ) { pets, selectedId -> pets to selectedId }
+                        .collect { (pets, selectedId) -> renderPets(pets, selectedId) }
+                }
             }
         }
+    }
+
+    /** Fills the pet picker's chips and marks the chosen one. */
+    private fun renderPets(pets: List<Pet>, selectedPetId: Long) {
+        if (!viewModel.showsPetPicker) return
+
+        binding.petPicker.bindPets(
+            pets = pets,
+            selectedPetId = selectedPetId,
+            onPetSelected = { petId -> viewModel.selectPet(petId) }
+        )
+
+        // A user with no pets at all has nothing to pick from, so the row would be an empty label
+        // over an empty strip. The empty state below explains the situation instead.
+        binding.petPicker.root.isVisible = pets.isNotEmpty()
+
+        hasNoPets = pets.isEmpty()
+
+        // The empty state's wording depends on this, and the pet list can arrive after the
+        // checklist state did — so the screen is redrawn rather than waiting for the next tick.
+        render(viewModel.uiState.value)
     }
 
     // ---------------------------------------------------------------------------------------
@@ -318,12 +407,7 @@ class ChecklistFragment : Fragment() {
 
     /** Applies the current checklist state to the views. */
     private fun render(state: ChecklistUiState) {
-        // The pet's name only arrives once the database read finishes. Until then the app bar
-        // keeps the destination's own label, which reads sensibly on its own — better than
-        // blanking the title and having it appear a moment later.
-        if (state.petName.isNotEmpty()) {
-            setToolbarTitle(getString(R.string.checklist_title_format, state.petName))
-        }
+        renderTitle(state)
 
         binding.checklistProgressText.text = progressText(state)
 
@@ -331,20 +415,67 @@ class ChecklistFragment : Fragment() {
 
         // The list and the empty message share the same region, so exactly one is ever shown. Both
         // stay hidden while loading, which stops "Nothing due today" flashing up first.
-        binding.checklistRecyclerView.visibility =
-            if (state.items.isNotEmpty()) View.VISIBLE else View.GONE
-        binding.emptyChecklistContainer.visibility =
-            if (state.hasNothingDue) View.VISIBLE else View.GONE
+        binding.checklistRecyclerView.isVisible = state.items.isNotEmpty()
+        binding.emptyChecklistContainer.isVisible = state.hasNothingDue
+
+        renderEmptyStateWording()
+
+        // The progress card would be an empty white rectangle with nothing to report when there is
+        // no care due, so it goes too.
+        binding.progressCard.isVisible = state.totalCount > 0
 
         // Shown only when there was care due and it has all been finished — not when nothing was
         // scheduled in the first place, which the empty state already explains.
-        binding.allDoneText.visibility = if (state.isAllDone) View.VISIBLE else View.GONE
+        binding.allDoneText.isVisible = state.isAllDone
+        if (state.isAllDone) {
+            binding.allDoneText.setText(R.string.checklist_all_done)
+        }
 
         // Delegating means telling someone what still needs doing, so with nothing outstanding
         // there is nothing to send. The button is disabled rather than hidden: a control that
         // vanishes leaves the user wondering where it went, whereas a greyed-out one alongside the
         // "everything is done" message explains itself.
         binding.delegateFab.isEnabled = state.outstandingCount > 0
+    }
+
+    /**
+     * Sets the app bar title.
+     *
+     * The two ways this screen is reached want different titles. Opened for one animal it is that
+     * animal's day — "Today for Bella" — which is the whole subject of the screen. As the Tasks tab
+     * the pet's name is already on the selected chip an inch below, so the bar keeps the tab's own
+     * label and the title does not change under the user every time they tap a different pet.
+     *
+     * In the first case the name only arrives once the database read finishes. Until then the bar
+     * keeps the destination's own label, which reads sensibly on its own — better than blanking the
+     * title and having it appear a moment later.
+     */
+    private fun renderTitle(state: ChecklistUiState) {
+        if (viewModel.showsPetPicker) return
+
+        if (state.petName.isNotEmpty()) {
+            setToolbarTitle(getString(R.string.checklist_title_format, state.petName))
+        }
+    }
+
+    /**
+     * Chooses which of the two empty states to word.
+     *
+     * "This pet has nothing scheduled today" and "you have no pets" both leave the screen with an
+     * empty list, but they are entirely different situations and only one of them is about today.
+     * Telling a brand-new user with no animals that *this pet* has no care due would be a small
+     * mystery on their first visit.
+     */
+    private fun renderEmptyStateWording() {
+        if (hasNoPets) {
+            binding.emptyChecklistIcon.setImageResource(R.drawable.ic_pet_placeholder)
+            binding.emptyChecklistTitle.setText(R.string.pet_picker_empty_title)
+            binding.emptyChecklistMessage.setText(R.string.pet_picker_empty_message)
+        } else {
+            binding.emptyChecklistIcon.setImageResource(R.drawable.ic_empty_tasks)
+            binding.emptyChecklistTitle.setText(R.string.checklist_empty_title)
+            binding.emptyChecklistMessage.setText(R.string.checklist_empty_message)
+        }
     }
 
     /** Builds the "2 of 5 tasks done" line, or nothing at all when there is no care due. */
