@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fill of the round check button on a task card.
+
+    The button is a *checkable* MaterialButton, which puts state_checked on itself when ticked — so
+    these selectors are all it takes to draw "done" as a filled yellow circle and "not done" as an
+    empty one. The disabled case (a day other than today, when ticking is unavailable) keeps the
+    same look at reduced strength so a completed task still reads as completed.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.5" android:color="@color/accent_yellow" android:state_checked="true" android:state_enabled="false" />
+    <item android:color="@color/accent_yellow" android:state_checked="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

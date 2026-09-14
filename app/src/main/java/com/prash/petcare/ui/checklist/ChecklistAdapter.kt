@@ -1,37 +1,62 @@
 package com.prash.petcare.ui.checklist
 
+import android.graphics.Paint
+import android.text.format.DateFormat
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.color.MaterialColors
 import com.prash.petcare.R
-import com.prash.petcare.databinding.ItemChecklistHeaderBinding
 import com.prash.petcare.databinding.ItemChecklistTaskBinding
+import com.prash.petcare.databinding.ItemTaskSectionHeaderBinding
 import com.prash.petcare.ui.common.formatTimeOfDay
-import com.prash.petcare.ui.common.iconRes
 import com.prash.petcare.ui.common.labelRes
+import java.text.DateFormatSymbols
+import java.util.Calendar
 
 /**
- * Renders today's checklist: category headings interleaved with tickable tasks.
+ * Renders the Tasks list: time-of-day section headers interleaved with task cards.
  *
- * Two different row layouts share one list, which RecyclerView supports through *view types*.
- * [getItemViewType] labels each position, [onCreateViewHolder] inflates the matching layout, and
- * the adapter recycles each type into its own pool, so a header is never reused as a task row.
+ * Part of the **View** layer. It receives ready-grouped [ChecklistItem]s from [ChecklistViewModel]
+ * through the fragment, draws them, and reports taps on a card's check button back through
+ * [onTaskChecked]; it decides nothing about what a tick means.
  *
- * The alternative — two RecyclerViews, or one per category — would scroll independently and break
- * the illusion of a single list.
+ * Two row layouts share one list through RecyclerView *view types*: [getItemViewType] labels each
+ * position, [onCreateViewHolder] inflates the matching layout, and each type is recycled into its own
+ * pool, so a header is never reused as a card.
  *
- * @property onTaskChecked Called with the task's id and its new state when a checkbox is toggled.
+ * Extends [ListAdapter], which diffs each new list against the last on a background thread and
+ * animates only the rows that changed — ticking one task redraws that card and its section header,
+ * not the whole day.
+ *
+ * @property onTaskChecked Called with a task's id and its new state when its circle is toggled.
  */
 class ChecklistAdapter(
     private val onTaskChecked: (taskId: Long, isDone: Boolean) -> Unit
 ) : ListAdapter<ChecklistItem, RecyclerView.ViewHolder>(ChecklistDiffCallback) {
 
-    /** Labels each position so RecyclerView knows which layout and holder pool to use. */
+    /**
+     * Whether ticking is allowed — true only while today is the day shown.
+     *
+     * Held on the adapter rather than inside each item because it is one fact about the whole list.
+     * Changing it rebinds every row, so each card's check button enables or disables together; see
+     * [ChecklistViewModel.setTaskDone] for why other days are read-only.
+     */
+    var canCheckOff: Boolean = true
+        set(value) {
+            if (field == value) return
+            field = value
+            // Every visible card needs its button state refreshed. A payload-free full rebind is
+            // acceptable here because it only happens when the user taps a different day.
+            @Suppress("NotifyDataSetChanged")
+            notifyDataSetChanged()
+        }
+
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
-        is ChecklistItem.CategoryHeader -> VIEW_TYPE_HEADER
+        is ChecklistItem.SectionHeader -> VIEW_TYPE_HEADER
         is ChecklistItem.TaskRow -> VIEW_TYPE_TASK
     }
 
@@ -40,101 +65,169 @@ class ChecklistAdapter(
 
         return when (viewType) {
             VIEW_TYPE_HEADER -> HeaderViewHolder(
-                ItemChecklistHeaderBinding.inflate(inflater, parent, false)
+                ItemTaskSectionHeaderBinding.inflate(inflater, parent, false)
             )
 
             VIEW_TYPE_TASK -> TaskViewHolder(
-                ItemChecklistTaskBinding.inflate(inflater, parent, false),
-                onTaskChecked
+                ItemChecklistTaskBinding.inflate(inflater, parent, false)
             )
 
-            // Unreachable: getItemViewType only ever returns the two constants above. Throwing
-            // rather than returning a default means a future third row type fails loudly here
-            // instead of silently rendering as the wrong thing.
+            // Unreachable: getItemViewType returns only the constants above. Throwing means a future
+            // row type fails loudly here instead of rendering silently as the wrong thing.
             else -> throw IllegalArgumentException("Unknown checklist view type: $viewType")
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = getItem(position)) {
-            is ChecklistItem.CategoryHeader -> (holder as HeaderViewHolder).bind(item)
-            is ChecklistItem.TaskRow -> (holder as TaskViewHolder).bind(item)
+            is ChecklistItem.SectionHeader -> (holder as HeaderViewHolder).bind(item)
+            is ChecklistItem.TaskRow -> (holder as TaskViewHolder).bind(item, canCheckOff, onTaskChecked)
         }
     }
 
-    /** A category heading. */
+    /** "MORNING ———— 2/3". */
     class HeaderViewHolder(
-        private val binding: ItemChecklistHeaderBinding
+        private val binding: ItemTaskSectionHeaderBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: ChecklistItem.CategoryHeader) {
-            binding.categoryHeaderText.setText(item.category.labelRes())
-            // The icon repeats what the label says, which is the point: a symbol is read far
-            // faster than a word when scanning a list for the next thing to do.
-            //
-            // Set as a compound drawable on the label rather than as a separate ImageView, which
-            // keeps this row to a single view. "Relative" places it at the start, so it moves to
-            // the right-hand side automatically in a right-to-left language.
-            binding.categoryHeaderText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                item.category.iconRes(), 0, 0, 0
-            )
+        fun bind(item: ChecklistItem.SectionHeader) {
+            val context = binding.root.context
+            binding.sectionLabelText.setText(item.timeOfDay.labelRes)
+            binding.sectionCountText.text =
+                context.getString(R.string.tasks_section_count, item.doneCount, item.totalCount)
         }
     }
 
-    /** A tickable task. */
+    /**
+     * One task card.
+     *
+     * ViewBinding resolves every view once, when the card is created, so rebinding while scrolling
+     * only reassigns text and state.
+     */
     class TaskViewHolder(
-        private val binding: ItemChecklistTaskBinding,
-        private val onTaskChecked: (taskId: Long, isDone: Boolean) -> Unit
+        private val binding: ItemChecklistTaskBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: ChecklistItem.TaskRow) {
+        fun bind(
+            item: ChecklistItem.TaskRow,
+            canCheckOff: Boolean,
+            onTaskChecked: (taskId: Long, isDone: Boolean) -> Unit
+        ) {
             val context = binding.root.context
             val task = item.task
 
+            bindTime(task.timeOfDayMinutes)
+
             binding.taskTitleText.text = task.title
-            binding.taskTimeText.text = task.timeOfDayMinutes
-                ?.let { formatTimeOfDay(context, it) }
-                .orEmpty()
+            binding.taskSubtitleText.text = context.getString(
+                R.string.tasks_card_subtitle,
+                item.petName,
+                context.getString(task.category.labelRes())
+            )
 
-            // Supplies are the more useful of the two at a glance, so they win when both exist.
-            val detail = task.requiredSupplies?.takeIf { it.isNotBlank() }
-                ?.let { context.getString(R.string.task_supplies_format, it) }
-                ?: task.notes?.takeIf { it.isNotBlank() }
+            // The supplies tag, only when something was recorded. Set both ways, because this card
+            // may be recycled from a task that had supplies.
+            val supplies = task.requiredSupplies?.takeIf { it.isNotBlank() }
+            binding.taskSuppliesText.text = supplies.orEmpty()
+            binding.taskSuppliesText.isVisible = supplies != null
 
-            binding.taskDetailText.text = detail.orEmpty()
-            // Set explicitly both ways, because this row may be recycled from a task that had
-            // detail text when this one does not.
-            binding.taskDetailText.visibility = if (detail != null) View.VISIBLE else View.GONE
+            bindDoneState(item.isDone)
 
-            // The listener is detached before the state is applied and reattached afterwards.
-            // Without this, setting `isChecked` during a rebind would fire the listener and write
-            // the recycled row's state back to the database — silently ticking off the wrong task.
-            binding.taskCheckBox.setOnCheckedChangeListener(null)
-            binding.taskCheckBox.isChecked = item.isDoneToday
-            binding.taskCheckBox.setOnCheckedChangeListener { _, isChecked ->
-                onTaskChecked(task.id, isChecked)
+            // The check button. Its listener is removed before the state is applied and re-added
+            // after: setting isChecked during a rebind would otherwise fire the listener and write the
+            // *previous* occupant's state to the database — ticking off the wrong task.
+            val check = binding.taskCheckButton
+            check.clearOnCheckedChangeListeners()
+            check.isChecked = item.isDone
+            check.isEnabled = canCheckOff
+            // Names the task, so TalkBack says which card a toggle belongs to rather than a row of
+            // identical "Mark task as done" buttons.
+            check.contentDescription = context.getString(R.string.cd_task_done_named, task.title)
+            check.addOnCheckedChangeListener { _, isChecked -> onTaskChecked(task.id, isChecked) }
+
+            // Tapping anywhere on the card toggles it too — a far easier target than a 40dp circle.
+            // Routed through the button so both paths run the same listener. isClickable is set
+            // *after* the listener, because setOnClickListener switches clickability back on.
+            binding.root.setOnClickListener { if (check.isEnabled) check.toggle() }
+            binding.root.isClickable = canCheckOff
+        }
+
+        /**
+         * Applies "done" to the whole card.
+         *
+         * `isActivated` on the content row does most of it: the badge fill, the badge text and the
+         * title colour all switch through their state lists (see item_checklist_task.xml). What XML
+         * cannot do is strike the title through, which is a paint flag, and tint the card's outline,
+         * which MaterialCardView takes as a plain colour.
+         */
+        private fun bindDoneState(isDone: Boolean) {
+            binding.taskContent.isActivated = isDone
+
+            val title = binding.taskTitleText
+            title.paintFlags = if (isDone) {
+                title.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            } else {
+                title.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
             }
 
-            // Tapping anywhere on the row toggles it, which is a far easier target than the box.
-            binding.root.setOnClickListener {
-                binding.taskCheckBox.isChecked = !binding.taskCheckBox.isChecked
+            // A faint accent edge on a finished task, the neutral hairline otherwise — resolved from
+            // the theme so both follow light and dark mode.
+            binding.root.strokeColor = MaterialColors.getColor(
+                binding.root,
+                if (isDone) {
+                    com.google.android.material.R.attr.colorPrimaryContainer
+                } else {
+                    com.google.android.material.R.attr.colorOutlineVariant
+                }
+            )
+        }
+
+        /**
+         * Fills the time badge: "8:00" over "AM" on a 12-hour clock, "08:00" alone on a 24-hour one.
+         *
+         * The design splits the time from its AM/PM marker to fit a narrow square, which the
+         * device's ready-made time format (used everywhere else via [formatTimeOfDay]) cannot do. So
+         * the two halves are built separately — but still from the device's own 12/24-hour setting
+         * and the locale's own AM/PM words, so nothing is hard-coded to English.
+         */
+        private fun bindTime(minutesSinceMidnight: Int?) {
+            val context = binding.root.context
+
+            if (minutesSinceMidnight == null) {
+                binding.taskTimeText.text = ""
+                binding.taskMeridiemText.isVisible = false
+                return
+            }
+
+            val calendar = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, minutesSinceMidnight / 60)
+                set(Calendar.MINUTE, minutesSinceMidnight % 60)
+            }
+
+            if (DateFormat.is24HourFormat(context)) {
+                binding.taskTimeText.text = formatTimeOfDay(context, minutesSinceMidnight)
+                binding.taskMeridiemText.isVisible = false
+            } else {
+                binding.taskTimeText.text = DateFormat.format("h:mm", calendar)
+                binding.taskMeridiemText.text =
+                    DateFormatSymbols.getInstance().amPmStrings[calendar.get(Calendar.AM_PM)]
+                binding.taskMeridiemText.isVisible = true
             }
         }
     }
 
     /**
-     * Tells [ListAdapter] how to compare two checklists.
+     * Tells [ListAdapter] how to compare two lists.
      *
-     * Identity comes from [ChecklistItem.itemId] rather than list position, so headers and tasks
-     * are never confused with one another as the list is regrouped.
+     * Identity comes from [ChecklistItem.itemId], so headers and tasks are never confused as sections
+     * gain and lose rows; contents are compared with `==`, which for these data classes includes a
+     * task's done state and a header's counts — exactly what should trigger a redraw.
      */
     private object ChecklistDiffCallback : DiffUtil.ItemCallback<ChecklistItem>() {
 
         override fun areItemsTheSame(oldItem: ChecklistItem, newItem: ChecklistItem): Boolean =
             oldItem.itemId == newItem.itemId
 
-        // Both kinds are data classes, so `==` compares every property — including a task's
-        // isDoneToday, which is what makes a tick redraw its row.
         override fun areContentsTheSame(oldItem: ChecklistItem, newItem: ChecklistItem): Boolean =
             oldItem == newItem
     }

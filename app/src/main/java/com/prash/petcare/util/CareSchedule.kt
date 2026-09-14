@@ -25,6 +25,8 @@ object CareSchedule {
 
     private const val MINUTES_PER_HOUR = 60
 
+    private const val DAYS_PER_WEEK = 7
+
     /**
      * How far ahead [nextOccurrence] looks by default.
      *
@@ -59,6 +61,39 @@ object CareSchedule {
 
     /** The last millisecond of today. */
     fun endOfToday(): Long = endOfDay(System.currentTimeMillis())
+
+    /**
+     * The seven day-starts (local midnights) of the week containing [millis], in order.
+     *
+     * Used by the Tasks tab's week strip. The week begins on [firstDayOfWeek], which defaults to the
+     * device locale's own convention — Monday in the UK, Sunday in the US — so the strip starts
+     * where the user's calendar does rather than where the code's author's does.
+     *
+     * Each day is reached with [Calendar.add] and then snapped back to midnight with [startOfDay],
+     * rather than by adding 24 hours: a week that includes a clock change has one 23- or 25-hour
+     * day, and fixed steps would drift off midnight.
+     *
+     * @param firstDayOfWeek A [Calendar] day constant such as [Calendar.MONDAY].
+     */
+    fun weekContaining(
+        millis: Long,
+        firstDayOfWeek: Int = Calendar.getInstance().firstDayOfWeek
+    ): List<Long> {
+        val calendar = Calendar.getInstance().apply { timeInMillis = startOfDay(millis) }
+
+        // How many days back the week's first day is. The +7 keeps the result positive when today's
+        // weekday number is smaller than the first day's (Sunday = 1 in a Monday-first week).
+        val daysSinceWeekStart =
+            (calendar.get(Calendar.DAY_OF_WEEK) - firstDayOfWeek + DAYS_PER_WEEK) % DAYS_PER_WEEK
+        calendar.add(Calendar.DAY_OF_MONTH, -daysSinceWeekStart)
+
+        val days = ArrayList<Long>(DAYS_PER_WEEK)
+        repeat(DAYS_PER_WEEK) {
+            days.add(startOfDay(calendar.timeInMillis))
+            calendar.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        return days
+    }
 
     /**
      * True if [routine] runs on the day beginning at [dayStartMillis].

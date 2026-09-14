@@ -67,6 +67,12 @@
              primary — the light theme's deep amber would disappear into the background. -->
         <item name="colorAccentText">@color/accent_text_dark</item>
 
+        <!-- The "chosen" fill flips to yellow here: a near-black fill would disappear into the
+             near-black page. See attrs.xml. -->
+        <item name="colorSelectedContainer">@color/selected_container_dark</item>
+        <item name="colorOnSelectedContainer">@color/on_selected_container_dark</item>
+        <item name="colorOnSelectedContainerNeutral">@color/on_selected_container_neutral_dark</item>
+
         <!-- The dark half of the app's own pill roles — see attrs.xml. -->
         <item name="colorPillMint">@color/pill_dark_mint</item>
         <item name="colorOnPillMint">@color/pill_dark_on_mint</item>

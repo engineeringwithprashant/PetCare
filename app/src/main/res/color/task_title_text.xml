@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A task card's title: full-strength while outstanding, muted once done.
+
+    Keyed on state_activated, which the adapter sets on the card's content with View.setActivated.
+    Like "selected", "activated" is passed down from a ViewGroup to all its children, so one call
+    switches the title, the time badge and its text together. Activated is used rather than checked
+    because a plain layout has no checked state, and rather than selected because RecyclerView and
+    focus handling can set selected on a row for reasons of their own.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorOnSurfaceVariant" android:state_activated="true" />
+    <item android:color="?attr/colorOnSurface" />
+</selector>

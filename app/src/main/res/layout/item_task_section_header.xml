@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A time-of-day header in the Tasks list: "MORNING ———————— 2/3".
+
+    A horizontal LinearLayout of three views: the label, a hairline rule that stretches to fill the
+    middle (0dp width with layout_weight="1"), and the done/total count pinned to the end. The rule is
+    what ties the label and the count together across the width, so the count is read as belonging to
+    this section rather than floating on its own.
+
+    Both texts use PetCare.SectionLabel — small, upper-case, letter-spaced and muted — so the header
+    labels the cards beneath it without competing with their titles.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/spacing_md"
+    android:layout_marginBottom="@dimen/spacing_sm"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <!-- accessibilityHeading lets TalkBack users jump between the sections of the day. -->
+    <TextView
+        android:id="@+id/sectionLabelText"
+        style="@style/PetCare.SectionLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:accessibilityHeading="true"
+        tools:targetApi="p"
+        tools:text="Morning" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="@dimen/spacing_sm"
+        android:layout_marginEnd="@dimen/spacing_sm"
+        android:layout_weight="1"
+        android:background="?attr/colorOutlineVariant" />
+
+    <TextView
+        android:id="@+id/sectionCountText"
+        style="@style/PetCare.SectionLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="2/3" />
+
+</LinearLayout>

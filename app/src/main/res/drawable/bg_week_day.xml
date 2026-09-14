@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Background of one day cell in the Tasks tab's week strip.
+
+    A state-list drawable: the selected day is a solid pill in the strong "selected" fill, every
+    other day an outlined cell on the card surface. The fragment only calls setSelected on the cell;
+    choosing which shape to draw is left entirely to this file.
+
+    Wrapped in a ripple so a tap is acknowledged. The ripple's mask is the shape itself (the
+    <item> content), so the ink stays inside the rounded outline instead of flashing a square.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorPrimary">
+
+    <item>
+        <selector>
+
+            <item android:state_selected="true">
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorSelectedContainer" />
+                    <corners android:radius="@dimen/week_day_corner_radius" />
+                </shape>
+            </item>
+
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorSurface" />
+                    <stroke
+                        android:width="1dp"
+                        android:color="?attr/colorOutlineVariant" />
+                    <corners android:radius="@dimen/week_day_corner_radius" />
+                </shape>
+            </item>
+
+        </selector>
+    </item>
+
+</ripple>

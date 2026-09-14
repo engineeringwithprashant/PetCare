@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The rounded time badge at the start of a task card: yellow once the task is done, a pale
+     neutral while it is still to do — which is how the design lets a column of badges double as a
+     glance at the day's progress. Driven by state_activated; see task_title_text.xml. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/accent_yellow" android:state_activated="true" />
+    <item android:color="?attr/colorSurfaceVariant" />
+</selector>

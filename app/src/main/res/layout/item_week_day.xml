@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One day in the Tasks tab's week strip: the two-letter weekday above the date, and a dot beneath
+    when care is scheduled that day.
+
+    Included seven times by fragment_checklist.xml, each with its own id (day0 … day6), which is how
+    ViewBinding hands the fragment seven typed bindings of this one layout.
+
+    **All the selected/unselected styling is declarative.** The fragment calls setSelected(true) on
+    the chosen cell and nothing else. The background (bg_week_day.xml) swaps between an outlined cell
+    and a solid pill on that state, and because a ViewGroup passes "selected" down to its children,
+    the weekday, date and dot switch colour through their own state lists in res/color at the same
+    moment.
+
+    The width is 0dp with a weight of 1 so the seven cells share the row equally on any screen width;
+    the height and look come from PetCare.WeekDay in styles.xml.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.WeekDay"
+    android:layout_width="0dp"
+    android:layout_weight="1">
+
+    <!-- "MO", "TU"… Upper-cased by textAllCaps so the locale's own short weekday names can be used. -->
+    <TextView
+        android:id="@+id/weekdayText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:letterSpacing="0.08"
+        android:textAllCaps="true"
+        android:textAppearance="?attr/textAppearanceLabelSmall"
+        android:textColor="@color/week_day_label_text"
+        tools:text="Th" />
+
+    <TextView
+        android:id="@+id/dateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="@color/week_day_date_text"
+        android:textStyle="bold"
+        tools:text="11" />
+
+    <!-- The "care scheduled" dot. INVISIBLE rather than GONE when there is none, so a day without
+         care keeps exactly the same layout as one with — the dates stay level across the row. -->
+    <View
+        android:id="@+id/dotView"
+        android:layout_width="@dimen/week_day_dot_size"
+        android:layout_height="@dimen/week_day_dot_size"
+        android:layout_marginTop="3dp"
+        android:background="@drawable/bg_dot"
+        android:backgroundTint="@color/week_day_label_text" />
+
+</LinearLayout>

@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -21,32 +22,40 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
-import com.prash.petcare.data.local.entity.Pet
+import com.prash.petcare.data.local.entity.CareTask
+import com.prash.petcare.data.local.entity.TaskCategory
 import com.prash.petcare.databinding.FragmentChecklistBinding
+import com.prash.petcare.databinding.ItemWeekDayBinding
+import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.SwipeActionCallback
-import com.prash.petcare.ui.common.bindPets
+import com.prash.petcare.ui.common.bindOptions
+import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.setToolbarTitle
+import com.prash.petcare.ui.common.setUp
+import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
+import com.prash.petcare.ui.task.AddEditTaskFragment
+import com.prash.petcare.ui.task.CareTaskViewModel
 import com.prash.petcare.util.ContactLookup
 import com.prash.petcare.util.ContactReader
 import com.prash.petcare.util.EmailComposer
 import com.prash.petcare.util.ShakeDetector
 import com.prash.petcare.util.SmsSender
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.util.Date
+import java.util.Locale
 
 /**
  * The ways a checklist can be handed over, in the order they are offered in the chooser.
  *
  * An enum rather than two bare positions in a string array: the dialog's list and the branch that
- * acts on what the user tapped are both built from these entries, so they cannot drift out of step
- * with one another — and a third channel would be a single entry here rather than a new index to
- * thread through two places.
+ * acts on what the user tapped are both built from these entries, so they cannot drift out of step.
  *
  * Private to this file because it is a piece of this screen's presentation. Nothing below the UI
  * layer knows or cares how a checklist travels: the message itself is identical either way.
@@ -59,29 +68,30 @@ private enum class DelegationChannel(@param:StringRes val labelRes: Int) {
 }
 
 /**
- * Today's care checklist for one pet, grouped by category, with each task tickable — and the
- * ability to hand the whole list to someone looking after the animal, by text message or by email.
+ * The Tasks tab: a week strip to pick a day, a progress card for that day, category and pet filters,
+ * and the day's care grouped into morning, afternoon and evening — each task tickable, swipeable and
+ * delegable.
  *
- * The list is worked out rather than stored: tasks are repeating templates, so [ChecklistViewModel]
- * decides which of them fall due today before grouping them. Ticking a box writes straight back to
- * the database and the list re-emits from Room as a result.
+ * In MVVM this is the **View**. [ChecklistViewModel] works out which tasks fall on the chosen day,
+ * applies the filters and groups the result; this class draws that state and forwards what the user
+ * does — a day tapped, a chip chosen, a circle ticked, a card swiped, the phone shaken. It formats
+ * dates, counts and names (which need a Context), but decides nothing about the data.
  *
- * **The delegation flow**, which is most of this class, starts by asking which channel to use. The
- * two branches are deliberately very different lengths, because they differ in who does the sending.
+ * **Also one pet's checklist.** Opened from a pet's detail page with a `petId`, the same screen shows
+ * that animal alone: the shared header and the pet chips are hidden, and MainActivity shows the
+ * normal toolbar with a back arrow. See the note at the top of nav_graph.xml.
  *
- * *Text message* — the app sends it, so every step is the app's responsibility. It runs in strict
- * order and can stop at any step without leaving anything half-done:
- *  1. a rationale dialog explains why contacts access is needed, then the permission is requested;
- *  2. the system contact picker opens and the chosen contact's number is looked up;
- *  3. the exact message is shown for confirmation, with how many texts it will cost;
- *  4. a second rationale dialog explains the SMS permission, which is then requested;
- *  5. only then is anything sent.
+ * **Gestures**, all shortcuts to something also reachable by a button TalkBack can find:
+ *  - swipe a card **right** to complete it (today only);
+ *  - swipe **left** to delete it, with an undo;
+ *  - **shake** the phone, or press "Reset day", to clear the ticks shown — after a confirmation.
  *
- * *Email* — the app sends nothing. The checklist is handed to the user's own mail app as a draft,
- * and they address it and send it from there, so there is no permission to ask for, no recipient to
- * look up and no preview to show: the compose window they land in is the preview.
- *
- * Either way nothing is read or sent without the user having asked for it and confirmed it.
+ * **The delegation flow**, which is the longest part of this class, starts by asking which channel
+ * to use. *Text message*: the app sends it, so every step is explicit and can stop cleanly — a
+ * rationale then the contacts permission, the system contact picker, a preview of the exact message
+ * and its cost, a rationale then the SMS permission, and only then the send. *Email*: the checklist
+ * is handed to the user's own mail app as a draft, which they address and send themselves, so no
+ * permission, recipient or preview is involved.
  */
 class ChecklistFragment : Fragment() {
 
@@ -90,12 +100,10 @@ class ChecklistFragment : Fragment() {
     private val binding get() = _binding!!
 
     /**
-     * Which pet to show, or [ChecklistViewModel.NO_PET_ID] when this screen was opened as the Tasks
-     * tab and should offer the pet picker instead.
+     * Which pet to show, or [ChecklistViewModel.NO_PET_ID] when this screen is the Tasks tab.
      *
      * `arguments?` rather than `requireArguments()`: reached from the bottom navigation bar, this
-     * destination is navigated to with no argument bundle at all, so there is genuinely nothing to
-     * require. The default is what puts the screen into picker mode.
+     * destination arrives with no argument bundle at all, and the default is what selects tab mode.
      */
     private val petId: Long by lazy {
         arguments?.getLong(ARG_PET_ID, ChecklistViewModel.NO_PET_ID)
@@ -103,11 +111,8 @@ class ChecklistFragment : Fragment() {
     }
 
     /**
-     * Which account is signed in, for the pet picker's list.
-     *
-     * Read from the Activity-wide session rather than from a navigation argument: a bottom
-     * navigation bar moves between tabs by destination id and has nowhere to attach one. See
-     * [SessionViewModel].
+     * Which account is signed in. Read from the Activity-wide session, because a bottom navigation
+     * bar moves between tabs by destination id and has nowhere to attach an argument.
      */
     private val sessionViewModel: SessionViewModel by activityViewModels()
 
@@ -123,55 +128,61 @@ class ChecklistFragment : Fragment() {
     )
 
     /**
-     * The confirmation dialog, held so it can be dismissed if the screen is destroyed.
+     * The seven week-strip cells, in order. Filled once the binding exists, and read on every render
+     * so the cell at index `i` always shows `state.weekDays[i]`.
+     */
+    private var dayCells: List<ItemWeekDayBinding> = emptyList()
+
+    /**
+     * Formatters for the week strip and the progress card's date, created with the view so they use
+     * the locale in force at that moment. A change of language recreates the Activity, and with it
+     * these.
      *
-     * A dialog belongs to the window it was shown in, so leaving one attached to a destroyed
-     * Activity leaks it. The delegation stage lives in the ViewModel, so after a rotation the
-     * dialog is simply shown again from that state.
+     * `android.icu` rather than `java.text` for the weekday because only ICU understands the "EEEEEE"
+     * pattern — the locale's own two-letter weekday ("Mo", "Tu"), which a `take(2)` on the full name
+     * would get wrong in plenty of languages. ICU is part of the platform from API 24, this app's
+     * minimum.
+     */
+    private val shortWeekdayFormat by lazy {
+        android.icu.text.SimpleDateFormat("EEEEEE", Locale.getDefault())
+    }
+    private val dayOfMonthFormat by lazy {
+        android.icu.text.SimpleDateFormat("d", Locale.getDefault())
+    }
+    private val fullDateFormat by lazy {
+        // "Thursday 11 September" in the UK, "Thursday, September 11" in the US: the best pattern for
+        // those fields is asked of the locale rather than spelled out here.
+        val pattern = android.text.format.DateFormat
+            .getBestDateTimePattern(Locale.getDefault(), "EEEEdMMMM")
+        android.icu.text.SimpleDateFormat(pattern, Locale.getDefault())
+    }
+
+    /**
+     * Open dialogs, held so they can be dismissed if the view is destroyed — a dialog belongs to the
+     * window it was shown in, and one left attached to a destroyed Activity leaks it.
+     *
+     *  - [previewDialog] is backed by ViewModel state (the SMS delegation stage), so after a rotation
+     *    it is simply shown again from that state.
+     *  - [channelDialog], [resetDialog] and [routineDialog] are answered in one tap without leaving the
+     *    app; a rotation closes them and the user asks again, having lost nothing. [resetDialog] also
+     *    stops a continued shake stacking a second confirmation on the first.
      */
     private var previewDialog: AlertDialog? = null
-
-    /**
-     * The "text message or email?" chooser, held so it can be dismissed if the screen is destroyed.
-     *
-     * Unlike [previewDialog] this is not backed by ViewModel state, and does not need to be: it is
-     * answered in a single tap without leaving the app, so there is no trip out of the app that
-     * could destroy the screen mid-question. A rotation simply closes it and the user taps Delegate
-     * again, having lost nothing.
-     */
     private var channelDialog: AlertDialog? = null
-
-    /**
-     * The shake-to-reset confirmation, held for the same reason as [previewDialog] and also so a
-     * continued shake cannot stack a second copy on top of the first.
-     */
     private var resetDialog: AlertDialog? = null
+    private var routineDialog: AlertDialog? = null
 
     /**
-     * Watches the accelerometer for a shake.
-     *
-     * Started in [onResume] and stopped in [onPause]: a registered sensor listener keeps hardware
-     * powered, so leaving it running while the screen is in the background would drain the battery
-     * for readings nobody is waiting on.
+     * Watches the accelerometer for a shake. Started in [onResume] and stopped in [onPause]: a
+     * registered sensor listener keeps hardware powered, so leaving it running in the background
+     * would drain the battery for readings nobody is waiting on.
      */
     private val shakeDetector = ShakeDetector { onShakeDetected() }
 
     /**
-     * True when the signed-in user has no pets at all, as opposed to a pet with nothing due today.
-     *
-     * Held here rather than in [ChecklistUiState] because it belongs to the picker's list rather
-     * than to any one pet's checklist — and the two arrive on separate flows. The distinction
-     * matters only for the wording of the empty state, which is the one place the screen has to
-     * tell "there is no animal to show" apart from "this animal has a quiet day".
-     */
-    private var hasNoPets: Boolean = false
-
-    /**
-     * Launchers for the trips out of this screen.
-     *
-     * All three are registered as properties because `registerForActivityResult` must be called
-     * while the fragment is being created — later is too late, since the callback has to be in
-     * place before a restored fragment can be handed a pending result.
+     * Launchers for the trips out of this screen. Registered as properties because
+     * `registerForActivityResult` must be called while the fragment is being created, so the callback
+     * is in place before a restored fragment can be handed a pending result.
      */
     private val requestContactsPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -190,13 +201,10 @@ class ChecklistFragment : Fragment() {
             if (isGranted) {
                 sendPendingChecklist()
             } else {
-                // The flow ends here, but the chosen recipient is discarded so the user restarts
+                // The flow ends here, and the chosen recipient is discarded so the user restarts
                 // cleanly rather than finding a stale confirmation waiting.
                 viewModel.onDelegationFinished()
-                onPermissionDenied(
-                    Manifest.permission.SEND_SMS,
-                    R.string.permission_sms_denied
-                )
+                onPermissionDenied(Manifest.permission.SEND_SMS, R.string.permission_sms_denied)
             }
         }
 
@@ -219,25 +227,11 @@ class ChecklistFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setUpPetPicker()
+        setUpModeSpecificChrome()
         setUpRecyclerView()
         setUpSwipeGestures()
         setUpClickListeners()
         observeViewModel()
-    }
-
-    /**
-     * Shows or hides the row of pet chips.
-     *
-     * Only the Tasks tab has one. Opened for a particular animal from its detail page, the pet is
-     * already decided and a picker offering to change it would be offering to leave the screen the
-     * user just asked for.
-     *
-     * The chips themselves are filled in later, once the pet list arrives — see [renderPets].
-     */
-    private fun setUpPetPicker() {
-        binding.petPicker.root.isVisible = viewModel.showsPetPicker
-        binding.petPicker.petPickerLabel.setText(R.string.pet_picker_label)
     }
 
     override fun onResume() {
@@ -250,47 +244,76 @@ class ChecklistFragment : Fragment() {
         shakeDetector.stop()
     }
 
+    /**
+     * Shows the parts that exist only on the tab, or only for one pet.
+     *
+     * On the tab: the shared header (the app bar is hidden by MainActivity) and the pet chips. For one
+     * pet: neither — the toolbar carries that pet's name and a back arrow, and there is no other pet to
+     * choose.
+     */
+    private fun setUpModeSpecificChrome() {
+        val isTab = viewModel.showsPetPicker
+
+        binding.header.root.isVisible = isTab
+        binding.petChipScroll.isVisible = isTab
+
+        if (isTab) {
+            // The badge opens the profile screen, for the same reason as on Home and Pets: this tab
+            // hides the toolbar whose overflow menu held the account actions.
+            binding.header.setUp(title = R.string.nav_tasks) {
+                findNavController().navigate(R.id.profileFragment)
+            }
+        }
+
+        dayCells = listOf(
+            binding.day0, binding.day1, binding.day2, binding.day3,
+            binding.day4, binding.day5, binding.day6
+        )
+    }
+
     private fun setUpRecyclerView() {
         binding.checklistRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = checklistAdapter
-            // Deliberately not setHasFixedSize(true): headers and task rows are different heights,
-            // so the list's own size changes as categories appear and disappear.
+            // Not setHasFixedSize(true): the list is wrap_content inside the page's scroll view, so
+            // its own height changes as sections appear and disappear.
         }
     }
 
     /**
-     * Attaches swipe-to-complete to the checklist.
+     * Attaches the swipe gestures to the task cards.
      *
-     * Only swipe-right is offered here. Swipe-left means delete across the app, and a checklist row
-     * is a repeating template rather than a one-day copy — deleting it from a view of *today* would
-     * quietly remove it from every future day too. Task deletion therefore lives on the routine
-     * detail screen, which is where tasks are managed.
+     * [ItemTouchHelper] detects the drag and animates the card; [SwipeActionCallback] draws what is
+     * revealed behind it (a tick on yellow to the right, a bin on red to the left) — the same
+     * convention the routine screen uses, so a gesture means the same thing everywhere in the app.
      *
-     * [ItemTouchHelper] does the gesture detection and animation;
-     * [com.prash.petcare.ui.common.SwipeActionCallback] draws the background and calls back here.
+     * Section headers cannot be swiped. Swipe-right is only offered on today and on a task not yet
+     * done, since offering it elsewhere would imply something would happen.
      */
     private fun setUpSwipeGestures() {
         val callback = SwipeActionCallback(
             context = requireContext(),
             allowedDirections = { position ->
                 // `currentList` is what the adapter is actually showing, which is what the swiped
-                // position refers to. Reading from ViewModel state instead could disagree with it
-                // mid-update and act on the wrong row.
-                val item = checklistAdapter.currentList.getOrNull(position)
+                // position refers to. Reading ViewModel state instead could disagree mid-update and act
+                // on the wrong card.
+                val row = checklistAdapter.currentList.getOrNull(position)
 
-                // Category headings cannot be completed, and neither can a task already ticked off
-                // today — offering the gesture there would imply something would happen.
-                if (item is ChecklistItem.TaskRow && !item.isDoneToday) {
-                    ItemTouchHelper.RIGHT
+                if (row is ChecklistItem.TaskRow) {
+                    val canComplete = viewModel.uiState.value.isSelectedDayToday && !row.isDone
+                    ItemTouchHelper.LEFT or (if (canComplete) ItemTouchHelper.RIGHT else 0)
                 } else {
                     0
                 }
             },
-            onSwipe = { position, _ ->
+            onSwipe = { position, direction ->
                 val row = checklistAdapter.currentList.getOrNull(position)
                 if (row is ChecklistItem.TaskRow) {
-                    onSwipedToComplete(position, row)
+                    if (direction == ItemTouchHelper.RIGHT) {
+                        onSwipedToComplete(position, row)
+                    } else {
+                        onSwipedToDelete(row.task)
+                    }
                 }
             }
         )
@@ -301,10 +324,9 @@ class ChecklistFragment : Fragment() {
     /**
      * Swiped right: mark the task done.
      *
-     * The row stays on the checklist, now ticked, so its swiped-away view has to be put back.
-     * ItemTouchHelper leaves a swiped row translated off-screen on the assumption it is about to be
-     * removed; rebinding the position resets that. Without this the row would simply vanish until
-     * the next time the list was rebuilt.
+     * The card stays in the list, now ticked, so its swiped-away view has to be put back:
+     * ItemTouchHelper leaves a swiped row translated off-screen on the assumption it is being removed,
+     * and rebinding the position resets it.
      */
     private fun onSwipedToComplete(position: Int, row: ChecklistItem.TaskRow) {
         viewModel.setTaskDone(row.task.id, true)
@@ -312,186 +334,321 @@ class ChecklistFragment : Fragment() {
     }
 
     /**
-     * Reacts to the phone being shaken.
+     * Swiped left: delete the task, offering an undo rather than a confirmation.
      *
-     * The gesture only ever asks a question — it never resets anything on its own. A shake can
-     * happen by accident in a pocket or a bag, and silently wiping a morning's worth of ticked-off
-     * care would be no small thing to undo by hand.
+     * A confirmation on every swipe would make the shortcut slower than the long way round; an undo
+     * keeps it fast and still rescues an accidental swipe. The whole task object is captured, so undo
+     * puts it back exactly as it was, same id included.
+     *
+     * Unlike [onSwipedToComplete] the card is *not* rebound: it is leaving the list, and Room re-emits
+     * without it a moment later, at which point DiffUtil removes the row. Rebinding first would snap
+     * the card back into place only for it to vanish again — the same approach the routine screen's
+     * swipe-to-delete takes.
      */
-    private fun onShakeDetected() {
-        // Already asking; a continued shake should not stack dialogs.
-        if (resetDialog != null) return
+    private fun onSwipedToDelete(task: CareTask) {
+        viewModel.deleteTask(task)
 
-        // Nothing ticked off means nothing to reset, so the question would be pointless.
-        if (viewModel.uiState.value.doneCount == 0) return
-
-        showResetConfirmation()
-    }
-
-    /** Confirms before clearing the day's progress. */
-    private fun showResetConfirmation() {
-        val petName = viewModel.uiState.value.petName
-
-        resetDialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.reset_dialog_title)
-            .setMessage(getString(R.string.reset_dialog_message, petName))
-            // Cancel is listed first and does nothing, so the safe choice is the easy one.
-            .setNegativeButton(R.string.reset_dialog_cancel, null)
-            .setPositiveButton(R.string.reset_dialog_confirm) { _, _ ->
-                viewModel.resetTodaysChecklist()
-                showMessage(getString(R.string.reset_done))
-            }
-            // Fires however the dialog closes, so the reference is always released and a later
-            // shake can ask again.
-            .setOnDismissListener { resetDialog = null }
+        Snackbar.make(
+            binding.root,
+            getString(R.string.swipe_task_deleted, task.title),
+            Snackbar.LENGTH_LONG
+        )
+            .setAction(R.string.action_undo) { viewModel.restoreTask(task) }
             .show()
     }
 
     private fun setUpClickListeners() {
-        binding.delegateFab.setOnClickListener { startDelegation() }
+        binding.delegateButton.setOnClickListener { startDelegation() }
+        binding.addTaskButton.setOnClickListener { startAddTask() }
+        binding.resetDayButton.setOnClickListener { requestReset() }
     }
+
+    // ---------------------------------------------------------------------------------------
+    // Reset
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * Reacts to the phone being shaken — by asking, never by resetting on its own. A shake can happen
+     * by accident in a pocket, and silently wiping a morning's ticks would be no small thing to redo.
+     */
+    private fun onShakeDetected() {
+        requestReset()
+    }
+
+    /**
+     * The shared entry point for the "Reset day" button and a shake: confirm, then reset.
+     *
+     * Does nothing when there is nothing to reset — no ticks shown, or a day other than today — and
+     * does not stack a second dialog over one already open.
+     */
+    private fun requestReset() {
+        if (resetDialog != null) return
+
+        val state = viewModel.uiState.value
+        if (!state.isSelectedDayToday || state.doneCount == 0) return
+
+        showResetConfirmation(joinNames(state.donePetNames))
+    }
+
+    /** Confirms before clearing the ticks. [petLabel] names whose ticks they are. */
+    private fun showResetConfirmation(petLabel: String) {
+        resetDialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.reset_dialog_title)
+            .setMessage(getString(R.string.reset_dialog_message, petLabel))
+            // Cancel does nothing, so the safe choice is the easy one.
+            .setNegativeButton(R.string.reset_dialog_cancel, null)
+            .setPositiveButton(R.string.reset_dialog_confirm) { _, _ ->
+                viewModel.resetDay()
+                showMessage(getString(R.string.reset_done))
+            }
+            // Fires however the dialog closes, so the reference is always released and a later shake
+            // can ask again.
+            .setOnDismissListener { resetDialog = null }
+            .show()
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Add task
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * "+ Add task": opens the existing task form in the right routine.
+     *
+     * A task always belongs to a routine — the routine is what says which days it runs — so the form
+     * needs one. With no routines the user is pointed to a pet's page, which is where routines are
+     * created; with exactly one the form opens straight away; with several, a short list asks which.
+     * The routines offered follow the pet filter, so choosing a pet chip first narrows the question.
+     */
+    private fun startAddTask() {
+        val options = viewModel.uiState.value.routineOptions
+
+        when (options.size) {
+            0 -> showMessage(getString(R.string.tasks_add_task_no_routine))
+
+            1 -> openNewTaskForm(options.single().routine.id)
+
+            else -> {
+                val labels = options.map {
+                    getString(R.string.tasks_add_task_routine_option, it.routine.title, it.petName)
+                }.toTypedArray()
+
+                routineDialog = MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.tasks_add_task_pick_routine)
+                    .setItems(labels) { _, index -> openNewTaskForm(options[index].routine.id) }
+                    .setNegativeButton(R.string.delegate_cancel, null)
+                    .setOnDismissListener { routineDialog = null }
+                    .show()
+            }
+        }
+    }
+
+    /** Opens an empty task form for [routineId]. [CareTaskViewModel.NO_TASK_ID] means "create". */
+    private fun openNewTaskForm(routineId: Long) {
+        findNavController().navigate(
+            R.id.action_checklist_to_add_edit_task,
+            bundleOf(
+                AddEditTaskFragment.ARG_ROUTINE_ID to routineId,
+                AddEditTaskFragment.ARG_TASK_ID to CareTaskViewModel.NO_TASK_ID
+            )
+        )
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Rendering
+    // ---------------------------------------------------------------------------------------
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // Independent collectors, each in its own coroutine: collect() never returns, so
-                // calling them in sequence would mean only the first ever ran.
+                // calling them one after the other would mean only the first ever ran.
                 launch {
                     viewModel.uiState.collect { state -> render(state) }
                 }
                 launch {
                     viewModel.delegationStage.collect { stage -> renderDelegation(stage) }
                 }
-                // The chips and the checklist are separate flows because they change on completely
-                // different rhythms: the pet list moves when an animal is added, the checklist every
-                // time a box is ticked. Combining them would rebuild the chip row on every tick.
-                launch {
-                    // combine here — rather than two more collectors — because a chip's *selected*
-                    // state is a function of both the list and the selection, and binding it from
-                    // whichever of the two emitted last would leave the row briefly showing a
-                    // selection that belongs to the other.
-                    combine(
-                        viewModel.pets,
-                        viewModel.selectedPetId
-                    ) { pets, selectedId -> pets to selectedId }
-                        .collect { (pets, selectedId) -> renderPets(pets, selectedId) }
-                }
             }
         }
     }
 
-    /** Fills the pet picker's chips and marks the chosen one. */
-    private fun renderPets(pets: List<Pet>, selectedPetId: Long) {
-        if (!viewModel.showsPetPicker) return
-
-        binding.petPicker.bindPets(
-            pets = pets,
-            selectedPetId = selectedPetId,
-            onPetSelected = { petId -> viewModel.selectPet(petId) }
-        )
-
-        // A user with no pets at all has nothing to pick from, so the row would be an empty label
-        // over an empty strip. The empty state below explains the situation instead.
-        binding.petPicker.root.isVisible = pets.isNotEmpty()
-
-        hasNoPets = pets.isEmpty()
-
-        // The empty state's wording depends on this, and the pet list can arrive after the
-        // checklist state did — so the screen is redrawn rather than waiting for the next tick.
-        render(viewModel.uiState.value)
-    }
-
-    // ---------------------------------------------------------------------------------------
-    // Checklist rendering
-    // ---------------------------------------------------------------------------------------
-
-    /** Applies the current checklist state to the views. */
+    /** Applies the current state to the views. */
     private fun render(state: ChecklistUiState) {
-        renderTitle(state)
+        if (viewModel.showsPetPicker) {
+            binding.header.showPetCount(state.pets.size)
+        } else {
+            renderTitle(state)
+        }
 
-        binding.checklistProgressText.text = progressText(state)
+        // Before the first results there is nothing sensible to draw; after them, an account with no
+        // pets gets only the empty state, since a week, filters and actions for nobody would be noise.
+        val showContent = !state.isLoading && !state.hasNoPets
+        binding.weekStrip.isVisible = showContent
+        binding.progressCard.isVisible = showContent
+        binding.categoryChipScroll.isVisible = showContent
+        binding.petChipScroll.isVisible = showContent && viewModel.showsPetPicker
+        binding.actionsRow.isVisible = showContent
 
+        if (!state.isLoading) {
+            renderWeekStrip(state)
+            renderProgressCard(state)
+            renderFilters(state)
+        }
+
+        checklistAdapter.canCheckOff = state.isSelectedDayToday
         checklistAdapter.submitList(state.items)
 
-        // The list and the empty message share the same region, so exactly one is ever shown. Both
-        // stay hidden while loading, which stops "Nothing due today" flashing up first.
         binding.checklistRecyclerView.isVisible = state.items.isNotEmpty()
-        binding.emptyChecklistContainer.isVisible = state.hasNothingDue
+        binding.emptyChecklistContainer.isVisible = state.hasNothingDue || state.hasNoPets
+        renderEmptyStateWording(state)
 
-        renderEmptyStateWording()
-
-        // The progress card would be an empty white rectangle with nothing to report when there is
-        // no care due, so it goes too.
-        binding.progressCard.isVisible = state.totalCount > 0
-
-        // Shown only when there was care due and it has all been finished — not when nothing was
-        // scheduled in the first place, which the empty state already explains.
-        binding.allDoneText.isVisible = state.isAllDone
-        if (state.isAllDone) {
-            binding.allDoneText.setText(R.string.checklist_all_done)
-        }
-
-        // Delegating means telling someone what still needs doing, so with nothing outstanding
-        // there is nothing to send. The button is disabled rather than hidden: a control that
-        // vanishes leaves the user wondering where it went, whereas a greyed-out one alongside the
-        // "everything is done" message explains itself.
-        binding.delegateFab.isEnabled = state.outstandingCount > 0
+        // Delegating means telling someone what is left, so with nothing outstanding the button is
+        // disabled — not hidden, which would leave the user wondering where it went.
+        binding.delegateButton.isEnabled = state.outstandingCount > 0
     }
 
     /**
-     * Sets the app bar title.
+     * Sets the toolbar title for a single pet's checklist, e.g. "Tasks for Bella". Only in that mode:
+     * the tab has its own header and never touches the toolbar.
      *
-     * The two ways this screen is reached want different titles. Opened for one animal it is that
-     * animal's day — "Today for Bella" — which is the whole subject of the screen. As the Tasks tab
-     * the pet's name is already on the selected chip an inch below, so the bar keeps the tab's own
-     * label and the title does not change under the user every time they tap a different pet.
-     *
-     * In the first case the name only arrives once the database read finishes. Until then the bar
-     * keeps the destination's own label, which reads sensibly on its own — better than blanking the
-     * title and having it appear a moment later.
+     * Until the pet's name has loaded the toolbar keeps the destination's own label, which reads
+     * sensibly on its own — better than blanking the title and having it appear a moment later.
      */
     private fun renderTitle(state: ChecklistUiState) {
-        if (viewModel.showsPetPicker) return
-
-        if (state.petName.isNotEmpty()) {
-            setToolbarTitle(getString(R.string.checklist_title_format, state.petName))
-        }
+        if (state.singlePetName.isEmpty()) return
+        setToolbarTitle(getString(R.string.checklist_title_format, state.singlePetName))
     }
 
     /**
-     * Chooses which of the two empty states to word.
+     * Fills the seven day cells.
      *
-     * "This pet has nothing scheduled today" and "you have no pets" both leave the screen with an
-     * empty list, but they are entirely different situations and only one of them is about today.
-     * Telling a brand-new user with no animals that *this pet* has no care due would be a small
-     * mystery on their first visit.
+     * Selection is expressed with a single `isSelected` on each cell; the cell's drawable and text
+     * colours respond to that state by themselves (see item_week_day.xml). The dot is INVISIBLE rather
+     * than GONE when a day has no care, so every cell keeps the same layout.
      */
-    private fun renderEmptyStateWording() {
-        if (hasNoPets) {
+    private fun renderWeekStrip(state: ChecklistUiState) {
+        dayCells.forEachIndexed { index, cell ->
+            val day = state.weekDays.getOrNull(index)
+            cell.root.isVisible = day != null
+            if (day == null) return@forEachIndexed
+
+            val date = Date(day.dayStart)
+            val fullDate = fullDateFormat.format(date)
+
+            cell.weekdayText.text = shortWeekdayFormat.format(date)
+            cell.dateText.text = dayOfMonthFormat.format(date)
+            cell.dotView.visibility = if (day.hasTasks) View.VISIBLE else View.INVISIBLE
+            cell.root.isSelected = day.isSelected
+
+            // One spoken label for the whole cell — "Thursday 11 September, care scheduled" — in place
+            // of "TH", "11" read as two fragments. TalkBack adds "selected" from the selected state.
+            cell.root.contentDescription = getString(
+                if (day.hasTasks) R.string.cd_week_day_has_tasks else R.string.cd_week_day,
+                fullDate
+            )
+            cell.root.setOnClickListener { viewModel.selectDay(day.dayStart) }
+        }
+    }
+
+    /** Fills the progress card: date, count, reset button, segmented bar and gesture guide. */
+    private fun renderProgressCard(state: ChecklistUiState) {
+        binding.progressDateText.text = fullDateFormat.format(Date(state.selectedDay))
+
+        val hasTasks = state.totalCount > 0
+
+        // "0 of 0 done" would read as a score; a day with nothing on it says so instead.
+        binding.progressCountText.text = if (hasTasks) {
+            resources.getQuantityString(
+                R.plurals.tasks_progress_count,
+                state.totalCount,
+                state.doneCount,
+                state.totalCount
+            )
+        } else {
+            getString(R.string.tasks_progress_none)
+        }
+
+        // The bar is a drawing TalkBack cannot read, so the count carries the full sentence for both.
+        binding.progressCountText.contentDescription = if (hasTasks) {
+            resources.getQuantityString(
+                R.plurals.cd_tasks_progress,
+                state.totalCount,
+                state.doneCount,
+                state.totalCount
+            )
+        } else {
+            null
+        }
+
+        binding.progressSegments.isVisible = hasTasks
+        binding.progressSegments.setSegments(state.segments)
+
+        // Offered only when there is something to clear, and only on today — see requestReset.
+        binding.resetDayButton.isVisible = hasTasks
+        binding.resetDayButton.isEnabled = state.isSelectedDayToday && state.doneCount > 0
+
+        binding.progressHelpText.isVisible = hasTasks
+        binding.progressHelpText.setText(
+            if (state.isSelectedDayToday) R.string.tasks_progress_help
+            else R.string.tasks_progress_help_other_day
+        )
+    }
+
+    /**
+     * Fills both chip rows and marks the chosen chip in each.
+     *
+     * The rows are keyed by strings so one helper serves both — see ui/common/FilterChips.kt. "All"
+     * uses a key no category or pet id can produce.
+     */
+    private fun renderFilters(state: ChecklistUiState) {
+        val categoryOptions = listOf(ChipOption(KEY_ALL, getString(R.string.tasks_filter_all_categories))) +
+            TaskCategory.entries.map { ChipOption(it.name, getString(it.labelRes())) }
+
+        binding.categoryChipGroup.bindOptions(
+            options = categoryOptions,
+            selectedKey = state.selectedCategory?.name ?: KEY_ALL,
+            chipLayout = R.layout.item_category_chip,
+            onSelected = { key ->
+                viewModel.selectCategory(TaskCategory.entries.firstOrNull { it.name == key })
+            }
+        )
+
+        if (!viewModel.showsPetPicker) return
+
+        val petOptions = listOf(ChipOption(KEY_ALL, getString(R.string.tasks_filter_all_pets))) +
+            state.pets.map { ChipOption(it.id.toString(), it.name) }
+
+        binding.petChipGroup.bindOptions(
+            options = petOptions,
+            selectedKey = if (state.selectedPetId == ChecklistViewModel.ALL_PETS) KEY_ALL
+            else state.selectedPetId.toString(),
+            chipLayout = R.layout.item_pet_filter_chip,
+            onSelected = { key ->
+                viewModel.selectPet(key.toLongOrNull() ?: ChecklistViewModel.ALL_PETS)
+            }
+        )
+    }
+
+    /**
+     * Words the empty state. "You have no pets" and "nothing matches this day" both leave the list
+     * empty, but only one of them is about the day — telling a brand-new user that nothing is
+     * scheduled would be a small mystery on their first visit.
+     */
+    private fun renderEmptyStateWording(state: ChecklistUiState) {
+        if (state.hasNoPets) {
             binding.emptyChecklistIcon.setImageResource(R.drawable.ic_pet_placeholder)
             binding.emptyChecklistTitle.setText(R.string.pet_picker_empty_title)
             binding.emptyChecklistMessage.setText(R.string.pet_picker_empty_message)
         } else {
             binding.emptyChecklistIcon.setImageResource(R.drawable.ic_empty_tasks)
-            binding.emptyChecklistTitle.setText(R.string.checklist_empty_title)
-            binding.emptyChecklistMessage.setText(R.string.checklist_empty_message)
+            binding.emptyChecklistTitle.setText(R.string.tasks_empty_title)
+            binding.emptyChecklistMessage.setText(R.string.tasks_empty_message)
         }
     }
 
-    /** Builds the "2 of 5 tasks done" line, or nothing at all when there is no care due. */
-    private fun progressText(state: ChecklistUiState): String =
-        if (state.totalCount == 0) {
-            ""
-        } else {
-            // getQuantityString picks the right plural form for the device's language. The first
-            // argument selects the form; the two after it fill the placeholders.
-            resources.getQuantityString(
-                R.plurals.checklist_progress,
-                state.totalCount,
-                state.doneCount,
-                state.totalCount
-            )
-        }
+    /** Joins pet names into one phrase — "Krishala, Ddjw" — with the locale's list separator. */
+    private fun joinNames(names: List<String>): String =
+        names.joinToString(getString(R.string.list_separator))
 
     // ---------------------------------------------------------------------------------------
     // Delegation flow
@@ -501,8 +658,8 @@ class ChecklistFragment : Fragment() {
     private fun startDelegation() {
         val state = viewModel.uiState.value
 
-        // The button is already disabled in this case; this is a guard against the state changing
-        // between the tap and this running — a task ticked off on another screen, say.
+        // The button is already disabled in this case; this guards against the state changing between
+        // the tap and this running — a task ticked off on another screen, say.
         if (state.outstandingCount == 0) {
             showMessage(
                 getString(
@@ -519,19 +676,13 @@ class ChecklistFragment : Fragment() {
     /**
      * Asks whether to send the checklist as a text message or as an email.
      *
-     * Both options are always offered, and whether a channel is actually usable is checked only
-     * once it has been chosen. Filtering the list beforehand would leave the user with a single
-     * unexplained option on a tablet, whereas choosing "Text message" there gets them a sentence
-     * saying why it is unavailable.
-     *
-     * `setItems` rather than two buttons: a dialog's positive and negative buttons carry a sense of
-     * "do it" and "don't", which is wrong for two equal choices where either one goes ahead.
+     * Both options are always offered, and whether a channel is usable is checked once chosen —
+     * filtering beforehand would leave a tablet user with one unexplained option, whereas choosing
+     * "Text message" there gets them a sentence saying why it is unavailable. `setItems` rather than
+     * two buttons, because a dialog's positive and negative buttons imply "do it" and "don't".
      */
     private fun showChannelChooser() {
         val channels = DelegationChannel.entries
-
-        // Built from the enum in its own order, so the label the user taps and the branch that runs
-        // are guaranteed to be the same channel.
         val labels = channels.map { getString(it.labelRes) }.toTypedArray()
 
         channelDialog = MaterialAlertDialogBuilder(requireContext())
@@ -542,17 +693,15 @@ class ChecklistFragment : Fragment() {
                     DelegationChannel.EMAIL -> startEmailDelegation()
                 }
             }
-            // Backing out does nothing at all, so changing one's mind costs nothing.
             .setNegativeButton(R.string.delegate_cancel, null)
             .setOnDismissListener { channelDialog = null }
             .show()
     }
 
     /**
-     * SMS branch, step 1: make sure the device can text at all, then ask for contacts access.
-     *
-     * The telephony check comes before any permission is requested: prompting for SMS access on a
-     * tablet or a Wi-Fi-only device would ask the user for something that could never work.
+     * SMS branch, step 1: make sure the device can text at all, then ask for contacts access. The
+     * telephony check comes first so a Wi-Fi-only tablet is never asked for a permission that could
+     * not work.
      */
     private fun startSmsDelegation() {
         if (!SmsSender.isSmsSupported(requireContext())) {
@@ -573,43 +722,29 @@ class ChecklistFragment : Fragment() {
     }
 
     /**
-     * The email branch, in full — it is this short because the app does not do the sending.
-     *
-     * [EmailComposer] opens a draft in the user's mail app and PetCare's part is over. There is no
-     * preview dialog here, unlike the SMS branch, and that is not an omission: showing the message
-     * for confirmation and then immediately handing it to a compose window that shows the very same
-     * text would be asking the same question twice. Nothing leaves the device unless the user
-     * addresses the draft and sends it themselves.
-     *
-     * The body comes from the same builder the text message uses, so both channels describe the
-     * checklist identically; only the subject line is particular to email.
+     * The email branch, in full — this short because the app does not do the sending. [EmailComposer]
+     * opens a draft in the user's mail app; the compose window is the preview, so none is shown here.
      */
     private fun startEmailDelegation() {
         val state = viewModel.uiState.value
 
         val wasOpened = EmailComposer.compose(
             context = requireContext(),
-            subject = buildDelegationSubject(requireContext(), state.petName),
+            subject = buildDelegationSubject(requireContext(), joinNames(state.outstandingPetNames)),
             body = outstandingMessage(state),
             chooserTitle = getString(R.string.delegate_email_chooser_title)
         )
 
-        // A device with no mail app set up is a situation to explain, not an error: the checklist
-        // itself is untouched and the text message channel is still there.
+        // No mail app set up is a situation to explain, not an error: the text channel is still there.
         if (!wasOpened) {
             showMessage(getString(R.string.delegate_no_email_app))
         }
     }
 
     /**
-     * Explains why a permission is needed, then requests it.
-     *
-     * Shared by both points in the SMS branch that need one — contacts at step 1, SMS at step 4.
-     *
-     * The rationale is shown every time rather than only when
-     * `shouldShowRequestPermissionRationale` returns true. That helper is false on the very first
-     * request, which is exactly when the user has least idea why they are being asked — and both
-     * permissions here are ones people are rightly cautious about granting.
+     * Explains why a permission is needed, then requests it. Shown every time rather than only when
+     * `shouldShowRequestPermissionRationale` is true, because that is false on the very first request
+     * — exactly when the user has least idea why they are being asked.
      */
     private fun showRationaleThenRequest(
         permission: String,
@@ -620,7 +755,6 @@ class ChecklistFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(titleRes)
             .setMessage(messageRes)
-            // "Not now" does nothing at all, so declining is the easy, consequence-free choice.
             .setNegativeButton(R.string.permission_not_now, null)
             .setPositiveButton(R.string.permission_continue) { _, _ -> launcher.launch(permission) }
             .show()
@@ -636,7 +770,7 @@ class ChecklistFragment : Fragment() {
         val appContext = requireContext().applicationContext
 
         // The fragment's own lifecycleScope, not the view's: a picker result can arrive before the
-        // view has been recreated, and viewLifecycleOwner does not exist at that point.
+        // view has been recreated, when viewLifecycleOwner does not exist.
         lifecycleScope.launch {
             when (val lookup = ContactReader.read(appContext, contactUri)) {
                 is ContactLookup.Found ->
@@ -652,26 +786,18 @@ class ChecklistFragment : Fragment() {
     }
 
     /**
-     * Reacts to the delegation stage.
-     *
-     * Driven entirely by ViewModel state, so a rotation part-way through the flow puts the
-     * confirmation dialog back rather than losing the chosen recipient.
-     *
-     * Only the SMS branch has stages to track. The email branch leaves and returns in one step, and
-     * the draft it produced is held by the mail app rather than by this screen, so there is nothing
-     * for it to restore.
+     * Reacts to the delegation stage. Driven entirely by ViewModel state, so a rotation part-way
+     * through puts the confirmation dialog back rather than losing the chosen recipient.
      */
     private fun renderDelegation(stage: DelegationStage) {
         when (stage) {
             is DelegationStage.Preview -> {
-                // Guarded so re-collecting the same state does not stack a second dialog on top.
+                // Guarded so re-collecting the same state does not stack a second dialog.
                 if (previewDialog == null) {
                     showPreviewDialog(stage.recipient)
                 }
             }
 
-            // In both other stages no dialog should be on screen. Sending is reached by the user
-            // confirming, which dismisses it themselves.
             is DelegationStage.Sending, is DelegationStage.Idle -> Unit
         }
     }
@@ -681,33 +807,28 @@ class ChecklistFragment : Fragment() {
         val state = viewModel.uiState.value
         val message = outstandingMessage(state)
 
-        // Summarises what is being handed over, so the user can sanity-check the scope at a glance
-        // without reading the whole message body — "4 remaining tasks for Max".
+        // "4 remaining tasks for Max" — a sanity check of the scope without reading the whole body.
         val summary = resources.getQuantityString(
             R.plurals.delegate_outstanding_summary,
             state.outstandingCount,
             state.outstandingCount,
-            state.petName
+            joinNames(state.outstandingPetNames)
         )
 
         val partCount = SmsSender.partCount(requireContext(), message)
-        val partNote = resources.getQuantityString(
-            R.plurals.delegate_part_count,
-            partCount,
-            partCount
-        )
+        val partNote = resources.getQuantityString(R.plurals.delegate_part_count, partCount, partCount)
 
-        // The full message is shown verbatim, not a summary: the user is about to send this exact
-        // text to a real person, and the cost in messages is stated alongside it.
+        // The full message verbatim: the user is about to send this exact text to a real person, and
+        // the cost in messages is stated alongside it.
         previewDialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.delegate_preview_title, recipient.name))
             .setMessage("$summary\n\n$message\n\n$partNote")
             .setNegativeButton(R.string.delegate_cancel) { _, _ -> viewModel.onDelegationFinished() }
             .setPositiveButton(R.string.delegate_send) { _, _ -> onSendConfirmed() }
-            // Back button or a tap outside counts as cancelling, so the flow does not sit half-done.
+            // Back or a tap outside counts as cancelling, so the flow does not sit half-done.
             .setOnCancelListener { viewModel.onDelegationFinished() }
-            // Fires however the dialog closes, including being dismissed in onDestroyView, so it
-            // only releases the reference and never changes the flow's state.
+            // Fires however the dialog closes, including in onDestroyView, so it only releases the
+            // reference and never changes the flow's state.
             .setOnDismissListener { previewDialog = null }
             .show()
     }
@@ -734,29 +855,31 @@ class ChecklistFragment : Fragment() {
             ?: return
 
         val message = outstandingMessage(viewModel.uiState.value)
-
         val wasSent = SmsSender.send(requireContext(), recipient.phoneNumber, message)
 
         showMessage(
-            if (wasSent) {
-                getString(R.string.delegate_sent, recipient.name)
-            } else {
-                getString(R.string.delegate_failed)
-            }
+            if (wasSent) getString(R.string.delegate_sent, recipient.name)
+            else getString(R.string.delegate_failed)
         )
 
         viewModel.onDelegationFinished()
     }
 
     /**
-     * Builds the message body from the outstanding tasks only.
+     * Builds the message body from the outstanding tasks on the chosen day.
      *
-     * Every route out of this screen goes through here — the SMS preview, the SMS send, and the
-     * email draft — so the text confirmed on screen is guaranteed to be the text that goes out, and
-     * a carer gets the same checklist whichever way it reaches them.
+     * Every route out goes through here — the SMS preview, the SMS send and the email draft — so the
+     * text confirmed on screen is guaranteed to be the text that goes out. Pet names are added to each
+     * line only when the tasks span more than one pet.
      */
     private fun outstandingMessage(state: ChecklistUiState): String =
-        buildDelegationMessage(requireContext(), state.petName, state.outstandingItems)
+        buildDelegationMessage(
+            context = requireContext(),
+            petLabel = joinNames(state.outstandingPetNames),
+            dayStart = state.selectedDay,
+            items = state.outstandingItems,
+            showPetNames = state.outstandingPetNames.size > 1
+        )
 
     // ---------------------------------------------------------------------------------------
     // Permission helpers
@@ -767,28 +890,17 @@ class ChecklistFragment : Fragment() {
             PackageManager.PERMISSION_GRANTED
 
     /**
-     * Explains what the refusal means, and offers a way back if it was permanent.
-     *
-     * A refusal is never treated as an error: the checklist itself still works, only delegation is
-     * unavailable, so this is a brief explanation rather than anything blocking.
-     *
-     * After a request has been refused, `shouldShowRequestPermissionRationale` returning false
-     * means the user chose "don't ask again" — the system will no longer show a prompt, so asking
-     * again would do nothing and the only route left is the app's settings screen.
+     * Explains what a refusal means, and offers a way back if it was permanent. After a refusal,
+     * `shouldShowRequestPermissionRationale` returning false means "don't ask again" was chosen — the
+     * system will no longer prompt, so the only route left is the app's settings screen.
      */
     private fun onPermissionDenied(permission: String, @StringRes messageRes: Int) {
         val deniedPermanently = !shouldShowRequestPermissionRationale(permission)
 
-        val snackbar = Snackbar.make(
-            binding.root,
-            getString(messageRes),
-            Snackbar.LENGTH_LONG
-        )
-
+        val snackbar = Snackbar.make(binding.root, getString(messageRes), Snackbar.LENGTH_LONG)
         if (deniedPermanently) {
             snackbar.setAction(R.string.permission_open_settings) { openAppSettings() }
         }
-
         snackbar.show()
     }
 
@@ -809,20 +921,29 @@ class ChecklistFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Detaches the dialogs from the window being destroyed. The delegation stage lives in the
-        // ViewModel, so that dialog reappears from state once the view is rebuilt; the channel
-        // chooser and the reset confirmation are transient and simply asked again next time.
+        // Detach the dialogs from the window being destroyed. The SMS preview reappears from
+        // ViewModel state once the view is rebuilt; the others are simply asked again next time.
         previewDialog?.dismiss()
         previewDialog = null
         channelDialog?.dismiss()
         channelDialog = null
         resetDialog?.dismiss()
         resetDialog = null
+        routineDialog?.dismiss()
+        routineDialog = null
+
+        // The adapter is a property of the fragment, which outlives this view; detaching it stops the
+        // destroyed RecyclerView being held alive through it.
+        binding.checklistRecyclerView.adapter = null
+        dayCells = emptyList()
         _binding = null
     }
 
     companion object {
         /** Navigation argument name; must match the one declared in nav_graph.xml. */
         const val ARG_PET_ID = "petId"
+
+        /** The chip key for "All" in either filter row — never a category name or a pet id. */
+        private const val KEY_ALL = "all"
     }
 }

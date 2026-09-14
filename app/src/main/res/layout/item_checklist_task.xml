@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One tickable task in today's checklist.
+    One task card on the Tasks tab.
 
-    The checkbox is the whole point of this row, so it sits first where it is easy to reach, with
-    the task's details beside it.
+    Left to right: a rounded time badge ("8:00 AM"), the task's details (title, "pet · category", and a
+    pale supplies tag), and a round check button.
+
+    **Done and not-done are a single state switch.** The adapter calls setActivated(isDone) on the
+    card's content row. "Activated" is passed down to every child, and the badge's fill, the badge's
+    text and the title's colour each have a state list in res/color keyed on it — so a completed task
+    turns its badge yellow and mutes its title without the adapter recolouring anything. The only
+    change XML cannot express is the strike-through, which the adapter adds to the title's paint.
+
+    **Why a horizontal LinearLayout, not a ConstraintLayout.** Three blocks side by side with the
+    middle one taking the leftover width is exactly what a LinearLayout with one weighted child
+    describes. This card is inflated per row of a list, so it is kept as shallow as the design allows.
+
+    The card itself is the app's default MaterialCardView with the large corner and a hairline stroke;
+    the adapter tints that stroke faintly yellow for a completed task, as in the design.
 -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -12,65 +25,109 @@
     style="@style/PetCare.Card.Clickable"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/spacing_sm">
+    android:layout_marginBottom="@dimen/task_card_spacing"
+    app:cardElevation="0dp"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Large"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- The row whose activated state stands for "done" — see the note above. -->
+    <LinearLayout
+        android:id="@+id/taskContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:padding="@dimen/card_spacing">
 
-        <!-- No text of its own: the labels sit alongside as separate views so they can be styled
-             and truncated independently. The row's own click listener forwards taps to it, giving
-             a much larger target than the box itself. -->
-        <com.google.android.material.checkbox.MaterialCheckBox
-            android:id="@+id/taskCheckBox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/cd_task_done"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        <!-- The time badge: a fixed square so every card's details start at the same x, whatever the
+             time's width. Its fill is a white shape tinted by a state list (yellow when done). The
+             texts are hidden from TalkBack because the card's description already says the time. -->
+        <LinearLayout
+            android:layout_width="@dimen/task_time_badge_size"
+            android:layout_height="@dimen/task_time_badge_size"
+            android:background="@drawable/bg_time_badge"
+            android:backgroundTint="@color/task_time_badge_background"
+            android:gravity="center"
+            android:importantForAccessibility="noHideDescendants"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/taskTitleText"
+            <TextView
+                android:id="@+id/taskTimeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="@color/task_time_badge_text"
+                android:textStyle="bold"
+                tools:text="8:00" />
+
+            <!-- "AM" / "PM" on its own line. Hidden by the adapter on a 24-hour clock. -->
+            <TextView
+                android:id="@+id/taskMeridiemText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAllCaps="true"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="@color/task_time_badge_text"
+                tools:text="AM" />
+
+        </LinearLayout>
+
+        <!-- The details column, taking all the width the badge and button leave. -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/spacing_sm"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface"
-            app:layout_constraintEnd_toStartOf="@id/taskTimeText"
-            app:layout_constraintStart_toEndOf="@id/taskCheckBox"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Morning meal" />
+            android:layout_marginStart="@dimen/card_spacing"
+            android:layout_marginEnd="@dimen/spacing_sm"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/taskTimeText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/spacing_sm"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="?attr/colorAccentText"
-            app:layout_constraintBaseline_toBaselineOf="@id/taskTitleText"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:text="07:30" />
+            <TextView
+                android:id="@+id/taskTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="@color/task_title_text"
+                android:textStyle="bold"
+                tools:text="Morning meds" />
 
-        <!-- Hidden unless the task records supplies or notes. -->
-        <TextView
-            android:id="@+id/taskDetailText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/taskTitleText"
-            app:layout_constraintTop_toBottomOf="@id/taskTitleText"
-            tools:text="Needs: dry food, measuring cup"
-            tools:visibility="visible" />
+            <TextView
+                android:id="@+id/taskSubtitleText"
+                style="@style/PetCare.ListSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                tools:text="Ddjw · Medication" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <!-- The supplies tag. wrap_content width so it hugs its text like a tag rather than
+                 stretching into a bar; hidden by the adapter when no supplies are recorded. -->
+            <TextView
+                android:id="@+id/taskSuppliesText"
+                style="@style/PetCare.Pill.Supplies"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:visibility="gone"
+                tools:text="Flea tablet"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <!-- The quick check-off. A checkable MaterialButton — see PetCare.TaskCheckButton for why —
+             whose contentDescription is set by the adapter to include the task's title, so TalkBack
+             says which task a toggle belongs to. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/taskCheckButton"
+            style="@style/PetCare.TaskCheckButton"
+            android:layout_width="@dimen/task_check_button_size"
+            android:layout_height="@dimen/task_check_button_size"
+            android:contentDescription="@string/cd_task_done" />
+
+    </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

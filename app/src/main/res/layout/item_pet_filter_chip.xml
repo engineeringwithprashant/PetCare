@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One chip in the Tasks tab's pet filter row — "All pets", then one per pet.
+
+    The same filter chip as item_category_chip.xml with the wider pet variant of its style, so the two
+    rows look related but the pet row's pills are roomier, as in the design. Inflated by
+    ui/common/FilterChips.kt.
+-->
+<com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.FilterChip.Pet"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:text="Krishala" />

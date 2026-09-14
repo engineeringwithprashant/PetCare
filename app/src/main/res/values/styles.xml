@@ -369,6 +369,150 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
+    <!-- ================================= Tasks tab =================================
+         The redesigned Tasks tab. Its one piece of visual grammar is "chosen = strong fill": the
+         selected day, the selected filter chips and the Delegate button all use
+         ?attr/colorSelectedContainer (near-black in light mode, yellow in dark — see attrs.xml),
+         and everything unchosen is an outlined shape on the surface colour. -->
+
+    <!--
+        A filter chip in the category or pet row.
+
+        A genuine Material filter chip, so it brings the checkable state, the ripple, the touch
+        target and TalkBack's "selected" announcement. The colours come from three state lists in
+        res/color that switch on state_checked, so choosing a chip needs no code beyond checking it.
+
+        The tick Material normally shows on a checked filter chip is switched off: the solid fill
+        already says which chip is chosen, and a tick would make the chip grow as it is selected and
+        shunt the rest of the row sideways under the user's finger.
+    -->
+    <style name="PetCare.FilterChip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/filter_chip_background</item>
+        <item name="chipStrokeColor">@color/filter_chip_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipCornerRadius">@dimen/pill_corner_radius</item>
+        <item name="android:textColor">@color/filter_chip_text</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textStyle">bold</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="android:checkable">true</item>
+    </style>
+
+    <!-- The pet row's chips: the same chip with more horizontal padding. The design gives pets wider
+         pills than categories — there are fewer of them, and a name is the thing being chosen, so it
+         gets more room to be read and tapped. -->
+    <style name="PetCare.FilterChip.Pet" parent="PetCare.FilterChip">
+        <item name="chipMinHeight">40dp</item>
+        <item name="textStartPadding">@dimen/spacing_md</item>
+        <item name="textEndPadding">@dimen/spacing_md</item>
+    </style>
+
+    <!-- One cell of the week strip: a centred column of weekday, date and dot on bg_week_day.xml.
+         Width is shared out by layout_weight in the layout, so it is not set here. -->
+    <style name="PetCare.WeekDay" parent="">
+        <item name="android:layout_height">@dimen/week_day_height</item>
+        <item name="android:background">@drawable/bg_week_day</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!--
+        The small outlined pill button — "RESET DAY" in the progress card.
+
+        An outlined MaterialButton made compact: shorter than the default, fully rounded, with the
+        small letter-spaced capitals the tab uses for secondary labels. insetTop/insetBottom are
+        zeroed because the default insets exist to pad a 40dp button out to a 48dp touch target, and
+        on a 36dp pill they would only add invisible space above and below it.
+    -->
+    <style name="PetCare.SmallPillButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/small_pill_button_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/spacing_md</item>
+        <item name="android:paddingEnd">@dimen/spacing_md</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <!--
+        The round check button on the right of a task card.
+
+        A *checkable* Material icon button rather than a CheckBox with a custom drawable: the design
+        is a circle that fills yellow, which is a button shape, and MaterialButton supports
+        android:checkable directly — it toggles state_checked on tap, draws its fill, ring and icon
+        from state lists keyed on that state (res/color/task_check_*.xml), and is announced by
+        TalkBack as a toggle with its checked state.
+
+        The circle comes from the 50%-corner shape appearance, so it stays round at any size. Padding
+        is set so the 20dp tick sits centred in the 40dp circle.
+    -->
+    <style name="PetCare.TaskCheckButton" parent="Widget.Material3.Button.IconButton.Outlined">
+        <item name="android:checkable">true</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:padding">10dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Circle</item>
+        <item name="icon">@drawable/ic_check</item>
+        <item name="iconSize">@dimen/task_check_icon_size</item>
+        <item name="iconPadding">0dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconTint">@color/task_check_foreground</item>
+        <item name="backgroundTint">@color/task_check_background</item>
+        <item name="strokeColor">@color/task_check_foreground</item>
+        <item name="strokeWidth">@dimen/task_check_stroke_width</item>
+    </style>
+
+    <!-- The pale tag under a task's subtitle naming its supplies — "Flea tablet". The pastel pill's
+         shape with a neutral wash instead of a hue, since supplies are one kind of fact and do not
+         need telling apart from a neighbour. -->
+    <style name="PetCare.Pill.Supplies" parent="PetCare.Pill">
+        <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:paddingStart">@dimen/spacing_sm</item>
+        <item name="android:paddingEnd">@dimen/spacing_sm</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingBottom">3dp</item>
+    </style>
+
+    <!-- "+ ADD TASK" at the foot of the Tasks tab: the outlined add-row button, on a surface fill so
+         it reads as a solid pill on the cream page beside the dark Delegate button, as in the
+         design. Its label is full-strength because here it is one of the tab's two main actions. -->
+    <style name="PetCare.TaskActionButton.Outlined" parent="PetCare.AddRowButton">
+        <item name="android:minHeight">@dimen/task_action_button_height</item>
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="iconTint">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- "DELEGATE": the filled partner of the button above, in the tab's strong "selected" fill.
+         Colours are state lists so the button greys out properly when there is nothing to hand
+         over — see res/color/selected_action_background.xml. -->
+    <style name="PetCare.TaskActionButton.Filled" parent="Widget.Material3.Button">
+        <item name="android:minHeight">@dimen/task_action_button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/pet_card_corner_radius</item>
+        <item name="backgroundTint">@color/selected_action_background</item>
+        <item name="android:textColor">@color/selected_action_text</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+    </style>
+
     <!-- ============================= Category icon badge =============================
          The tinted circle a care-category icon sits in on a dashboard task row. The circle is what
          turns a 20dp glyph into something with enough visual weight to anchor the row's left edge,

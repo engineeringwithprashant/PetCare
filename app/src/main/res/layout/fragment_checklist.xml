@@ -1,174 +1,374 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Today's care checklist: the care due today, grouped under category headings, each row tickable,
-    plus an action to hand the whole list to someone else by text message or email.
+    The Tasks tab: a week of care, one day at a time.
 
-    **This layout serves two screens.** Reached from the bottom navigation bar it is the Tasks tab
-    and shows the pet picker at the top; reached from a pet's detail page it shows that animal alone
-    and the picker is hidden. See the note at the top of nav_graph.xml on why one destination does
-    both jobs. Everything below the picker is identical either way, which is the point — delegation,
-    swipe-to-complete and shake-to-reset exist in exactly one place.
+    Top to bottom:
+      - **The header** (monogram, "Tasks", theme toggle, pet count), shared with Home and Pets. Fixed:
+        it is identity and controls, not content.
+      - Everything else scrolls as one page:
+          · the **week strip** — seven day cells, the chosen one a solid pill;
+          · the **progress card** — the date, "5 of 6 done", "Reset day", a segmented bar and the
+            gesture guide;
+          · two **filter rows** — categories, then pets;
+          · the **task list**, grouped under Morning / Afternoon / Evening;
+          · the two **actions** — "+ Add task" and "Delegate".
 
-    The list mixes two row layouts (headings and tasks) in a single RecyclerView rather than using a
-    separate list per category, so the whole page scrolls as one.
+    **This layout serves two screens.** Reached from the bottom bar it is the Tasks tab. Reached from a
+    pet's detail page it is that pet's checklist: the fragment hides the header (the shared toolbar
+    with its back arrow is shown instead — see MainActivity.updateChromeFor) and the pet row, and
+    everything else is identical. See the note at the top of nav_graph.xml.
 
-    The root is a CoordinatorLayout so the extended floating action button and any Snackbar
-    cooperate — a Snackbar sliding up lifts the button rather than covering it.
+    **Why one NestedScrollView with the list inside it, rather than a RecyclerView for the page.** The
+    design scrolls the week strip, card, chips and actions away together with the tasks. Those controls
+    are a handful of stateful views, not rows, and forcing them into adapter items would make every
+    chip tap an adapter update. A day's task list is short and bounded — the care scheduled for a
+    household in one day — so the list is given wrap_content height with nestedScrollingEnabled="false",
+    handing all scrolling to the page. The cost is that every card for the day is inflated at once
+    rather than recycled; at the size of one day's care that is the right trade. The Pets tab, whose
+    list has no such bound, is built the other way.
+
+    **Why a CoordinatorLayout at the root.** This screen shows several Snackbars — "Breakfast deleted ·
+    Undo", the reset confirmation, delegation results. A Snackbar attaches itself to the nearest
+    CoordinatorLayout above the view it is given; without one here it would climb all the way to the
+    window and appear on top of the bottom navigation bar, covering the tabs. Inside it, a vertical LinearLayout does the actual arrangement: the header takes the
+    height it needs, and the scrolling page takes the rest through layout_height="0dp" with
+    layout_weight="1".
 -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.checklist.ChecklistFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- The shared header, as a nested binding (`binding.header`). Hidden for a single pet. -->
+    <include
+        android:id="@+id/header"
+        layout="@layout/view_tab_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/checklistScroll"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/list_padding_bottom">
 
-        <!--
-            The pet picker. Included with an id, which is what makes ViewBinding expose it as a
-            nested binding — the fragment reaches its chip group as `binding.petPicker.petChipGroup`
-            rather than having those ids flattened into this layout's own.
-
-            Hidden entirely when the screen is showing one particular pet. `gone` rather than
-            `invisible`, so the progress line below moves up to the top of the screen instead of
-            leaving a band of empty space where a picker might have been.
-        -->
-        <include
-            android:id="@+id/petPicker"
-            layout="@layout/view_pet_picker"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:visibility="visible" />
+            android:orientation="vertical">
 
-        <!--
-            The day's progress, in a card of its own.
-
-            A card rather than a bare line of text, because it is the one figure on this screen the
-            user came to check — "how much is left?" — and a white surface on the cream page is what
-            marks it out from the list of rows beneath it.
-        -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/progressCard"
-            style="@style/PetCare.Card.Feature"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/screen_padding"
-            android:layout_marginTop="@dimen/spacing_md"
-            android:layout_marginEnd="@dimen/screen_padding"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/petPicker">
-
+            <!-- ============================ Week strip ============================
+                 Seven includes of one cell layout, each with its own id so ViewBinding gives the
+                 fragment day0 … day6. Built in XML rather than added in code because the count is
+                 fixed at seven: a static row is simpler to read and preview than one assembled at
+                 runtime. Equal widths come from layout_weight; the gaps are start margins on all but
+                 the first cell, so the outer cells line up with the screen gutter exactly. -->
             <LinearLayout
+                android:id="@+id/weekStrip"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/card_padding">
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/screen_padding"
+                android:paddingEnd="@dimen/screen_padding">
 
-                <TextView
-                    android:id="@+id/checklistProgressText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="?attr/colorOnSurface"
-                    tools:text="2 of 5 tasks done" />
+                <include
+                    android:id="@+id/day0"
+                    layout="@layout/item_week_day"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/week_day_height"
+                    android:layout_weight="1" />
 
-                <!-- Explains why the delegate action is unavailable once everything has been ticked
-                     off. Hidden the rest of the time, so it takes up no space and does not make the
-                     card taller than the one line it usually holds. -->
-                <TextView
-                    android:id="@+id/allDoneText"
-                    style="@style/PetCare.Subtitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_xs"
-                    android:visibility="gone"
-                    tools:text="@string/checklist_all_done"
-                    tools:visibility="visible" />
+                <include
+                    android:id="@+id/day1"
+                    layout="@layout/item_week_day"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/week_day_height"
+                    android:layout_marginStart="@dimen/week_day_gap"
+                    android:layout_weight="1" />
+
+                <include
+                    android:id="@+id/day2"
+                    layout="@layout/item_week_day"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/week_day_height"
+                    android:layout_marginStart="@dimen/week_day_gap"
+                    android:layout_weight="1" />
+
+                <include
+                    android:id="@+id/day3"
+                    layout="@layout/item_week_day"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/week_day_height"
+                    android:layout_marginStart="@dimen/week_day_gap"
+                    android:layout_weight="1" />
+
+                <include
+                    android:id="@+id/day4"
+                    layout="@layout/item_week_day"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/week_day_height"
+                    android:layout_marginStart="@dimen/week_day_gap"
+                    android:layout_weight="1" />
+
+                <include
+                    android:id="@+id/day5"
+                    layout="@layout/item_week_day"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/week_day_height"
+                    android:layout_marginStart="@dimen/week_day_gap"
+                    android:layout_weight="1" />
+
+                <include
+                    android:id="@+id/day6"
+                    layout="@layout/item_week_day"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/week_day_height"
+                    android:layout_marginStart="@dimen/week_day_gap"
+                    android:layout_weight="1" />
 
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- The generous bottom padding, with clipToPadding="false", lets the last row scroll clear
-             of the delegate button instead of finishing underneath it. -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/checklistRecyclerView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="@dimen/spacing_sm"
-            android:clipToPadding="false"
-            android:paddingStart="@dimen/screen_padding"
-            android:paddingEnd="@dimen/screen_padding"
-            android:paddingBottom="@dimen/list_padding_bottom_fab"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/progressCard"
-            tools:listitem="@layout/item_checklist_task" />
-
-        <!-- Occupies the same region as the list; the fragment shows exactly one of the two. Its
-             wording is set in code, because "nothing due today" and "no pets to show" are different
-             situations that both leave this screen with nothing to draw. -->
-        <LinearLayout
-            android:id="@+id/emptyChecklistContainer"
-            style="@style/PetCare.EmptyState"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/checklistRecyclerView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/checklistRecyclerView"
-            tools:visibility="visible">
-
-            <ImageView
-                android:id="@+id/emptyChecklistIcon"
-                style="@style/PetCare.EmptyStateIcon"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_empty_tasks" />
-
-            <TextView
-                android:id="@+id/emptyChecklistTitle"
-                style="@style/PetCare.EmptyStateTitle"
+            <!-- ============================ Progress card ============================
+                 The one figure the user comes to check — how much of the day is done — on a light
+                 surface card so it stands apart from the list. -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/progressCard"
+                style="@style/PetCare.Card.Feature"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/checklist_empty_title" />
+                android:layout_marginStart="@dimen/screen_padding"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:layout_marginEnd="@dimen/screen_padding"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
 
-            <TextView
-                android:id="@+id/emptyChecklistMessage"
-                style="@style/PetCare.EmptyStateMessage"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/card_padding">
+
+                    <!-- The date and the count on the left, "Reset day" on the right, vertically
+                         centred against the two lines of text. -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:baselineAligned="false"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <!-- "THURSDAY 11 SEPTEMBER" — the section-label treatment, so it labels
+                                 the count beneath rather than competing with it. -->
+                            <TextView
+                                android:id="@+id/progressDateText"
+                                style="@style/PetCare.SectionLabel"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                tools:text="Thursday 11 September" />
+
+                            <TextView
+                                android:id="@+id/progressCountText"
+                                style="@style/PetCare.Headline"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/spacing_xs"
+                                android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                                android:textColor="?attr/colorOnSurface"
+                                tools:text="5 of 6 done" />
+
+                        </LinearLayout>
+
+                        <!-- Clears the ticks shown on screen — the same action as shaking the
+                             phone, and it asks the same confirmation first. -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/resetDayButton"
+                            style="@style/PetCare.SmallPillButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/spacing_sm"
+                            android:text="@string/tasks_reset_day" />
+
+                    </LinearLayout>
+
+                    <!-- One segment per task; drawn by ui/common/SegmentedProgressView.kt. Marked
+                         unimportant for accessibility because a drawing has nothing to read aloud —
+                         the fragment gives the count above a full "5 of 6 tasks done" description
+                         instead, so the bar's information is still spoken once. -->
+                    <com.prash.petcare.ui.common.SegmentedProgressView
+                        android:id="@+id/progressSegments"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:importantForAccessibility="no" />
+
+                    <TextView
+                        android:id="@+id/progressHelpText"
+                        style="@style/PetCare.Subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        tools:text="@string/tasks_progress_help" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ============================ Filter rows ============================
+                 Each a single line of chips that slides sideways. A ChipGroup wraps onto more lines by
+                 default; singleLine inside a HorizontalScrollView keeps each row one chip tall however
+                 many options there are. clipToPadding="false" lets the first chip sit in the screen
+                 gutter while the row still scrolls past the edge.
+
+                 singleSelection: one option at a time. selectionRequired: tapping the chosen chip
+                 cannot un-choose it, which would leave the row with nothing selected. -->
+            <HorizontalScrollView
+                android:id="@+id/categoryChipScroll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/checklist_empty_message" />
+                android:layout_marginTop="@dimen/spacing_md"
+                android:clipToPadding="false"
+                android:paddingStart="@dimen/screen_padding"
+                android:paddingEnd="@dimen/screen_padding"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/categoryChipGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipSpacingHorizontal="@dimen/pill_spacing"
+                    app:selectionRequired="true"
+                    app:singleLine="true"
+                    app:singleSelection="true" />
+
+            </HorizontalScrollView>
+
+            <!-- The pet row. Hidden for a single pet's checklist, where there is nothing to choose. -->
+            <HorizontalScrollView
+                android:id="@+id/petChipScroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:clipToPadding="false"
+                android:paddingStart="@dimen/screen_padding"
+                android:paddingEnd="@dimen/screen_padding"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/petChipGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipSpacingHorizontal="@dimen/pill_spacing"
+                    app:selectionRequired="true"
+                    app:singleLine="true"
+                    app:singleSelection="true" />
+
+            </HorizontalScrollView>
+
+            <!-- ============================== Task list ==============================
+                 Section headers and task cards in one RecyclerView — see ChecklistAdapter. Given
+                 wrap_content and no nested scrolling, so the page above scrolls it; see the note at
+                 the top of this file. -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/checklistRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:paddingStart="@dimen/screen_padding"
+                android:paddingEnd="@dimen/screen_padding"
+                tools:itemCount="3"
+                tools:listitem="@layout/item_checklist_task" />
+
+            <!-- Shown in the list's place when there is nothing to show. The wording is set in code,
+                 because "no care matches this day" and "you have no pets" are different situations
+                 that both leave the list empty. -->
+            <LinearLayout
+                android:id="@+id/emptyChecklistContainer"
+                style="@style/PetCare.EmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xl"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:visibility="gone"
+                tools:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/emptyChecklistIcon"
+                    style="@style/PetCare.EmptyStateIcon"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_empty_tasks" />
+
+                <TextView
+                    android:id="@+id/emptyChecklistTitle"
+                    style="@style/PetCare.EmptyStateTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tasks_empty_title" />
+
+                <TextView
+                    android:id="@+id/emptyChecklistMessage"
+                    style="@style/PetCare.EmptyStateMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tasks_empty_message" />
+
+            </LinearLayout>
+
+            <!-- ============================== Actions ==============================
+                 Two equal buttons: outlined "+ Add task" and filled "Delegate". Equal widths through
+                 layout_weight on zero-width children, so the row is balanced whatever the labels'
+                 lengths in another language. They replace the floating Delegate button this screen
+                 used to have, which covered the bottom of the last card. -->
+            <LinearLayout
+                android:id="@+id/actionsRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/screen_padding"
+                android:paddingEnd="@dimen/screen_padding">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/addTaskButton"
+                    style="@style/PetCare.TaskActionButton.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/tasks_add_task" />
+
+                <!-- Hands the outstanding tasks to someone else by text or email. Disabled, not
+                     hidden, when nothing is left — a control that vanishes leaves the user wondering
+                     where it went. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/delegateButton"
+                    style="@style/PetCare.TaskActionButton.Filled"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_sm"
+                    android:layout_weight="1"
+                    android:text="@string/checklist_delegate" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
-    <!--
-        Hands this pet's checklist to someone else. Tapping it asks which channel to use — text
-        message or email — rather than the screen carrying a button for each: the two are the same
-        action sent two ways, and a second floating button would imply two different jobs.
-
-        An extended floating action button rather than a plain one: the action messages a real
-        person, and a text costs money to send, so it carries a written label instead of leaving an
-        icon to be guessed at.
-    -->
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/delegateFab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/screen_padding"
-        android:text="@string/checklist_delegate"
-        app:icon="@drawable/ic_send" />
+</LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

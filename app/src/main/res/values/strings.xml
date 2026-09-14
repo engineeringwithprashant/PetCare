@@ -455,9 +455,69 @@
     <!-- Prefixes the supplies line in task lists. %1$s is what the user recorded. -->
     <string name="task_supplies_format">Needs: %1$s</string>
 
-    <!-- =============================== Checklist screen =============================== -->
-    <!-- %1$s is the pet's name. -->
-    <string name="checklist_title_format">Today for %1$s</string>
+    <!-- =============================== Checklist screen ===============================
+         The Tasks tab, and the same screen opened for one pet from its detail page. -->
+    <!-- The app bar title when opened for one pet. Not "Today for…": the week strip lets the user
+         look at other days, so the title names whose care it is rather than which day. %1$s is the
+         pet's name. -->
+    <string name="checklist_title_format">Tasks for %1$s</string>
+
+    <!-- The progress card. %1$d is the number done and %2$d the total; plurals because which forms a
+         count needs varies by language, even where English uses one form for both. -->
+    <plurals name="tasks_progress_count">
+        <item quantity="one">%1$d of %2$d done</item>
+        <item quantity="other">%1$d of %2$d done</item>
+    </plurals>
+    <!-- Replaces the count on a day, or a filter, with nothing scheduled — "0 of 0 done" would state
+         an absence as if it were a score. -->
+    <string name="tasks_progress_none">Nothing scheduled</string>
+    <string name="tasks_reset_day">Reset day</string>
+    <!-- The gesture guide under the progress bar. The swipes are invisible until tried, so the one
+         place they are explained is kept on screen rather than in a one-off tutorial. -->
+    <string name="tasks_progress_help">Swipe a card right to complete it, left to delete. Tap the circle for a quick check-off.</string>
+    <!-- The same guide on any day but today, where ticking off is unavailable — a completion is
+         recorded as happening now, so ticking Friday\'s feed on Wednesday would mark Wednesday\'s. -->
+    <string name="tasks_progress_help_other_day">Ticking off is available on the day itself. Swipe a card left to delete it.</string>
+    <!-- What TalkBack reads for the segmented bar and the count together. %1$d done, %2$d total. -->
+    <plurals name="cd_tasks_progress">
+        <item quantity="one">%1$d of %2$d task done</item>
+        <item quantity="other">%1$d of %2$d tasks done</item>
+    </plurals>
+
+    <!-- The filter rows. -->
+    <string name="tasks_filter_all_categories">All</string>
+    <string name="tasks_filter_all_pets">All pets</string>
+
+    <!-- Section headers grouping the day's tasks. Upper-cased by their style. "Anytime" holds a task
+         with no recorded time, which the form never creates but the database column allows. -->
+    <string name="tasks_section_morning">Morning</string>
+    <string name="tasks_section_afternoon">Afternoon</string>
+    <string name="tasks_section_evening">Evening</string>
+    <string name="tasks_section_anytime">Anytime</string>
+    <!-- The count on the right of a section header. %1$d done, %2$d in the section. -->
+    <string name="tasks_section_count">%1$d/%2$d</string>
+
+    <!-- The line under a task's title. %1$s is the pet's name, %2$s the category. -->
+    <string name="tasks_card_subtitle">%1$s · %2$s</string>
+
+    <!-- A week-strip cell's spoken label, since "TH 11" is not something a screen reader should
+         spell out. %1$s is the full date. -->
+    <string name="cd_week_day">%1$s</string>
+    <string name="cd_week_day_has_tasks">%1$s, care scheduled</string>
+
+    <!-- Shown in the list's place when the chosen day and filters leave nothing to show. -->
+    <string name="tasks_empty_title">Nothing scheduled</string>
+    <string name="tasks_empty_message">No care matches this day and these filters.</string>
+
+    <!-- The two actions at the foot of the tab. "Add task" is upper-cased by its style; the "+" is
+         the button\'s icon. -->
+    <string name="tasks_add_task">Add task</string>
+    <!-- A task always belongs to a routine, so adding one first asks which. -->
+    <string name="tasks_add_task_pick_routine">Add a task to which routine?</string>
+    <!-- One routine in that list. %1$s is the routine's name, %2$s its pet. -->
+    <string name="tasks_add_task_routine_option">%1$s · %2$s</string>
+    <!-- Routines are created on a pet's own page, so this points there rather than offering a form. -->
+    <string name="tasks_add_task_no_routine">Set up a care routine first — open a pet from the Pets tab and add one there.</string>
     <!-- ============================== Checklist gestures ==============================
          Swipe a row to complete or delete it; shake the phone to start the day over. -->
     <!-- %1$s is the deleted task's title. -->
@@ -465,26 +525,22 @@
     <string name="action_undo">Undo</string>
     <string name="reset_dialog_title">Start today over?</string>
     <!-- Spells out both what is cleared and what is not, since a shake is easy to trigger by
-         accident and the wording is the only chance to reassure. %1$s is the pet's name. -->
-    <string name="reset_dialog_message">This clears every task ticked off today for %1$s, so the checklist starts over. The tasks themselves are not deleted.</string>
+         accident and the wording is the only chance to reassure. %1$s names the pets whose ticks
+         are cleared — one name, or several joined with commas. Only the tasks currently on screen
+         are affected, which is why the dialog says "shown". -->
+    <string name="reset_dialog_message">This clears the tasks shown as ticked off today for %1$s, so the day starts over. The tasks themselves are not deleted.</string>
     <string name="reset_dialog_confirm">Start over</string>
     <string name="reset_dialog_cancel">Cancel</string>
     <string name="reset_done">Today\'s checklist has been reset</string>
-
-    <string name="checklist_empty_title">Nothing due today</string>
-    <string name="checklist_empty_message">This pet has no care scheduled for today.</string>
-    <!-- Plural because the wording changes with the count, and which forms exist varies by
-         language. %1$d is the completed count and %2$d the total. -->
-    <plurals name="checklist_progress">
-        <item quantity="one">%1$d of %2$d task done</item>
-        <item quantity="other">%1$d of %2$d tasks done</item>
-    </plurals>
+    <!-- Joins several pet names in one sentence, e.g. "Krishala, Ddjw". A string resource rather than a
+         hard-coded comma so a language with a different list separator can supply its own. -->
+    <string name="list_separator">, </string>
 
     <!-- ============================== Care delegation ==============================
          Handing a pet's checklist to someone who is looking after them, either as a text message
          sent by the app itself or as an email drafted in the user's own mail app. -->
     <string name="checklist_delegate">Delegate</string>
-    <string name="delegate_nothing_to_send">There is no care due today to delegate</string>
+    <string name="delegate_nothing_to_send">There is no outstanding care to delegate</string>
 
     <!-- The channel chooser, shown first so the user picks how the checklist travels before the app
          asks for anything. The two options are worded as the things themselves rather than as
@@ -537,6 +593,10 @@
     <!-- %1$s is the task title, %2$s its time of day. -->
     <string name="delegate_message_task">- %1$s at %2$s</string>
     <string name="delegate_message_task_no_time">- %1$s</string>
+    <!-- The same lines when the checklist covers more than one pet, so each task says whose it is.
+         %3$s (or %2$s in the second) is the pet's name. -->
+    <string name="delegate_message_task_with_pet">- %1$s at %2$s (%3$s)</string>
+    <string name="delegate_message_task_no_time_with_pet">- %1$s (%2$s)</string>
     <string name="delegate_message_supplies">  Needs: %1$s</string>
     <string name="delegate_message_notes">  Note: %1$s</string>
 
@@ -581,6 +641,8 @@
     <string name="cd_add_routine">Add a care routine</string>
     <string name="cd_add_task">Add a care task</string>
     <string name="cd_task_done">Mark task as done</string>
+    <!-- The same, naming the task, for the check button on a Tasks-tab card. %1$s is its title. -->
+    <string name="cd_task_done_named">Mark %1$s as done</string>
     <string name="cd_add_expense">Record an expense</string>
     <!-- The category symbol beside a dashboard task. %1$s is the category's own name, so TalkBack
          reads "Feeding" rather than announcing an unnamed image. -->

@@ -347,6 +347,80 @@ class CareScheduleTest {
     }
 
     // -------------------------------------------------------------------------------------------
+    // tasksDueOn — the shared "what runs on this day" rule used by the Home, Pets and Tasks tabs
+    // -------------------------------------------------------------------------------------------
+
+    /**
+     * A task counts on a day only when its routine does. 11 September 2026 is a Friday, so a weekly
+     * routine started on a Friday contributes its task then and not on the Saturday after.
+     */
+    @Test
+    fun `tasksDueOn keeps only tasks whose routine runs that day`() {
+        val weekly = routine(startDate = at(2026, 9, 11), repeatUnit = RepeatUnit.WEEK)
+            .copy(id = 7L)
+        val weeklyTask = task(completedAt = null).copy(id = 1L, routineId = 7L)
+
+        assertEquals(
+            listOf(weeklyTask),
+            CareSchedule.tasksDueOn(listOf(weekly), listOf(weeklyTask), at(2026, 9, 11))
+        )
+        assertTrue(
+            CareSchedule.tasksDueOn(listOf(weekly), listOf(weeklyTask), at(2026, 9, 12)).isEmpty()
+        )
+    }
+
+    /** A task with no routine has no schedule, so it is never due — and a paused routine never runs. */
+    @Test
+    fun `tasksDueOn ignores unscheduled tasks and paused routines`() {
+        val paused = routine(startDate = at(2026, 9, 1), isActive = false).copy(id = 3L)
+        val pausedTask = task(completedAt = null).copy(id = 1L, routineId = 3L)
+        val orphanTask = task(completedAt = null).copy(id = 2L, routineId = null)
+
+        assertTrue(
+            CareSchedule.tasksDueOn(listOf(paused), listOf(pausedTask, orphanTask), at(2026, 9, 11))
+                .isEmpty()
+        )
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // weekContaining — the Tasks tab's week strip
+    // -------------------------------------------------------------------------------------------
+
+    /** Thursday 10 September 2026 in a Monday-first week: Monday the 7th through Sunday the 13th. */
+    @Test
+    fun `weekContaining starts on the given first day and runs seven midnights`() {
+        val week = CareSchedule.weekContaining(at(2026, 9, 10, 15, 45), Calendar.MONDAY)
+
+        assertEquals(7, week.size)
+        assertEquals("2026-09-07 00:00", format(week.first()))
+        assertEquals("2026-09-13 00:00", format(week.last()))
+    }
+
+    /** A Sunday in a Monday-first week belongs to the week that *ends* on it, not the one after. */
+    @Test
+    fun `weekContaining puts a Sunday at the end of a Monday-first week`() {
+        val week = CareSchedule.weekContaining(at(2026, 9, 13), Calendar.MONDAY)
+
+        assertEquals("2026-09-07 00:00", format(week.first()))
+    }
+
+    /** Every cell must be a real local midnight even in the week the clocks go forward. */
+    @Test
+    fun `weekContaining stays on midnight across a spring forward`() {
+        useZone(DST_ZONE)
+
+        val week = CareSchedule.weekContaining(at(2026, 3, 8), Calendar.SUNDAY)
+
+        assertEquals(
+            listOf(
+                "2026-03-08 00:00", "2026-03-09 00:00", "2026-03-10 00:00", "2026-03-11 00:00",
+                "2026-03-12 00:00", "2026-03-13 00:00", "2026-03-14 00:00"
+            ),
+            week.map { format(it) }
+        )
+    }
+
+    // -------------------------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------------------------
 

@@ -164,6 +164,40 @@
          touch target; the extra keeps it in proportion with the tall cards above. -->
     <dimen name="pets_add_row_height">56dp</dimen>
 
+    <!-- ================================= Tasks tab =================================
+         The redesigned Tasks tab: week strip, progress card, filter chips, task cards and the two
+         actions at the foot. -->
+
+    <!-- One day cell in the week strip. Seven share the width, so only the height and the gap
+         between cells are fixed; the corner is a little under half the width a cell ends up at on
+         a phone, which rounds it towards a pill without becoming a circle. -->
+    <dimen name="week_day_height">60dp</dimen>
+    <dimen name="week_day_gap">6dp</dimen>
+    <dimen name="week_day_corner_radius">16dp</dimen>
+    <!-- The "care scheduled" dot under a date. -->
+    <dimen name="week_day_dot_size">4dp</dimen>
+
+    <!-- The segmented bar in the progress card: one rounded segment per task. -->
+    <dimen name="segmented_progress_height">8dp</dimen>
+    <dimen name="segmented_progress_gap">4dp</dimen>
+
+    <!-- The small outlined "Reset day" pill in the progress card. Shorter than a standard 40dp
+         button because it is a secondary action sitting beside a headline, not below a form — its
+         touch area is still padded out to 48dp by Material's own inset handling. -->
+    <dimen name="small_pill_button_height">36dp</dimen>
+
+    <!-- A task card: the time badge on the left, the round check button on the right. -->
+    <dimen name="task_time_badge_size">52dp</dimen>
+    <dimen name="task_check_button_size">40dp</dimen>
+    <dimen name="task_check_icon_size">20dp</dimen>
+    <dimen name="task_check_stroke_width">1.5dp</dimen>
+    <!-- Gap between task cards; tighter than between pet cards because these are rows of a list
+         grouped under headers, and wide gaps would break the groups apart visually. -->
+    <dimen name="task_card_spacing">10dp</dimen>
+
+    <!-- The two buttons at the foot of the tab: "+ Add task" and "Delegate". -->
+    <dimen name="task_action_button_height">52dp</dimen>
+
     <!-- The quick-action cards along the bottom of the dashboard: an outlined tile with a circled
          "+" above its label. -->
     <dimen name="quick_action_height">86dp</dimen>

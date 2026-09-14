@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text inside the time badge. On the yellow (done) badge it must be the fixed dark colour made for
+     the accent; on the pale badge it follows the theme. Paired with task_time_badge_background.xml. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/on_accent_yellow" android:state_activated="true" />
+    <item android:color="?attr/colorOnSurface" />
+</selector>

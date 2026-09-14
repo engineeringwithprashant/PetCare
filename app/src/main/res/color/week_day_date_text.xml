@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The date number in a week-strip cell.
+
+    Keyed on state_selected, which the fragment sets on the *cell* with View.setSelected. A ViewGroup
+    passes its selected state down to every child automatically, so the number, the weekday and the
+    dot all switch colour from that one call — nothing in Kotlin has to recolour them individually.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorOnSelectedContainer" android:state_selected="true" />
+    <item android:color="?attr/colorOnSurface" />
+</selector>

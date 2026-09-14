@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One chip in the Tasks tab's category filter row — "All", "Feeding", "Walk"…
+
+    A layout for a single view because a Material component takes its look from the style applied at
+    inflation time; ui/common/FilterChips.kt inflates one of these per option and sets its text. The
+    whole selected/unselected appearance is in PetCare.FilterChip.
+-->
+<com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.FilterChip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:text="Feeding" />

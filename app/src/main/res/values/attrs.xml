@@ -34,6 +34,23 @@
     -->
     <attr name="colorAccentText" format="color" />
 
+    <!--
+        The "this one is chosen" fill, used on the Tasks tab for the selected day in the week strip,
+        the selected filter chips, and the Delegate button.
+
+        Declared because no Material role means "selected, strongly". In the light theme it is the
+        app's near-black with the yellow accent written on it; in the dark theme a near-black fill
+        would vanish into the near-black page, so the pair flips to a yellow fill with dark text. Both
+        are the highest-contrast thing on their page, which is the property that actually matters.
+
+        colorOnSelectedContainer is the accented text on that fill (yellow on black / dark on yellow).
+        colorOnSelectedContainerNeutral is plain text on the same fill (white on black / dark on
+        yellow), for a button label that should read as a word rather than as a highlight.
+    -->
+    <attr name="colorSelectedContainer" format="color" />
+    <attr name="colorOnSelectedContainer" format="color" />
+    <attr name="colorOnSelectedContainerNeutral" format="color" />
+
     <!-- Mint — the app uses this one for a pet's age. -->
     <attr name="colorPillMint" format="color" />
     <attr name="colorOnPillMint" format="color" />

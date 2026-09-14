@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fill of the Delegate button. A selector rather than a single colour so a disabled button (nothing
+     left to delegate) visibly greys out — a fixed backgroundTint would override Material's own
+     disabled styling and leave an unusable button looking fully live. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.12" android:color="?attr/colorOnSurface" android:state_enabled="false" />
+    <item android:color="?attr/colorSelectedContainer" />
+</selector>

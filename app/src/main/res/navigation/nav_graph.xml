@@ -143,6 +143,12 @@
             android:name="petId"
             android:defaultValue="-1L"
             app:argType="long" />
+
+        <!-- "+ Add task" opens the existing task form for a routine the user picks, passing
+             taskId = -1. Routines themselves are still created only from a pet's detail page. -->
+        <action
+            android:id="@+id/action_checklist_to_add_edit_task"
+            app:destination="@id/addEditTaskFragment" />
     </fragment>
 
     <!-- Tab 4. One pet's spending: the total, the breakdown by category, and every recorded

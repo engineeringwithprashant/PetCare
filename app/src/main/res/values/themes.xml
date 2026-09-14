@@ -81,6 +81,12 @@
              see attrs.xml for why this role has to exist at all. -->
         <item name="colorAccentText">@color/accent_text_light</item>
 
+        <!-- The "chosen" fill on the Tasks tab: near-black with yellow on it in this theme. See
+             attrs.xml. -->
+        <item name="colorSelectedContainer">@color/selected_container_light</item>
+        <item name="colorOnSelectedContainer">@color/on_selected_container_light</item>
+        <item name="colorOnSelectedContainerNeutral">@color/on_selected_container_neutral_light</item>
+
         <!-- ======================== Pastel stat pill roles ========================
              The app's own colour roles, declared in attrs.xml. See the note there for why a stat
              pill needs a family of *equal* colours that the Material roles cannot express. -->
