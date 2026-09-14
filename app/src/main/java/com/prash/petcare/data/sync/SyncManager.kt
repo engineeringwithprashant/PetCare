@@ -5,6 +5,7 @@ import com.prash.petcare.data.local.entity.CareRoutine
 import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.entity.Expense
 import com.prash.petcare.data.local.entity.Pet
+import com.prash.petcare.data.local.entity.Place
 import com.prash.petcare.data.local.entity.SyncEntityType
 import com.prash.petcare.data.local.entity.User
 import com.prash.petcare.data.remote.FirestoreSyncService
@@ -12,17 +13,20 @@ import com.prash.petcare.data.remote.careRoutineFromRemote
 import com.prash.petcare.data.remote.careTaskFromRemote
 import com.prash.petcare.data.remote.expenseFromRemote
 import com.prash.petcare.data.remote.petFromRemote
+import com.prash.petcare.data.remote.placeFromRemote
 import com.prash.petcare.data.remote.toRemoteMap
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
 import com.prash.petcare.data.repository.PetRepository
+import com.prash.petcare.data.repository.PlaceRepository
 import com.prash.petcare.data.repository.SyncDeletionRepository
 import com.prash.petcare.data.repository.UserRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -60,9 +64,10 @@ import kotlinx.coroutines.withTimeoutOrNull
  *  1. **deletions are pushed first**, so a row deleted on this device is gone from Firestore before
  *     step 2 reads it — otherwise the pull would find it, see no local row, and put it straight
  *     back;
- *  2. **pets, then routines, then tasks, then expenses** are each fetched, compared and written in
- *     both directions. Parents before children, because Room's foreign keys reject a task whose pet
- *     has not been inserted yet;
+ *  2. **pets, then routines, then tasks, then expenses, then places** are each fetched, compared and
+ *     written in both directions. Parents before children, because Room's foreign keys reject a task
+ *     whose pet has not been inserted yet. Places hang off the account rather than a pet, so they
+ *     could go anywhere in the order; last keeps the pet-shaped tables together;
  *  3. the account's own document is refreshed so it records when this last happened.
  *
  * **Failure is silence, but never forgetfulness.** Any exception — and offline is by far the
@@ -93,6 +98,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * @param careRoutineRepository Local routines, and where pulled routines are written.
  * @param careTaskRepository Local tasks, and where pulled tasks are written.
  * @param expenseRepository Local expenses, and where pulled expenses are written.
+ * @param placeRepository Local saved places, and where pulled places are written.
  * @param syncDeletionRepository The queue of deletions still to be sent.
  * @param firestoreSyncService The only route to Firestore; see it for the remote layout.
  * @param networkMonitor Tells this class when the device comes back online, so a change made with
@@ -104,6 +110,7 @@ class SyncManager(
     private val careRoutineRepository: CareRoutineRepository,
     private val careTaskRepository: CareTaskRepository,
     private val expenseRepository: ExpenseRepository,
+    private val placeRepository: PlaceRepository,
     private val syncDeletionRepository: SyncDeletionRepository,
     private val firestoreSyncService: FirestoreSyncService,
     private val networkMonitor: NetworkMonitor
@@ -278,19 +285,24 @@ class SyncManager(
     /**
      * How many records are waiting to be uploaded, across everything that can be queued.
      *
-     * Deletions are counted alongside the four tables of live rows: a pet the user deleted with no
+     * Deletions are counted alongside the five tables of live rows: a pet the user deleted with no
      * connection is every bit as unsynced as one they renamed, and reporting "nothing waiting"
      * while a deletion sat in the queue would be a lie.
+     *
+     * The list form of `combine` is used because there are now six sources, and the typed overloads
+     * of `combine` stop at five. Every source here is a count, so the values arrive as one array of
+     * the same type and simply add up.
      */
     private fun observePendingCount(userId: Long) = combine(
-        petRepository.observePendingPetCount(userId),
-        careRoutineRepository.observePendingRoutineCount(userId),
-        careTaskRepository.observePendingTaskCount(userId),
-        expenseRepository.observePendingExpenseCount(userId),
-        syncDeletionRepository.observePendingCount()
-    ) { pets, routines, tasks, expenses, deletions ->
-        pets + routines + tasks + expenses + deletions
-    }
+        listOf(
+            petRepository.observePendingPetCount(userId),
+            careRoutineRepository.observePendingRoutineCount(userId),
+            careTaskRepository.observePendingTaskCount(userId),
+            expenseRepository.observePendingExpenseCount(userId),
+            placeRepository.observePendingPlaceCount(userId),
+            syncDeletionRepository.observePendingCount()
+        )
+    ) { counts -> counts.sum() }
 
     /**
      * Turns the three facts into the one thing the user sees.
@@ -325,17 +337,24 @@ class SyncManager(
      * [distinctUntilChanged] over the combined tuple is the other half of that. Room invalidates
      * queries by table, so it re-runs all of these on any write to the table; comparing the results
      * is what turns "the table was touched" into "something actually changed".
+     *
+     * Six sources, so the list form of `combine` — see [observePendingCount]. The sources mix
+     * nullable timestamps with a count, so they are gathered as `Flow<Any?>`: nothing here reads the
+     * values as numbers, it only compares one snapshot with the next.
      */
     private fun observeLocalChanges(userId: Long) = combine(
-        petRepository.observeLatestPetUpdate(userId),
-        careRoutineRepository.observeLatestRoutineUpdate(userId),
-        careTaskRepository.observeLatestTaskUpdate(userId),
-        expenseRepository.observeLatestExpenseUpdate(userId),
-        syncDeletionRepository.observePendingCount()
-    ) { pets, routines, tasks, expenses, pendingDeletions ->
+        listOf<Flow<Any?>>(
+            petRepository.observeLatestPetUpdate(userId),
+            careRoutineRepository.observeLatestRoutineUpdate(userId),
+            careTaskRepository.observeLatestTaskUpdate(userId),
+            expenseRepository.observeLatestExpenseUpdate(userId),
+            placeRepository.observeLatestPlaceUpdate(userId),
+            syncDeletionRepository.observePendingCount()
+        )
+    ) { snapshot ->
         // The values are combined only to be compared; what is emitted is simply "this user's data
         // is at this state", and the id is what the collector needs to act on it.
-        listOf(pets, routines, tasks, expenses, pendingDeletions)
+        snapshot.toList()
     }
         .distinctUntilChanged()
         .map { userId }
@@ -361,6 +380,7 @@ class SyncManager(
                 syncRoutines(userKey, userId)
                 syncTasks(userKey, userId)
                 syncExpenses(userKey, userId)
+                syncPlaces(userKey, userId)
                 writeAccountDocument(userKey, user)
                 true
             } catch (e: CancellationException) {
@@ -425,7 +445,7 @@ class SyncManager(
     }
 
     // ---------------------------------------------------------------------------------------
-    // Step 2: the four synced tables
+    // Step 2: the five synced tables
     // ---------------------------------------------------------------------------------------
 
     /**
@@ -587,6 +607,45 @@ class SyncManager(
         expenseRepository.clearPendingExpenseSync(userId, readAt)
     }
 
+    /**
+     * Reconciles saved places.
+     *
+     * The simplest of the five, because a place's only parent is the account itself: there is no pet
+     * whose absence could break a foreign key, so nothing has to be filtered out for that reason.
+     * The owner id is overwritten with this session's account on the way in, exactly as for pets —
+     * see [petFromRemote].
+     */
+    private suspend fun syncPlaces(userKey: String, userId: Long) {
+        val otherAccountsPlaceIds = placeRepository.getPlaceIdsNotOwnedBy(userId)
+
+        val remote = firestoreSyncService
+            .fetchCollection(userKey, FirestoreSyncService.COLLECTION_PLACES)
+            .mapNotNull { placeFromRemote(it, userId) }
+            .filterNot { it.id in otherAccountsPlaceIds }
+
+        val readAt = System.currentTimeMillis()
+        val local = placeRepository.getPlacesForOwner(userId)
+
+        val (toApplyLocally, toPushRemotely) = reconcile(
+            local = local,
+            remote = remote,
+            idOf = Place::id,
+            updatedAtOf = Place::updatedAt,
+            isPendingOf = Place::isPendingSync
+        )
+
+        applyLocally(toApplyLocally) { placeRepository.upsertPlacesFromSync(it) }
+
+        pushRemotely(
+            userKey,
+            FirestoreSyncService.COLLECTION_PLACES,
+            toPushRemotely,
+            Place::id
+        ) { it.toRemoteMap() }
+
+        placeRepository.clearPendingPlaceSync(userId, readAt)
+    }
+
     // ---------------------------------------------------------------------------------------
     // Step 3: the account document
     // ---------------------------------------------------------------------------------------
@@ -627,7 +686,7 @@ class SyncManager(
     /**
      * Decides, for one table, which records travel in which direction.
      *
-     * This is last-write-wins written once and reused by all four tables rather than repeated with
+     * This is last-write-wins written once and reused by all five tables rather than repeated with
      * a different type each time — the rule is the same regardless of what is being compared, and
      * four copies of it would be four chances for one to drift.
      *

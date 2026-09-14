@@ -64,8 +64,24 @@ class AddEditTaskFragment : Fragment() {
         requireArguments().getLong(ARG_TASK_ID, CareTaskViewModel.NO_TASK_ID)
     }
 
+    /**
+     * Suggested starting values, when the form was opened by "Book a visit" on the Places tab. All
+     * three arguments default to null in the nav graph, so every other route in gets an empty form.
+     * An unrecognised category name is ignored rather than trusted.
+     */
+    private val prefill: CareTaskPrefill? by lazy {
+        val args = requireArguments()
+        val title = args.getString(ARG_PREFILL_TITLE)
+        val notes = args.getString(ARG_PREFILL_NOTES)
+        val category = args.getString(ARG_PREFILL_CATEGORY)
+            ?.let { name -> TaskCategory.entries.firstOrNull { it.name == name } }
+
+        if (title == null && notes == null && category == null) null
+        else CareTaskPrefill(title, notes, category)
+    }
+
     private val viewModel: CareTaskViewModel by viewModels {
-        CareTaskViewModel.factory(routineId, taskId)
+        CareTaskViewModel.factory(routineId, taskId, prefill)
     }
 
     /**
@@ -331,6 +347,13 @@ class AddEditTaskFragment : Fragment() {
         when (event) {
             is CareTaskEvent.PrefillForm -> prefillForm(event.task)
 
+            // Only text fields the user has not already started typing in are filled, so a
+            // suggestion can never overwrite their own words.
+            is CareTaskEvent.PrefillDraft -> {
+                if (binding.taskTitleInput.text.isNullOrEmpty()) binding.taskTitleInput.setText(event.title)
+                if (binding.notesInput.text.isNullOrEmpty()) binding.notesInput.setText(event.notes)
+            }
+
             // Both outcomes simply close the screen. The routine detail screen behind it already
             // observes the database, so its task list updates itself.
             is CareTaskEvent.Saved, is CareTaskEvent.Deleted -> findNavController().navigateUp()
@@ -365,6 +388,9 @@ class AddEditTaskFragment : Fragment() {
         /** Navigation argument names; must match those declared in nav_graph.xml. */
         const val ARG_ROUTINE_ID = "routineId"
         const val ARG_TASK_ID = "taskId"
+        const val ARG_PREFILL_TITLE = "prefillTitle"
+        const val ARG_PREFILL_NOTES = "prefillNotes"
+        const val ARG_PREFILL_CATEGORY = "prefillCategory"
 
         /** Tag the FragmentManager uses to restore the time picker after a rotation. */
         private const val TIME_PICKER_TAG = "care_task_time_picker"

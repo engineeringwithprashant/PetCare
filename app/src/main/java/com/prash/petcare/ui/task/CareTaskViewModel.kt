@@ -44,6 +44,21 @@ data class CareTaskFormState(
     @param:StringRes val timeError: Int? = null
 )
 
+/**
+ * Starting values for a *new* task, supplied by the screen that opened the form.
+ *
+ * Used by "Book a visit" on the Places tab, which opens this form already reading "Visit Patan Animal
+ * Hospital", with the clinic's details in the notes and the category set to a vet visit. The user
+ * still picks the time and presses save, so a prefill is a suggestion, not a saved record.
+ *
+ * Ignored in edit mode: an existing task's own values always win over anything passed in.
+ */
+data class CareTaskPrefill(
+    val title: String?,
+    val notes: String?,
+    val category: TaskCategory?
+)
+
 /** A one-off occurrence the task form reacts to exactly once. */
 sealed interface CareTaskEvent {
 
@@ -55,6 +70,12 @@ sealed interface CareTaskEvent {
      * typing.
      */
     data class PrefillForm(val task: CareTask) : CareTaskEvent
+
+    /**
+     * Carries a [CareTaskPrefill]'s text for a new task, for the same once-only reason as
+     * [PrefillForm]. A separate event because there is no task row to send yet.
+     */
+    data class PrefillDraft(val title: String, val notes: String) : CareTaskEvent
 
     /** The task was created or updated; the screen should close. */
     data object Saved : CareTaskEvent
@@ -83,12 +104,14 @@ sealed interface CareTaskEvent {
  * @param careRoutineRepository Used to look up the owning routine.
  * @param routineId The routine this task belongs to.
  * @param taskId Which task to edit, or [NO_TASK_ID] to create one.
+ * @param prefill Starting values for a new task, or null for an empty form.
  */
 class CareTaskViewModel(
     private val careTaskRepository: CareTaskRepository,
     private val careRoutineRepository: CareRoutineRepository,
     private val routineId: Long,
-    private val taskId: Long
+    private val taskId: Long,
+    private val prefill: CareTaskPrefill? = null
 ) : ViewModel() {
 
     /** True when changing an existing record rather than creating one. */
@@ -133,8 +156,17 @@ class CareTaskViewModel(
             routine = loadedRoutine
 
             if (!isEditMode) {
-                // A new task starts from the defaults; there is nothing to fetch.
-                _formState.value = _formState.value.copy(isLoading = false)
+                // A new task starts from the defaults — or from what the opening screen suggested.
+                // The category is state (it lives in a dropdown); the text goes out once as an event.
+                _formState.value = _formState.value.copy(
+                    isLoading = false,
+                    category = prefill?.category ?: _formState.value.category
+                )
+                if (prefill != null && (prefill.title != null || prefill.notes != null)) {
+                    _events.send(
+                        CareTaskEvent.PrefillDraft(prefill.title.orEmpty(), prefill.notes.orEmpty())
+                    )
+                }
                 return@launch
             }
 
@@ -272,7 +304,11 @@ class CareTaskViewModel(
         /** [taskId] value meaning "create a new task". Matches the default in the nav graph. */
         const val NO_TASK_ID = -1L
 
-        fun factory(routineId: Long, taskId: Long): ViewModelProvider.Factory = viewModelFactory {
+        fun factory(
+            routineId: Long,
+            taskId: Long,
+            prefill: CareTaskPrefill? = null
+        ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PetCareApplication
@@ -280,7 +316,8 @@ class CareTaskViewModel(
                     careTaskRepository = application.careTaskRepository,
                     careRoutineRepository = application.careRoutineRepository,
                     routineId = routineId,
-                    taskId = taskId
+                    taskId = taskId,
+                    prefill = prefill
                 )
             }
         }

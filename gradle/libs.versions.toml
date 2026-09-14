@@ -28,6 +28,10 @@ googleServices = "4.4.4"
 # Adds `await()` for Google Play services Task objects, which is what the Firestore API returns.
 # Without it every Firestore call would have to be wrapped in a callback by hand.
 coroutinesPlayServices = "1.10.2"
+# The fused location provider from Google Play services, used to geotag saved places. This is the
+# location library only - the Google Maps SDK is deliberately not a dependency; see
+# data.location.LocationRepository.
+playServicesLocation = "21.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -61,6 +65,7 @@ androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview"
 # has no version of its own on purpose, so the BoM decides it.
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
 
 [plugins]

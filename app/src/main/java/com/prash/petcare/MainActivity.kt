@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
      * Anything listed here shows no back arrow, because there is nowhere above it to go; every
      * other destination gets one automatically.
      *
-     * The set is the four bottom-bar destinations plus the sign-in screen. The four are peers
+     * The set is the five bottom-bar destinations plus the sign-in screen. The five are peers
      * rather than a hierarchy — moving from Pets to Expenses is a switch, not a step forward, so
      * offering "back" from any of them would be offering to undo something the user did not do.
      * Sign-in is the app's entry point and has nothing above it either.
@@ -74,6 +74,7 @@ class MainActivity : AppCompatActivity() {
             R.id.homeFragment,
             R.id.petsFragment,
             R.id.checklistFragment,
+            R.id.placesFragment,
             R.id.expensesFragment
         )
     )
@@ -165,8 +166,8 @@ class MainActivity : AppCompatActivity() {
      * to and belong to nobody, so all of it goes — the tabs as well: a row of tabs leading into an
      * account the user has not signed in to yet would be worse than no chrome at all.
      *
-     * The **dashboard**, the **Pets tab** and the **Tasks tab** hide only the app bar, and keep their
-     * tabs. They draw their own header — the monogram, the title, the theme toggle and the pet count,
+     * The **dashboard**, the **Pets tab**, the **Tasks tab** and the **Places tab** hide only the app
+     * bar, and keep their tabs. They draw their own header — the monogram, the title, the theme toggle and the pet count,
      * shared as res/layout/view_tab_header.xml — because every one of those depends on the screen's
      * own data or state, which a toolbar shared by twelve destinations has no way to supply. Leaving
      * the shared bar visible above it would show the screen's name twice.
@@ -186,8 +187,10 @@ class MainActivity : AppCompatActivity() {
         val isTasksTab = destinationId == R.id.checklistFragment &&
             (arguments?.getLong(ARG_PET_ID, NO_PET_ID) ?: NO_PET_ID) == NO_PET_ID
 
-        val hasOwnHeader =
-            destinationId == R.id.homeFragment || destinationId == R.id.petsFragment || isTasksTab
+        val hasOwnHeader = destinationId == R.id.homeFragment ||
+            destinationId == R.id.petsFragment ||
+            destinationId == R.id.placesFragment ||
+            isTasksTab
 
         binding.appBarLayout.isVisible = !isAuthScreen && !hasOwnHeader
         binding.bottomNav.isVisible = !isAuthScreen

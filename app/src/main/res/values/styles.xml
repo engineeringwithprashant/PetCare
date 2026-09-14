@@ -710,4 +710,164 @@
         <item name="checkedIconVisible">false</item>
     </style>
 
+    <!-- ================================= Places tab =================================
+         The Places tab's small print — labels, distances, subtitles, the GPS chip — is set in the
+         platform **monospace** face, as in the design. A distance list is the one place in the app
+         where columns of figures are compared at a glance ("0.5 km", "1.2 km", "1.9 km"), and fixed
+         character widths make those figures line up. Headings and names stay in the normal face, so
+         the monospace reads as "data" beside them. -->
+
+    <!-- The meta line under a place's name — "Vet clinic · Pulchowk" — and the distance on a row. -->
+    <style name="PetCare.Places.Meta" parent="">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- "GEOTAGGED · BY DISTANCE" on the dark strip: small, bold, upper-case and letter-spaced, like the
+         app's section labels but in the strip's fixed muted colour, since the strip is dark in both
+         themes. -->
+    <style name="PetCare.Places.StripLabel" parent="">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textColor">@color/places_strip_muted</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "within 2 km", on the right of the same line — the same voice, not upper-cased. -->
+    <style name="PetCare.Places.StripRange" parent="PetCare.Places.StripLabel">
+        <item name="android:textStyle">normal</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <!-- The helper sentence under the axis. -->
+    <style name="PetCare.Places.StripHelp" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">@color/places_strip_text</item>
+    </style>
+
+    <!-- The small field name under an info block's value: "TODAY", "PHONE". -->
+    <style name="PetCare.Places.FieldLabel" parent="PetCare.SectionLabel">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:layout_marginTop">2dp</item>
+    </style>
+
+    <!-- An info block's value: "8:00 – 20:00", "01-5521…". The Pets tab's stat value, so a figure in
+         a bordered block looks the same on both tabs. -->
+    <style name="PetCare.Places.InfoValue" parent="PetCare.PetStat.Value" />
+
+    <!-- "OPEN NOW": the pastel pill's shape, filled green. Bold monospace capitals so it reads as a
+         status badge rather than as words in the heading beside it. -->
+    <style name="PetCare.Places.OpenNowPill" parent="PetCare.Pill">
+        <item name="android:backgroundTint">@color/open_now_container</item>
+        <item name="android:textColor">@color/on_open_now</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.06</item>
+    </style>
+
+    <!-- "GPS tag saved · 1.2 km walk": the pale supplies tag from the Tasks tab, in monospace. -->
+    <style name="PetCare.Places.GpsChip" parent="PetCare.Pill.Supplies">
+        <item name="android:fontFamily">monospace</item>
+    </style>
+
+    <!--
+        "OPEN IN MAPS ↗": a text button styled as a link.
+
+        A MaterialButton rather than a clickable TextView, for the ripple, the touch target and the
+        "button" role TalkBack announces. The arrow is part of the label because it is the conventional
+        "this leaves the app" mark, and a screen reader skipping it loses nothing.
+    -->
+    <style name="PetCare.Places.TextLink" parent="Widget.Material3.Button.TextButton">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/spacing_sm</item>
+        <item name="android:paddingEnd">@dimen/spacing_sm</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- "Allow location" on the dark strip: the same link in the accent. The strip is near-black in
+         both themes, so the theme's text colour — near-black itself in light mode — would vanish into
+         it; the accent is legible on the strip whichever theme is in use. -->
+    <style name="PetCare.Places.TextLink.OnStrip" parent="PetCare.Places.TextLink">
+        <item name="android:textColor">@color/accent_yellow</item>
+        <item name="android:paddingStart">0dp</item>
+    </style>
+
+    <!-- "BOOK A VISIT": the card's main action, a fully rounded yellow pill. The accent and its
+         content colour are named directly rather than through colorPrimary, so the button stays the
+         brand yellow even where a surrounding theme overlay re-points the primary. -->
+    <style name="PetCare.Places.BookButton" parent="Widget.Material3.Button">
+        <item name="android:minHeight">@dimen/places_action_button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+    </style>
+
+    <!--
+        "PINNED": the outlined partner of the button above, as a checkable toggle.
+
+        android:checkable makes the MaterialButton flip state_checked on each tap and announce itself
+        to TalkBack as a toggle. The fill is held at the surface colour in both states — Material's
+        default checked fill would turn it into a second filled button competing with "Book a visit" —
+        and the checked state shows as a darker outline instead (place_pin_stroke.xml), alongside the
+        label changing from "Pin" to "Pinned".
+    -->
+    <style name="PetCare.Places.PinButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:checkable">true</item>
+        <item name="android:minHeight">@dimen/places_action_button_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/spacing_lg</item>
+        <item name="android:paddingEnd">@dimen/spacing_lg</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="strokeColor">@color/place_pin_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- The category badge on a saved-place row. The rounded square is bg_place_badge.xml; its fill
+         and text colour are set by SavedPlaceAdapter, since they depend on whether the row is the
+         featured place. Hidden from TalkBack: the row's own description already names the place. -->
+    <style name="PetCare.Places.Badge" parent="">
+        <item name="android:layout_width">@dimen/places_badge_size</item>
+        <item name="android:layout_height">@dimen/places_badge_size</item>
+        <item name="android:background">@drawable/bg_place_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
 </resources>

@@ -14,16 +14,16 @@
     out of it clear the whole graph behind them so that "back" from the app cannot return to a form
     the user has already completed.
 
-    *The signed-in app* — four **top-level** destinations (homeFragment, petsFragment,
-    checklistFragment, expensesFragment), each matching an item in res/menu/bottom_nav_menu.xml by
-    id, plus the detail and form screens reached from them. Top-level here has a precise meaning:
-    these four are peers of one another rather than ancestors, so moving between them is a switch
+    *The signed-in app* — five **top-level** destinations (homeFragment, petsFragment,
+    checklistFragment, placesFragment, expensesFragment), each matching an item in
+    res/menu/bottom_nav_menu.xml by id, plus the detail and form screens reached from them. Top-level
+    here has a precise meaning: these five are peers of one another rather than ancestors, so moving between them is a switch
     and not a journey — which is why none of them shows a back arrow and why none has an `action`
     pointing at another. NavigationUI moves between them from the bottom bar alone.
 
     **Which destinations carry a userId, and which do not.** None of them. The signed-in account
     used to be a navigation argument on the home screen, but a bottom bar navigates by destination
-    id with no arguments attached, so the four tabs could never have been handed one. The account is
+    id with no arguments attached, so the tabs could never have been handed one. The account is
     held instead by SessionViewModel, scoped to the Activity and therefore shared by every screen —
     see that class for why it survives both rotation and the process being killed.
 
@@ -84,7 +84,7 @@
     </fragment>
 
     <!-- ========================= Top-level: the bottom bar =========================
-         These four are the bottom navigation bar's destinations. They are listed here in the same
+         These five are the bottom navigation bar's destinations. They are listed here in the same
          order as res/menu/bottom_nav_menu.xml, and each id matches an item there — see the note at
          the top of that file for why the ids have to agree. -->
 
@@ -151,7 +151,28 @@
             app:destination="@id/addEditTaskFragment" />
     </fragment>
 
-    <!-- Tab 4. One pet's spending: the total, the breakdown by category, and every recorded
+    <!-- Tab 4. The user's saved vets, groomers, parks and shops, laid out by distance from home, with
+         directions handed off to a maps app. Takes no arguments: places belong to the account, which
+         comes from SessionViewModel like every other tab's. -->
+    <fragment
+        android:id="@+id/placesFragment"
+        android:name="com.prash.petcare.ui.place.PlacesFragment"
+        android:label="@string/nav_places"
+        tools:layout="@layout/fragment_places">
+
+        <!-- "+ Add a place" passes placeId = -1; a long press on a saved place passes its real id. -->
+        <action
+            android:id="@+id/action_places_to_add_edit_place"
+            app:destination="@id/addEditPlaceFragment" />
+
+        <!-- "Book a visit" opens the ordinary task form, prefilled with the place — see the prefill
+             arguments on addEditTaskFragment below. -->
+        <action
+            android:id="@+id/action_places_to_add_edit_task"
+            app:destination="@id/addEditTaskFragment" />
+    </fragment>
+
+    <!-- Tab 5. One pet's spending: the total, the breakdown by category, and every recorded
          expense. Reached the same two ways as the checklist above. -->
     <fragment
         android:id="@+id/expensesFragment"
@@ -287,6 +308,41 @@
              is creating a new task rather than changing one. -->
         <argument
             android:name="taskId"
+            android:defaultValue="-1L"
+            app:argType="long" />
+
+        <!-- Suggested starting values for a *new* task, sent by "Book a visit" on the Places tab.
+             All three are nullable and default to null, so every other route into this form is
+             unaffected and simply gets an empty form. The category travels as the enum's name, the
+             same text the database stores. -->
+        <argument
+            android:name="prefillTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="prefillNotes"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="prefillCategory"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+
+    <!-- Save a new place with its GPS geotag, or change or delete a saved one. -->
+    <fragment
+        android:id="@+id/addEditPlaceFragment"
+        android:name="com.prash.petcare.ui.place.AddEditPlaceFragment"
+        android:label="@string/add_place_title"
+        tools:layout="@layout/fragment_add_edit_place">
+
+        <!-- Which place to edit. The default of -1 means "none" — creating a new place. The owner is
+             not an argument: it is the signed-in account, read from SessionViewModel. -->
+        <argument
+            android:name="placeId"
             android:defaultValue="-1L"
             app:argType="long" />
     </fragment>

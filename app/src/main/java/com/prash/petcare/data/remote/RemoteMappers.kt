@@ -6,6 +6,8 @@ import com.prash.petcare.data.local.entity.Expense
 import com.prash.petcare.data.local.entity.ExpenseCategory
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.local.entity.PetSpecies
+import com.prash.petcare.data.local.entity.Place
+import com.prash.petcare.data.local.entity.PlaceCategory
 import com.prash.petcare.data.local.entity.RepeatUnit
 import com.prash.petcare.data.local.entity.TaskCategory
 
@@ -64,6 +66,13 @@ private const val FIELD_AMOUNT = "amount"
 private const val FIELD_INCURRED_ON = "incurredOn"
 private const val FIELD_CREATED_AT = "createdAt"
 private const val FIELD_UPDATED_AT = "updatedAt"
+private const val FIELD_AREA = "area"
+private const val FIELD_LATITUDE = "latitude"
+private const val FIELD_LONGITUDE = "longitude"
+private const val FIELD_PHONE = "phone"
+private const val FIELD_OPENING_MINUTES = "openingMinutes"
+private const val FIELD_CLOSING_MINUTES = "closingMinutes"
+private const val FIELD_IS_PINNED = "isPinned"
 
 // ------------------------------------------------------------------------------------------------
 // Reading helpers
@@ -274,3 +283,74 @@ fun expenseFromRemote(document: Map<String, Any?>): Expense? {
         updatedAt = document.longOrNull(FIELD_UPDATED_AT) ?: 0L
     )
 }
+
+// ------------------------------------------------------------------------------------------------
+// Place
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Converts a saved place into the document written to Firestore.
+ *
+ * The coordinates are written as two plain numbers rather than as a Firestore `GeoPoint`. A GeoPoint
+ * would only pay for itself with geo-queries ("places within 2 km"), which this app never asks
+ * Firestore — distances are worked out on the device — and two numbers keep the document readable
+ * and mirror the Room columns one-to-one, like every other field here.
+ */
+fun Place.toRemoteMap(): Map<String, Any?> = mapOf(
+    FIELD_ID to id,
+    FIELD_OWNER_ID to ownerId,
+    FIELD_NAME to name,
+    FIELD_CATEGORY to category.name,
+    FIELD_AREA to area,
+    FIELD_LATITUDE to latitude,
+    FIELD_LONGITUDE to longitude,
+    FIELD_PHONE to phone,
+    FIELD_OPENING_MINUTES to openingMinutes,
+    FIELD_CLOSING_MINUTES to closingMinutes,
+    FIELD_NOTES to notes,
+    FIELD_IS_PINNED to isPinned,
+    FIELD_CREATED_AT to createdAt,
+    FIELD_UPDATED_AT to updatedAt
+)
+
+/**
+ * Rebuilds a place from a document, or returns null if it cannot be trusted.
+ *
+ * The coordinates are required, not defaulted. Falling back to 0,0 would quietly put the user's vet
+ * in the Gulf of Guinea, and every distance on the Places tab would be thousands of kilometres out —
+ * a missing place is far less confusing than a wrong one.
+ *
+ * Opening hours outside a real day (below 0 or at/after 24:00) are dropped to null rather than kept,
+ * since the "open now" check would otherwise compare against a time that never comes round.
+ *
+ * @param ownerId The local account the pulled data belongs to — see [petFromRemote] for why it is
+ *   taken from the sync session rather than from the document.
+ */
+fun placeFromRemote(document: Map<String, Any?>, ownerId: Long): Place? {
+    val id = document.longOrNull(FIELD_ID) ?: return null
+    val name = document.stringOrNull(FIELD_NAME) ?: return null
+    val latitude = document.doubleOrNull(FIELD_LATITUDE) ?: return null
+    val longitude = document.doubleOrNull(FIELD_LONGITUDE) ?: return null
+
+    return Place(
+        id = id,
+        ownerId = ownerId,
+        name = name,
+        // STORE is the least specific category, so an unrecognised one from a newer app version
+        // lands somewhere harmless rather than claiming to be a vet.
+        category = document.enumOr(FIELD_CATEGORY, PlaceCategory.STORE),
+        area = document.stringOrNull(FIELD_AREA),
+        latitude = latitude,
+        longitude = longitude,
+        phone = document.stringOrNull(FIELD_PHONE),
+        openingMinutes = document.intOrNull(FIELD_OPENING_MINUTES)?.takeIf { it in MINUTES_IN_DAY },
+        closingMinutes = document.intOrNull(FIELD_CLOSING_MINUTES)?.takeIf { it in MINUTES_IN_DAY },
+        notes = document.stringOrNull(FIELD_NOTES),
+        isPinned = document.booleanOr(FIELD_IS_PINNED, fallback = false),
+        createdAt = document.longOrNull(FIELD_CREATED_AT) ?: System.currentTimeMillis(),
+        updatedAt = document.longOrNull(FIELD_UPDATED_AT) ?: 0L
+    )
+}
+
+/** The valid range for a time of day stored as minutes since midnight. */
+private val MINUTES_IN_DAY = 0 until 24 * 60

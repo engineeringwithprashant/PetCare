@@ -77,6 +77,12 @@ dependencies {
     // code rather than as nested success/failure listeners.
     implementation(libs.kotlinx.coroutines.play.services)
 
+    // Fused location provider: captures a GPS fix when a place is saved, and the phone's position
+    // for measuring distances on the Places tab. Only the location API - there is no Maps SDK here.
+    // Distances are computed on the device (util.GeoDistance) and directions are handed off to the
+    // user's own maps app through a geo: intent, so no map ever needs drawing inside PetCare.
+    implementation(libs.play.services.location)
+
     // Lifecycle-aware ViewModels and flow collection.
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

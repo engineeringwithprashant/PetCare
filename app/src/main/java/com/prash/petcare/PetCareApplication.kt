@@ -7,7 +7,9 @@ import com.prash.petcare.data.remote.FirestoreSyncService
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
+import com.prash.petcare.data.location.LocationRepository
 import com.prash.petcare.data.repository.PetRepository
+import com.prash.petcare.data.repository.PlaceRepository
 import com.prash.petcare.data.repository.SyncDeletionRepository
 import com.prash.petcare.data.repository.UserRepository
 import com.prash.petcare.data.sync.NetworkMonitor
@@ -52,7 +54,7 @@ class PetCareApplication : Application() {
     /**
      * The queue of deleted rows waiting to be removed from Firestore.
      *
-     * The four repositories below each take the same DAO, because every one of them can delete
+     * The five repositories below each take the same DAO, because every one of them can delete
      * something — see [PetRepository] for why recording a deletion belongs in that layer.
      */
     val syncDeletionRepository: SyncDeletionRepository by lazy {
@@ -75,6 +77,20 @@ class PetCareApplication : Application() {
         ExpenseRepository(database.expenseDao(), database.syncDeletionDao())
     }
 
+    /** The user's saved vets, groomers, parks and shops, for the Places tab. */
+    val placeRepository: PlaceRepository by lazy {
+        PlaceRepository(database.placeDao(), database.syncDeletionDao())
+    }
+
+    /**
+     * Where the phone is, for capturing a new place's geotag and measuring distances to saved ones.
+     *
+     * Given the Application rather than an Activity: it outlives every screen, and a location client
+     * holding an Activity would leak it. See [LocationRepository] for why location is treated as a
+     * data source like Room rather than as something a screen reads directly.
+     */
+    val locationRepository: LocationRepository by lazy { LocationRepository(this) }
+
     /**
      * Mirrors the signed-in account's data between Room and Firestore.
      *
@@ -94,6 +110,7 @@ class PetCareApplication : Application() {
             careRoutineRepository = careRoutineRepository,
             careTaskRepository = careTaskRepository,
             expenseRepository = expenseRepository,
+            placeRepository = placeRepository,
             syncDeletionRepository = syncDeletionRepository,
             firestoreSyncService = FirestoreSyncService(FirebaseFirestore.getInstance()),
             // `this` is the Application, so the network callback it registers lives as long as the

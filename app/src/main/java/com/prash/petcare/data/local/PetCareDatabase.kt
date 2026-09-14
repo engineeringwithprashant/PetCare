@@ -12,12 +12,14 @@ import com.prash.petcare.data.local.dao.CareRoutineDao
 import com.prash.petcare.data.local.dao.CareTaskDao
 import com.prash.petcare.data.local.dao.ExpenseDao
 import com.prash.petcare.data.local.dao.PetDao
+import com.prash.petcare.data.local.dao.PlaceDao
 import com.prash.petcare.data.local.dao.SyncDeletionDao
 import com.prash.petcare.data.local.dao.UserDao
 import com.prash.petcare.data.local.entity.CareRoutine
 import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.entity.Expense
 import com.prash.petcare.data.local.entity.Pet
+import com.prash.petcare.data.local.entity.Place
 import com.prash.petcare.data.local.entity.SyncDeletion
 import com.prash.petcare.data.local.entity.User
 
@@ -38,9 +40,10 @@ import com.prash.petcare.data.local.entity.User
         CareRoutine::class,
         CareTask::class,
         Expense::class,
-        SyncDeletion::class
+        SyncDeletion::class,
+        Place::class
     ],
-    version = 5,
+    version = 6,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -57,6 +60,7 @@ abstract class PetCareDatabase : RoomDatabase() {
     abstract fun careTaskDao(): CareTaskDao
     abstract fun expenseDao(): ExpenseDao
     abstract fun syncDeletionDao(): SyncDeletionDao
+    abstract fun placeDao(): PlaceDao
 
     companion object {
 
@@ -174,6 +178,54 @@ abstract class PetCareDatabase : RoomDatabase() {
         }
 
         /**
+         * Version 5 to 6: adds the `places` table behind the Places tab.
+         *
+         * A brand-new table rather than a change to an existing one, so no user data is touched —
+         * every existing row stays exactly where it is, and the account simply starts with no saved
+         * places.
+         *
+         * As with `sync_deletions` in [MIGRATION_3_4], the SQL has to reproduce what Room itself would
+         * generate from [Place] *exactly*: the same column types (REAL for the two `Double`
+         * coordinates, INTEGER for `Int`, `Long` and `Boolean`), `NOT NULL` on precisely the
+         * non-nullable properties, the same foreign key with its CASCADE rule, and the index named the
+         * way Room names it. Room compares the file against the entity every time the database opens
+         * and refuses to start on any difference, so "close enough" here is a crash on launch.
+         *
+         * No `updatedAt` seeding or pending flag is needed, unlike the earlier sync migrations: the
+         * table is empty, so there are no pre-existing rows to make claims about.
+         */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `places` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `ownerId` INTEGER NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `category` TEXT NOT NULL,
+                        `area` TEXT,
+                        `latitude` REAL NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `phone` TEXT,
+                        `openingMinutes` INTEGER,
+                        `closingMinutes` INTEGER,
+                        `notes` TEXT,
+                        `isPinned` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        `isPendingSync` INTEGER NOT NULL,
+                        FOREIGN KEY(`ownerId`) REFERENCES `users`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_places_ownerId` ON `places` (`ownerId`)"
+                )
+            }
+        }
+
+        /**
          * The one shared instance.
          *
          * `@Volatile` means a write here is immediately visible to every thread, which stops one
@@ -207,7 +259,8 @@ abstract class PetCareDatabase : RoomDatabase() {
                         MIGRATION_1_2,
                         MIGRATION_2_3,
                         MIGRATION_3_4,
-                        MIGRATION_4_5
+                        MIGRATION_4_5,
+                        MIGRATION_5_6
                     )
                     .build()
                     .also { INSTANCE = it }

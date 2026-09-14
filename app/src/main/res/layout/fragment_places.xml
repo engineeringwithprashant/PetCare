@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Places tab: the user's saved vets, groomers, parks and shops, by distance.
+
+    Top to bottom:
+      - **The header** (monogram, "Places", theme toggle, pet count), shared with the other tabs. Fixed
+        above the scrolling page: it is identity and controls, not content.
+      - Everything else scrolls as one page:
+          · the **distance strip** — a dark card with an axis from home to the furthest place, a chip
+            per place along it, and a line of helper text;
+          · the **category chips** — All, Vet, Grooming, Park, Store;
+          · the **featured place** card — name and "open now", hours and phone, notes, the GPS tag and
+            "open in maps", then "book a visit" and "pinned";
+          · the **saved places** list, tapping a row to feature it;
+          · "+ Add a place".
+
+    **Why one NestedScrollView with the list inside it,** rather than a RecyclerView for the whole page:
+    the same reasoning as fragment_checklist.xml. The strip, chips and card are a handful of stateful
+    views, not rows, and the list of places a household saves is short and bounded, so the list is
+    wrap_content with nestedScrollingEnabled="false" and the page does all the scrolling.
+
+    **Why a CoordinatorLayout at the root:** so Snackbars ("No maps app is installed…") attach here and
+    appear above the bottom navigation bar rather than on top of it — see fragment_checklist.xml.
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.place.PlacesFragment">
+
+    <!-- The header takes the height it needs; the page takes the rest through height 0 + weight 1. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- The shared header, as a nested binding (`binding.header`). -->
+        <include
+            android:id="@+id/header"
+            layout="@layout/view_tab_header" />
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/placesScroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/list_padding_bottom">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- ============================ Distance strip ============================
+                     A dark card in both themes — see the Places section of colors.xml for why. Given
+                     an explicit ground and no elevation: a shadow under a near-black card on a
+                     near-black page (dark mode) is invisible, and on the cream page (light mode) the
+                     dark fill already separates it more strongly than any shadow could. -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/distanceStrip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/screen_padding"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:layout_marginEnd="@dimen/screen_padding"
+                    app:cardBackgroundColor="@color/places_strip_ground"
+                    app:cardElevation="0dp"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/card_padding">
+
+                        <!-- The label on the left and the range on the right, on one line. The label
+                             takes the leftover width (weight 1) so the range is always flush right. -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:baselineAligned="true"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/places_strip_label"
+                                style="@style/PetCare.Places.StripLabel" />
+
+                            <TextView
+                                android:id="@+id/stripRangeText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_sm"
+                                style="@style/PetCare.Places.StripRange"
+                                tools:text="within 2 km" />
+
+                        </LinearLayout>
+
+                        <!-- The axis itself: a custom drawing, see DistanceAxisView. Its height is fixed
+                             in dimens so the strip does not jump as places are added. -->
+                        <com.prash.petcare.ui.place.DistanceAxisView
+                            android:id="@+id/distanceAxis"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/places_axis_height"
+                            android:layout_marginTop="@dimen/spacing_md" />
+
+                        <TextView
+                            android:id="@+id/stripHelpText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_md"
+                            android:text="@string/places_strip_help"
+                            style="@style/PetCare.Places.StripHelp" />
+
+                        <!-- Only when location access has not been granted: the way to grant it. Placed
+                             beside the sentence that explains why, rather than prompting on arrival. -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/allowLocationButton"
+                            style="@style/PetCare.Places.TextLink.OnStrip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_xs"
+                            android:text="@string/places_allow_location"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ============================ Category chips ============================
+                     A horizontally scrolling single-selection row; the chips are added in code — see
+                     ui/common/FilterChips.kt. clipToPadding="false" lets the row scroll edge to edge
+                     while its first chip still lines up with the screen gutter. -->
+                <HorizontalScrollView
+                    android:id="@+id/categoryChipScroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:clipToPadding="false"
+                    android:paddingStart="@dimen/screen_padding"
+                    android:paddingEnd="@dimen/screen_padding"
+                    android:scrollbars="none">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/categoryChipGroup"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:selectionRequired="true"
+                        app:singleLine="true"
+                        app:singleSelection="true" />
+
+                </HorizontalScrollView>
+
+                <!-- ============================ Featured place ============================
+                     The feature card style with the pet cards' softer corner, so it reads as the
+                     page's subject in the same way a pet card does on the Pets tab. -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/featuredCard"
+                    style="@style/PetCare.Card.Feature"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/screen_padding"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:layout_marginEnd="@dimen/screen_padding"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/card_padding">
+
+                        <!-- Name and the "open now" pill. The name takes the leftover width and wraps
+                             onto a second line if it must, rather than pushing the pill off the card. -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/featuredNameText"
+                                style="@style/PetCare.Headline"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:accessibilityHeading="true"
+                                android:maxLines="2"
+                                android:textColor="?attr/colorOnSurface"
+                                tools:targetApi="p"
+                                tools:text="Patan Animal Hospital" />
+
+                            <TextView
+                                android:id="@+id/openNowPill"
+                                style="@style/PetCare.Places.OpenNowPill"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_sm"
+                                android:text="@string/places_open_now" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/featuredSubtitleText"
+                            style="@style/PetCare.Places.Meta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            tools:text="Vet clinic · Pulchowk" />
+
+                        <!-- Hours and phone, side by side in one outlined row split by a hairline — the
+                             construction of the Pets tab's stat row. Equal halves through weight 1 on
+                             each block; baselineAligned="false" stops LinearLayout nudging one block
+                             down to line up the text baselines of two differently sized values. -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_md"
+                            android:background="@drawable/bg_places_info_row"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                style="@style/PetCare.PetStat"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1">
+
+                                <TextView
+                                    android:id="@+id/hoursValueText"
+                                    style="@style/PetCare.Places.InfoValue"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    tools:text="8:00 – 20:00" />
+
+                                <TextView
+                                    style="@style/PetCare.Places.FieldLabel"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/places_featured_today" />
+
+                            </LinearLayout>
+
+                            <View style="@style/PetCare.PetStat.Divider" />
+
+                            <!-- Tappable when a number is saved: it opens the dialler. Given a ripple
+                                 through selectableItemBackground so it looks pressable when it is. -->
+                            <LinearLayout
+                                android:id="@+id/phoneBlock"
+                                style="@style/PetCare.PetStat"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:background="?attr/selectableItemBackground">
+
+                                <TextView
+                                    android:id="@+id/phoneValueText"
+                                    style="@style/PetCare.Places.InfoValue"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    tools:text="01-5521…" />
+
+                                <TextView
+                                    style="@style/PetCare.Places.FieldLabel"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/places_featured_phone" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/featuredNotesText"
+                            style="@style/PetCare.Subtitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_md"
+                            tools:text="Krishala's vaccination clinic. Walk-ins before 10:00, appointments after." />
+
+                        <!-- The GPS tag and the maps link on one line. The chip wraps its text; the link
+                             follows it directly, as in the design, rather than being pushed to the edge. -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_md"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/gpsTagChip"
+                                style="@style/PetCare.Places.GpsChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                tools:text="GPS tag saved · 1.2 km walk" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/openInMapsButton"
+                                style="@style/PetCare.Places.TextLink"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_xs"
+                                android:text="@string/places_open_in_maps" />
+
+                        </LinearLayout>
+
+                        <!-- The two actions. "Book a visit" takes the leftover width (weight 1) and
+                             "Pinned" only what its label needs, so the main action is the big target. -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_md"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/bookVisitButton"
+                                style="@style/PetCare.Places.BookButton"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/places_book_visit" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/pinButton"
+                                style="@style/PetCare.Places.PinButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_sm"
+                                tools:text="@string/place_pinned" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ============================ Saved places ============================ -->
+                <TextView
+                    android:id="@+id/savedPlacesLabel"
+                    style="@style/PetCare.SectionLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/screen_padding"
+                    android:layout_marginTop="@dimen/spacing_lg"
+                    android:layout_marginEnd="@dimen/screen_padding"
+                    android:accessibilityHeading="true"
+                    android:text="@string/places_saved_label"
+                    tools:targetApi="p" />
+
+                <!-- Shown instead of the list when a category chip matches no saved place. -->
+                <TextView
+                    android:id="@+id/noMatchesText"
+                    style="@style/PetCare.Subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/screen_padding"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:layout_marginEnd="@dimen/screen_padding"
+                    android:visibility="gone"
+                    tools:text="No park places saved yet." />
+
+                <!-- The rows. wrap_content with nested scrolling off, so the page scrolls rather than
+                     the list — see the note at the top of this file. The side padding with
+                     clipToPadding="false" keeps each card's shadow from being cut at the gutter. -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/placesRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    android:paddingStart="@dimen/screen_padding"
+                    android:paddingEnd="@dimen/screen_padding"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/item_place_row" />
+
+                <!-- Shown when no place has been saved at all, in place of the strip, chips, card and
+                     list. The add button below stays, since it is the answer to the empty state. -->
+                <LinearLayout
+                    android:id="@+id/emptyPlacesContainer"
+                    style="@style/PetCare.EmptyState"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xl"
+                    android:visibility="gone">
+
+                    <ImageView
+                        style="@style/PetCare.EmptyStateIcon"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_nav_places"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+
+                    <TextView
+                        style="@style/PetCare.EmptyStateTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/places_empty_title" />
+
+                    <TextView
+                        style="@style/PetCare.EmptyStateMessage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/places_empty_message" />
+
+                </LinearLayout>
+
+                <!-- "+ ADD A PLACE": the Pets tab's outlined add row, so adding reads the same on
+                     both tabs. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/addPlaceButton"
+                    style="@style/PetCare.AddRowButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/screen_padding"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:layout_marginEnd="@dimen/screen_padding"
+                    android:text="@string/places_add_place" />
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

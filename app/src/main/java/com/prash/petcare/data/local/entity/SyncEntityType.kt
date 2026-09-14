@@ -16,5 +16,6 @@ enum class SyncEntityType {
     PET,
     CARE_ROUTINE,
     CARE_TASK,
-    EXPENSE
+    EXPENSE,
+    PLACE
 }

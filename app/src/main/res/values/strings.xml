@@ -771,4 +771,140 @@
     <!-- Refusal is explained, not treated as an error: the task and its schedule are saved either
          way, and only the notification is lost. -->
     <string name="permission_notifications_denied">Reminders are off, so this task won\'t notify you. Its schedule is still saved.</string>
+
+    <!-- ================================= Places tab =================================
+         The tab of saved vets, groomers, parks and shops. See PlacesFragment. -->
+
+    <!-- The tab's name in the bottom bar and its header. Sentence case; the bar capitalises it — see
+         the note on the other nav_ strings. -->
+    <string name="nav_places">Places</string>
+
+    <!-- The dark distance strip. The middle dot is the design's separator, used the same way in the
+         place subtitles below. -->
+    <string name="places_strip_label">Geotagged · by distance</string>
+    <!-- %1$s is a formatted distance such as "2 km". -->
+    <string name="places_strip_within">within %1$s</string>
+    <!-- The label under the blue origin dot on the axis. Lower case, like the tick labels beside it. -->
+    <string name="places_axis_home">home</string>
+    <string name="places_strip_help">Walking distance from home. Each place keeps its GPS geotag — open it in your maps app for directions.</string>
+    <!-- Shown in place of the axis when location access has not been granted. -->
+    <string name="places_strip_no_permission">Allow location access to see how far each saved place is. Every place still keeps its GPS geotag for directions.</string>
+    <!-- Shown when access is granted but the phone has not produced a location yet. -->
+    <string name="places_strip_waiting_for_fix">Finding your location… If distances do not appear, check that location is switched on.</string>
+    <string name="places_allow_location">Allow location</string>
+
+    <!-- Category filter chips. -->
+    <string name="places_filter_all">All</string>
+    <!-- %1$s is a category in lower case, e.g. "park". -->
+    <string name="places_no_matches">No %1$s places saved yet.</string>
+
+    <!-- The featured place card. -->
+    <string name="places_open_now">Open now</string>
+    <string name="places_featured_today">Today</string>
+    <string name="places_featured_phone">Phone</string>
+    <!-- %1$s and %2$s are the opening and closing times in the device's own clock format. -->
+    <string name="place_hours_format">%1$s – %2$s</string>
+    <string name="place_hours_unknown">Hours not set</string>
+    <string name="place_phone_unknown">Not saved</string>
+    <string name="place_gps_tag">GPS tag saved</string>
+    <!-- %1$s is a distance such as "1.2 km". "walk" because the strip measures walking-scale
+         distances from home; the figure is a straight line, and the maps app plans the real route. -->
+    <string name="place_gps_tag_with_distance">GPS tag saved · %1$s walk</string>
+    <!-- The arrow is the conventional "opens outside the app" mark. -->
+    <string name="places_open_in_maps">Open in maps ↗</string>
+    <string name="places_book_visit">Book a visit</string>
+    <string name="place_pin">Pin</string>
+    <string name="place_pinned">Pinned</string>
+    <!-- Spoken labels for the pin toggle, naming the action a tap performs. %1$s is the place. -->
+    <string name="cd_place_pin">Pin %1$s</string>
+    <string name="cd_place_unpin">Unpin %1$s</string>
+
+    <!-- Saved places list. -->
+    <string name="places_saved_label">Saved places</string>
+    <string name="places_add_place">Add a place</string>
+    <string name="places_empty_title">No places saved yet</string>
+    <string name="places_empty_message">Save your vet, groomer, favourite park or pet shop with its GPS location, and see how far each one is.</string>
+
+    <!-- The distance axis's spoken description, since TalkBack cannot read a drawing. %1$s is a list
+         of cd_places_axis_entry items. -->
+    <string name="cd_places_axis">Distances from home: %1$s</string>
+    <!-- %1$s is a place name, %2$s its distance. -->
+    <string name="cd_places_axis_entry">%1$s, %2$s</string>
+
+    <!-- Handing off to other apps. -->
+    <string name="places_no_maps_app">No maps app is installed to show directions.</string>
+    <string name="places_no_dialer">No app on this device can make phone calls.</string>
+
+    <!-- "Book a visit" — creating a vet-visit care task prefilled with the place. -->
+    <string name="places_book_pick_routine">Add the visit to which routine?</string>
+    <!-- The task's suggested title. %1$s is the place name. -->
+    <string name="place_book_task_title">Visit %1$s</string>
+    <!-- Lines added to the task's notes. %1$s is a phone number / opening hours. -->
+    <string name="place_book_notes_phone">Phone: %1$s</string>
+    <string name="place_book_notes_hours">Open %1$s</string>
+
+    <!-- Category names: on chips and in the form's dropdown. -->
+    <string name="place_category_vet">Vet</string>
+    <string name="place_category_grooming">Grooming</string>
+    <string name="place_category_park">Park</string>
+    <string name="place_category_store">Store</string>
+    <!-- The longer description under a place's name. -->
+    <string name="place_category_vet_description">Vet clinic</string>
+    <string name="place_category_grooming_description">Grooming</string>
+    <string name="place_category_park_description">Park</string>
+    <string name="place_category_store_description">Pet store</string>
+    <!-- Abbreviations on the small row badges and the distance axis chips (upper-cased there). Kept to
+         four letters or fewer so they fit a 40dp badge. -->
+    <string name="place_badge_vet">Vet</string>
+    <string name="place_badge_grooming">Grm</string>
+    <string name="place_badge_park">Park</string>
+    <string name="place_badge_store">Shop</string>
+    <!-- "Vet clinic · Pulchowk". %1$s is the category description, %2$s the area. -->
+    <string name="place_subtitle_format">%1$s · %2$s</string>
+    <!-- %1$s is a locale-formatted number. -->
+    <string name="place_distance_km">%1$s km</string>
+
+    <!-- ============================== Add / edit place form ============================== -->
+    <string name="add_place_title">Add a place</string>
+    <string name="edit_place_title">Edit place</string>
+    <string name="place_name_label">Name</string>
+    <string name="place_category_label">Category</string>
+    <string name="place_area_label">Area or address</string>
+    <string name="place_phone_label">Phone (optional)</string>
+    <string name="place_hours_heading">Opening hours</string>
+    <string name="place_opening_label">Opens</string>
+    <string name="place_closing_label">Closes</string>
+    <string name="place_clear_hours">Clear hours</string>
+    <string name="place_opening_picker_title">Opening time</string>
+    <string name="place_closing_picker_title">Closing time</string>
+    <string name="place_notes_label">Notes (optional)</string>
+    <string name="place_location_heading">GPS geotag</string>
+    <string name="place_location_none">Not captured yet. Stand at or near the place and capture your current location.</string>
+    <!-- %1$s latitude, %2$s longitude, each to five decimal places. -->
+    <string name="place_location_coordinates">%1$s, %2$s</string>
+    <string name="place_location_capture">Capture current location</string>
+    <string name="place_location_recapture">Recapture location</string>
+    <string name="place_location_capturing">Getting a GPS fix…</string>
+    <string name="place_location_approximate">Only approximate location is allowed, so this geotag may be a few hundred metres out. Allow precise location in settings for an exact position.</string>
+    <string name="place_location_failed">Could not get a location fix. Check location is switched on, move nearer a window or outside, and try again.</string>
+    <string name="place_save">Save place</string>
+    <string name="place_delete">Delete place</string>
+    <string name="delete_place_dialog_title">Delete this place?</string>
+    <!-- %1$s is the place name. -->
+    <string name="delete_place_dialog_message">%1$s will be removed from your saved places. This cannot be undone.</string>
+    <string name="delete_place_dialog_confirm">Delete</string>
+
+    <string name="error_place_name_required">Please enter the place\'s name</string>
+    <string name="error_place_hours_incomplete">Set both an opening and a closing time, or clear the hours</string>
+    <string name="error_place_location_required">Capture the place\'s GPS location before saving</string>
+    <string name="error_place_not_found">That place could not be found</string>
+
+    <!-- Location permission. Two rationales, because the two screens want it for different reasons
+         and a user deciding whether to allow it deserves the reason that applies right now. -->
+    <string name="permission_location_title">Use your location?</string>
+    <string name="permission_location_capture_message">PetCare saves this place\'s GPS position so it can show how far away it is and open directions in your maps app. Your location is only read when you press capture, and is stored with this place only.</string>
+    <string name="permission_location_distance_message">PetCare uses your current location to work out how far each saved place is from you. It is only read while this tab is open and is never stored or shared.</string>
+    <string name="permission_location_capture_denied">Without location access, PetCare cannot geotag this place. Your other details are kept if you allow it later.</string>
+    <string name="permission_location_distance_denied">Distances stay hidden without location access. Your saved places and directions still work.</string>
+
 </resources>

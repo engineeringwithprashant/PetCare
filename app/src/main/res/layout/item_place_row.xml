@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One row in the Places tab's "SAVED PLACES" list: a category badge, the name over what and where it
+    is, and the distance on the right.
+
+    A clickable MaterialCardView, so the whole row is one touch target with a ripple that follows its
+    rounded corners. Tapping features the place; a long press opens it for editing (SavedPlaceAdapter).
+    The featured row's pale accent fill and yellow badge are applied in code, because they depend on
+    state rather than on anything this layout can know.
+
+    A horizontal LinearLayout inside: three things in a row where the middle one takes the leftover
+    width. That is one weight attribute in a LinearLayout; a ConstraintLayout would need a chain.
+    The bottom margin spaces the rows, since a RecyclerView has no gap attribute of its own.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Card.Clickable"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/places_row_spacing">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_md">
+
+        <!-- "Vet", "Grm", "Park", "Shop". Colours set per row by the adapter. -->
+        <TextView
+            android:id="@+id/placeBadge"
+            style="@style/PetCare.Places.Badge"
+            tools:backgroundTint="@color/accent_yellow"
+            tools:text="Vet" />
+
+        <!-- Name over subtitle. Width 0 + weight 1 makes this column absorb whatever the badge and
+             distance leave, so a long name ellipsises instead of pushing the distance off the row. -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/placeNameText"
+                style="@style/PetCare.ListTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                tools:text="Patan Animal Hospital" />
+
+            <TextView
+                android:id="@+id/placeSubtitleText"
+                style="@style/PetCare.Places.Meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                tools:text="Vet clinic · Pulchowk" />
+
+        </LinearLayout>
+
+        <!-- Right-aligned distance; hidden when the phone's position is unknown. -->
+        <TextView
+            android:id="@+id/placeDistanceText"
+            style="@style/PetCare.Places.Meta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
+            tools:text="1.2 km" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

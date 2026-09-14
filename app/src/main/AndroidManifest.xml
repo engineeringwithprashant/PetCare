@@ -53,6 +53,26 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!--
+        Permissions for the Places tab, which geotags each saved vet, groomer, park or shop.
+
+        ACCESS_FINE_LOCATION is what capturing a place's position really needs: GPS accuracy, so the
+        geotag marks the clinic's door rather than the neighbourhood. ACCESS_COARSE_LOCATION is
+        declared alongside it because from Android 12 the system will only show the prompt when both
+        are requested, and lets the user choose "Approximate" instead — which the app accepts, with a
+        note that the geotag may be off.
+
+        Both are "dangerous" permissions, asked for at runtime and only at the moment they are used:
+        pressing "Capture current location" in the place form, or "Allow location" on the Places tab
+        to see distances. Each shows a rationale first, and the app keeps working if refused — see
+        ui.place.LocationPermissionRequester.
+
+        No background location is requested. The position is only ever read while one of those two
+        screens is open.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -73,6 +93,18 @@
     -->
     <uses-feature
         android:name="android.hardware.sensor.accelerometer"
+        android:required="false" />
+
+    <!--
+        Declaring the location permissions above makes Google Play assume the app needs GPS hardware
+        and hide it from devices without it. Places work without GPS — Wi-Fi and cell positioning give
+        a usable fix, and every other tab needs no location at all — so both features are optional.
+    -->
+    <uses-feature
+        android:name="android.hardware.location"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
         android:required="false" />
 
     <!--

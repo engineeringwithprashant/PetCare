@@ -22,6 +22,7 @@ import kotlinx.coroutines.tasks.await
  * users/{userKey}/routines/{routineId}
  * users/{userKey}/tasks/{taskId}
  * users/{userKey}/expenses/{expenseId}
+ * users/{userKey}/places/{placeId}
  * ```
  *
  * Subcollections under a per-user document, rather than four top-level collections with an owner
@@ -153,6 +154,7 @@ class FirestoreSyncService(private val firestore: FirebaseFirestore) {
         const val COLLECTION_ROUTINES = "routines"
         const val COLLECTION_TASKS = "tasks"
         const val COLLECTION_EXPENSES = "expenses"
+        const val COLLECTION_PLACES = "places"
 
         /** The field every child document carries so a deleted pet's children can be found. */
         private const val FIELD_PET_ID = "petId"
@@ -172,6 +174,7 @@ class FirestoreSyncService(private val firestore: FirebaseFirestore) {
             SyncEntityType.CARE_ROUTINE -> COLLECTION_ROUTINES
             SyncEntityType.CARE_TASK -> COLLECTION_TASKS
             SyncEntityType.EXPENSE -> COLLECTION_EXPENSES
+            SyncEntityType.PLACE -> COLLECTION_PLACES
         }
     }
 }

@@ -223,4 +223,21 @@
          length, so "7%" and "100%" do not produce bars that cannot be compared. -->
     <dimen name="share_percent_min_width">40dp</dimen>
 
+    <!-- ================================= Places tab =================================
+         The distance strip, the featured place card and the saved-place rows. -->
+
+    <!-- The distance axis inside the dark strip. Tall enough for two staggered lanes of category chips
+         above the line and a row of tick labels below it — see DistanceAxisView.onMeasure. -->
+    <dimen name="places_axis_height">104dp</dimen>
+    <!-- The rounded-square category badge on a saved-place row ("Vet", "Grm"). A rounded square
+         rather than a circle, so it echoes the header's monogram rather than a pet's round photo. -->
+    <dimen name="places_badge_size">40dp</dimen>
+    <dimen name="places_badge_corner_radius">10dp</dimen>
+    <!-- The outlined pair of info blocks (hours, phone) in the featured card. -->
+    <dimen name="places_info_corner_radius">14dp</dimen>
+    <!-- "BOOK A VISIT" and "PINNED" at the foot of the featured card. -->
+    <dimen name="places_action_button_height">52dp</dimen>
+    <!-- Gap between saved-place rows. -->
+    <dimen name="places_row_spacing">10dp</dimen>
+
 </resources>
