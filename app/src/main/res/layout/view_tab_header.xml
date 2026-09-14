@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The header shared by the Home and Pets tabs: the app's monogram and the screen's name on the
+    left, the light/dark toggle and the pet-count badge on the right.
+
+    **Why a separate layout pulled in with <include>.** Both tabs draw this row, and it has to look
+    *identical* on each — the user switches between them with the bottom bar, and a header that
+    shifted by a few pixels or changed colour as they did so would read as two different apps. One
+    file is what makes that a fact rather than a promise. ViewBinding supports this directly: an
+    <include> given an android:id becomes a nested binding (`binding.header.themeToggle`), so the
+    fragments keep type-safe access to every view in here without a single findViewById.
+
+    **Why these tabs carry their own header at all.** Every other screen takes its title from the
+    MaterialToolbar in activity_main.xml, and MainActivity hides that toolbar on these two. Two of
+    the controls here depend on state a shared toolbar cannot reach: the toggle reflects the current
+    display mode, and the badge counts the user's pets. The trade is that the account actions in the
+    toolbar's overflow menu are not on screen — so the badge doubles as the way into the profile
+    screen, which carries its own sign-out button.
+
+    The behaviour (title, toggle state, badge count, taps) is attached by TabHeader.kt, so the two
+    fragments share the Kotlin as well as the XML.
+
+    A horizontal LinearLayout rather than a ConstraintLayout. There are four children in one row, the
+    title takes whatever is left over, and nothing is positioned relative to anything but its
+    neighbour — which is precisely the arrangement a LinearLayout describes in one attribute and a
+    ConstraintLayout needs eight to express.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/screen_padding"
+    android:paddingTop="@dimen/spacing_sm"
+    android:paddingEnd="@dimen/screen_padding"
+    android:paddingBottom="@dimen/spacing_sm">
+
+    <!-- The app's monogram: a "p" on a rounded yellow square. A TextView rather than an icon, so the
+         letter is drawn with the device's own font and stays crisp at any density without a
+         drawable per size. Its background supplies the shape — see bg_monogram.xml.
+
+         importantForAccessibility="no" because the next view already announces the screen: a screen
+         reader would otherwise open each tab by reading out the letter "p". -->
+    <TextView
+        android:layout_width="@dimen/monogram_size"
+        android:layout_height="@dimen/monogram_size"
+        android:background="@drawable/bg_monogram"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:text="@string/home_monogram"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="@color/on_accent_yellow"
+        android:textStyle="bold" />
+
+    <!-- The screen's name, set by the fragment ("Home", "Pets"). layout_weight="1" on a zero-width
+         view is LinearLayout's "take everything left over", which is what pushes the two controls to
+         the far end however wide the title turns out to be.
+
+         accessibilityHeading marks it as the screen's heading, so TalkBack users can jump straight
+         to it with heading navigation. -->
+    <TextView
+        android:id="@+id/headerTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_sm"
+        android:layout_weight="1"
+        android:accessibilityHeading="true"
+        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+        android:textColor="?attr/colorOnBackground"
+        android:textStyle="bold"
+        tools:targetApi="p"
+        tools:text="Pets" />
+
+    <!--
+        The light/dark toggle.
+
+        A LinearLayout made clickable rather than a MaterialButton with an icon: the pill holds a
+        glyph and a word that change independently — the sun becomes a moon and "Light" becomes
+        "Dark" — and a button's icon and text are a single styled unit that is awkward to re-colour
+        by halves.
+
+        It reports the mode currently in use, not the one a tap would bring about. Its
+        contentDescription says the opposite, because a screen reader announces the description
+        *instead of* the label and so has to carry the action as well — both are set in TabHeader.kt.
+    -->
+    <LinearLayout
+        android:id="@+id/themeToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/header_control_height"
+        android:background="@drawable/bg_header_control"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/spacing_sm"
+        android:paddingEnd="@dimen/spacing_md">
+
+        <ImageView
+            android:id="@+id/themeToggleIcon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_theme_light"
+            app:tint="@color/accent_yellow" />
+
+        <TextView
+            android:id="@+id/themeToggleLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_xs"
+            android:textAllCaps="true"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold"
+            tools:text="Light" />
+
+    </LinearLayout>
+
+    <!-- How many pets are in care, and the way in to the account screen.
+
+         It carries two jobs because these tabs hide the shared toolbar and with it the overflow
+         menu — see the note at the top of this file. A count is a natural thing to press to see more
+         of what it counts, so the double duty is not the stretch it might look. -->
+    <TextView
+        android:id="@+id/petCountBadge"
+        android:layout_width="@dimen/header_badge_size"
+        android:layout_height="@dimen/header_badge_size"
+        android:layout_marginStart="@dimen/spacing_sm"
+        android:background="@drawable/bg_header_control"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?attr/colorOnSurface"
+        android:textStyle="bold"
+        tools:text="2" />
+
+</LinearLayout>

@@ -349,18 +349,11 @@ class HomeViewModel(
         /**
          * Narrows this pet's tasks down to the ones actually due on the given day.
          *
-         * A task runs today only if the routine that owns it runs today — a weekly routine counts on
-         * its own weekday and not otherwise — which is why the routines are filtered first and the
-         * tasks matched against what survives.
+         * The rule itself — a task runs on a day only if its routine does — lives in
+         * [CareSchedule.tasksDueOn], shared with the Pets tab so the two screens always agree.
          */
         fun tasksDueOn(dayStart: Long, dayEnd: Long): PetToday {
-            val routineIdsDueToday = activeRoutines
-                .filter { routine -> CareSchedule.occursOn(routine, dayStart) }
-                .map { it.id }
-                .toSet()
-
-            val rows = tasks
-                .filter { task -> task.routineId?.let { it in routineIdsDueToday } == true }
+            val rows = CareSchedule.tasksDueOn(activeRoutines, tasks, dayStart)
                 .map { task ->
                     TodayTask(
                         task = task,

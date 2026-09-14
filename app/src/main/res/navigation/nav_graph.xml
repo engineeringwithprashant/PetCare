@@ -114,7 +114,8 @@
         android:label="@string/nav_pets"
         tools:layout="@layout/fragment_pets">
 
-        <!-- The floating action button goes straight to an empty form, passing petId = -1. -->
+        <!-- The "+ Add a pet" row at the end of the list (or in the empty state) goes straight to an
+             empty form, passing petId = -1. -->
         <action
             android:id="@+id/action_pets_to_add_edit_pet"
             app:destination="@id/addEditPetFragment" />

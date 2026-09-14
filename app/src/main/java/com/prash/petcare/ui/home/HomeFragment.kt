@@ -22,7 +22,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
 import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.databinding.FragmentHomeBinding
-import com.prash.petcare.ui.common.ThemePreference
+import com.prash.petcare.ui.common.setUp
+import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.pet.AddEditPetFragment
 import com.prash.petcare.ui.pet.PetDetailFragment
 import com.prash.petcare.ui.pet.PetViewModel
@@ -49,9 +50,10 @@ import java.text.NumberFormat
  * cards by being written into Room like any other row.
  *
  * **The one piece of state that is not the ViewModel's.** The header's light/dark toggle is handled
- * here rather than through [HomeViewModel], because the display mode is neither this account's data
- * nor this screen's — it belongs to the installation, is read before any ViewModel exists, and is
- * applied by AppCompat recreating the Activity. See [com.prash.petcare.ui.common.ThemePreference].
+ * in the View layer rather than through [HomeViewModel], because the display mode is neither this
+ * account's data nor this screen's — it belongs to the installation, is read before any ViewModel
+ * exists, and is applied by AppCompat recreating the Activity. The header itself is shared with the
+ * Pets tab; see [com.prash.petcare.ui.common.setUp] in TabHeader.kt.
  */
 class HomeFragment : Fragment() {
 
@@ -105,7 +107,10 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setUpPetList()
         setUpClickListeners()
-        renderThemeToggle()
+
+        // The shared header: title, theme toggle and badge. See ui/common/TabHeader.kt.
+        binding.header.setUp(title = R.string.nav_home, onBadgeClick = ::openProfile)
+
         observeViewModel()
     }
 
@@ -140,39 +145,6 @@ class HomeFragment : Fragment() {
         // destination id rather than through an action in the graph.
         binding.actionAddTask.setOnClickListener { openTab(R.id.checklistFragment) }
         binding.actionLogExpense.setOnClickListener { openTab(R.id.expensesFragment) }
-
-        binding.petCountBadge.setOnClickListener { openProfile() }
-
-        // Switching the mode recreates this Activity, so there is nothing to update here afterwards
-        // — the rebuilt screen reads the new mode in renderThemeToggle and draws itself accordingly.
-        binding.themeToggle.setOnClickListener { ThemePreference.toggle(requireContext()) }
-    }
-
-    /**
-     * Points the theme toggle at whatever mode is currently in use.
-     *
-     * The control reports the *present* mode rather than the one a tap would bring about, which is
-     * how a light/dark switch is nearly always read. Its content description says the opposite,
-     * because TalkBack announces the description in place of the label and so has to carry the
-     * action instead of the state.
-     *
-     * Called once per view creation and never again: nothing can change the mode while this screen
-     * is on top without the Activity being recreated, which brings a new view through here anyway.
-     */
-    private fun renderThemeToggle() {
-        val isDark = ThemePreference.isNightModeActive(requireContext())
-
-        binding.themeToggleIcon.setImageResource(
-            if (isDark) R.drawable.ic_theme_dark else R.drawable.ic_theme_light
-        )
-
-        binding.themeToggleLabel.setText(
-            if (isDark) R.string.home_theme_dark else R.string.home_theme_light
-        )
-
-        binding.themeToggle.contentDescription = getString(
-            if (isDark) R.string.cd_switch_to_light_theme else R.string.cd_switch_to_dark_theme
-        )
     }
 
     /** Opens an empty pet form. [PetViewModel.NO_PET_ID] is what tells it to create rather than edit. */
@@ -306,9 +278,7 @@ class HomeFragment : Fragment() {
     private fun renderPetCount(state: HomeUiState) {
         val count = state.pets.size
 
-        binding.petCountBadge.text = formatCount(count)
-        binding.petCountBadge.contentDescription =
-            resources.getQuantityString(R.plurals.cd_pets_badge, count, count)
+        binding.header.showPetCount(count)
 
         binding.petsInCareText.text =
             resources.getQuantityString(R.plurals.home_pets_in_care, count, count)
@@ -353,9 +323,9 @@ class HomeFragment : Fragment() {
     /**
      * Renders a bare number for display.
      *
-     * The two places on this screen that show a digit on its own — the header badge and the middle
-     * of the progress ring — have no sentence around them to carry a placeholder, so they cannot use
-     * a string resource. `toString()` would nonetheless be wrong: it always produces Western Arabic
+     * The middle of the progress ring shows a digit on its own, with no sentence around it to carry
+     * a placeholder, so it cannot use a string resource. (The header badge has the same problem and
+     * solves it the same way in TabHeader.kt.) `toString()` would nonetheless be wrong: it always produces Western Arabic
      * digits, where a device set to, say, Bengali or Persian expects the number in its own numerals.
      * [NumberFormat] asks the current locale, which is the same thing `getString` does for every
      * other number in the app.

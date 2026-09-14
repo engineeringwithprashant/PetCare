@@ -171,6 +171,34 @@ object CareSchedule {
     }
 
     /**
+     * The tasks, out of one pet's [tasks], that fall due on the day beginning at [dayStartMillis].
+     *
+     * A task runs on a day only if the routine that owns it runs that day — a weekly routine counts
+     * on its own weekday and not otherwise — which is why the routines are filtered first and the
+     * tasks matched against what survives. A task with no routine is a one-off with no schedule to
+     * project, so it is never counted.
+     *
+     * Lives here rather than inside a ViewModel because two screens ask this exact question: the
+     * dashboard (for its care card and checklist) and the Pets tab (for each card's "due today"
+     * figure). One copy of the rule is what guarantees the two never report different numbers.
+     *
+     * @param routines The pet's routines. Paused ones are filtered out by [occursOn] itself, so the
+     *   caller may pass all of them or only the active ones.
+     */
+    fun tasksDueOn(
+        routines: List<CareRoutine>,
+        tasks: List<CareTask>,
+        dayStartMillis: Long
+    ): List<CareTask> {
+        val routineIdsDue = routines
+            .filter { routine -> occursOn(routine, dayStartMillis) }
+            .map { it.id }
+            .toSet()
+
+        return tasks.filter { task -> task.routineId?.let { it in routineIdsDue } == true }
+    }
+
+    /**
      * True if [task] has been ticked off within the day spanning [dayStart] to [dayEnd].
      *
      * The task's own completion timestamp is what is tested, not its boolean flag. Because a task

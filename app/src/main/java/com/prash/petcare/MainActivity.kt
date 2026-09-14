@@ -165,20 +165,22 @@ class MainActivity : AppCompatActivity() {
      * to and belong to nobody, so all of it goes — the tabs as well: a row of tabs leading into an
      * account the user has not signed in to yet would be worse than no chrome at all.
      *
-     * The **dashboard** hides only the app bar, and keeps its tabs. It draws its own header — the
-     * monogram, the title, the theme toggle and the pet count — because every one of those depends
-     * on the screen's own data or state, which a toolbar shared by twelve destinations has no way to
-     * supply. Leaving the shared bar visible above it would show the word "Home" twice.
+     * The **dashboard** and the **Pets tab** hide only the app bar, and keep their tabs. They draw
+     * their own header — the monogram, the title, the theme toggle and the pet count, shared as
+     * res/layout/view_tab_header.xml — because every one of those depends on the screen's own data
+     * or state, which a toolbar shared by twelve destinations has no way to supply. Leaving the
+     * shared bar visible above it would show the screen's name twice.
      *
      * Nothing is lost with it: the account actions in the overflow menu are also reachable from the
-     * dashboard's count badge, which opens the profile screen, and that screen carries its own sign
-     * out button. See [com.prash.petcare.ui.home.HomeFragment.openProfile].
+     * header's count badge, which opens the profile screen, and that screen carries its own sign
+     * out button. See [com.prash.petcare.ui.common.setUp].
      */
     private fun updateChromeFor(destinationId: Int) {
         val isAuthScreen =
             destinationId == R.id.loginFragment || destinationId == R.id.registerFragment
 
-        val hasOwnHeader = destinationId == R.id.homeFragment
+        val hasOwnHeader =
+            destinationId == R.id.homeFragment || destinationId == R.id.petsFragment
 
         binding.appBarLayout.isVisible = !isAuthScreen && !hasOwnHeader
         binding.bottomNav.isVisible = !isAuthScreen

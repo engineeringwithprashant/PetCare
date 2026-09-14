@@ -13,22 +13,28 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentPetsBinding
+import com.prash.petcare.ui.common.setUp
+import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
 
 /**
- * The Pets tab: every animal the signed-in user has, and the way in to adding another.
+ * The Pets tab: a large card for every animal the signed-in user has, and the way in to adding
+ * another.
  *
- * This is the app's directory of pets. It was the home screen before the redesign; the dashboard
- * took that slot, and this became a tab of its own — which is a better home for it either way,
- * because a list that grows without limit and a summary that has to fit on one screen want
- * different things.
+ * The screen has the same header as the dashboard (monogram, title, theme toggle, pet count), then a
+ * headline that adapts to the count — "Two pets, one household" — then one card per pet showing its
+ * photo, species, name, carer, age, weight and tasks due today, and finally an outlined "Add a pet"
+ * row.
  *
  * In MVVM this is the **View**: it renders whatever [PetsViewModel] publishes and forwards taps
- * back, performing no queries itself.
+ * back, performing no queries itself. The one thing it works out is the headline's wording, because
+ * that needs string resources and a ViewModel must never hold a Context to read them.
  */
 class PetsFragment : Fragment() {
 
@@ -56,13 +62,21 @@ class PetsFragment : Fragment() {
     }
 
     /**
-     * Rebuilt with each view rather than held for the fragment's whole life, because it captures
-     * `viewLifecycleOwner.lifecycleScope` for its photo loads — and a fragment outlives its view,
-     * so that scope is a different object each time the view is recreated. An adapter created once
-     * would still hold the first view's scope, which is already cancelled, and every photo would
-     * silently fail to load after the first visit.
+     * The three adapters that make up the list, top to bottom.
+     *
+     * Rebuilt with each view rather than held for the fragment's whole life. [petAdapter] captures
+     * `viewLifecycleOwner.lifecycleScope` for its photo loads, and a fragment outlives its view, so
+     * that scope is a different object each time the view is recreated — an adapter created once
+     * would hold the first view's cancelled scope and every photo would silently fail to load after
+     * the first visit. The other two are rebuilt alongside it so all three always belong to the same
+     * view.
+     *
+     * Nullable for the same reason [_binding] is: they only exist between [onViewCreated] and
+     * [onDestroyView].
      */
+    private var headlineAdapter: PetsHeadlineAdapter? = null
     private var petAdapter: PetAdapter? = null
+    private var addPetRowAdapter: AddPetRowAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -75,30 +89,45 @@ class PetsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // The header shared with the dashboard. The badge opens the profile screen, because this
+        // tab — like the dashboard — hides the shared toolbar whose overflow menu held the account
+        // actions. See ui/common/TabHeader.kt and MainActivity.updateChromeFor.
+        binding.header.setUp(title = R.string.nav_pets, onBadgeClick = ::openProfile)
+
         setUpRecyclerView()
-        setUpClickListeners()
+        binding.emptyAddPetButton.setOnClickListener { openNewPetForm() }
         observeViewModel()
     }
 
-    /** Prepares the pet list. */
+    /**
+     * Prepares the list: headline, pet cards and add row, joined into one.
+     *
+     * [ConcatAdapter] presents several adapters to a single RecyclerView as if they were one list,
+     * in the order given. That lets the headline and the add row scroll with the cards — as the
+     * design requires — while the pet cards keep full recycling, and without any adapter having to
+     * shift its positions by one to make room for a header.
+     *
+     * Deliberately not `setHasFixedSize(true)`: a card's height varies with the length of the pet's
+     * name, and the headline and add row come and go.
+     */
     private fun setUpRecyclerView() {
-        petAdapter = PetAdapter(
+        val headline = PetsHeadlineAdapter()
+        val pets = PetAdapter(
             photoScope = viewLifecycleOwner.lifecycleScope,
-            onPetClick = { pet -> openPetDetail(pet.id) }
+            onPetClick = { petId -> openPetDetail(petId) }
         )
+        val addRow = AddPetRowAdapter(onAddPetClick = { openNewPetForm() })
+
+        headlineAdapter = headline
+        petAdapter = pets
+        addPetRowAdapter = addRow
 
         binding.petsRecyclerView.apply {
-            // The layout manager decides how rows are positioned; a vertical linear list here.
+            // The layout manager decides how items are positioned; a vertical linear list here.
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = petAdapter
-
-            // Deliberately not setHasFixedSize(true): a card's height changes with whether the pet
-            // has an age and a weight recorded, since the pill row is hidden when it has neither.
+            adapter = ConcatAdapter(headline, pets, addRow)
         }
-    }
-
-    private fun setUpClickListeners() {
-        binding.addPetFab.setOnClickListener { openNewPetForm() }
     }
 
     /** Opens an empty pet form. [PetViewModel.NO_PET_ID] is what tells it to create rather than edit. */
@@ -128,6 +157,16 @@ class PetsFragment : Fragment() {
     }
 
     /**
+     * Opens the account screen, from the header's pet-count badge.
+     *
+     * By destination id, the same way the dashboard's badge and the toolbar's overflow menu do, so
+     * all three routes to the profile screen arrive identically.
+     */
+    private fun openProfile() {
+        findNavController().navigate(R.id.profileFragment)
+    }
+
+    /**
      * Subscribes to the ViewModel's state.
      *
      * `repeatOnLifecycle(STARTED)` begins collecting when the screen becomes visible and cancels
@@ -145,24 +184,51 @@ class PetsFragment : Fragment() {
 
     /** Applies the current state to the views. */
     private fun render(state: PetsUiState) {
+        val count = state.pets.size
+        val hasPets = count > 0
+
+        binding.header.showPetCount(count)
+
+        // The headline and add row only join the list once there are cards for them to frame. While
+        // loading they would sit alone on an otherwise blank screen; with no pets, the empty state
+        // below says the same things in a form suited to an empty screen.
+        headlineAdapter?.headline = if (hasPets) headlineFor(count) else null
+        addPetRowAdapter?.isShown = hasPets
+
         // submitList hands the whole new list to DiffUtil, which works out what changed and
-        // animates only those rows.
+        // animates only those cards.
         petAdapter?.submitList(state.pets)
 
         // The list and the empty state occupy the same space, so exactly one is ever visible. Both
         // stay hidden during the initial load, which stops "No pets yet" flashing up before the
         // first query returns.
-        binding.petsRecyclerView.isVisible = state.pets.isNotEmpty()
+        binding.petsRecyclerView.isVisible = hasPets
         binding.emptyStateContainer.isVisible = state.hasNoPets
+    }
+
+    /**
+     * The headline sentence for [count] pets: "One pet,\none household", "Two pets,\none household".
+     *
+     * The number is spelled out from a string array while there is a word for it, and falls back to
+     * locale-formatted digits beyond that — see the note on the resources in strings.xml. The
+     * plurals resource chooses "pet" or "pets" from the count itself, so the grammar is right in
+     * either case and in any language that supplies its own plural forms.
+     */
+    private fun headlineFor(count: Int): String {
+        val words = resources.getStringArray(R.array.pets_headline_count_words)
+        val number = words.getOrNull(count - 1) ?: NumberFormat.getInstance().format(count)
+        return resources.getQuantityString(R.plurals.pets_headline, count, number)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // The adapter outlives the view it was drawing into, so it is detached here. Without this a
-        // RecyclerView keeps a reference to its adapter and the adapter to its holders, and the
-        // whole destroyed hierarchy is held alive behind them.
+        // The adapters outlive the view they were drawing into, so they are detached here. Without
+        // this a RecyclerView keeps a reference to its adapter and the adapter to its holders, and
+        // the whole destroyed hierarchy is held alive behind them.
         binding.petsRecyclerView.adapter = null
+        headlineAdapter = null
         petAdapter = null
+        addPetRowAdapter = null
 
         // Release the reference to the destroyed view hierarchy — see the note on [_binding].
         _binding = null

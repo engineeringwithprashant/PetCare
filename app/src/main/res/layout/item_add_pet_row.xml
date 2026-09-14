@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The full-width "+ ADD A PET" row that ends the Pets tab's list.
+
+    It replaced the floating action button this tab used to have. A button floating over the list
+    covers the bottom of whichever card is behind it; a row *after* the last card covers nothing, and
+    sits exactly where the next pet will appear once added — so its position says what it does.
+
+    A list item rather than a view below the RecyclerView for the same reason as the headline: it has
+    to scroll with the cards. See item_pets_headline.xml and PetsFragment.
+
+    Its whole look — outline, muted capitals, "+" icon, the pet cards' corner radius — comes from
+    PetCare.AddRowButton in styles.xml, which the empty state's button shares so the two cannot differ.
+-->
+<com.google.android.material.button.MaterialButton xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/addPetButton"
+    style="@style/PetCare.AddRowButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/pets_add_pet_row" />

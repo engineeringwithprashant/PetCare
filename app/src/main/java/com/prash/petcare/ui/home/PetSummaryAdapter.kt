@@ -11,6 +11,8 @@ import com.prash.petcare.R
 import com.prash.petcare.databinding.ItemPetHeroBinding
 import com.prash.petcare.databinding.ItemPetRowBinding
 import com.prash.petcare.ui.common.formatAgeShort
+// Shared with the Pets tab's cards, so a weight reads identically on both — see WeightFormatting.kt.
+import com.prash.petcare.ui.common.formatWeight
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.loadPetPhoto
 import kotlinx.coroutines.CoroutineScope
@@ -258,20 +260,3 @@ private fun bindFactsPill(pill: TextView, summary: PetSummary) {
 
     pill.visibility = if (facts.isEmpty()) View.GONE else View.VISIBLE
 }
-
-/**
- * Renders a stored weight without a pointless decimal place: 26.0 becomes "26", 4.5 stays "4.5".
- *
- * Weight is stored as a `Double` because half-kilograms matter for a small animal, but most are
- * recorded as whole numbers and `toString()` would put "26.0 kg" on every card. The trailing ".0"
- * costs two characters in a capsule that is already sharing a line with the pet's status.
- *
- * The comparison is against the value truncated to a whole number rather than against a rounded one,
- * so only a genuinely whole weight loses its decimal.
- */
-private fun formatWeight(kilograms: Double): String =
-    if (kilograms == kilograms.toLong().toDouble()) {
-        kilograms.toLong().toString()
-    } else {
-        kilograms.toString()
-    }

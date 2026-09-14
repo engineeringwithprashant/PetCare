@@ -1,91 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The Pets tab: every animal the user has, and the way in to adding another.
+    The Pets tab: every animal the user has, one large card each, and the way in to adding another.
 
-    The screen's title lives in the app bar, so there is no heading repeated here — the list starts
-    straight away, which is what keeps the first pet above the fold on a small phone.
+    From top to bottom:
+      - **The header** — monogram, "Pets", theme toggle and pet count — shared with the Home tab
+        through <include>. It stays fixed while the page scrolls under it: it is the app's identity
+        and two controls, not content, and scrolling it away would put the theme toggle out of reach.
+      - **The list**, which scrolls: the headline ("Two pets, one household"), a card per pet, and
+        the "+ Add a pet" row. All three live inside one RecyclerView — see PetsFragment for how a
+        ConcatAdapter joins them.
+      - **The empty state**, shown in the list's place when there are no pets.
 
-    **Why a single RecyclerView rather than the dashboard's scroll view.** This list has no fixed
-    upper size: somebody fostering has a dozen animals, and every one of them carries a photo to
-    decode. A RecyclerView recycles rows as they scroll off, so only the visible ones are ever
-    inflated. The dashboard is built the other way round because its sections are short and known —
-    see the note at the top of fragment_home.xml.
+    **Why a single RecyclerView rather than a scroll view.** This list has no fixed upper size:
+    somebody fostering has a dozen animals, and every card carries a photo to decode. A RecyclerView
+    recycles cards as they scroll off, so only the visible ones are ever inflated. The dashboard is
+    built the other way round because its sections are short and known — see fragment_home.xml.
 
-    The root is a CoordinatorLayout because it is what lets the floating action button and any
-    Snackbar cooperate — a Snackbar sliding up from the bottom lifts the button rather than covering
-    it.
+    **Why a vertical LinearLayout at the root.** The header takes the height it needs and the region
+    below takes the rest (0dp height with layout_weight="1"). The list and the empty state share that
+    region, so it is a FrameLayout holding both, and the fragment shows exactly one of them.
 -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".ui.pet.PetsFragment">
 
-    <!--
-        clipToPadding="false" with a large bottom padding is the standard pairing for a list under a
-        floating action button: the padding lets the last card scroll clear of the button, and
-        switching off clipping means rows are still drawn as they pass through that padding rather
-        than being cut off at its edge.
-    -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/petsRecyclerView"
+    <!-- The shared header. The android:id is what makes ViewBinding expose it as a nested binding,
+         `binding.header`. See view_tab_header.xml. -->
+    <include
+        android:id="@+id/header"
+        layout="@layout/view_tab_header" />
+
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingStart="@dimen/screen_padding"
-        android:paddingTop="@dimen/content_top_padding"
-        android:paddingEnd="@dimen/screen_padding"
-        android:paddingBottom="@dimen/list_padding_bottom_fab"
-        tools:listitem="@layout/item_pet" />
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-    <!--
-        Shown instead of the list when the user has no pets. It occupies the same region as the
-        RecyclerView, and the fragment toggles which of the two is visible.
+        <!--
+            The headline, the cards and the add row.
 
-        An icon and a sentence saying what to do next, rather than a bare line of grey text — an
-        empty screen with one short message leaves the user unsure whether there is nothing here or
-        it simply has not loaded. No button, unlike the dashboard's empty state: the floating action
-        button below is already on this screen and pointing at the same thing, and two controls
-        doing one job would leave the user wondering how they differ.
-    -->
-    <LinearLayout
-        android:id="@+id/emptyStateContainer"
-        style="@style/PetCare.EmptyState"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        tools:visibility="visible">
+            clipToPadding="false" lets content scroll *through* the bottom padding rather than being
+            cut off at its edge, which is what lets the add row clear the bottom navigation bar
+            instead of finishing underneath it. The padding no longer has to clear a floating action
+            button, so it is the smaller list_padding_bottom.
 
-        <ImageView
-            style="@style/PetCare.EmptyStateIcon"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_pet_placeholder" />
-
-        <TextView
-            style="@style/PetCare.EmptyStateTitle"
+            The top padding is small because the headline should sit directly under the header, as
+            it does on the dashboard.
+        -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/petsRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pets_empty_title" />
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/screen_padding"
+            android:paddingTop="@dimen/spacing_xs"
+            android:paddingEnd="@dimen/screen_padding"
+            android:paddingBottom="@dimen/list_padding_bottom"
+            android:visibility="gone"
+            tools:listitem="@layout/item_pet"
+            tools:visibility="visible" />
 
-        <TextView
-            style="@style/PetCare.EmptyStateMessage"
+        <!--
+            Shown instead of the list when the user has no pets.
+
+            An icon, a sentence saying what to do next, and the same outlined "Add a pet" row that
+            ends the list when there are pets — rather than a bare line of grey text. An empty screen
+            with one short message leaves the user unsure whether there is nothing here or it simply
+            has not loaded, and with the floating button gone this is the only way to add a first pet
+            from this tab, so the action has to be here.
+        -->
+        <LinearLayout
+            android:id="@+id/emptyStateContainer"
+            style="@style/PetCare.EmptyState"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pets_empty_message" />
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            tools:visibility="gone">
 
-    </LinearLayout>
+            <ImageView
+                style="@style/PetCare.EmptyStateIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_pet_placeholder" />
 
-    <!-- The add-pet button. contentDescription is required on an icon-only control: without it
-         TalkBack would announce nothing useful to a user who cannot see the plus symbol. -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addPetFab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/screen_padding"
-        android:contentDescription="@string/cd_add_pet"
-        app:srcCompat="@drawable/ic_add" />
+            <TextView
+                style="@style/PetCare.EmptyStateTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/pets_empty_title" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+            <TextView
+                style="@style/PetCare.EmptyStateMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/pets_empty_message" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/emptyAddPetButton"
+                style="@style/PetCare.AddRowButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:text="@string/pets_add_pet_row" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

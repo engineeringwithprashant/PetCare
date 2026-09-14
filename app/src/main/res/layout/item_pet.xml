@@ -1,17 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One row in the Pets tab's list: a round photo, the pet's name and breed, and pastel pills for
-    the facts worth seeing without opening the animal.
+    One pet's card on the Pets tab.
 
-    Close to item_dashboard_pet.xml by design — the two are the same *kind* of object and should
-    look like it — but not the same file, because they answer different questions. The dashboard
-    card reports today ("2 left today"); this one reports the animal itself (age and weight), since
-    the Pets tab is a directory rather than a to-do list. Sharing one layout would mean a row
-    carrying both sets of pills, most of them empty on any given screen.
+    Two stacked panels inside one rounded card:
+      1. **The photo**, filling a tall area at the top, with the species marked in a small yellow chip
+         in its top-left corner.
+      2. **A light panel** underneath: the pet's name, who cares for them, and a row of three facts —
+         age, weight and how many tasks are due today — split by hairline dividers.
 
-    This layout is inflated once per visible row and then recycled as the list scrolls, which is why
-    it must stay shallow — a deep view hierarchy here is measured and laid out repeatedly and is the
-    usual cause of janky scrolling.
+    **Why the name is under the photo here but across it on the dashboard.** The dashboard's large
+    card is a glance, and writing on the photo saves height. This tab is where the user comes to look
+    at their animals, so the photo is left clear to be looked at, and the text moves onto the card's
+    own surface where it follows the theme like any other text — which also makes room for the stats
+    row the dashboard card has no space for.
+
+    **Why a vertical LinearLayout inside the card, not a ConstraintLayout.** Every child simply sits
+    below the one before it at full width. That is exactly what a vertical LinearLayout expresses,
+    and this layout is inflated for every visible row of a scrolling list, so it is kept as flat and
+    simple to measure as the design allows.
+
+    The card is the app's default MaterialCardView style (white surface in light mode, charcoal in
+    dark, soft shadow) with two additions: the larger pet-card corner radius, applied as a shape
+    overlay so ripple and shadow follow it, and a tap that opens the pet — attached by PetAdapter.
 -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -20,100 +30,187 @@
     style="@style/PetCare.Card.Clickable"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/card_spacing">
+    android:layout_marginBottom="@dimen/pets_card_spacing"
+    app:cardCornerRadius="@dimen/pet_card_corner_radius"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/card_padding">
+        android:orientation="vertical">
 
-        <!-- The photo, clipped to a circle by the shape overlay rather than by a container around
-             it — see the fuller note in item_dashboard_pet.xml. -->
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/petPhotoImage"
-            android:layout_width="@dimen/pet_thumb_size"
-            android:layout_height="@dimen/pet_thumb_size"
-            android:background="@drawable/bg_photo_circle"
-            android:contentDescription="@string/cd_pet_photo"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_pet_placeholder"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Circle" />
+        <!-- ============================ The photo ============================
+             A FrameLayout because its two children genuinely *overlap*: the chip is drawn on top of
+             the photo's corner. Stacking is the one arrangement a FrameLayout expresses better than
+             anything else — children are painted in the order declared, so the photo goes first and
+             the chip over it. -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pets_card_photo_height">
 
-        <TextView
-            android:id="@+id/petNameText"
-            style="@style/PetCare.ListTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/spacing_md"
-            app:layout_constraintEnd_toStartOf="@id/openIcon"
-            app:layout_constraintStart_toEndOf="@id/petPhotoImage"
-            app:layout_constraintTop_toTopOf="@id/petPhotoImage"
-            tools:text="Bella" />
+            <!-- The photograph. centerCrop because the panel has a fixed shape and a photo almost
+                 never shares it: the picture is scaled to cover and the overflow trimmed, where
+                 fitCenter would letterbox every portrait photo.
 
-        <!-- Species, plus breed when one was recorded. Filled in by PetAdapter. -->
-        <TextView
-            android:id="@+id/petSubtitleText"
-            style="@style/PetCare.ListSubtitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            app:layout_constraintEnd_toEndOf="@id/petNameText"
-            app:layout_constraintStart_toStartOf="@id/petNameText"
-            app:layout_constraintTop_toBottomOf="@id/petNameText"
-            tools:text="Dog · Labrador" />
+                 The dark ground (bg_pet_photo_dark) shows behind the paw-print placeholder when the
+                 pet has no photo. It is dark in both themes so adding a photo fills the panel in
+                 rather than changing its whole character — see the pet-card note in colors.xml.
 
-        <!--
-            Age and weight as pastel pills. A horizontal LinearLayout rather than two constrained
-            views, because the second has to sit directly after the first whatever width the first
-            turns out to be.
+                 No rounding of its own: the MaterialCardView clips it to the card's rounded top
+                 corners. The bitmap is loaded asynchronously by ui/common/PetPhotoBinder.kt. -->
+            <ImageView
+                android:id="@+id/petPhotoImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_pet_photo_dark"
+                android:contentDescription="@string/cd_pet_photo"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_pet_placeholder" />
 
-            The adapter hides either pill when its fact was never recorded, and hides the whole row
-            when neither was — which is common for a rescue animal with an unknown birthday and no
-            weight taken yet, and would otherwise leave an empty band of padding under the breed.
-        -->
+            <!-- The species chip, pinned to the top-left corner by layout_gravity. Upper-cased by its
+                 style rather than in the string, so the label stays correct in a language where
+                 blanket capitals are wrong. -->
+            <TextView
+                android:id="@+id/speciesChip"
+                style="@style/PetCare.SpeciesChip.Accent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_margin="@dimen/card_padding"
+                tools:text="Cat" />
+
+        </FrameLayout>
+
+        <!-- ========================== The light panel ==========================
+             Its colour is the card's own surface, so it is white in light mode and charcoal in dark
+             without this layout knowing which is in use. -->
         <LinearLayout
-            android:id="@+id/pillRow"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_sm"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="@id/petNameText"
-            app:layout_constraintStart_toStartOf="@id/petNameText"
-            app:layout_constraintTop_toBottomOf="@id/petSubtitleText">
+            android:orientation="vertical"
+            android:padding="@dimen/card_padding">
 
+            <!-- The pet's name: the card's heading. Two lines at most, so a long name wraps rather
+                 than being cut, but cannot push the stats row far down the card. -->
             <TextView
-                android:id="@+id/agePill"
-                style="@style/PetCare.Pill.Mint"
-                android:layout_width="wrap_content"
+                android:id="@+id/petNameText"
+                style="@style/PetCare.Headline"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                tools:text="3 years old" />
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Krishala Pant Thapa Baby" />
 
+            <!-- "Cared for by …" — smaller and muted, because it supports the name rather than
+                 competing with it. Hidden by the adapter until the owner's name has loaded, rather
+                 than reading "Cared for by" with nothing after it. -->
             <TextView
-                android:id="@+id/weightPill"
-                style="@style/PetCare.Pill.Sky"
-                android:layout_width="wrap_content"
+                android:id="@+id/caredForByText"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/pill_spacing"
-                tools:text="24.5 kg" />
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Cared for by Prashant" />
+
+            <!--
+                The three facts, in an outlined box (bg_pets_stat_row.xml).
+
+                Equal thirds via layout_weight="1" on zero-width children: the row is divided
+                evenly whatever each value's length, so "0 mo" and "25 kg" line up card after card
+                instead of every card's columns landing somewhere different.
+
+                The dividers are 1dp Views between the blocks with match_parent height — see
+                PetCare.PetStat.Divider for how that resolves inside a wrap_content row.
+
+                baselineAligned="false" because the children are blocks, not single lines of text;
+                there is no baseline worth aligning, and measuring one costs an extra pass.
+            -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/card_padding"
+                android:background="@drawable/bg_pets_stat_row"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <!-- Age -->
+                <LinearLayout
+                    style="@style/PetCare.PetStat"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:id="@+id/ageValueText"
+                        style="@style/PetCare.PetStat.Value"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        tools:text="0 mo" />
+
+                    <TextView
+                        style="@style/PetCare.PetStat.Label"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/pets_stat_age" />
+
+                </LinearLayout>
+
+                <View style="@style/PetCare.PetStat.Divider" />
+
+                <!-- Weight -->
+                <LinearLayout
+                    style="@style/PetCare.PetStat"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:id="@+id/weightValueText"
+                        style="@style/PetCare.PetStat.Value"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        tools:text="25 kg" />
+
+                    <TextView
+                        style="@style/PetCare.PetStat.Label"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/pets_stat_weight" />
+
+                </LinearLayout>
+
+                <View style="@style/PetCare.PetStat.Divider" />
+
+                <!-- Tasks due today -->
+                <LinearLayout
+                    style="@style/PetCare.PetStat"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:id="@+id/dueTodayValueText"
+                        style="@style/PetCare.PetStat.Value"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        tools:text="3" />
+
+                    <TextView
+                        style="@style/PetCare.PetStat.Label"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/pets_stat_due_today" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Says the card opens something, without which a card that happens to be tappable looks
-             exactly like one that is not. -->
-        <ImageView
-            android:id="@+id/openIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:contentDescription="@string/cd_open_pet"
-            android:src="@drawable/ic_chevron_right"
-            app:layout_constraintBottom_toBottomOf="@id/petNameText"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/petNameText" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

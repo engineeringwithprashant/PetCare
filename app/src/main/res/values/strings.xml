@@ -226,6 +226,57 @@
     <string name="pets_empty_title">No pets yet</string>
     <string name="pets_empty_message">Add your first pet to start tracking their care, routines and spending.</string>
 
+    <!--
+        The headline under the Pets tab's header: "Two pets,\none household".
+
+        Built from two resources because the count is spelled out as a word, which neither a plurals
+        resource nor NumberFormat can do. The array supplies the word — item 0 is "One", item 1
+        "Two" and so on — and the plurals resource supplies the sentence with "pet" or "pets" agreeing
+        with the count. Past the end of the array the fragment falls back to digits ("14 pets"),
+        because a dozen is about where a spelled-out number stops reading as friendly.
+
+        Both are ordinary translatable resources, so a translation can supply its own number words
+        and its own plural forms. The \n is the deliberate line break after the comma in the design.
+        %1$s is the number, as a word or digits.
+    -->
+    <string-array name="pets_headline_count_words">
+        <item>One</item>
+        <item>Two</item>
+        <item>Three</item>
+        <item>Four</item>
+        <item>Five</item>
+        <item>Six</item>
+        <item>Seven</item>
+        <item>Eight</item>
+        <item>Nine</item>
+        <item>Ten</item>
+        <item>Eleven</item>
+        <item>Twelve</item>
+    </string-array>
+    <plurals name="pets_headline">
+        <item quantity="one">%1$s pet,\none household</item>
+        <item quantity="other">%1$s pets,\none household</item>
+    </plurals>
+
+    <!-- The muted line under a pet's name on its card. %1$s is the owner's name. -->
+    <string name="pets_card_cared_for_by">Cared for by %1$s</string>
+
+    <!-- The labels under the three figures on a pet card. Sentence case here and upper-cased by their
+         style at draw time, so the words stay correct in a language where blanket capitals are
+         wrong. -->
+    <string name="pets_stat_age">Age</string>
+    <string name="pets_stat_weight">Weight</string>
+    <string name="pets_stat_due_today">Due today</string>
+    <!-- Stands in for an age or weight that was never recorded, so the three blocks keep their
+         shape. A dash rather than "Unknown", which would not fit a third of a card's width. -->
+    <string name="pets_stat_unknown">—</string>
+    <!-- What a screen reader says in place of that dash, which would otherwise be read out as a
+         punctuation mark. -->
+    <string name="cd_pets_stat_unknown">Not recorded</string>
+
+    <!-- The outlined row at the foot of the list. Upper-cased by its style; the "+" is an icon. -->
+    <string name="pets_add_pet_row">Add a pet</string>
+
     <!-- ============================== Pet list item ============================== -->
     <!-- Joins species and breed into one subtitle, e.g. "Dog · Labrador". -->
     <string name="pet_species_and_breed">%1$s · %2$s</string>
@@ -526,7 +577,6 @@
 
     <!-- =========================== Accessibility labels ===========================
          contentDescription values, read aloud by TalkBack for users who cannot see the icon. -->
-    <string name="cd_add_pet">Add a pet</string>
     <string name="cd_pet_photo">Pet photo</string>
     <string name="cd_add_routine">Add a care routine</string>
     <string name="cd_add_task">Add a care task</string>

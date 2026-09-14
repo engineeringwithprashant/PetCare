@@ -41,118 +41,12 @@
          Fixed above the scrolling page: the app mark and the screen's name on the left, the two
          controls on the right.
 
-         A horizontal LinearLayout rather than a ConstraintLayout. There are four children in one
-         row, the title takes whatever is left over, and nothing is positioned relative to anything
-         but its neighbour — which is precisely the arrangement a LinearLayout describes in one
-         attribute and a ConstraintLayout needs eight to express. -->
-    <LinearLayout
-        android:id="@+id/headerBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/screen_padding"
-        android:paddingTop="@dimen/spacing_sm"
-        android:paddingEnd="@dimen/screen_padding"
-        android:paddingBottom="@dimen/spacing_sm">
-
-        <!-- The app's monogram: a "p" on a rounded yellow square. A TextView rather than an icon,
-             so the letter is drawn with the device's own font and stays crisp at any density
-             without a drawable per size. Its background supplies the shape — see bg_monogram.xml.
-
-             importantForAccessibility="no" because the next view already announces the screen: a
-             screen reader would otherwise open the dashboard by reading out the letter "p". -->
-        <TextView
-            android:layout_width="@dimen/monogram_size"
-            android:layout_height="@dimen/monogram_size"
-            android:background="@drawable/bg_monogram"
-            android:gravity="center"
-            android:importantForAccessibility="no"
-            android:text="@string/home_monogram"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="@color/on_accent_yellow"
-            android:textStyle="bold" />
-
-        <!-- The screen's name. layout_weight="1" on a zero-width view is LinearLayout's "take
-             everything left over", which is what pushes the two controls to the far end however
-             wide the title turns out to be. -->
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/spacing_sm"
-            android:layout_weight="1"
-            android:text="@string/nav_home"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall"
-            android:textColor="?attr/colorOnBackground"
-            android:textStyle="bold" />
-
-        <!--
-            The light/dark toggle.
-
-            A LinearLayout made clickable rather than a MaterialButton with an icon: the pill holds a
-            glyph and a word that change independently — the sun becomes a moon and "Light" becomes
-            "Dark" — and a button's icon and text are a single styled unit that is awkward to
-            re-colour by halves.
-
-            It reports the mode currently in use, not the one a tap would bring about. Its
-            contentDescription says the opposite, because a screen reader announces the description
-            *instead of* the label and so has to carry the action as well — both are set by the
-            fragment.
-        -->
-        <LinearLayout
-            android:id="@+id/themeToggle"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/header_control_height"
-            android:background="@drawable/bg_header_control"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/spacing_sm"
-            android:paddingEnd="@dimen/spacing_md">
-
-            <ImageView
-                android:id="@+id/themeToggleIcon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_theme_light"
-                app:tint="@color/accent_yellow" />
-
-            <TextView
-                android:id="@+id/themeToggleLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/spacing_xs"
-                android:textAllCaps="true"
-                android:textAppearance="?attr/textAppearanceLabelSmall"
-                android:textColor="?attr/colorOnSurface"
-                android:textStyle="bold"
-                tools:text="Light" />
-
-        </LinearLayout>
-
-        <!-- How many pets are in care, and the way in to the account screen.
-
-             It carries two jobs because the dashboard hides the shared toolbar and with it the
-             overflow menu — see the note at the top of this file. A count is a natural thing to
-             press to see more of what it counts, so the double duty is not the stretch it might
-             look. -->
-        <TextView
-            android:id="@+id/petCountBadge"
-            android:layout_width="@dimen/header_badge_size"
-            android:layout_height="@dimen/header_badge_size"
-            android:layout_marginStart="@dimen/spacing_sm"
-            android:background="@drawable/bg_header_control"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="?attr/colorOnSurface"
-            android:textStyle="bold"
-            tools:text="3" />
-
-    </LinearLayout>
+         Pulled in from view_tab_header.xml rather than declared here, because the Pets tab draws
+         exactly the same row and the two must never drift apart — see the note in that file. The
+         android:id is what makes ViewBinding expose it as a nested binding, `binding.header`. -->
+    <include
+        android:id="@+id/header"
+        layout="@layout/view_tab_header" />
 
     <!-- ============================== The page ==============================
          Everything below the header scrolls as one. layout_height="0dp" with layout_weight="1"

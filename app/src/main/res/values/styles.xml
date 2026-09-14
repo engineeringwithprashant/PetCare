@@ -277,6 +277,98 @@
         <item name="android:maxLines">1</item>
     </style>
 
+    <!-- The same species marker in the accent, for the Pets tab's cards: "CAT" on a yellow capsule.
+
+         Yellow there rather than the translucent dark chip above, because on the Pets tab nothing is
+         written across the photo — the name and stats live on the light panel below it — so the chip
+         is the only mark on the picture and can afford to be the one bright thing. It inherits the
+         size, case and letter-spacing from PetCare.SpeciesChip and only swaps the colours.
+
+         The capsule is bg_pill tinted to the accent, the same trick the pastel pills use; the text is
+         the colour guaranteed legible on the accent. Both are fixed values, not theme roles, since the
+         chip sits on a photograph in either theme. -->
+    <style name="PetCare.SpeciesChip.Accent" parent="PetCare.SpeciesChip">
+        <item name="android:background">@drawable/bg_pill</item>
+        <item name="android:backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+    </style>
+
+    <!-- ============================ Pets tab: stat blocks ============================
+         The row of three facts under a pet's name on the Pets tab — "0 mo / AGE", "25 kg / WEIGHT",
+         "3 / DUE TODAY". A bold value over a small letter-spaced label, the label deliberately given
+         the same treatment as PetCare.SectionLabel so it reads as a field name rather than as text.
+
+         Styles rather than attributes repeated three times in item_pet.xml, so the three blocks
+         cannot drift apart and a fourth fact later is one more short block. -->
+
+    <!-- One block: a column holding the value and its label. Width is left to the layout, which
+         divides the row into equal thirds with layout_weight. -->
+    <style name="PetCare.PetStat" parent="">
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingStart">@dimen/pets_stat_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/pets_stat_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/pets_stat_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/pets_stat_padding_vertical</item>
+    </style>
+
+    <!-- The figure itself: bold, and one step below the pet's name so the name stays the heading. -->
+    <style name="PetCare.PetStat.Value" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- The small upper-case name under the figure: "AGE", "WEIGHT", "DUE TODAY". -->
+    <style name="PetCare.PetStat.Label" parent="PetCare.SectionLabel">
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- The hairline between two blocks. Full height of the row (match_parent), which a horizontal
+         LinearLayout resolves after measuring its tallest child — so the line always spans the row
+         exactly, however tall a value's text turns out to be at the user's font scale. -->
+    <style name="PetCare.PetStat.Divider" parent="">
+        <item name="android:layout_width">@dimen/pets_stat_divider_width</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">?attr/colorOutlineVariant</item>
+    </style>
+
+    <!--
+        The full-width "+ ADD A PET" row at the foot of the Pets tab (and in its empty state).
+
+        A Material 3 **outlined button** rather than a plain clickable TextView: the component brings
+        the ripple, the focus state, the 48dp touch target and the "button" role TalkBack announces,
+        none of which a TextView has. Outlined, not filled, because it sits at the end of a list of
+        large cards — it should read as "there is room for one more" rather than as the screen's
+        loudest action.
+
+        Styled quietly to match: the muted text colour and a faint outline, letter-spaced capitals
+        like the section labels, and the pet cards' own corner radius so it reads as the outline of a
+        card still to come. The "+" is Material's icon slot rather than a character in the string,
+        so a screen reader announces "Add a pet, button" and not "plus".
+    -->
+    <style name="PetCare.AddRowButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/pets_add_row_height</item>
+        <!-- Material buttons reserve invisible space above and below for the touch target. The row
+             is already taller than that minimum, so the insets would only add a gap nothing uses. -->
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/pet_card_corner_radius</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="icon">@drawable/ic_add</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconSize">16dp</item>
+        <item name="iconTint">?attr/colorOnSurfaceVariant</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
     <!-- ============================= Category icon badge =============================
          The tinted circle a care-category icon sits in on a dashboard task row. The circle is what
          turns a 20dp glyph into something with enough visual weight to anchor the row's left edge,

@@ -142,6 +142,28 @@
          from the card edge on all four sides, so the card is the photo plus twice the inset. -->
     <dimen name="pet_row_photo_size">76dp</dimen>
 
+    <!-- ================================= Pets tab =================================
+         The redesigned Pets tab: one tall card per pet, stacked, then an outlined "Add a pet" row.
+         The cards reuse pet_card_corner_radius above, so a pet looks like the same object on both
+         tabs. -->
+
+    <!-- The photo panel filling the top of a Pets-tab card. Taller than the dashboard's row photo
+         because here every pet gets the large treatment — the tab *is* the pets — but short enough
+         that the name and stats under it stay on screen with the photo on a small phone. -->
+    <dimen name="pets_card_photo_height">200dp</dimen>
+    <!-- Gap between one pet card and the next, and before the add row. A step wider than the app's
+         usual card_spacing: these cards carry a shadow and a photograph, and packed at 12dp the
+         shadows of neighbouring cards run together. -->
+    <dimen name="pets_card_spacing">16dp</dimen>
+    <!-- The age / weight / due-today blocks inside a card. -->
+    <dimen name="pets_stat_padding_horizontal">12dp</dimen>
+    <dimen name="pets_stat_padding_vertical">10dp</dimen>
+    <!-- The hairline between two stat blocks, and the outline around the row of them. -->
+    <dimen name="pets_stat_divider_width">1dp</dimen>
+    <!-- The full-width "+ Add a pet" row at the foot of the list. At least 48dp is Android's minimum
+         touch target; the extra keeps it in proportion with the tall cards above. -->
+    <dimen name="pets_add_row_height">56dp</dimen>
+
     <!-- The quick-action cards along the bottom of the dashboard: an outlined tile with a circled
          "+" above its label. -->
     <dimen name="quick_action_height">86dp</dimen>
