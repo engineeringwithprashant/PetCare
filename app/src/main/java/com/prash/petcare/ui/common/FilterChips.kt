@@ -7,11 +7,11 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 
 /*
- * Binds a single-selection row of filter chips — the category and pet rows on the Tasks tab.
+ * Binds a single-selection row of filter chips — the category and pet rows on the Tasks tab, the
+ * category row on the Places tab, and the pet row on the Money tab.
  *
- * Part of the View layer. It generalises the pet picker (PetPicker.kt) to any list of options,
- * because the Tasks tab needs two rows that each begin with an "All" option that is not a pet or a
- * category at all. Each option is identified by a string key the caller chooses ("all", "FEEDING",
+ * Part of the View layer. Every one of those rows begins with an "All" option that is not a pet or a
+ * category at all, which is why the options are generic keys rather than pets. Each option is identified by a string key the caller chooses ("all", "FEEDING",
  * "42"), so this file knows nothing about pets or categories and serves both rows.
  */
 

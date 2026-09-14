@@ -1,55 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The headline card at the top of the expenses screen: everything spent on this pet.
+    The dark total card at the top of the Money tab: "TOTAL SPENT · SEPTEMBER", the month's total in
+    very large type, a stacked bar of what it went on, and a one-line caption.
 
-    This is the one figure the screen exists to answer, so it is given the largest type on the page
-    and its own card, with the record count beneath it as quieter supporting text.
+    Dark in both themes, like the Places distance strip — see the Money section of colors.xml. It is
+    given its ground explicitly and no elevation: on the near-black page of dark mode a shadow would be
+    invisible, and on the cream page of light mode the dark fill already separates it more strongly
+    than a shadow could.
 
-    An Elevated card rather than the Filled style used by the list rows below, so the summary lifts
-    off the page and reads as a header instead of as the first item in the list.
+    A vertical LinearLayout inside, because the four pieces simply stack. The pet cards' softer corner
+    (ShapeAppearance.PetCare.XLarge) marks it as the page's subject, as it does on the other tabs.
 -->
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/PetCare.Card.Feature"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/spacing_sm">
+    android:layout_marginBottom="@dimen/spacing_md"
+    app:cardBackgroundColor="@color/total_card_ground"
+    app:cardElevation="0dp"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
         android:orientation="vertical"
         android:padding="@dimen/spacing_lg">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/totalLabelText"
+            style="@style/PetCare.Expenses.TotalLabel"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/expenses_total_label"
-            android:textAppearance="?attr/textAppearanceLabelMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            tools:text="Total spent · September" />
 
-        <!-- The total. Given a display-scale text appearance because it is the number the user
-             opened this screen to see; everything else on the page supports it. -->
+        <!-- The total. Its paise are shrunk with a span in ExpenseAdapter, so this is one TextView and
+             the two parts share a baseline. -->
         <TextView
             android:id="@+id/totalAmountText"
-            android:layout_width="wrap_content"
+            style="@style/PetCare.Expenses.TotalAmount"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:textAppearance="?attr/textAppearanceHeadlineMedium"
-            android:textColor="?attr/colorAccentText"
-            tools:text="£248.50" />
+            android:layout_marginTop="@dimen/spacing_md"
+            tools:text="Rs 5,240.00" />
 
-        <!-- How many records make up that total, e.g. "across 12 expenses". -->
+        <!-- The stacked bar: a custom drawing, one coloured segment per category. Hidden from TalkBack
+             in code — the legend rows beneath the card say the same in words. -->
+        <com.prash.petcare.ui.expense.CategoryBarView
+            android:id="@+id/categoryBar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/expenses_category_bar_height"
+            android:layout_marginTop="@dimen/spacing_lg" />
+
         <TextView
             android:id="@+id/totalCaptionText"
-            android:layout_width="wrap_content"
+            style="@style/PetCare.Expenses.TotalCaption"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            tools:text="across 12 expenses" />
+            android:layout_marginTop="@dimen/spacing_md"
+            android:maxLines="2"
+            tools:text="3 expenses · 2 pets · +12% vs August" />
 
     </LinearLayout>
 

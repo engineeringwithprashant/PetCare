@@ -697,19 +697,6 @@
         <item name="android:letterSpacing">0.08</item>
     </style>
 
-    <!-- ================================== Chips ==================================
-         The pet picker at the top of the Tasks and Expenses tabs. A genuine Material Chip here,
-         unlike the stat pills above, precisely because these *are* pressed: the component brings
-         the touch target, the ripple and the selected state with it. -->
-    <style name="PetCare.PetChip" parent="Widget.Material3.Chip.Filter">
-        <item name="chipCornerRadius">@dimen/pill_corner_radius</item>
-        <!-- The tick Material shows on a selected filter chip is switched off. With only one chip
-             ever selected, the tick is redundant — the filled yellow background already says which
-             pet is showing — and removing it stops every chip changing width as the selection
-             moves, which makes the row jump sideways under the user's finger. -->
-        <item name="checkedIconVisible">false</item>
-    </style>
-
     <!-- ================================= Places tab =================================
          The Places tab's small print — labels, distances, subtitles, the GPS chip — is set in the
          platform **monospace** face, as in the design. A distance list is the one place in the app
@@ -866,6 +853,73 @@
         <item name="android:fontFamily">monospace</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- ================================= Money tab =================================
+         The redesigned Money (Expenses) tab. It shares the Places tab's typographic voice — figures
+         and captions in monospace, headings in the normal face — and its dark card uses the same
+         fixed colours as the Places distance strip, since both are dark in either theme. -->
+
+    <!-- "TOTAL SPENT · SEPTEMBER" on the dark card: the Places strip label, unchanged. -->
+    <style name="PetCare.Expenses.TotalLabel" parent="PetCare.Places.StripLabel" />
+
+    <!-- The month's total. Very large, bold and white on the dark card, with the letters drawn a
+         touch closer together: at this size the default spacing reads as gappy, and the design sets
+         the figure tight. includeFontPadding is off so the figure sits snugly under its label rather
+         than floating in the extra space a font reserves for accents. -->
+    <style name="PetCare.Expenses.TotalAmount" parent="">
+        <item name="android:textSize">@dimen/expenses_total_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/total_card_amount</item>
+        <item name="android:letterSpacing">-0.03</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "3 expenses · 2 pets · +12% vs August": the Places strip's range caption, in the same muted
+         monospace. -->
+    <style name="PetCare.Expenses.TotalCaption" parent="PetCare.Places.StripRange" />
+
+    <!-- A legend row's category name. On the page rather than on a card, hence colorOnBackground. -->
+    <style name="PetCare.Expenses.LegendName" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- A legend row's percentage: small and muted, so the amount beside it is what the eye lands on. -->
+    <style name="PetCare.Expenses.LegendShare" parent="">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- An amount, bold — on a legend row (page) or an expense card (surface). The colour is set by
+         the layout, since the two sit on different grounds. -->
+    <style name="PetCare.Expenses.Amount" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "Medication · Sep 12, 2026" under an expense's title: the Places tab's meta line. -->
+    <style name="PetCare.Expenses.Meta" parent="PetCare.Places.Meta" />
+
+    <!-- The rounded grey square holding a category abbreviation ("MED") on an expense card. Hidden
+         from TalkBack: the card's own description names the category in full. -->
+    <style name="PetCare.Expenses.Badge" parent="">
+        <item name="android:layout_width">@dimen/expenses_badge_size</item>
+        <item name="android:layout_height">@dimen/expenses_badge_size</item>
+        <item name="android:background">@drawable/bg_expense_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:maxLines">1</item>
         <item name="android:importantForAccessibility">no</item>
     </style>

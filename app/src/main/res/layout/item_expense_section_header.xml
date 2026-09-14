@@ -1,20 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    A section heading inside the expenses list ("Where the money went", "All expenses").
+    The "ALL EXPENSES" heading in the Money tab's list, with the hairline above it that separates the
+    category legend from the expense cards.
 
-    A row in the RecyclerView rather than a fixed TextView above it, because the headings have to
-    scroll away with the content they introduce. The adapter sets the text from the string resource
-    carried by the item.
+    A row in the RecyclerView rather than a fixed view, because it has to scroll away with the content
+    it introduces. The divider lives in this row rather than as a row of its own: it only ever appears
+    immediately above this heading, so the two are one piece of the page.
 
-    A single TextView with no wrapper: this layout is inflated and recycled as the list scrolls, and
-    a ViewGroup around one child would be a whole extra measure and layout pass for nothing.
+    The heading is the app's quiet section label — small, upper-case, letter-spaced and muted — since
+    its job is to name what follows, not to compete with the cards beneath it.
 -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/sectionHeaderText"
-    style="@style/PetCare.SectionHeader"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/spacing_lg"
-    android:layout_marginBottom="@dimen/spacing_sm"
-    tools:text="Where the money went" />
+    android:orientation="vertical">
+
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_md"
+        app:dividerColor="?attr/colorOutlineVariant" />
+
+    <TextView
+        style="@style/PetCare.SectionLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:layout_marginBottom="@dimen/spacing_md"
+        android:accessibilityHeading="true"
+        android:paddingStart="@dimen/spacing_xs"
+        android:paddingEnd="@dimen/spacing_xs"
+        android:text="@string/expenses_all_title"
+        tools:targetApi="p" />
+
+</LinearLayout>

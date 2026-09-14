@@ -1,89 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One recorded expense in the list.
+    One expense card on the Money tab: a grey category badge ("MED"), the title in bold over
+    "Medication · Sep 12, 2026", and the amount right-aligned.
 
-    The amount sits at the end of the title line so that every amount lines up in a single column
-    down the list, which is what lets the user scan for the large ones without reading each row.
+    A clickable MaterialCardView, so the whole card is one touch target with a ripple following its
+    rounded corners; tapping opens the expense's edit screen, and swiping it left deletes it with an
+    undo (ExpensesFragment). The pet cards' softer corner, as in the design.
 
-    Kept shallow because this layout is inflated per visible row and recycled as the list scrolls;
-    a deep hierarchy here would be re-measured constantly and is the usual cause of janky scrolling.
-
-    The whole card is clickable to open the expense for editing, and swiping it left deletes it —
-    the app-wide gesture convention, with the row's own edit screen as the accessible route to the
-    same action.
+    Kept shallow — a card, one row, one column — because this layout is inflated per visible row and
+    rebound constantly as the list scrolls. Inside, a horizontal LinearLayout with the text column
+    taking the leftover width (weight 1), so a long title ellipsises instead of pushing the amount off
+    the card and every amount lines up in a column down the list.
 -->
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/PetCare.Card.Clickable"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/spacing_sm">
+    android:layout_marginBottom="@dimen/expenses_card_spacing"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:padding="@dimen/card_padding">
 
-        <!-- Width 0dp between the start of the card and the amount is ConstraintLayout's "match
-             constraints": the title takes whatever space the amount leaves, so a long description
-             truncates rather than pushing the figure off the edge. -->
         <TextView
-            android:id="@+id/expenseTitleText"
-            style="@style/PetCare.ListTitle"
+            android:id="@+id/expenseBadgeText"
+            style="@style/PetCare.Expenses.Badge"
+            tools:text="MED" />
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toStartOf="@id/expenseAmountText"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Annual booster" />
+            android:layout_marginStart="@dimen/spacing_md"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <!-- Baseline-aligned with the title so the two read as one line, and constrained to the
-             card's end so amounts form a column down the list. -->
+            <TextView
+                android:id="@+id/expenseTitleText"
+                style="@style/PetCare.ListTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                tools:text="Grooming" />
+
+            <TextView
+                android:id="@+id/expenseSubtitleText"
+                style="@style/PetCare.Expenses.Meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                tools:text="Medication · Sep 12, 2026" />
+
+        </LinearLayout>
+
         <TextView
             android:id="@+id/expenseAmountText"
+            style="@style/PetCare.Expenses.Amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/spacing_sm"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorAccentText"
-            app:layout_constraintBaseline_toBaselineOf="@id/expenseTitleText"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:text="£48.00" />
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Rs 4,665" />
 
-        <!-- Category and date joined into one line, e.g. "Vet · 4 Mar 2026" — the pair of facts
-             that identifies a receipt without opening it. -->
-        <TextView
-            android:id="@+id/expenseSubtitleText"
-            style="@style/PetCare.ListSubtitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/expenseTitleText"
-            tools:text="Vet · 4 Mar 2026" />
-
-        <!-- Hidden by the adapter unless the expense records a note. Allowed two lines, unlike the
-             single-line rows above: a note is free text and is usually the reason the user will
-             recognise an entry. -->
-        <TextView
-            android:id="@+id/expenseNotesText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/expenseSubtitleText"
-            tools:text="Riverside Vets — includes the kennel cough booster"
-            tools:visibility="visible" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

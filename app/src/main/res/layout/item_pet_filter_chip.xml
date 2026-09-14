@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One chip in the Tasks tab's pet filter row — "All pets", then one per pet.
+    One chip in the pet filter row on the Tasks and Money tabs — "All pets", then one per pet.
 
     The same filter chip as item_category_chip.xml with the wider pet variant of its style, so the two
     rows look related but the pet row's pills are roomier, as in the design. Inflated by

@@ -48,8 +48,10 @@
             decimal separator the device's locale uses — so this field can receive "24.50" or
             "24,50" depending on the user, and the ViewModel handles both when it parses.
 
-            No currency symbol as a prefix: the app formats amounts for display using the device's
-            locale, and hard-coding one country's symbol into the form would contradict that.
+            "Rs" is shown as the field's prefix, because the app records every amount in rupees and
+            prints them that way everywhere else (see ui.common.formatCurrency). A prefix is drawn by
+            the TextInputLayout beside the text rather than being part of it, so the user never has
+            to delete it, and the ViewModel still receives a bare number to parse.
         -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/amountInputLayout"
@@ -57,7 +59,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_md"
-            android:hint="@string/expense_amount_label">
+            android:hint="@string/expense_amount_label"
+            app:prefixText="@string/currency_symbol">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/amountInput"

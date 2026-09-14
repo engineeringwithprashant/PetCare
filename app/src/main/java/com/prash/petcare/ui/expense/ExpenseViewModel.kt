@@ -1,80 +1,64 @@
 package com.prash.petcare.ui.expense
 
-import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
-import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Expense
-import com.prash.petcare.data.local.entity.ExpenseCategory
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.repository.ExpenseRepository
 import com.prash.petcare.data.repository.PetRepository
+import com.prash.petcare.util.CategorySpend
+import com.prash.petcare.util.MonthSummary
+import com.prash.petcare.util.MonthlySpending
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * One row in the expenses screen's single list.
+ * One row in the Money tab's single scrolling list.
  *
- * The screen shows four different kinds of content — a total, a breakdown, section headings and the
- * expenses themselves — and they all scroll together as one page. Modelling them as one sealed
- * hierarchy lets a single RecyclerView render the lot, which is what keeps the expense list
- * recycling properly however many years of receipts build up. Stacking separate views inside a
- * scroll view instead would inflate every expense at once.
+ * The screen shows four kinds of content — the dark total card, the category legend, the "ALL
+ * EXPENSES" heading and the expense cards — and they scroll together as one page. Modelling them as
+ * one sealed hierarchy lets a single RecyclerView draw the lot, which keeps the expense cards
+ * recycling however many years of receipts build up.
  *
- * Sealed, so [ExpenseAdapter]'s `when` branches are checked for exhaustiveness at compile time: a
- * new row type will not build until the adapter has been taught to draw it.
+ * Sealed, so [ExpenseAdapter]'s `when` branches are checked at compile time: a new row type will not
+ * build until the adapter can draw it.
  */
 sealed interface ExpenseListItem {
 
     /**
-     * Stable identity for [androidx.recyclerview.widget.DiffUtil].
-     *
-     * Diffing compares by this rather than by list position, so a row that moves as expenses are
-     * added is recognised as a move instead of a delete plus an insert. The values are namespaced
-     * by kind (the string prefixes below) because an expense id and a category could otherwise
+     * Stable identity for DiffUtil, namespaced by kind so an expense id and a category can never
      * collide and make two unrelated rows look like the same one.
      */
     val itemId: String
 
-    /** The headline figures: everything spent on this pet, and how many records make it up. */
-    data class Summary(val total: Double, val expenseCount: Int) : ExpenseListItem {
+    /** The dark total card: this month's total, its stacked bar, and the caption beneath. */
+    data class Summary(val month: MonthSummary) : ExpenseListItem {
         override val itemId: String get() = "summary"
     }
 
-    /** A heading introducing a group of rows, e.g. "Where the money went". */
-    data class SectionHeader(@param:StringRes val titleRes: Int) : ExpenseListItem {
-        override val itemId: String get() = "header-$titleRes"
+    /** One legend row: a category's dot, name, share of the month, and amount. */
+    data class CategoryTotal(val spend: CategorySpend) : ExpenseListItem {
+        override val itemId: String get() = "category-${spend.category.name}"
     }
 
-    /**
-     * One category's share of the total.
-     *
-     * @property amount Everything spent in this category.
-     * @property share This category's fraction of the pet's total, between 0 and 1. Precomputed
-     *   here rather than in the adapter so the row has no arithmetic to do at bind time, which is
-     *   the hot path while scrolling.
-     */
-    data class CategoryTotal(
-        val category: ExpenseCategory,
-        val amount: Double,
-        val share: Float
-    ) : ExpenseListItem {
-        override val itemId: String get() = "category-${category.name}"
+    /** The "ALL EXPENSES" heading, with the hairline that separates it from the legend. */
+    data object AllExpensesHeader : ExpenseListItem {
+        override val itemId: String get() = "header-all"
     }
 
     /** A single recorded expense. */
@@ -84,61 +68,68 @@ sealed interface ExpenseListItem {
 }
 
 /**
- * Everything the expenses screen displays.
+ * Everything the Money tab displays.
  *
- * @property pet The animal whose spending this is, or null while loading. Only its name is used,
- *   for the app bar title.
- * @property items The whole screen as one list of rows — see [ExpenseListItem].
- * @property isLoading True until the first database results arrive, so the screen can tell "still
- *   loading" apart from "genuinely has no expenses".
+ * @property pet The one pet this screen was opened for from its detail page, for the toolbar title;
+ *   null on the tab, which spans a choice of pets.
+ * @property pets The owner's pets, for the chip row. Empty when opened for one pet, where there is
+ *   no choice to offer.
+ * @property selectedPetId The chosen chip: a pet's id, or [ExpenseViewModel.ALL_PETS].
+ * @property items The whole scrolling page as rows — see [ExpenseListItem].
+ * @property hasExpenses Whether anything at all has been recorded for the pets in scope. Separate
+ *   from [items] being non-empty, because a month with no spending still shows its (empty) card.
+ * @property hasNoPets True when the account has no pets, which words the empty state differently.
+ * @property isLoading True until the first database results arrive, so the empty state never flashes
+ *   up before them.
  */
 data class ExpensesUiState(
     val pet: Pet? = null,
+    val pets: List<Pet> = emptyList(),
+    val selectedPetId: Long = ExpenseViewModel.ALL_PETS,
     val items: List<ExpenseListItem> = emptyList(),
+    val hasExpenses: Boolean = false,
+    val hasNoPets: Boolean = false,
     val isLoading: Boolean = true
 ) {
     /** True when the "no expenses yet" message should replace the list. */
-    val hasNoExpenses: Boolean get() = !isLoading && items.isEmpty()
+    val showsEmptyState: Boolean get() = !isLoading && !hasExpenses
 }
 
 /** A one-off occurrence the expenses screen reacts to exactly once. */
 sealed interface ExpenseEvent {
 
     /**
-     * An expense was deleted by a swipe, and the user should be offered an undo.
-     *
-     * The whole row travels with the event rather than just its id, because by the time the user
-     * taps Undo it no longer exists in the database and there would be nothing left to look up.
+     * An expense was deleted by a swipe, and the user should be offered an undo. The whole row travels
+     * with the event, because once deleted there is nothing left in the database to look up.
      */
     data class Deleted(val expense: Expense) : ExpenseEvent
 }
 
 /**
- * Supplies the expenses screen with one pet's spending, its total, and the breakdown by category.
+ * Backs the Money tab: this month's spending for one pet or all of them, its breakdown by category,
+ * and every expense ever recorded.
  *
- * Sits in the middle of the MVVM chain: the fragment observes [uiState] and forwards taps and
- * swipes here, and every database call goes out through [ExpenseRepository] rather than touching
- * the DAO directly. Nothing in this class references a Context, a View or a resource beyond string
- * ids, which is what lets it survive a rotation and be tested without an emulator.
+ * In MVVM this is the **ViewModel**. The fragment observes [uiState] and forwards taps and swipes;
+ * every read and write goes out through [PetRepository] and [ExpenseRepository]. The month arithmetic
+ * itself is in [MonthlySpending], a plain Kotlin object with its own unit tests.
  *
- * Recording and editing an expense belong to the form the user moves on to; what lives here is
- * reading the spending back and the swipe-to-delete shortcut on the list.
+ * **Two ways in**, as before — see the note at the top of nav_graph.xml:
+ *  - **As the tab** ([initialPetId] is [NO_PET_ID]): a chip row offers "All pets" and each pet, and
+ *    "All pets" is chosen to begin with, so the headline figure is the household's spending.
+ *  - **From a pet's detail page**: that animal only, no chips.
  *
- * **Which pet, and the two ways this screen is reached.** Spending is one of the four
- * bottom-navigation tabs *and* the screen a pet's detail page opens — see the note at the top of
- * nav_graph.xml on why one destination serves both. The difference is entirely in where the pet
- * comes from, and it mirrors [com.prash.petcare.ui.checklist.ChecklistViewModel] exactly:
+ * **"All pets" without touching the data layer.** The repository has a live query for one pet's
+ * expenses but not for a whole account's. Rather than add one, the tab subscribes to each pet's query
+ * and merges the lists — [combine] re-emits whenever any of them changes. A household has a handful
+ * of pets, so this is a handful of small queries, and it keeps the data layer exactly as it was.
  *
- *  - From a pet's detail page, [initialPetId] is that animal and the pet never changes. [pets] is
- *    empty, so the fragment shows no picker.
- *  - From the bottom bar, [initialPetId] is [NO_PET_ID]. [pets] then carries the owner's animals
- *    for the picker chips, and the first of them is selected automatically.
+ * **What the card counts, and what the list shows.** The card and the legend describe the *current
+ * calendar month*, which is what "TOTAL SPENT · SEPTEMBER" says. The list beneath is every expense,
+ * newest first, as its heading "ALL EXPENSES" says — which is also what keeps last month's receipts
+ * reachable for editing.
  *
- * @param petRepository Source of the pet, for the screen's title, and of the pet list for the
- *   picker.
- * @param expenseRepository Source of the spending, and where a swipe-delete is written.
- * @param ownerId Whose pets the picker offers. Ignored when a specific pet was passed in.
- * @param initialPetId The pet to show, or [NO_PET_ID] to offer the picker instead.
+ * @param ownerId Whose pets the chips offer. Ignored when a specific pet was passed in.
+ * @param initialPetId The pet to show, or [NO_PET_ID] for the tab.
  */
 class ExpenseViewModel(
     private val petRepository: PetRepository,
@@ -147,109 +138,112 @@ class ExpenseViewModel(
     initialPetId: Long
 ) : ViewModel() {
 
-    /**
-     * True when this screen was opened as a tab rather than for one particular animal, and should
-     * therefore let the user choose between pets.
-     */
+    /** True on the tab, where the user chooses between "All pets" and each pet. */
     val showsPetPicker: Boolean = initialPetId == NO_PET_ID
 
-    /**
-     * The pets the picker offers, or empty when this screen is showing one particular animal.
-     *
-     * Queried only in picker mode: subscribing to the owner's pets on a screen that will never show
-     * a picker would keep a query alive to populate a row that is not on screen.
-     */
-    val pets: StateFlow<List<Pet>> =
-        if (showsPetPicker) {
-            petRepository.observePetsForOwner(ownerId).stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyList()
-            )
-        } else {
-            MutableStateFlow(emptyList())
-        }
+    /** The chosen chip. On the tab it starts at "All pets"; for one pet it is that pet and never moves. */
+    private val selectedPetId = MutableStateFlow(if (showsPetPicker) ALL_PETS else initialPetId)
 
-    /** Which pet's spending is currently showing. */
-    private val _selectedPetId = MutableStateFlow(initialPetId)
-    val selectedPetId: StateFlow<Long> = _selectedPetId.asStateFlow()
-
-    /**
-     * Keeps the selection pointing at a pet that actually exists.
-     *
-     * Covers two moments with one rule: choosing the first pet once the list arrives, and moving on
-     * if the selected pet is later deleted — from the Pets tab, or by a sync pulling down its
-     * deletion from another device — rather than leaving the screen showing the spending of an
-     * animal that no longer exists.
-     *
-     * Only runs in picker mode: with a pet passed in explicitly there is nothing to choose, and
-     * reassigning the selection would quietly show a different animal than the one asked for.
-     */
-    init {
-        if (showsPetPicker) {
-            viewModelScope.launch {
-                pets.collect { available ->
-                    if (available.none { it.id == _selectedPetId.value }) {
-                        _selectedPetId.value = available.firstOrNull()?.id ?: NO_PET_ID
-                    }
-                }
-            }
-        }
-    }
-
-    /** Records the pet the user tapped in the picker. */
+    /** Records the chip the user tapped: a pet's id, or [ALL_PETS]. */
     fun selectPet(petId: Long) {
-        _selectedPetId.value = petId
+        selectedPetId.value = petId
     }
 
     /**
-     * The spending of whichever pet is selected.
+     * The screen's state.
      *
-     * [flatMapLatest] is what lets the pet change at runtime: each new selection replaces the
-     * previous pet's queries with the new pet's, and cancels the ones being left so that switching
-     * between animals repeatedly does not leave a subscription behind for each one visited.
+     * [flatMapLatest] swaps the expense subscriptions whenever the pets in scope change — a chip is
+     * tapped, or a pet is added or deleted — cancelling the old ones, so moving between chips never
+     * leaves a query running for a pet no longer shown.
      *
-     * With nothing selected — the moment before the pet list arrives, or a user with no pets at all
-     * — it emits an empty, finished state rather than no state at all. A flow that never emits
-     * would leave the screen on its loading state forever, and the fragment could not tell that
-     * apart from a slow query.
-     *
-     * [stateIn] caches the latest value, so a rotation re-attaches to what is already there instead
-     * of re-querying and flashing the empty state.
+     * The owner's pets are read with the repository's own flow rather than a cached StateFlow with an
+     * empty starting value. The difference is visible: an empty starting list would briefly look like
+     * "you have no pets" and flash that empty state before Room had answered.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<ExpensesUiState> = _selectedPetId.flatMapLatest { petId ->
-        if (petId == NO_PET_ID) {
-            flowOf(ExpensesUiState(isLoading = false))
-        } else {
-            spendingFor(petId)
+    val uiState: StateFlow<ExpensesUiState> = if (showsPetPicker) {
+        combine(petRepository.observePetsForOwner(ownerId), selectedPetId) { pets, selected ->
+            pets to selected
+        }.flatMapLatest { (pets, selected) ->
+            // A selected pet that has since been deleted (here, or by a sync from another device)
+            // falls back to "All pets" rather than showing the spending of an animal that is gone.
+            val chosen = pets.firstOrNull { it.id == selected }
+            val scope = chosen?.let { listOf(it) } ?: pets
+
+            spendingFor(scope).map { expenses ->
+                buildState(
+                    expenses = expenses,
+                    pet = null,
+                    pets = pets,
+                    selectedPetId = chosen?.id ?: ALL_PETS
+                )
+            }
+        }
+    } else {
+        petRepository.observePet(initialPetId).flatMapLatest { pet ->
+            spendingFor(listOfNotNull(pet)).map { expenses ->
+                buildState(expenses = expenses, pet = pet, pets = emptyList(), selectedPetId = initialPetId)
+            }
         }
     }.stateIn(
         scope = viewModelScope,
+        // Kept alive for five seconds after the screen stops collecting, so a rotation re-attaches
+        // to the live queries instead of re-running them and flashing the loading state.
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = ExpensesUiState()
     )
 
     /**
-     * Builds the state for one pet: the pet itself, its expenses and its total, combined.
+     * Every expense for [pets], merged into one list, newest first.
      *
-     * Three sources are combined so that any of them changing — renaming the pet, adding a receipt —
-     * refreshes the screen, and the values always describe the same moment rather than arriving
-     * piecemeal.
-     *
-     * The total comes from the repository's SUM query rather than being added up from the list.
-     * That is the point of [ExpenseRepository.observeTotalForPet]: SQLite adds the column without
-     * the rows ever leaving the database, and it keeps working if the list is later paged or
-     * filtered, when summing what happens to be loaded would quietly report the wrong figure.
+     * With no pets there is nothing to query, and a flow that never emitted would leave the screen on
+     * its loading state forever — so an empty list is emitted instead.
      */
-    private fun spendingFor(petId: Long): Flow<ExpensesUiState> = combine(
-        petRepository.observePet(petId),
-        expenseRepository.observeExpensesForPet(petId),
-        expenseRepository.observeTotalForPet(petId)
-    ) { pet, expenses, total ->
-        ExpensesUiState(
+    private fun spendingFor(pets: List<Pet>): Flow<List<Expense>> {
+        if (pets.isEmpty()) return flowOf(emptyList())
+
+        return combine(pets.map { expenseRepository.observeExpensesForPet(it.id) }) { perPet ->
+            // Each pet's list is already newest first; merged, they need sorting again as a whole.
+            perPet.flatMap { it }.sortedByDescending { it.incurredOn }
+        }
+    }
+
+    /**
+     * Assembles the page: the total card, the legend, the heading, then every expense.
+     *
+     * Nothing at all is built when there are no expenses, so the screen shows its empty state
+     * rather than a card announcing "Rs 0.00". A month with no spending *among* existing expenses is
+     * different: the card still appears, reporting the empty month against the last one.
+     *
+     * The month is read from the clock at the moment of each emission. If the screen sits open across
+     * midnight on the last day of a month it moves on at the next change to the data, which is an
+     * acceptable lag for a spending summary.
+     */
+    private fun buildState(
+        expenses: List<Expense>,
+        pet: Pet?,
+        pets: List<Pet>,
+        selectedPetId: Long
+    ): ExpensesUiState {
+        val items = if (expenses.isEmpty()) {
+            emptyList()
+        } else {
+            val month = MonthlySpending.summarise(expenses, System.currentTimeMillis())
+            buildList {
+                add(ExpenseListItem.Summary(month))
+                addAll(month.breakdown.map { ExpenseListItem.CategoryTotal(it) })
+                add(ExpenseListItem.AllExpensesHeader)
+                addAll(expenses.map { ExpenseListItem.ExpenseRow(it) })
+            }
+        }
+
+        return ExpensesUiState(
             pet = pet,
-            items = buildItems(expenses, total),
+            pets = pets,
+            selectedPetId = selectedPetId,
+            items = items,
+            hasExpenses = expenses.isNotEmpty(),
+            hasNoPets = showsPetPicker && pets.isEmpty(),
             isLoading = false
         )
     }
@@ -258,94 +252,20 @@ class ExpenseViewModel(
     val events = _events.receiveAsFlow()
 
     /**
-     * Assembles the whole screen: the total, then the category breakdown, then the expenses.
-     *
-     * Building the rows here rather than in the fragment keeps the ordering and grouping rules
-     * testable, and leaves the fragment with nothing to decide beyond which view to inflate.
-     *
-     * An empty list returns no rows at all — not even the total — so the screen shows its empty
-     * state rather than a card proudly announcing a total of zero.
-     */
-    private fun buildItems(expenses: List<Expense>, total: Double): List<ExpenseListItem> {
-        if (expenses.isEmpty()) return emptyList()
-
-        return buildList {
-            add(ExpenseListItem.Summary(total = total, expenseCount = expenses.size))
-
-            add(ExpenseListItem.SectionHeader(R.string.expenses_breakdown_title))
-            addAll(buildBreakdown(expenses))
-
-            add(ExpenseListItem.SectionHeader(R.string.expenses_all_title))
-            // Already ordered most recently incurred first by the DAO's ORDER BY, so there is
-            // nothing to sort here — letting SQLite do it uses the index on `incurredOn`.
-            addAll(expenses.map { ExpenseListItem.ExpenseRow(it) })
-        }
-    }
-
-    /**
-     * Works out how much went on each category, largest first.
-     *
-     * Only categories that were actually used appear. Listing all nine with zeroes beside most of
-     * them would bury the two or three that matter, and the breakdown exists precisely to make
-     * those stand out.
-     *
-     * Largest-first rather than enum order, because the question this answers is "where is the
-     * money going?" — and that puts the answer at the top where it is seen without scrolling.
-     *
-     * The grouping is done in Kotlin over the list already loaded for the rows below, rather than
-     * as a second `GROUP BY` query. The rows are in memory either way, so a second trip to the
-     * database would re-read the same data the list is built from.
-     *
-     * The percentages are divided by the sum of *this list*, deliberately not by the headline total
-     * from the SUM query. The two arrive on separate flows, so for a single emission after a new
-     * expense is added one can be ahead of the other — and dividing by the stale figure would print
-     * a share above 100%. Using the list's own sum keeps the breakdown internally consistent, and
-     * the two figures agree again as soon as both queries have re-run.
-     */
-    private fun buildBreakdown(expenses: List<Expense>): List<ExpenseListItem.CategoryTotal> {
-        val breakdownTotal = expenses.sumOf { it.amount }
-
-        return expenses
-            .groupBy { it.category }
-            .map { (category, categoryExpenses) ->
-                val amount = categoryExpenses.sumOf { it.amount }
-
-                ExpenseListItem.CategoryTotal(
-                    category = category,
-                    amount = amount,
-                    // Guarded against a zero total, which is reachable: every expense could have
-                    // been recorded as 0.00, and dividing by it would yield NaN or Infinity and
-                    // render as a nonsense percentage rather than failing anywhere it could be
-                    // noticed.
-                    share = if (breakdownTotal > 0.0) (amount / breakdownTotal).toFloat() else 0f
-                )
-            }
-            .sortedByDescending { it.amount }
-    }
-
-    /**
-     * Deletes an expense, as the swipe-left gesture does.
-     *
-     * No confirmation dialog here: the caller offers an undo instead, which is the app's convention
-     * for swipe actions. A swipe is easy to trigger by accident, but a dialog on every one would
-     * make the shortcut slower than opening the expense and using its delete button — which remains
-     * the deliberate, screen-reader-reachable route.
+     * Deletes an expense, as the swipe-left gesture does. No confirmation: the fragment offers an undo
+     * instead, the app's convention for swipe actions, and the edit screen's delete button remains the
+     * deliberate, screen-reader-reachable route.
      */
     fun deleteExpense(expense: Expense) {
         viewModelScope.launch {
             expenseRepository.deleteExpense(expense)
-
             _events.send(ExpenseEvent.Deleted(expense))
         }
     }
 
     /**
-     * Puts back an expense removed by [deleteExpense], for the undo action.
-     *
-     * Re-inserting the original object restores its id as well as its contents, because Room only
-     * generates a new primary key when the one it is given is zero. Keeping the id matters: the row
-     * returns as itself rather than as a lookalike copy with a new identity, and anything holding
-     * a reference to it still refers to the same record.
+     * Puts back an expense removed by [deleteExpense], for the undo action. Re-inserting the original
+     * object restores its id too, because Room only generates a key when given zero.
      */
     fun restoreExpense(expense: Expense) {
         viewModelScope.launch {
@@ -356,20 +276,21 @@ class ExpenseViewModel(
     companion object {
 
         /**
-         * The pet id meaning "none chosen", matching the app's convention for absent ids and the
-         * default declared on this destination in nav_graph.xml. Its presence is what puts the
-         * screen into picker mode.
+         * The pet id meaning "none given", matching the default declared on this destination in
+         * nav_graph.xml. Its presence puts the screen into tab mode.
          */
         const val NO_PET_ID = -1L
 
         /**
-         * Builds the ViewModel.
-         *
-         * A function rather than a property because neither id is known until runtime: the owner
-         * comes from the session and the pet from the navigation argument.
-         *
-         * @param ownerId Whose pets the picker offers.
-         * @param petId The pet to show, or [NO_PET_ID] to offer the picker instead.
+         * The chip meaning "every pet". The same value as [NO_PET_ID] — both mean "no one pet" — but
+         * named separately because they answer different questions: how the screen was opened, and
+         * which chip is chosen. Mirrors ChecklistViewModel.ALL_PETS.
+         */
+        const val ALL_PETS = NO_PET_ID
+
+        /**
+         * Builds the ViewModel. A function because both ids are only known at runtime: the owner from
+         * the session, the pet from the navigation argument.
          */
         fun factory(ownerId: Long, petId: Long): ViewModelProvider.Factory = viewModelFactory {
             initializer {

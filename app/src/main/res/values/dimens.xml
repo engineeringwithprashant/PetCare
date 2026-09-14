@@ -212,16 +212,21 @@
     <dimen name="bottom_nav_corner_radius">28dp</dimen>
     <dimen name="bottom_nav_height">64dp</dimen>
 
-    <!-- ============================ Spending breakdown ============================
-         The bar showing one category's share of a pet's total spending. -->
-    <!-- Thicker than the default progress track: this is being read as a bar chart rather than
-         glanced at as a loading indicator, so the lengths need to be comparable down a column. -->
-    <dimen name="share_bar_thickness">8dp</dimen>
-    <!-- Rounded ends, matching Material 3's treatment of progress tracks. -->
-    <dimen name="share_bar_corner_radius">4dp</dimen>
-    <!-- Reserved width for the percentage beside each bar. Fixing it keeps every bar the same
-         length, so "7%" and "100%" do not produce bars that cannot be compared. -->
-    <dimen name="share_percent_min_width">40dp</dimen>
+    <!-- ================================= Money tab =================================
+         The dark total card, its stacked category bar, the legend and the expense cards. -->
+
+    <!-- The month's total — the largest figure in the app, because it is the one this tab exists to
+         answer. In sp, so it still grows with the user's font-size setting. -->
+    <dimen name="expenses_total_text_size">44sp</dimen>
+    <!-- The stacked bar. Thick enough that a 3% segment is still a readable coloured capsule. -->
+    <dimen name="expenses_category_bar_height">10dp</dimen>
+    <!-- The coloured dot on a legend row: a small rounded square, echoing the bar's segments. -->
+    <dimen name="expenses_legend_dot_size">10dp</dimen>
+    <dimen name="expenses_legend_dot_corner_radius">3dp</dimen>
+    <!-- The category badge on an expense card, and the gap between cards. -->
+    <dimen name="expenses_badge_size">44dp</dimen>
+    <dimen name="expenses_badge_corner_radius">12dp</dimen>
+    <dimen name="expenses_card_spacing">12dp</dimen>
 
     <!-- ================================= Places tab =================================
          The distance strip, the featured place card and the saved-place rows. -->

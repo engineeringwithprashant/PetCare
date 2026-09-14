@@ -310,4 +310,34 @@
     <color name="open_now_container">#34C77B</color>
     <color name="on_open_now">#062B17</color>
 
+    <!-- ================================= Money tab =================================
+         The dark total card, and the colour that stands for each spending category.
+
+         **The card is dark in both themes**, for the reason given for the Places strip above: it is a
+         small chart, and coloured segments read most clearly on a dark ground. Its colours are the
+         strip's, referenced rather than repeated, so the two dark cards stay one family. -->
+    <color name="total_card_ground">@color/places_strip_ground</color>
+    <color name="total_card_amount">#FFFFFF</color>
+    <!-- The empty bar, before a month has any spending: a step lighter than the card, just visible,
+         and nothing like a category colour. -->
+    <color name="total_card_track">#33352A</color>
+
+    <!-- **Category colours.** Single values rather than light/dark pairs: each colour is drawn as a bar
+         segment on the dark card *and* as a dot on the page, and the page changes with the theme while
+         the card does not. They were therefore picked mid-light — saturated enough to stand out on
+         the near-black card, dark enough that a 10dp dot still shows on the cream page — and far enough
+         apart in hue that neighbouring segments never blur together.
+
+         Medication takes the accent, Food a warm grey and Grooming green, as in the design; the rest
+         continue round the colour wheel. -->
+    <color name="expense_category_medication">@color/accent_yellow</color>
+    <color name="expense_category_food">#A39D8A</color>
+    <color name="expense_category_grooming">#34C77B</color>
+    <color name="expense_category_vet">#4F93F0</color>
+    <color name="expense_category_toys">#FF8457</color>
+    <color name="expense_category_accessories">#AE86EE</color>
+    <color name="expense_category_insurance">#26AFA6</color>
+    <color name="expense_category_training">#EC6AA2</color>
+    <color name="expense_category_other">#76725F</color>
+
 </resources>

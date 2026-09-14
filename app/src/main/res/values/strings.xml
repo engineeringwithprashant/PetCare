@@ -281,13 +281,9 @@
     <!-- Joins species and breed into one subtitle, e.g. "Dog · Labrador". -->
     <string name="pet_species_and_breed">%1$s · %2$s</string>
 
-    <!-- ============================== The pet picker ==============================
-         The row of chips at the top of the Tasks and Expenses tabs. Those two screens show one
-         pet at a time, and the chips are how that pet is chosen — see the note at the top of
-         nav_graph.xml on why one screen serves both the tab and the per-pet route into it. -->
-    <string name="pet_picker_label">Showing care for</string>
-    <string name="pet_picker_label_expenses">Showing spending for</string>
-    <!-- Shown in place of either screen when there is no pet to pick. -->
+    <!-- ============================== No pets to pick ==============================
+         The Tasks and Money tabs filter by pet with a row of chips. When the account has no pets at
+         all, both show this in place of their content. -->
     <string name="pet_picker_empty_title">No pets to show</string>
     <string name="pet_picker_empty_message">Add a pet from the Pets tab, and their care will appear here.</string>
 
@@ -691,25 +687,64 @@
     <!-- %1$s is the pet's name. -->
     <string name="expenses_title_format">Spending on %1$s</string>
 
-    <string name="expenses_total_label">Total spent</string>
-    <!-- Sits under the total to say how many records it is made up of. A plurals resource, not a
-         plain string: the wording changes with the count, and which forms exist differs by
-         language. %1$d is the number of expenses. -->
-    <plurals name="expenses_total_caption">
-        <item quantity="one">across %1$d expense</item>
-        <item quantity="other">across %1$d expenses</item>
-    </plurals>
+    <!-- The Money tab's own header title. The bottom bar calls the tab "Money" (see nav_money), but
+         the screen itself is titled "Expenses", as in the design: the bar needs one short word, and
+         the header has room to name what the list actually holds. -->
+    <string name="expenses_header_title">Expenses</string>
 
-    <!-- Section headings. Worded as questions the user is actually asking rather than as labels
-         for the data structures beneath them. -->
-    <string name="expenses_breakdown_title">Where the money went</string>
+    <!-- The first chip in the pet row, which totals spending across every pet. -->
+    <string name="expenses_filter_all_pets">All pets</string>
+
+    <!-- The dark total card. %1$s is the current month's name, e.g. "Total spent · September"; the
+         label is shown in capitals by its style. -->
+    <string name="expenses_total_label_format">Total spent · %1$s</string>
+    <!-- The caption under the card's bar: "3 expenses · 2 pets · +12% vs August". Built from the
+         pieces below, joined by the separator, so a language can reword each piece and the comparison
+         can be left out when there is nothing to compare against. -->
+    <plurals name="expenses_caption_expenses">
+        <item quantity="one">%1$d expense</item>
+        <item quantity="other">%1$d expenses</item>
+    </plurals>
+    <plurals name="expenses_caption_pets">
+        <item quantity="one">%1$d pet</item>
+        <item quantity="other">%1$d pets</item>
+    </plurals>
+    <!-- %1$d is the size of the change as a positive whole number, %2$s the previous month's name.
+         The sign is part of each string, not the number, so "up" and "down" can be translated as
+         words where a language prefers that. The minus is a true minus sign (U+2212), which is the
+         width of the plus beside it. -->
+    <string name="expenses_caption_change_up">+%1$d%% vs %2$s</string>
+    <string name="expenses_caption_change_down">−%1$d%% vs %2$s</string>
+    <string name="expenses_caption_change_flat">%1$d%% vs %2$s</string>
+    <string name="expenses_caption_separator">" · "</string>
+
+    <!-- The heading over the expense cards; shown in capitals by its style. -->
     <string name="expenses_all_title">All expenses</string>
-    <!-- One category's share of the total, e.g. "48%". %1$d is the percentage. The literal percent
+    <!-- One category's share of the month, e.g. "89%". %1$d is the percentage. The literal percent
          sign is doubled because a single one starts a format specifier. -->
     <string name="expenses_category_share_format">%1$d%%</string>
 
-    <!-- Joins an expense's category and date into one line, e.g. "Vet · 4 Mar 2026". -->
+    <!-- Joins an expense's category and date into one line, e.g. "Medication · Sep 12, 2026". -->
     <string name="expenses_row_subtitle_format">%1$s · %2$s</string>
+
+    <!-- The badge on each expense card. Three or four capitals, so every badge is roughly the same
+         width and the column of them reads as a set. -->
+    <string name="expense_abbr_food">FOOD</string>
+    <string name="expense_abbr_vet">VET</string>
+    <string name="expense_abbr_medication">MED</string>
+    <string name="expense_abbr_grooming">GRM</string>
+    <string name="expense_abbr_toys">TOY</string>
+    <string name="expense_abbr_accessories">ACC</string>
+    <string name="expense_abbr_insurance">INS</string>
+    <string name="expense_abbr_training">TRN</string>
+    <string name="expense_abbr_other">OTH</string>
+
+    <!-- The currency every amount is recorded and shown in: Nepalese rupees. Not translatable — the
+         money is rupees in every language. Kept in step with CURRENCY_PREFIX in ExpenseLabels.kt. -->
+    <string name="currency_symbol" translatable="false">Rs</string>
+
+    <!-- With "All pets" chosen, the add button has to ask which pet the new expense is for. -->
+    <string name="expenses_pick_pet_title">Record an expense for which pet?</string>
 
     <string name="expenses_empty_title">No expenses yet</string>
     <string name="expenses_empty_message">Record what you spend on this pet to see the total and where the money goes.</string>

@@ -1,112 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Expenses: one pet's total spending, a breakdown by category, and every recorded expense.
+    The Money tab: this month's spending, what it went on, and every expense recorded.
 
-    **This layout serves two screens.** Reached from the bottom navigation bar it is the Expenses
-    tab and shows the pet picker at the top; reached from a pet's detail page it shows that animal
-    alone and the picker is hidden. See the note at the top of nav_graph.xml on why one destination
-    does both jobs.
+    Top to bottom:
+      - **The header** (monogram, "Expenses", theme toggle, pet count), shared with the other tabs.
+      - **The pet chips** — "All pets", then one per pet. Fixed under the header rather than scrolling
+        away, because they say whose spending the page is showing: scrolling back through a year of
+        receipts should not carry off the answer to "whose are these?".
+      - **One scrolling list** holding the dark total card, the category legend, the "ALL EXPENSES"
+        heading and the expense cards — see ExpenseAdapter.
+      - **The floating action button** for recording an expense.
 
-    There is deliberately only one scrolling list on this screen. The total and the breakdown are
-    rows inside the same RecyclerView as the expenses, not cards stacked above it, so everything
-    scrolls as one page while the expenses below still recycle — a spending history only ever grows,
-    and inflating every receipt at once inside a scroll view would get slower every month. (The
-    dashboard is built the other way round, for the opposite reason — see fragment_home.xml.)
+    **This layout serves two screens.** Reached from the bottom bar it is the Money tab. Reached from a
+    pet's detail page it is that animal's spending: the fragment hides the header and the chips, and
+    MainActivity shows the ordinary toolbar with its back arrow instead. See nav_graph.xml.
 
-    The picker sits *outside* that list rather than being another row in it, because it is a control
-    rather than content: scrolling a year of receipts should not carry away the thing that says
-    whose receipts these are.
+    **Why one RecyclerView for everything below the chips**, unlike the Places and Tasks tabs' scroll
+    views: those pages hold a bounded handful of items, but an expense list only ever grows. With the
+    card and legend as the first rows of the same list, the whole page scrolls together while the
+    expense cards below still recycle.
 
-    CoordinatorLayout is the root purely so the floating action button can float over the list and
-    so a Snackbar knows to lift clear of it rather than covering it.
+    **Why a CoordinatorLayout at the root:** the floating action button floats over the list, and a
+    Snackbar ("Kibble deleted · Undo") anchored to it lifts clear of the button instead of covering it.
 -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.expense.ExpensesFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Header, chips, then the list taking the rest of the height (height 0 + weight 1). -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <!-- The pet picker. Included with an id, which is what makes ViewBinding expose it as a
-             nested binding — see the equivalent note in fragment_checklist.xml. -->
+        <!-- The shared header, as a nested binding (`binding.header`). Hidden for a single pet. -->
         <include
-            android:id="@+id/petPicker"
-            layout="@layout/view_pet_picker"
-            android:layout_width="0dp"
+            android:id="@+id/header"
+            layout="@layout/view_tab_header" />
+
+        <!-- The pet filter: the same horizontally scrolling single-selection chip row as the Tasks
+             tab, built in code by ui/common/FilterChips.kt. The chosen chip is the app's strong
+             "selected" fill — near-black with yellow text in light mode — from PetCare.FilterChip. -->
+        <HorizontalScrollView
+            android:id="@+id/petChipScroll"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:visibility="visible" />
-
-        <!--
-            clipToPadding="false" with bottom padding is the standard pairing for a list under a
-            floating action button: the padding lets the last row scroll clear of the button, and
-            switching off clipping means rows are still drawn as they pass through that padding
-            rather than being cut off at its edge.
-
-            layout_height="0dp" with the top pinned under the picker and the bottom to the parent is
-            how ConstraintLayout expresses "stretch to fit the remaining space".
-        -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/expensesRecyclerView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
             android:clipToPadding="false"
             android:paddingStart="@dimen/screen_padding"
-            android:paddingTop="@dimen/spacing_md"
             android:paddingEnd="@dimen/screen_padding"
-            android:paddingBottom="@dimen/list_padding_bottom_fab"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/petPicker"
-            tools:listitem="@layout/item_expense" />
+            android:scrollbars="none">
 
-        <!-- Occupies the same region as the list; the fragment shows exactly one of the two. Its
-             wording is set in code, because "no expenses recorded" and "no pets to show" are
-             different situations that both leave this screen with nothing to draw. -->
-        <LinearLayout
-            android:id="@+id/emptyExpensesContainer"
-            style="@style/PetCare.EmptyState"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/expensesRecyclerView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/expensesRecyclerView"
-            tools:visibility="visible">
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/petChipGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true" />
 
-            <ImageView
-                android:id="@+id/emptyExpensesIcon"
-                style="@style/PetCare.EmptyStateIcon"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_empty_expenses" />
+        </HorizontalScrollView>
 
-            <TextView
-                android:id="@+id/emptyExpensesTitle"
-                style="@style/PetCare.EmptyStateTitle"
+        <!-- The list and the empty state share this slot; the fragment shows exactly one. A
+             FrameLayout because the two simply sit on top of each other in the same space. -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <!-- clipToPadding="false" with bottom padding is the standard pairing for a list under a
+                 floating action button: the last card can scroll clear of the button, and cards are
+                 still drawn as they pass through the padding rather than cut off at its edge. -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/expensesRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingStart="@dimen/screen_padding"
+                android:paddingTop="@dimen/spacing_sm"
+                android:paddingEnd="@dimen/screen_padding"
+                android:paddingBottom="@dimen/list_padding_bottom_fab"
+                tools:listitem="@layout/item_expense" />
+
+            <!-- The existing empty state: receipt icon, title and message — or, for an account with no
+                 pets, the pet placeholder and "No pets to show". Worded in code. -->
+            <LinearLayout
+                android:id="@+id/emptyExpensesContainer"
+                style="@style/PetCare.EmptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/expenses_empty_title" />
+                android:layout_gravity="center"
+                android:visibility="gone"
+                tools:visibility="visible">
 
-            <TextView
-                android:id="@+id/emptyExpensesMessage"
-                style="@style/PetCare.EmptyStateMessage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/expenses_empty_message" />
+                <ImageView
+                    android:id="@+id/emptyExpensesIcon"
+                    style="@style/PetCare.EmptyStateIcon"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_empty_expenses" />
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/emptyExpensesTitle"
+                    style="@style/PetCare.EmptyStateTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/expenses_empty_title" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+                <TextView
+                    android:id="@+id/emptyExpensesMessage"
+                    style="@style/PetCare.EmptyStateMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/expenses_empty_message" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addExpenseFab"
