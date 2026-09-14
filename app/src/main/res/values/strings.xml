@@ -18,11 +18,18 @@
          Each of these is used twice, and has to work in both places: as the label under a tab's
          icon, and as the app bar title for the screen that tab leads to. That is why they are
          single words — a longer phrase would be truncated in the bar even if it read well at the
-         top of the screen. -->
+         top of the screen.
+
+         They are stored in sentence case even though the bar shows them in capitals. The upper-case
+         is applied by the label's text appearance at display time (see TextAppearance.PetCare.
+         NavLabel in styles.xml), which keeps the same resource usable as a screen title, and keeps
+         the capitalisation right in languages where blanket upper-casing is wrong. -->
     <string name="nav_home">Home</string>
     <string name="nav_pets">Pets</string>
     <string name="nav_tasks">Tasks</string>
-    <string name="nav_expenses">Expenses</string>
+    <!-- "Money" rather than "Expenses": the screen reports totals and a breakdown as well as the
+         individual costs, and the shorter word leaves the four labels evenly weighted in the bar. -->
+    <string name="nav_money">Money</string>
 
     <!-- ======================== Top app bar overflow menu ========================
          The account actions. "Sign out" rather than "Log out" to match the sign-in screen's own
@@ -72,6 +79,74 @@
     <string name="home_pets_title">Your pets</string>
     <string name="home_today_title">Today\'s care</string>
     <string name="home_appointments_title">Upcoming appointments</string>
+
+    <!-- ====================== Dashboard header and care card ======================
+         The redesigned dashboard's own text. -->
+
+    <!-- The single letter in the app's monogram, top left of the dashboard. A string resource rather
+         than a literal so it can be transliterated along with the app's name. -->
+    <string name="home_monogram">p</string>
+
+    <!-- The theme toggle, which names the mode currently in use rather than the one a tap would
+         switch to — a control that reports its own state is misread far less often than one that
+         reports its effect. -->
+    <string name="home_theme_light">Light</string>
+    <string name="home_theme_dark">Dark</string>
+
+    <!-- The count beside the "Your pets" heading. Deliberately not a bare number: "2" alone on the
+         right of a heading could be a count of anything on the screen. -->
+    <plurals name="home_pets_in_care">
+        <item quantity="one">%1$d in care</item>
+        <item quantity="other">%1$d in care</item>
+    </plurals>
+
+    <!-- The care card's headline, reporting what is *left* rather than what is done: an owner opens
+         the app to find out what still needs doing. The zero case is a separate string because
+         "0 things left for today" states an absence where the point is that there is nothing to
+         do — which is good news and should read like it. -->
+    <plurals name="home_things_left">
+        <item quantity="one">%1$d thing left for today</item>
+        <item quantity="other">%1$d things left for today</item>
+    </plurals>
+    <string name="home_all_caught_up">All caught up for today</string>
+    <string name="home_nothing_scheduled">Nothing scheduled today</string>
+
+    <!-- The line under the care card's headline, naming the next task and the pet it belongs to.
+         %1$s is the task's title and %2$s the pet's name. -->
+    <string name="home_next_up">Next up: %1$s for %2$s</string>
+    <!-- Shown in its place once everything due today has been ticked off. -->
+    <string name="home_next_up_done">Every task is ticked off. Enjoy the quiet.</string>
+    <!-- And when no care was scheduled in the first place. -->
+    <string name="home_next_up_none">Add a care routine to see the day here.</string>
+
+    <!-- The label under the completed count in the middle of the progress ring — "OF 6". Upper-cased
+         by its style at display time, for the same reason as the navigation labels. %1$d is the
+         total number of tasks due today. -->
+    <string name="home_ring_of_total">of %1$d</string>
+
+    <!-- ============================== Quick actions ==============================
+         The three tiles at the foot of the dashboard. Verb-first, so each reads as the thing it does
+         rather than as the name of a screen. -->
+    <string name="home_action_add_task">Add task</string>
+    <string name="home_action_log_expense">Log expense</string>
+    <string name="home_action_add_pet">Add pet</string>
+
+    <!-- Joins a pet's age to its weight in the dark pill on a pet card, e.g. "2 yrs · 26 kg".
+         %1$s is the age and %2$s the weight. A separate string from the pet list's version because
+         this one has to stay short enough to sit on a photo beside the status pill. -->
+    <string name="home_pet_facts">%1$s · %2$s</string>
+
+    <!-- The abbreviated age used on a pet card, where the full "2 years old" would not fit beside
+         the weight. Plurals because which forms exist differs by language, even for abbreviations.
+         %1$d is the number of years or months. -->
+    <plurals name="home_pet_age_years_short">
+        <item quantity="one">%1$d yr</item>
+        <item quantity="other">%1$d yrs</item>
+    </plurals>
+    <plurals name="home_pet_age_months_short">
+        <item quantity="one">%1$d mo</item>
+        <item quantity="other">%1$d mo</item>
+    </plurals>
 
     <!-- Shown in place of the whole dashboard when the user has not added any pets yet. -->
     <string name="home_empty_title">No pets yet</string>
@@ -462,6 +537,27 @@
     <string name="cd_task_category">%1$s</string>
     <!-- The chevron on a card that opens another screen. -->
     <string name="cd_open_pet">Open this pet</string>
+
+    <!-- The dashboard header's controls.
+
+         The theme toggle's description says what a tap *does*, unlike its visible label, which names
+         the mode currently in use. A sighted user infers the action from a control that shows its
+         state; TalkBack announces the description in place of the label, so it has to carry both. -->
+    <string name="cd_switch_to_dark_theme">Switch to dark theme</string>
+    <string name="cd_switch_to_light_theme">Switch to light theme</string>
+    <!-- The circular count badge, which opens the account screen. %1$d is the number of pets. -->
+    <plurals name="cd_pets_badge">
+        <item quantity="one">%1$d pet in care. Open your account.</item>
+        <item quantity="other">%1$d pets in care. Open your account.</item>
+    </plurals>
+    <!-- The progress ring. Announced as one sentence rather than leaving TalkBack to read the count
+         and the "of 6" beneath it as two unrelated numbers. %1$d is the completed count and %2$d the
+         total due today; the plural form is chosen by the *total*, so a day with a single task does
+         not read as "1 of 1 tasks". -->
+    <plurals name="cd_today_progress">
+        <item quantity="one">%1$d of %2$d task done today</item>
+        <item quantity="other">%1$d of %2$d tasks done today</item>
+    </plurals>
 
     <!-- ============================ Spending categories ============================
          Display names for the ExpenseCategory enum. Kept separate from the care categories above

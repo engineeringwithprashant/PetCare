@@ -30,7 +30,10 @@
     <!--
         AppBarLayout provides the elevation and surface treatment Material 3 expects behind a top
         app bar. MainActivity hides the whole thing on the sign-in screens, which carry their own
-        large headings and need no navigation chrome.
+        large headings and need no navigation chrome — and on the dashboard, which supplies its own
+        header with the monogram, theme toggle and pet count in it. See MainActivity.updateChromeFor,
+        and the note at the top of fragment_home.xml on why that header belongs to the fragment
+        rather than to this shared toolbar.
 
         Its background is the app's cream page colour rather than a white surface, and its elevation
         is zero. That is what makes the bar read as part of the window's frame — the content below
@@ -84,24 +87,28 @@
         — so tapping a tab navigates, and arriving anywhere highlights the right tab, in both
         directions with no code.
 
-        Everything about how it looks comes from PetCare.BottomNav, wired in as the theme's default
-        bottomNavigationStyle, which is why no style is named here.
+        Everything about how it *looks* comes from PetCare.BottomNav, wired in as the theme's default
+        bottomNavigationStyle, which is why no style is named here: a dark rounded capsule, in light
+        mode as well as dark.
 
-        A thin divider above it separates the bar from whatever is scrolling behind it. The bar has
-        no elevation of its own — a shadow pointing *upwards* from the bottom of the screen is the
-        one place Material's depth metaphor reads as wrong — so without the line, a list scrolled to
-        the bottom would appear to run straight into the tabs.
+        **Margins, not an overlay.** The capsule looks detached from the page, but the view still
+        takes its own row in this LinearLayout and reserves the space it occupies — the margins
+        simply inset the bar within that row. Genuinely floating it over the content would leave the
+        last row of every list in the app sitting underneath it and permanently unreachable, and
+        fixing that would mean adding bottom padding to every scrolling screen.
+
+        The hairline divider that used to sit above the bar is gone with the redesign. It existed to
+        stop a list scrolled to the bottom appearing to run into the tabs; now that the bar is inset
+        on all sides with the page visible around it, there is nothing left for a line to separate.
     -->
-    <View
-        android:id="@+id/bottomNavDivider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/colorOutlineVariant" />
-
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/bottom_nav_height"
+        android:layout_marginStart="@dimen/bottom_nav_margin_horizontal"
+        android:layout_marginTop="@dimen/bottom_nav_margin_vertical"
+        android:layout_marginEnd="@dimen/bottom_nav_margin_horizontal"
+        android:layout_marginBottom="@dimen/bottom_nav_margin_vertical"
         app:menu="@menu/bottom_nav_menu" />
 
 </LinearLayout>

@@ -17,33 +17,41 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
 import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.databinding.FragmentHomeBinding
+import com.prash.petcare.ui.common.ThemePreference
 import com.prash.petcare.ui.pet.AddEditPetFragment
 import com.prash.petcare.ui.pet.PetDetailFragment
 import com.prash.petcare.ui.pet.PetViewModel
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
 
 /**
  * The dashboard: the first of the four bottom-navigation tabs, and the screen the app opens on once
  * signed in.
  *
- * It answers four questions in the order they are asked — who am I and is my data safe, who are my
- * animals and how are they today, what do I have to do now, and what is coming.
+ * It answers four questions in the order they are asked — whose app is this and what mode am I in,
+ * how is today going, who are my animals, and what might I want to do next.
  *
  * In MVVM this is the **View**. It renders whatever [HomeViewModel] publishes and forwards taps
  * back — it performs no queries and calculates nothing itself, which is what allows it to be
  * destroyed and rebuilt on rotation without losing or duplicating work. Even the day's arithmetic
- * — which repeating tasks land on today — happens in the ViewModel, where it can be tested without
- * an emulator.
+ * — which repeating tasks land on today, and which of them is next — happens in the ViewModel, where
+ * it can be tested without an emulator.
  *
  * The pets and the care come from Room, exactly as they did before the app gained a Firestore sync
  * layer. This screen shows how that sync is getting on but never reads anything from it: the
  * database remains the only thing the UI reads, and a pet pulled down from Firestore reaches these
  * cards by being written into Room like any other row.
+ *
+ * **The one piece of state that is not the ViewModel's.** The header's light/dark toggle is handled
+ * here rather than through [HomeViewModel], because the display mode is neither this account's data
+ * nor this screen's — it belongs to the installation, is read before any ViewModel exists, and is
+ * applied by AppCompat recreating the Activity. See [com.prash.petcare.ui.common.ThemePreference].
  */
 class HomeFragment : Fragment() {
 
@@ -71,22 +79,6 @@ class HomeFragment : Fragment() {
     }
 
     /**
-     * The adapters for today's care and the appointments card.
-     *
-     * Created once and kept, rather than being rebuilt on each update: a new adapter would discard
-     * the previous list, so DiffUtil would have nothing to compare against and every row would be
-     * redrawn instead of only the ones that changed.
-     *
-     * Neither depends on the view, so both can be fields on the fragment. The pet adapter below
-     * cannot, and the note there explains why.
-     */
-    private val todayAdapter = TodayTaskAdapter(
-        onTaskChecked = { taskId, isDone -> viewModel.setTaskDone(taskId, isDone) }
-    )
-
-    private val appointmentAdapter = AppointmentAdapter()
-
-    /**
      * The pet-card adapter, rebuilt with each view rather than held for the fragment's whole life.
      *
      * It captures `viewLifecycleOwner.lifecycleScope` so its photo loads are cancelled when the
@@ -111,44 +103,76 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setUpRecyclerViews()
+        setUpPetList()
         setUpClickListeners()
+        renderThemeToggle()
         observeViewModel()
     }
 
     /**
-     * Prepares the three lists.
+     * Prepares the pet list.
      *
-     * None of them calls `setHasFixedSize(true)`, and none of them should: each sits inside the
-     * dashboard's NestedScrollView with wrap_content height, so every one must be allowed to
-     * re-measure as its contents change. Telling a list its size is fixed when the list is what
-     * decides that size leaves rows clipped or floating in blank space.
+     * It does not call `setHasFixedSize(true)`, and should not: the list sits inside the dashboard's
+     * NestedScrollView with wrap_content height, so it must be allowed to re-measure as its contents
+     * change. Telling a list its size is fixed when the list is what decides that size leaves cards
+     * clipped or floating in blank space.
      */
-    private fun setUpRecyclerViews() {
+    private fun setUpPetList() {
         petAdapter = PetSummaryAdapter(
             photoScope = viewLifecycleOwner.lifecycleScope,
             onPetClick = { petId -> openPetDetail(petId) }
         )
 
         binding.petsRecyclerView.apply {
-            // The layout manager decides how rows are positioned; a vertical linear list here.
+            // The layout manager decides how cards are positioned; a vertical linear list here. The
+            // two card sizes are the adapter's business, not the layout manager's — see
+            // PetSummaryAdapter.getItemViewType.
             layoutManager = LinearLayoutManager(requireContext())
             adapter = petAdapter
-        }
-
-        binding.todayRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = todayAdapter
-        }
-
-        binding.appointmentsRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = appointmentAdapter
         }
     }
 
     private fun setUpClickListeners() {
         binding.addFirstPetButton.setOnClickListener { openNewPetForm() }
+        binding.actionAddPet.setOnClickListener { openNewPetForm() }
+
+        // The two tabs the remaining quick actions lead to. See openTab for why they navigate by
+        // destination id rather than through an action in the graph.
+        binding.actionAddTask.setOnClickListener { openTab(R.id.checklistFragment) }
+        binding.actionLogExpense.setOnClickListener { openTab(R.id.expensesFragment) }
+
+        binding.petCountBadge.setOnClickListener { openProfile() }
+
+        // Switching the mode recreates this Activity, so there is nothing to update here afterwards
+        // — the rebuilt screen reads the new mode in renderThemeToggle and draws itself accordingly.
+        binding.themeToggle.setOnClickListener { ThemePreference.toggle(requireContext()) }
+    }
+
+    /**
+     * Points the theme toggle at whatever mode is currently in use.
+     *
+     * The control reports the *present* mode rather than the one a tap would bring about, which is
+     * how a light/dark switch is nearly always read. Its content description says the opposite,
+     * because TalkBack announces the description in place of the label and so has to carry the
+     * action instead of the state.
+     *
+     * Called once per view creation and never again: nothing can change the mode while this screen
+     * is on top without the Activity being recreated, which brings a new view through here anyway.
+     */
+    private fun renderThemeToggle() {
+        val isDark = ThemePreference.isNightModeActive(requireContext())
+
+        binding.themeToggleIcon.setImageResource(
+            if (isDark) R.drawable.ic_theme_dark else R.drawable.ic_theme_light
+        )
+
+        binding.themeToggleLabel.setText(
+            if (isDark) R.string.home_theme_dark else R.string.home_theme_light
+        )
+
+        binding.themeToggle.contentDescription = getString(
+            if (isDark) R.string.cd_switch_to_light_theme else R.string.cd_switch_to_dark_theme
+        )
     }
 
     /** Opens an empty pet form. [PetViewModel.NO_PET_ID] is what tells it to create rather than edit. */
@@ -174,6 +198,52 @@ class HomeFragment : Fragment() {
         findNavController().navigate(
             R.id.action_home_to_pet_detail,
             bundleOf(PetDetailFragment.ARG_PET_ID to petId)
+        )
+    }
+
+    /**
+     * Opens the account screen.
+     *
+     * Reached from the pet-count badge in the header, because the dashboard hides the shared toolbar
+     * that carries the account actions everywhere else in the app — see
+     * [com.prash.petcare.MainActivity.updateChromeFor]. Signing out lives on the profile screen
+     * itself, so nothing is unreachable from here.
+     */
+    private fun openProfile() {
+        findNavController().navigate(R.id.profileFragment)
+    }
+
+    /**
+     * Switches to one of the other bottom-navigation tabs.
+     *
+     * **Why the quick actions go to a tab rather than straight to a form.** Neither a task nor an
+     * expense can be created from nothing: a care task belongs to a routine, and an expense belongs
+     * to a pet, so both forms require an argument the dashboard has no way to choose on the user's
+     * behalf. Sending them to the tab that owns each — where a pet is picked and the form is one tap
+     * further on — is the honest version of the shortcut. Guessing a pet here would be the kind of
+     * convenience that files things under the wrong animal.
+     *
+     * **Why it navigates by destination id and not through an action.** The four tabs are peers
+     * rather than steps in a journey, so the navigation graph deliberately declares no actions
+     * between them — see the note at the top of nav_graph.xml. These options are the same ones
+     * NavigationUI applies when a tab is tapped in the bar, which is what makes arriving this way
+     * indistinguishable from arriving that way: the back stack does not grow a rung per switch, the
+     * tab that was left keeps its scroll position, and the bottom bar moves its highlight by itself
+     * because it is wired to the same NavController.
+     */
+    private fun openTab(destinationId: Int) {
+        findNavController().navigate(
+            destinationId,
+            null,
+            navOptions {
+                // Clear back to the graph's start, saving the state of what is popped, so switching
+                // tabs never stacks screens on top of one another.
+                popUpTo(findNavController().graph.startDestinationId) { saveState = true }
+                // Do not add a second copy of a destination already on top.
+                launchSingleTop = true
+                // Restore that tab as the user left it, if they have been there before.
+                restoreState = true
+            }
         )
     }
 
@@ -212,22 +282,12 @@ class HomeFragment : Fragment() {
             getString(R.string.home_welcome_generic)
         }
 
+        renderPetCount(state)
+        renderTodayCard(state)
+
         // submitList hands each whole new list to DiffUtil, which works out what changed and
-        // animates only those rows.
+        // animates only those cards.
         petAdapter?.submitList(state.pets)
-        todayAdapter.submitList(state.todayTasks)
-        appointmentAdapter.submitList(state.appointments)
-
-        binding.todayProgressText.text = progressText(state)
-
-        // Within each card, the list and its "nothing here" line occupy the same slot, so exactly
-        // one of the two is ever shown. Both are set explicitly rather than only the one that
-        // changed, because this runs on every emission and the previous state may have been either.
-        binding.todayRecyclerView.isVisible = state.todayTasks.isNotEmpty()
-        binding.todayEmptyText.isVisible = state.todayTasks.isEmpty()
-
-        binding.appointmentsRecyclerView.isVisible = state.appointments.isNotEmpty()
-        binding.appointmentsEmptyText.isVisible = state.appointments.isEmpty()
 
         // The whole dashboard and the empty state swap as a unit. Both stay hidden during the
         // initial load, which stops "No pets yet" flashing up before the first query returns.
@@ -235,22 +295,113 @@ class HomeFragment : Fragment() {
         binding.emptyStateContainer.isVisible = state.hasNoPets
     }
 
-    /** Builds the "2 of 5 done" line beside today's heading, or nothing when no care is due. */
-    private fun progressText(state: HomeUiState): String =
-        if (state.tasksDueToday == 0) {
-            // Empty rather than "0 of 0 done": the card's own empty line already says there is
-            // nothing due, and a count of zero beside it would say it twice.
-            ""
-        } else {
-            // getQuantityString picks the right plural form for the device's language. The first
-            // argument selects the form; the two after it fill the placeholders.
-            resources.getQuantityString(
-                R.plurals.home_tasks_summary,
-                state.tasksDueToday,
-                state.tasksDoneToday,
-                state.tasksDueToday
-            )
+    /**
+     * Fills the header badge and the count beside the "Your pets" heading.
+     *
+     * The badge shows the bare number because a circle that size has room for nothing else; the
+     * heading's count spells out what it is counting, since a lone "2" on the right of a heading
+     * could be a count of anything on the screen. The badge's content description carries the same
+     * words as the heading, so a screen reader is not left announcing a digit.
+     */
+    private fun renderPetCount(state: HomeUiState) {
+        val count = state.pets.size
+
+        binding.petCountBadge.text = formatCount(count)
+        binding.petCountBadge.contentDescription =
+            resources.getQuantityString(R.plurals.cd_pets_badge, count, count)
+
+        binding.petsInCareText.text =
+            resources.getQuantityString(R.plurals.home_pets_in_care, count, count)
+    }
+
+    /**
+     * Draws the "today's care" card: the ring, the count inside it and the two lines beside it.
+     *
+     * The ring's maximum is set from the day's total rather than being left at the default hundred,
+     * so the progress value can be the completed count itself. Doing the percentage arithmetic here
+     * instead would introduce rounding that makes four of five tasks draw at 80% of a circle whose
+     * own track is divided into fifths — a mismatch of a degree or two that is visible at this size.
+     *
+     * A day with nothing scheduled would give the indicator a maximum of zero, which it cannot
+     * divide by, so the maximum is floored at one. The progress is zero in that case either way, so
+     * the ring simply shows an empty track.
+     */
+    private fun renderTodayCard(state: HomeUiState) {
+        binding.todayProgressRing.max = state.tasksDueToday.coerceAtLeast(1)
+        // setProgressCompat rather than setProgress: it animates from the previous value, so ticking
+        // a task off on the Tasks tab and coming back shows the ring moving rather than jumping.
+        binding.todayProgressRing.setProgressCompat(state.tasksDoneToday, true)
+
+        binding.todayDoneCount.text = formatCount(state.tasksDoneToday)
+        binding.todayTotalCount.text =
+            getString(R.string.home_ring_of_total, state.tasksDueToday)
+
+        // The ring and its two numbers are announced as one sentence. Without this, TalkBack would
+        // read "1" and "of 6" as two unrelated fragments with the progress bar's own percentage
+        // between them. A plural on the total, so a single task does not read as "1 of 1 tasks".
+        binding.todayProgressLabels.contentDescription = resources.getQuantityString(
+            R.plurals.cd_today_progress,
+            state.tasksDueToday,
+            state.tasksDoneToday,
+            state.tasksDueToday
+        )
+
+        binding.todayHeadlineText.text = headlineText(state)
+        binding.todayNextUpText.text = nextUpText(state)
+    }
+
+    /**
+     * Renders a bare number for display.
+     *
+     * The two places on this screen that show a digit on its own — the header badge and the middle
+     * of the progress ring — have no sentence around them to carry a placeholder, so they cannot use
+     * a string resource. `toString()` would nonetheless be wrong: it always produces Western Arabic
+     * digits, where a device set to, say, Bengali or Persian expects the number in its own numerals.
+     * [NumberFormat] asks the current locale, which is the same thing `getString` does for every
+     * other number in the app.
+     */
+    private fun formatCount(value: Int): String = NumberFormat.getInstance().format(value)
+
+    /**
+     * The card's headline.
+     *
+     * Three different sentences for what is arithmetically the same figure, because a count of zero
+     * arrives two ways and they mean opposite things to the reader: a day whose care is finished is
+     * an achievement, and a day with no care planned is simply quiet. "0 things left for today"
+     * would be a true statement that flattens both into an absence.
+     */
+    private fun headlineText(state: HomeUiState): String = when {
+        state.tasksDueToday == 0 -> getString(R.string.home_nothing_scheduled)
+
+        state.tasksLeftToday == 0 -> getString(R.string.home_all_caught_up)
+
+        // getQuantityString picks the right plural form for the device's language. The first
+        // argument selects the form; the second fills the placeholder.
+        else -> resources.getQuantityString(
+            R.plurals.home_things_left,
+            state.tasksLeftToday,
+            state.tasksLeftToday
+        )
+    }
+
+    /**
+     * The supporting line under the headline, naming what is next.
+     *
+     * Takes the same three cases as the headline above and says something different in each, rather
+     * than disappearing when there is no task to name — the line holds the card's height steady, and
+     * a card that changes shape as the last task is ticked off draws the eye to the wrong thing.
+     */
+    private fun nextUpText(state: HomeUiState): String {
+        val next = state.nextUpTask
+
+        return when {
+            next != null -> getString(R.string.home_next_up, next.task.title, next.petName)
+
+            state.tasksDueToday > 0 -> getString(R.string.home_next_up_done)
+
+            else -> getString(R.string.home_next_up_none)
         }
+    }
 
     /**
      * Shows how the backup is getting on, or nothing at all when there is nothing to say.
@@ -287,7 +438,7 @@ class HomeFragment : Fragment() {
         // a bright red would overstate it, since nothing has gone wrong and nothing is lost.
         //
         // colorAccentText rather than colorPrimary: the accent yellow is a fill colour and is far
-        // too light to read as text on the cream page. See attrs.xml.
+        // too light to read as text on the light page. See attrs.xml.
         val colourAttr = if (status is SyncStatus.Pending) {
             R.attr.colorAccentText
         } else {
@@ -327,12 +478,10 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // The adapters outlive the view they were drawing into, so they are detached here. Without
-        // this a RecyclerView keeps a reference to its adapter and the adapter to its holders, and
-        // the whole destroyed hierarchy is held alive behind them.
+        // The adapter outlives the view it was drawing into, so it is detached here. Without this a
+        // RecyclerView keeps a reference to its adapter and the adapter to its holders, and the
+        // whole destroyed hierarchy is held alive behind them.
         binding.petsRecyclerView.adapter = null
-        binding.todayRecyclerView.adapter = null
-        binding.appointmentsRecyclerView.adapter = null
 
         // Released rather than kept, because it holds this view's lifecycle scope — see the note on
         // the property.

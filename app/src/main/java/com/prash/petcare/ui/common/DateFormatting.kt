@@ -46,14 +46,57 @@ fun formatStoredDate(millis: Long): String {
  * change the answer.
  */
 fun formatAge(context: Context, dateOfBirthMillis: Long): String {
+    val months = ageInMonths(dateOfBirthMillis)
+    val years = months / MONTHS_PER_YEAR
+
+    // getQuantityString picks the right plural form for the device's language. The first argument
+    // selects the form; the second fills the placeholder.
+    return if (years >= 1) {
+        context.resources.getQuantityString(R.plurals.pet_detail_age_years, years, years)
+    } else {
+        context.resources.getQuantityString(R.plurals.pet_detail_age_months, months, months)
+    }
+}
+
+/**
+ * The same age, abbreviated: "3 yrs", "5 mo".
+ *
+ * For the dashboard's pet cards, where the age shares one small capsule with the pet's weight and
+ * the full "3 years old" would push the weight off the end of it. Everywhere the space exists,
+ * [formatAge] is still the right function — an abbreviation is harder to read and worth using only
+ * where it buys something.
+ *
+ * Both formatters derive their number from [ageInMonths], so the two can never disagree about how
+ * old an animal is — which they would if this one repeated the calendar arithmetic and only one of
+ * the copies were later corrected.
+ */
+fun formatAgeShort(context: Context, dateOfBirthMillis: Long): String {
+    val months = ageInMonths(dateOfBirthMillis)
+    val years = months / MONTHS_PER_YEAR
+
+    return if (years >= 1) {
+        context.resources.getQuantityString(R.plurals.home_pet_age_years_short, years, years)
+    } else {
+        context.resources.getQuantityString(R.plurals.home_pet_age_months_short, months, months)
+    }
+}
+
+/**
+ * A pet's age as a whole number of completed months.
+ *
+ * The shared calculation behind both age formatters above. It is expressed in months rather than in
+ * years-and-months because that is the form both callers need, and because working in months
+ * throughout avoids the classic off-by-one where a pet born in December is called a year old in the
+ * following January simply because the year number changed.
+ *
+ * See [formatAge] for why the calendars are fixed to UTC.
+ */
+private fun ageInMonths(dateOfBirthMillis: Long): Int {
     val utc = TimeZone.getTimeZone("UTC")
 
     val born = Calendar.getInstance(utc).apply { timeInMillis = dateOfBirthMillis }
     val now = Calendar.getInstance(utc)
 
-    // Total months first, then split. Working in months throughout avoids the classic off-by-one
-    // where a pet born in December is called a year old in the following January simply because the
-    // year number changed.
     var months = (now.get(Calendar.YEAR) - born.get(Calendar.YEAR)) * MONTHS_PER_YEAR +
         (now.get(Calendar.MONTH) - born.get(Calendar.MONTH))
 
@@ -66,17 +109,7 @@ fun formatAge(context: Context, dateOfBirthMillis: Long): String {
     // A date in the future means the record is wrong rather than that the pet is unborn. Clamping
     // to zero reports "0 months old" instead of a negative age, which would read as nonsense and
     // would also pick the wrong plural form.
-    months = months.coerceAtLeast(0)
-
-    val years = months / MONTHS_PER_YEAR
-
-    // getQuantityString picks the right plural form for the device's language. The first argument
-    // selects the form; the second fills the placeholder.
-    return if (years >= 1) {
-        context.resources.getQuantityString(R.plurals.pet_detail_age_years, years, years)
-    } else {
-        context.resources.getQuantityString(R.plurals.pet_detail_age_months, months, months)
-    }
+    return months.coerceAtLeast(0)
 }
 
 /**

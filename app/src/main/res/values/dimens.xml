@@ -102,6 +102,60 @@
     <!-- Gap between the edge of a list row and the icon revealed behind it while swiping. -->
     <dimen name="checklist_swipe_icon_margin">24dp</dimen>
 
+    <!-- ============================== Home dashboard ==============================
+         Sizes belonging to the redesigned dashboard. They are gathered here rather than typed into
+         fragment_home.xml for the usual reason — the hero card's height and the row card's photo
+         have to stay in proportion to one another, and a number in a layout is a number nobody
+         revisits. -->
+
+    <!-- The rounded square holding the app's "p" monogram in the dashboard header. -->
+    <dimen name="monogram_size">32dp</dimen>
+    <dimen name="monogram_corner_radius">10dp</dimen>
+
+    <!-- The circular badge on the right of the header reporting how many pets are in care, and the
+         theme-toggle pill beside it. Both are sized to the same height so the header's right-hand
+         cluster sits on one line. -->
+    <dimen name="header_control_height">32dp</dimen>
+    <dimen name="header_badge_size">32dp</dimen>
+
+    <!-- The progress ring on the "today's care" card.
+         The ring is drawn *inside* this box, so the thickness eats into it: a 96dp ring 8dp thick
+         leaves an 80dp hole, which is what the completed count has to fit into. -->
+    <dimen name="care_ring_size">92dp</dimen>
+    <dimen name="care_ring_thickness">8dp</dimen>
+    <!-- Exactly half the thickness, which is the largest radius the progress indicator accepts and
+         the value that rounds each end of the band into a semicircle. -->
+    <dimen name="care_ring_corner_radius">4dp</dimen>
+
+    <!-- The large card the first pet gets. Tall enough for a photograph to be the subject rather
+         than a thumbnail, short enough that the second pet's card still shows below it on a phone —
+         which is what tells the user the list continues. -->
+    <dimen name="pet_card_hero_height">230dp</dimen>
+    <!-- The corner radius shared by the hero card, the row cards and the care card. Larger than the
+         app's usual card radius: these are the page's subject, and the softer corner is what
+         separates them from an ordinary list row elsewhere in the app. -->
+    <dimen name="pet_card_corner_radius">24dp</dimen>
+    <!-- How far up the hero card the scrim reaches. Roughly the lower two-thirds — enough to carry
+         the name and the pills, little enough that the photo is still the thing being looked at. -->
+    <dimen name="pet_card_scrim_height">150dp</dimen>
+    <!-- The square photo on a follow-on pet's row card, and that card's height. The photo is inset
+         from the card edge on all four sides, so the card is the photo plus twice the inset. -->
+    <dimen name="pet_row_photo_size">76dp</dimen>
+
+    <!-- The quick-action cards along the bottom of the dashboard: an outlined tile with a circled
+         "+" above its label. -->
+    <dimen name="quick_action_height">86dp</dimen>
+    <dimen name="quick_action_icon_size">26dp</dimen>
+    <dimen name="quick_action_stroke_width">1dp</dimen>
+
+    <!-- The floating bottom navigation bar. The bar keeps its own space in the Activity's layout
+         rather than overlapping the content — see activity_main.xml — and these are the margins that
+         inset the dark capsule within that space. -->
+    <dimen name="bottom_nav_margin_horizontal">12dp</dimen>
+    <dimen name="bottom_nav_margin_vertical">8dp</dimen>
+    <dimen name="bottom_nav_corner_radius">28dp</dimen>
+    <dimen name="bottom_nav_height">64dp</dimen>
+
     <!-- ============================ Spending breakdown ============================
          The bar showing one category's share of a pet's total spending. -->
     <!-- Thicker than the default progress track: this is being read as a bar chart rather than

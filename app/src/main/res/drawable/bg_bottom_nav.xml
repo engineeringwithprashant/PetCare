@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The dark capsule the bottom navigation bar is drawn in.
+
+    Dark in light mode as well as dark mode — see the bottom-navigation note in colors.xml for why
+    the app's chrome is deliberately one treatment rather than two.
+
+    The radius is a little under half the bar's height, which rounds the ends hard without quite
+    turning the bar into a lozenge; a full capsule leaves the outermost tab's ripple visibly clipped
+    at each end.
+
+    The bar still *reserves* its space in activity_main.xml rather than floating over the content —
+    only its margins make it look detached. That distinction matters: a bar genuinely overlapping the
+    content would leave the last row of every list in the app permanently unreachable.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@color/nav_bar_ground" />
+
+    <corners android:radius="@dimen/bottom_nav_corner_radius" />
+
+</shape>

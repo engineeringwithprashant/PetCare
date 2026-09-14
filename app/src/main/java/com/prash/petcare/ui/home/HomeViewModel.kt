@@ -104,6 +104,23 @@ data class HomeUiState(
 
     /** How many fall due today in total, across every pet. */
     val tasksDueToday: Int get() = todayTasks.size
+
+    /** How many are still outstanding — the figure the dashboard's headline reports. */
+    val tasksLeftToday: Int get() = tasksDueToday - tasksDoneToday
+
+    /**
+     * The next piece of care still to be done today, or null when there is none left.
+     *
+     * "Next" is simply the first one not yet ticked off, because [todayTasks] is already ordered by
+     * time of day — see how that list is built below. Deriving it here rather than in the fragment
+     * keeps the screen free of even this much logic, and means the rule lives beside the sort that
+     * makes it true: change the ordering and this follows automatically, where a copy of the same
+     * search in the view would quietly start naming the wrong task.
+     *
+     * Null covers two different days — one where everything is done, and one where nothing was
+     * scheduled — which the fragment tells apart by looking at [tasksDueToday].
+     */
+    val nextUpTask: TodayTask? get() = todayTasks.firstOrNull { !it.isDoneToday }
 }
 
 /**

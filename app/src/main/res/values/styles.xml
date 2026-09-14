@@ -44,6 +44,22 @@
     </style>
 
     <!--
+        The softest corner in the app, for the dashboard's three subject cards: today's care, and the
+        two sizes of pet card.
+
+        It exists as a shape appearance rather than as a bare `cardCornerRadius` on each of those
+        layouts, and that is not belt and braces. Every MaterialCardView in the app picks up
+        PetCare.Card from the theme by default, and that style names a shapeAppearance of its own —
+        so a card setting only cardCornerRadius is asking two attributes for a different answer and
+        getting whichever the component happens to resolve last. An **overlay** is applied on top of
+        whatever shape the style supplied, which settles it.
+    -->
+    <style name="ShapeAppearance.PetCare.XLarge" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/pet_card_corner_radius</item>
+    </style>
+
+    <!--
         A circle, used to clip pet photos on the dashboard cards and the picker chips.
 
         The corner size is given as a *percentage* rather than in dp, which is what makes this one
@@ -110,6 +126,36 @@
     <style name="PetCare.SectionHeader" parent="">
         <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+
+    <!--
+        The quieter kind of section heading: small, upper-case and widely letter-spaced — "YOUR
+        PETS", with a count on the far right of the same line.
+
+        Used where the heading's job is to *label* what follows rather than to introduce it. At this
+        size the words carry almost no weight of their own, which is the point: the pet cards below
+        are the subject, and a full-sized heading above them would compete. The letter-spacing is
+        what keeps it legible once it is this small and capitalised — set solid, upper-case text at
+        11sp reads as a grey smear.
+
+        The same treatment as PetCare.DetailLabel further down, and deliberately so: both are saying
+        "here is the name of the thing you are about to read".
+    -->
+    <style name="PetCare.SectionLabel" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.14</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- The dashboard's largest statement — "5 things left for today" — and the pet's name across a
+         card photo. Bold and a step up from a section header, because on the redesigned dashboard
+         these two lines are what the screen is *for*. The colour is left to the layout: one of them
+         sits on a card and the other on a photograph. -->
+    <style name="PetCare.Headline" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceHeadlineSmall</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <!-- A heading *inside* a card. One step quieter than a section header, because the card's own
@@ -186,6 +232,51 @@
         <item name="android:textColor">?attr/colorOnPillPeach</item>
     </style>
 
+    <!-- ======================== Pills on a dashboard pet card ========================
+         The two pills written across a pet card's photo. They break from the pastel family above
+         for a reason that comes up repeatedly in this screen: a pastel wash is designed to sit on a
+         white card, and these sit on a photograph. Neither its ground nor its text colour can be
+         allowed to follow the theme, or the pills would become unreadable in one mode or the other —
+         see the pet-card note in colors.xml.
+
+         They also say two different kinds of thing, and are coloured to match: the accent pill
+         carries the pet's *day*, which is the reason to look at the card at all, and the dark pill
+         carries facts that are merely true. -->
+
+    <!-- The accent pill: "Nothing due today", "3 left today". The one piece of yellow on the card,
+         so the eye finds the pet's status before anything else written on it. -->
+    <style name="PetCare.Pill.Accent" parent="PetCare.Pill">
+        <item name="android:background">@drawable/bg_pill</item>
+        <item name="android:backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- The dark pill: "2 yrs · 26 kg". Translucent, so the photograph shows through it — the chip
+         supplies its own shape and colour, so no tint is applied over it. -->
+    <style name="PetCare.Pill.OnPhoto" parent="PetCare.Pill">
+        <item name="android:background">@drawable/bg_pet_card_chip</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:textColor">@color/on_pet_card</item>
+    </style>
+
+    <!-- The species chip in a pet card's top corner: "CAT", "DOG". Upper-case and letter-spaced so
+         it reads as a category marker rather than as a word somebody wrote on the photo, and small
+         enough to stay out of the way of the picture. -->
+    <style name="PetCare.SpeciesChip" parent="">
+        <item name="android:background">@drawable/bg_pet_card_chip</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textColor">@color/on_pet_card</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:paddingStart">@dimen/spacing_sm</item>
+        <item name="android:paddingEnd">@dimen/spacing_sm</item>
+        <item name="android:paddingTop">@dimen/spacing_xs</item>
+        <item name="android:paddingBottom">@dimen/spacing_xs</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
     <!-- ============================= Category icon badge =============================
          The tinted circle a care-category icon sits in on a dashboard task row. The circle is what
          turns a 20dp glyph into something with enough visual weight to anchor the row's left edge,
@@ -259,28 +350,115 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <!-- ============================== Quick actions ==============================
+         The three tiles along the bottom of the dashboard — "Add task", "Log expense", "Add pet".
+         A circled "+" above a short label, in an outlined tile.
+
+         A column rather than a row inside each tile, and a deliberately generous height: three
+         actions side by side on a phone leave each about a third of the screen wide, which is not
+         enough for an icon and a label on one line without the label truncating. -->
+
+    <style name="PetCare.QuickAction" parent="">
+        <item name="android:background">@drawable/bg_quick_action</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:minHeight">@dimen/quick_action_height</item>
+        <item name="android:paddingTop">@dimen/spacing_md</item>
+        <item name="android:paddingBottom">@dimen/spacing_md</item>
+    </style>
+
+    <!-- The circled "+". Padding inside the circle is what keeps the glyph from filling it edge to
+         edge, which would read as a solid blob at this size. -->
+    <style name="PetCare.QuickAction.Icon" parent="">
+        <item name="android:layout_width">@dimen/quick_action_icon_size</item>
+        <item name="android:layout_height">@dimen/quick_action_icon_size</item>
+        <item name="android:background">@drawable/bg_quick_action_icon</item>
+        <item name="android:padding">6dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="tint">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="PetCare.QuickAction.Label" parent="">
+        <item name="android:layout_marginTop">@dimen/spacing_sm</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- ============================ Today's care ring ============================
+         The circular progress ring on the dashboard's care card, showing how much of today has been
+         ticked off.
+
+         A determinate CircularProgressIndicator rather than a custom View: Material already draws a
+         rounded-cap ring with a track behind it, and it animates between values, which is exactly
+         what this needs and none of which is worth writing by hand.
+
+         The thickness is well above Material's default. At the default the ring reads as a loading
+         spinner that has got stuck; thick enough to be a gauge, it reads as a measurement. -->
+    <style name="PetCare.CareRing" parent="Widget.Material3.CircularProgressIndicator">
+        <item name="indicatorSize">@dimen/care_ring_size</item>
+        <item name="trackThickness">@dimen/care_ring_thickness</item>
+        <item name="indicatorColor">?attr/colorPrimary</item>
+        <item name="trackColor">?attr/colorSurfaceVariant</item>
+        <!-- Rounded ends, so a part-finished day reads as a band rather than as a cut segment.
+             Capped at half the thickness, which is the most the component accepts — at exactly half
+             the two ends are semicircles and the band is a capsule. -->
+        <item name="trackCornerRadius">@dimen/care_ring_corner_radius</item>
+    </style>
+
     <!-- =========================== Bottom navigation bar ===========================
          Wired into the theme as the default bottomNavigationStyle, so activity_main.xml declares
          the view and inherits all of this.
 
-         The bar sits on the app's cream page colour rather than on a white surface, so it reads as
-         part of the window's frame rather than as another card floating at the bottom. The selected
-         tab is marked by the yellow accent pill Material 3 draws behind the active icon — which is
-         the one place in the app's chrome the accent appears, so "where am I?" is answered by the
-         same colour that answers "what do I press?". -->
+         The bar is a dark rounded capsule in *both* themes — see the bottom-navigation note in
+         colors.xml for why the app's chrome is one treatment rather than two, and bg_bottom_nav.xml
+         for the shape itself.
+
+         The selected tab is marked by the accent pill Material 3 draws behind the active icon, with
+         its label in the accent below. That is the one place in the app's chrome the accent appears,
+         so "where am I?" is answered by the same colour that answers "what do I press?".
+
+         The icon and label take *different* state lists, because the two do not share a selected
+         colour — the icon sits on the yellow pill, the label on the bar beside it. -->
     <style name="PetCare.BottomNav" parent="Widget.Material3.BottomNavigationView">
-        <item name="android:background">?android:attr/colorBackground</item>
+        <item name="android:background">@drawable/bg_bottom_nav</item>
         <item name="itemActiveIndicatorStyle">@style/PetCare.BottomNav.ActiveIndicator</item>
         <item name="itemIconTint">@color/bottom_nav_item_tint</item>
-        <item name="itemTextColor">@color/bottom_nav_item_tint</item>
+        <item name="itemTextColor">@color/bottom_nav_label_tint</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.PetCare.NavLabel</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.PetCare.NavLabel</item>
         <item name="labelVisibilityMode">labeled</item>
+        <!-- The capsule is drawn by the background drawable, so the view must not also cast a
+             shadow — a shadow follows the view's rectangular bounds, not the drawable's rounded
+             outline, and would show as a faint square behind the rounded ends. -->
         <item name="elevation">0dp</item>
     </style>
 
-    <!-- The pill drawn behind the selected tab's icon. -->
+    <!-- The pill drawn behind the selected tab's icon: the accent itself rather than the muted
+         container the app uses elsewhere, since on a dark bar the muted variant barely registers. -->
     <style name="PetCare.BottomNav.ActiveIndicator"
         parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
-        <item name="android:color">?attr/colorPrimaryContainer</item>
+        <item name="android:color">@color/accent_yellow</item>
+    </style>
+
+    <!--
+        The tab labels: small, bold, upper-case and letter-spaced.
+
+        Upper-case is applied through `textAllCaps` rather than by capitalising the strings
+        themselves, so the same resource can stay sentence-case where it is also used as a screen
+        title — see the note at the top of the bottom-navigation strings in strings.xml.
+
+        No textColor here. A text *appearance* that named a colour would override the state list the
+        bar applies through itemTextColor, and every tab would end up looking identically selected.
+    -->
+    <style name="TextAppearance.PetCare.NavLabel" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
     </style>
 
     <!-- ================================== Chips ==================================

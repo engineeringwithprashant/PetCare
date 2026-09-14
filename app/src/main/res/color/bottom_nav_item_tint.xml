@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Icon and label colour for a bottom-navigation tab, by state.
+    Icon colour for a bottom-navigation tab, by state.
 
     A *colour state list* rather than a plain colour: one resource that resolves to a different
     value depending on what the view is doing. The bottom bar needs exactly that — the selected tab
@@ -11,17 +11,23 @@
     conditions all match, so the selected state has to come first: with the catch-all default above
     it, every tab would resolve to the unselected colour and nothing would ever look active.
 
-    Both values are theme attributes, so the bar follows light and dark mode automatically.
+    **Why fixed colours rather than theme attributes.** This bar is a dark capsule in light mode as
+    well as dark — see the bottom-navigation note in colors.xml — so the roles that would normally be
+    right here are not: ?attr/colorOnSurfaceVariant is a dark grey in light mode and would leave
+    three of the four tabs invisible against the bar.
+
+    The label has its own selector, bottom_nav_label_tint.xml, because the two do not share a
+    selected colour: the icon sits on the yellow pill and the label sits on the dark bar beside it.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- The active tab. Sits on the yellow accent pill (see PetCare.BottomNav.ActiveIndicator), so
-         it must use the colour guaranteed legible on that container and nothing else. -->
+    <!-- The active tab's icon, drawn on the accent pill (see PetCare.BottomNav.ActiveIndicator), so
+         it must use the colour guaranteed legible on the accent and nothing else. -->
     <item
-        android:color="?attr/colorOnPrimaryContainer"
+        android:color="@color/nav_item_selected_icon"
         android:state_checked="true" />
 
     <!-- Everything else: quiet, so the active tab is the one the eye finds. -->
-    <item android:color="?attr/colorOnSurfaceVariant" />
+    <item android:color="@color/nav_item_unselected" />
 
 </selector>

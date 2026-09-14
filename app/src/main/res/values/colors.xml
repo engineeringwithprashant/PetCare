@@ -7,16 +7,18 @@
     use those roles via ?attr/. That indirection is what makes dark mode work: the roles stay the
     same, and only the values behind them change.
 
-    **The scheme.** PetCare is built on warm cream and white with a single bright honey-yellow
+    **The scheme.** PetCare is built on warm cream and white with a single bright lemon-yellow
     accent. The reasoning behind each decision:
 
      - *Cream, not white, as the page.* A pure #FFFFFF background makes every white card on it
        invisible. Backing the app with a warm cream (#FFFBF3) and giving cards true white lets the
        cards lift off the page through colour alone, before a single pixel of shadow is drawn.
-     - *Yellow as the accent, used sparingly.* Yellow reads as friendly and animal-adjacent rather
-       than clinical, and nothing else in the app competes with it — so wherever it appears, that is
-       the thing to press. It is a *light* colour, which is why colorOnPrimary here is near-black:
-       white text on this yellow would fail contrast badly.
+     - *One accent, and only one.* [accent_yellow] is the app's single accent, and it is the *same*
+       value in light and dark mode rather than a pair — see the note on that colour for why this
+       one role breaks the light/dark pattern every other colour here follows. Yellow reads as
+       friendly and animal-adjacent rather than clinical, and nothing else in the app competes with
+       it, so wherever it appears, that is the thing to press. It is a *light* colour, which is why
+       colorOnPrimary is near-black: white text on this yellow would fail contrast badly.
      - *Pastel stat pills.* A separate family of soft tinted chips (see the pill section below) used
        for small facts — a pet's age, weight, species. They are deliberately low-saturation so a row
        of them reads as information rather than as five competing buttons.
@@ -28,17 +30,35 @@
 -->
 <resources>
 
+    <!-- ================================ The accent ================================
+         The one bright colour in the app, and the only colour here that is deliberately *identical*
+         in light and dark mode.
+
+         Every other value in this file comes as a light/dark pair, because a colour that works on a
+         cream page rarely works on a near-black one. The accent is the exception on purpose: it is
+         never a background for body text and never a page — it is always a *fill* with near-black
+         content on top of it (a button, the selected tab's pill, a pet card's status pill). That
+         relationship is unchanged by the theme around it, so splitting it into two values would
+         make the brand shift shade between modes for no gain.
+
+         It is referenced by both values/themes.xml and values-night/themes.xml, which is what makes
+         "one accent throughout" a fact about the code rather than a convention to remember. -->
+    <color name="accent_yellow">#F5E050</color>
+
+    <!-- The content colour guaranteed legible on the accent. Near-black, not white: the accent is a
+         light colour and white on it measures around 1.5:1, far below the 4.5:1 text needs. -->
+    <color name="on_accent_yellow">#1C1A05</color>
+
     <!-- ============================== Light scheme ============================== -->
 
-    <!-- Primary: the bright honey yellow. Carries the main actions — the FAB, filled buttons, the
-         selected bottom-navigation tab. Paired with a near-black "on" colour, because this yellow
-         is far too light to sit white text on. -->
-    <color name="md_theme_light_primary">#FFC53D</color>
-    <color name="md_theme_light_onPrimary">#2A1F00</color>
+    <!-- Primary: the accent. Carries the main actions — the FAB, filled buttons, the selected
+         bottom-navigation tab. -->
+    <color name="md_theme_light_primary">@color/accent_yellow</color>
+    <color name="md_theme_light_onPrimary">@color/on_accent_yellow</color>
     <!-- The muted variant, used behind content that should read as *related* to the accent without
-         shouting: the selected tab's pill, highlighted chips. -->
-    <color name="md_theme_light_primaryContainer">#FFEDBF</color>
-    <color name="md_theme_light_onPrimaryContainer">#2A1F00</color>
+         shouting: highlighted chips, the tint behind a category icon. -->
+    <color name="md_theme_light_primaryContainer">#FBF2C4</color>
+    <color name="md_theme_light_onPrimaryContainer">#2A2604</color>
 
     <!-- Secondary: a warm taupe, for supporting elements that should not compete with primary. -->
     <color name="md_theme_light_secondary">#6F6350</color>
@@ -81,19 +101,21 @@
          so they read as temporary and layered above it. -->
     <color name="md_theme_light_inverseSurface">#34302A</color>
     <color name="md_theme_light_inverseOnSurface">#F8EFE2</color>
-    <color name="md_theme_light_inversePrimary">#FFD978</color>
+    <color name="md_theme_light_inversePrimary">#F0DB6A</color>
 
     <!-- =============================== Dark scheme ===============================
-         Not simply the light scheme inverted. In dark mode the cream page becomes a warm near-black
-         and the white cards become a *lighter* charcoal, keeping the same relationship: the card is
-         still the lighter of the two, so it still lifts off the page. The yellow softens slightly,
-         because a fully saturated accent on a dark ground glares. The role pairings are unchanged,
-         which is exactly why layouts need no dark-mode variants of their own. -->
+         Not simply the light scheme inverted. In dark mode the cream page becomes a near-black and
+         the white cards become a *lighter* charcoal, keeping the same relationship: the card is
+         still the lighter of the two, so it still lifts off the page. The role pairings are
+         unchanged, which is exactly why layouts need no dark-mode variants of their own.
 
-    <color name="md_theme_dark_primary">#FFCE4F</color>
-    <color name="md_theme_dark_onPrimary">#3D2F00</color>
-    <color name="md_theme_dark_primaryContainer">#57450A</color>
-    <color name="md_theme_dark_onPrimaryContainer">#FFEDBF</color>
+         The accent is the one thing that does not change between the schemes — see [accent_yellow]
+         above. -->
+
+    <color name="md_theme_dark_primary">@color/accent_yellow</color>
+    <color name="md_theme_dark_onPrimary">@color/on_accent_yellow</color>
+    <color name="md_theme_dark_primaryContainer">#4A4308</color>
+    <color name="md_theme_dark_onPrimaryContainer">#FBF2C4</color>
 
     <color name="md_theme_dark_secondary">#DCCBB2</color>
     <color name="md_theme_dark_onSecondary">#3C3425</color>
@@ -110,19 +132,25 @@
     <color name="md_theme_dark_errorContainer">#93000A</color>
     <color name="md_theme_dark_onErrorContainer">#FFDAD6</color>
 
-    <!-- The dark equivalent of the cream-page / white-card split above. -->
-    <color name="md_theme_dark_background">#15120C</color>
-    <color name="md_theme_dark_onBackground">#EAE1D3</color>
-    <color name="md_theme_dark_surface">#221E17</color>
-    <color name="md_theme_dark_onSurface">#EAE1D3</color>
-    <color name="md_theme_dark_surfaceVariant">#2E291F</color>
-    <color name="md_theme_dark_onSurfaceVariant">#CFC5B2</color>
-    <color name="md_theme_dark_outline">#988E7D</color>
-    <color name="md_theme_dark_outlineVariant">#3A342A</color>
+    <!-- The dark equivalent of the cream-page / white-card split above.
 
-    <color name="md_theme_dark_inverseSurface">#EAE1D3</color>
-    <color name="md_theme_dark_inverseOnSurface">#34302A</color>
-    <color name="md_theme_dark_inversePrimary">#7B6000</color>
+         Pulled down to a genuine near-black for the redesign. The dashboard's pet cards are dark in
+         *both* themes — a photo needs a dark ground under its scrim whatever the surrounding page is
+         doing, see the pet-card section below — and against the warmer, lighter charcoal this scheme
+         used before, those cards read as barely distinguishable from the page they sit on. A
+         near-black page restores the separation without touching the cards. -->
+    <color name="md_theme_dark_background">#0E0F0A</color>
+    <color name="md_theme_dark_onBackground">#E8E6DA</color>
+    <color name="md_theme_dark_surface">#1B1C14</color>
+    <color name="md_theme_dark_onSurface">#E8E6DA</color>
+    <color name="md_theme_dark_surfaceVariant">#26271C</color>
+    <color name="md_theme_dark_onSurfaceVariant">#C4C2B2</color>
+    <color name="md_theme_dark_outline">#8F8D7D</color>
+    <color name="md_theme_dark_outlineVariant">#333426</color>
+
+    <color name="md_theme_dark_inverseSurface">#E8E6DA</color>
+    <color name="md_theme_dark_inverseOnSurface">#2F3026</color>
+    <color name="md_theme_dark_inversePrimary">#6E6410</color>
 
     <!-- =============================== Accent text ===============================
          The colour for text and icons that should read as *accented* — a task's time of day, an
@@ -135,14 +163,14 @@
          app.
 
          So the accent has two forms: the bright yellow that *fills* things — buttons, the selected
-         tab, the floating action button, all of which carry dark text on top — and this deeper amber
+         tab, the floating action button, all of which carry dark text on top — and this deeper olive
          that *is* text. Same hue, so they read as the same accent; very different lightness, so both
          are legible in the role they play. In dark mode the problem reverses and the yellow itself
-         becomes the legible choice, which is why the dark value below is the primary again.
+         becomes the legible choice, which is why the dark value below is the accent again.
 
          Exposed to layouts as ?attr/colorAccentText — see attrs.xml. -->
-    <color name="accent_text_light">#7A5300</color>
-    <color name="accent_text_dark">#FFCE4F</color>
+    <color name="accent_text_light">#6B5C00</color>
+    <color name="accent_text_dark">@color/accent_yellow</color>
 
     <!-- ============================== Pastel stat pills ==============================
          The soft tinted chips that carry a single small fact — a pet's age, its weight, how many
@@ -181,5 +209,58 @@
     <color name="pill_light_on_peach">#4A2513</color>
     <color name="pill_dark_peach">#43291C</color>
     <color name="pill_dark_on_peach">#F5C9B0</color>
+
+    <!-- ========================== Dashboard pet cards ==========================
+         The dashboard's pet cards carry a photograph with a dark gradient scrim over the lower half,
+         and the pet's name written across it.
+
+         **These are single values rather than light/dark pairs, and that is the point.** Everything
+         else in this file is themed, because a colour sitting behind body text has to change with
+         the page. These colours sit on top of a *photograph*, which does not change with the theme —
+         a white name over a dark scrim is legible over any photo in either mode, and swapping to a
+         dark name in light mode would make it disappear into the picture behind it. The card is
+         therefore dark in both themes by design, and reads as a photographic object on the page
+         rather than as another sheet of paper.
+
+         The same logic covers the card with no photo yet: the placeholder ground is dark too, so a
+         pet gaining a photo does not change the card's character. -->
+
+    <!-- The card's ground, seen where a photo has not been added and behind the scrim. -->
+    <color name="pet_card_ground">#17180F</color>
+
+    <!-- The scrim laid over the photo's lower portion so the name stays readable on a light or busy
+         picture. Drawn as a gradient between these two — see drawable/bg_pet_card_scrim.xml.
+
+         The transparent end has to be the *same* RGB as the opaque end with a zero alpha channel.
+         Fading to #00000000 instead would pass through grey on the way, which shows as a dirty band
+         across the middle of every photo. -->
+    <color name="pet_card_scrim_transparent">#0017180F</color>
+    <color name="pet_card_scrim_opaque">#E617180F</color>
+
+    <!-- Text drawn on the card. The muted value is for the supporting line under the name. -->
+    <color name="on_pet_card">#FFFFFF</color>
+    <color name="on_pet_card_muted">#B9B8A6</color>
+
+    <!-- The dark capsule holding a pet's age and weight, and the species chip in the card's top
+         corner. Semi-transparent, so a little of the photo shows through and they read as sitting
+         *on* the picture rather than as opaque tiles punched out of it. -->
+    <color name="pet_card_chip">#7A0E0F0A</color>
+
+    <!-- ========================= Bottom navigation bar =========================
+         The bar is a dark capsule floating over the page in *both* themes, for the same reason the
+         pet cards are dark in both: it is chrome rather than content, and a single treatment makes
+         it read as the app's frame instead of as part of whichever page is scrolling behind it.
+
+         Its colours therefore cannot come from the theme roles — colorSurface is white in light mode
+         and the tabs would vanish — so they are fixed here and used directly by
+         res/color/bottom_nav_item_tint.xml. -->
+    <color name="nav_bar_ground">#17180F</color>
+    <!-- The selected tab's icon and label. The icon sits on the accent pill, so it takes the colour
+         guaranteed legible on the accent; the label sits on the bar itself and takes the accent. -->
+    <color name="nav_item_selected_icon">@color/on_accent_yellow</color>
+    <color name="nav_item_selected_label">@color/accent_yellow</color>
+    <!-- The other three. Quiet enough that the selected tab is the one the eye finds, light enough
+         to stay legible on the dark bar. -->
+    <color name="nav_item_unselected">#8E8D7E</color>
 
 </resources>

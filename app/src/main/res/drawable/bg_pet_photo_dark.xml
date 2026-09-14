@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The dark ground behind a pet card's photo, seen while the photo is loading and permanently when
+    the pet has none and the paw-print placeholder is showing.
+
+    Dark in both themes, like everything else on these cards — see the pet-card note in colors.xml.
+    The alternative, ?attr/colorSurfaceVariant, would make a photo-less pet's card pale in light mode
+    and dark in dark mode, so adding a photograph would change the card's whole character rather than
+    just filling it in.
+
+    Square-cornered on purpose: the card itself clips this to its own rounded outline, and rounding
+    it a second time here would show as a faint double edge at each corner.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@color/pet_card_ground" />
+
+</shape>

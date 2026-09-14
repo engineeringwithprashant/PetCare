@@ -159,20 +159,29 @@ class MainActivity : AppCompatActivity() {
     /**
      * Shows or hides the navigation chrome for the destination just arrived at.
      *
+     * Two destinations go without the shared top app bar, for different reasons.
+     *
      * The sign-in and sign-up screens carry their own large headings, have nowhere to navigate back
-     * to and belong to nobody, so all of it goes: an empty app bar and a row of tabs leading into an
+     * to and belong to nobody, so all of it goes — the tabs as well: a row of tabs leading into an
      * account the user has not signed in to yet would be worse than no chrome at all.
      *
-     * The bottom bar and its divider are hidden as a pair, since a hairline floating above nothing
-     * is more conspicuous than the bar it was drawn to separate.
+     * The **dashboard** hides only the app bar, and keeps its tabs. It draws its own header — the
+     * monogram, the title, the theme toggle and the pet count — because every one of those depends
+     * on the screen's own data or state, which a toolbar shared by twelve destinations has no way to
+     * supply. Leaving the shared bar visible above it would show the word "Home" twice.
+     *
+     * Nothing is lost with it: the account actions in the overflow menu are also reachable from the
+     * dashboard's count badge, which opens the profile screen, and that screen carries its own sign
+     * out button. See [com.prash.petcare.ui.home.HomeFragment.openProfile].
      */
     private fun updateChromeFor(destinationId: Int) {
         val isAuthScreen =
             destinationId == R.id.loginFragment || destinationId == R.id.registerFragment
 
-        binding.appBarLayout.isVisible = !isAuthScreen
+        val hasOwnHeader = destinationId == R.id.homeFragment
+
+        binding.appBarLayout.isVisible = !isAuthScreen && !hasOwnHeader
         binding.bottomNav.isVisible = !isAuthScreen
-        binding.bottomNavDivider.isVisible = !isAuthScreen
 
         // The overflow menu holds the account actions, which only mean something once there is an
         // account. invalidateOptionsMenu asks the framework to rebuild the menu, which calls

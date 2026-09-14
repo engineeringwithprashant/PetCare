@@ -15,6 +15,7 @@ import com.prash.petcare.data.sync.SyncManager
 import com.prash.petcare.reminder.ReminderManager
 import com.prash.petcare.reminder.ReminderNotifier
 import com.prash.petcare.reminder.ReminderScheduler
+import com.prash.petcare.ui.common.ThemePreference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -149,6 +150,12 @@ class PetCareApplication : Application() {
      */
     override fun onCreate() {
         super.onCreate()
+
+        // Before anything else, and before the first Activity exists. The user's light/dark choice
+        // decides which resources every screen resolves against, so applying it after a screen had
+        // been created would draw that screen in the wrong mode and then recreate it — visible as a
+        // flash on every launch. See ThemePreference for why this one setting lives outside Room.
+        ThemePreference.apply(this)
 
         reminderNotifier.createNotificationChannel()
 

@@ -149,7 +149,7 @@
     <fragment
         android:id="@+id/expensesFragment"
         android:name="com.prash.petcare.ui.expense.ExpensesFragment"
-        android:label="@string/nav_expenses"
+        android:label="@string/nav_money"
         tools:layout="@layout/fragment_expenses">
 
         <argument

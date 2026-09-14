@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The outlined capsule behind the dashboard header's two right-hand controls: the light/dark theme
+    toggle and the circular pet-count badge.
+
+    One drawable serves both because the radius is far larger than either can be tall, so a
+    rounded rectangle becomes a capsule at any width — a 32dp-square badge comes out as a perfect
+    circle, and the wider toggle comes out as a pill, from the same file. See bg_pill.xml, which uses
+    the same trick for the pastel stat pills.
+
+    **Outlined rather than filled.** These two sit in the header, above the page rather than on a
+    card, and a filled chip there would read as a button competing with the screen's actual actions
+    further down. A hairline stroke says "control" quietly enough to stay out of the way.
+
+    Both colours come from theme roles, so the pair follows light and dark mode with no second copy
+    of this file — which matters here more than usual, since one of these controls is the thing that
+    switches between the two.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="?attr/colorSurface" />
+
+    <stroke
+        android:width="1dp"
+        android:color="?attr/colorOutlineVariant" />
+
+    <corners android:radius="@dimen/pill_corner_radius" />
+
+</shape>

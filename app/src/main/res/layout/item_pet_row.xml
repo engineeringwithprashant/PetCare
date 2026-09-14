@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A follow-on pet's card on the dashboard: a small square photo on the left, and the name, species
+    and pills stacked beside it.
+
+    The *first* pet gets item_pet_hero.xml instead — a full-width photo card. See PetSummaryAdapter
+    for why the list is drawn in two sizes, and this file for what the second size gives up: the
+    photo becomes a thumbnail, the scrim is unnecessary because nothing is written over the picture,
+    and the name moves onto the card's own surface.
+
+    **Why the card is still dark.** The photo is smaller but it is still a photograph, and the two
+    card sizes sit directly above one another in the same list. A white row card under a dark hero
+    card would read as two unrelated components rather than as one list at two scales.
+
+    A flat ConstraintLayout inside. This layout is inflated once per visible row and then recycled as
+    the list scrolls, which is why it must stay shallow — a deep hierarchy here is measured and laid
+    out repeatedly and is the usual cause of janky scrolling.
+-->
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/card_spacing"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="@color/pet_card_ground"
+    app:cardCornerRadius="@dimen/pet_card_corner_radius"
+    app:cardElevation="0dp"
+    app:rippleColor="@color/accent_yellow"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge"
+    app:strokeWidth="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/spacing_sm">
+
+        <!--
+            The thumbnail.
+
+            A ShapeableImageView rather than a plain one, unlike the hero card: there the card itself
+            clips the photo to its outline because the photo fills the card, but this one is inset
+            within the card and so has to carry its own rounded corners.
+
+            The shape appearance is the app's small radius — a detail *inside* a card takes the step
+            below the card's own, so the two corners never look like they are competing to be the
+            same thing.
+        -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/petPhotoImage"
+            android:layout_width="@dimen/pet_row_photo_size"
+            android:layout_height="@dimen/pet_row_photo_size"
+            android:background="@drawable/bg_pet_photo_dark"
+            android:contentDescription="@string/cd_pet_photo"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_pet_placeholder"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Small" />
+
+        <!-- The name. Constrained to the photo on one side and the card's end on the other, so it
+             has a real width to ellipsize within rather than running past the card edge.
+
+             The three text views and the pill row form a vertical chain packed to the top of the
+             photo, which is what keeps a pet with no recorded facts from leaving its name floating
+             in the middle of the card. -->
+        <TextView
+            android:id="@+id/petNameText"
+            style="@style/PetCare.ListTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:layout_marginEnd="@dimen/spacing_sm"
+            android:textColor="@color/on_pet_card"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/petPhotoImage"
+            app:layout_constraintTop_toTopOf="@id/petPhotoImage"
+            tools:text="Milo" />
+
+        <!-- Species, plus breed when one was recorded. Filled in by PetSummaryAdapter. -->
+        <TextView
+            android:id="@+id/petSubtitleText"
+            style="@style/PetCare.ListSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:textColor="@color/on_pet_card_muted"
+            app:layout_constraintEnd_toEndOf="@id/petNameText"
+            app:layout_constraintStart_toStartOf="@id/petNameText"
+            app:layout_constraintTop_toBottomOf="@id/petNameText"
+            tools:text="Dog · Labrador" />
+
+        <!-- The same two pills as the hero card, in the same order, so a pet reads the same way
+             whichever size of card it happens to be in today — the first pet becomes the second the
+             moment another is added. -->
+        <LinearLayout
+            android:id="@+id/pillRow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@id/petNameText"
+            app:layout_constraintStart_toStartOf="@id/petNameText"
+            app:layout_constraintTop_toBottomOf="@id/petSubtitleText">
+
+            <TextView
+                android:id="@+id/tasksPill"
+                style="@style/PetCare.Pill.Accent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="3 left today" />
+
+            <TextView
+                android:id="@+id/factsPill"
+                style="@style/PetCare.Pill.OnPhoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/pill_spacing"
+                tools:text="34 kg" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

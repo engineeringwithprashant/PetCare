@@ -39,6 +39,6 @@
     <item
         android:id="@+id/expensesFragment"
         android:icon="@drawable/ic_nav_expenses"
-        android:title="@string/nav_expenses" />
+        android:title="@string/nav_money" />
 
 </menu>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Label colour for a bottom-navigation tab, by state.
+
+    The companion to bottom_nav_item_tint.xml, which does the same job for the icon. They are two
+    files rather than one because the selected states differ, and that difference is what the design
+    asks for: the active tab's icon sits *inside* the yellow pill and so must be near-black to be
+    legible, while its label sits below the pill on the dark bar and so is the yellow itself. Sharing
+    one selector would force one of the two to be wrong.
+
+    The unselected colour is shared, so the three inactive tabs read as a single quiet group.
+
+    See bottom_nav_item_tint.xml for why these are fixed colours rather than theme attributes, and
+    why the selected state has to be listed first.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:color="@color/nav_item_selected_label"
+        android:state_checked="true" />
+
+    <item android:color="@color/nav_item_unselected" />
+
+</selector>
