@@ -1,5 +1,6 @@
 package com.prash.petcare.ui.common
 
+import android.view.View
 import androidx.annotation.StringRes
 import com.prash.petcare.R
 import com.prash.petcare.databinding.ViewTabHeaderBinding
@@ -7,7 +8,8 @@ import java.text.NumberFormat
 
 /*
  * Wires up the header shared by the redesigned tabs and the pet detail screen
- * (res/layout/view_tab_header.xml).
+ * (res/layout/view_tab_header.xml), including the two Home-only extras — the "AI" pill and the unread
+ * dot — which stay hidden unless a screen asks for them.
  *
  * In MVVM terms this is still part of the **View** layer: it only sets text, icons and click
  * listeners. It is a pair of extension functions on the generated [ViewTabHeaderBinding] rather than
@@ -88,4 +90,38 @@ fun ViewTabHeaderBinding.showPetCount(count: Int) {
     petCountBadge.text = NumberFormat.getInstance().format(count)
     petCountBadge.contentDescription =
         root.resources.getQuantityString(R.plurals.cd_pets_badge, count, count)
+}
+
+/**
+ * Shows the "AI" pill and attaches what pressing it does. Only the Home tab calls this; on every other
+ * screen the pill stays gone, as view_tab_header.xml declares it.
+ */
+fun ViewTabHeaderBinding.showAssistantPill(onClick: () -> Unit) {
+    aiPill.visibility = View.VISIBLE
+    aiPill.setOnClickListener { onClick() }
+}
+
+/**
+ * Shows the badge's pet count with the red dot for overdue care — the Home tab's version of
+ * [showPetCount].
+ *
+ * The dot is a shape and cannot be read aloud, so when it shows, the badge's description gains a
+ * sentence saying what it means ("2 pets in care. Open your account. 1 task is overdue."). Both the dot
+ * and the description are set in either direction on every call, because the count changes as tasks
+ * are ticked off and as their times pass.
+ *
+ * @param overdueCount How many of today's tasks are past their time and not done; 0 hides the dot.
+ */
+fun ViewTabHeaderBinding.showPetCount(count: Int, overdueCount: Int) {
+    showPetCount(count)
+
+    unreadDot.visibility = if (overdueCount > 0) View.VISIBLE else View.GONE
+    if (overdueCount > 0) {
+        val resources = root.resources
+        petCountBadge.contentDescription = resources.getString(
+            R.string.cd_badge_with_overdue,
+            petCountBadge.contentDescription,
+            resources.getQuantityString(R.plurals.cd_overdue_tasks, overdueCount, overdueCount)
+        )
+    }
 }

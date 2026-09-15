@@ -793,23 +793,13 @@
     </style>
 
     <!-- ============================== Quick actions ==============================
-         The three tiles along the bottom of the dashboard — "Add task", "Log expense", "Add pet".
-         A circled "+" above a short label, in an outlined tile.
+         The three cards along the bottom of the dashboard — "Add task", "Log expense", "Add pet": a
+         circled "+" above a short label. The card itself is PetCare.Home.QuickActionCard below; these
+         two style what sits inside it.
 
-         A column rather than a row inside each tile, and a deliberately generous height: three
-         actions side by side on a phone leave each about a third of the screen wide, which is not
-         enough for an icon and a label on one line without the label truncating. -->
-
-    <style name="PetCare.QuickAction" parent="">
-        <item name="android:background">@drawable/bg_quick_action</item>
-        <item name="android:orientation">vertical</item>
-        <item name="android:gravity">center</item>
-        <item name="android:clickable">true</item>
-        <item name="android:focusable">true</item>
-        <item name="android:minHeight">@dimen/quick_action_height</item>
-        <item name="android:paddingTop">@dimen/spacing_md</item>
-        <item name="android:paddingBottom">@dimen/spacing_md</item>
-    </style>
+         A column rather than a row inside each card: three actions side by side on a phone leave each
+         about a third of the screen wide, which is not enough for an icon and a label on one line
+         without the label truncating. -->
 
     <!-- The circled "+". Padding inside the circle is what keeps the glyph from filling it edge to
          edge, which would read as a solid blob at this size. -->
@@ -849,6 +839,299 @@
              Capped at half the thickness, which is the most the component accepts — at exactly half
              the two ends are semicircles and the band is a capsule. -->
         <item name="trackCornerRadius">@dimen/care_ring_corner_radius</item>
+    </style>
+
+    <!-- ============================== Home dashboard ==============================
+         The redesigned Home tab (fragment_home.xml and its item layouts), top to bottom.
+
+         It speaks the language the other redesigned tabs established rather than inventing a new one:
+         big names and figures in Bricolage Grotesque, captions and upper-case labels in IBM Plex Mono,
+         white cards on the cream page, one dark card and one yellow card for the two things that matter
+         most. Colours on the dark and yellow cards are fixed values, since those cards look the same in
+         both themes — see the Home dashboard section of colors.xml. -->
+
+    <!-- "Good evening, / Prashant": the largest text on the screen, bold and drawn slightly tight, as
+         large bold type is normally set. -->
+    <style name="PetCare.Home.Greeting" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textAppearance">?attr/textAppearanceHeadlineLarge</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <!-- "5:38 PM" on the right of the greeting: a figure, so Bricolage, a step below the greeting. -->
+    <style name="PetCare.Home.Clock" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "THU 11 SEP" under the clock: the app's section label, a little less widely spaced so the date
+         stays about as wide as the time above it. -->
+    <style name="PetCare.Home.DateLabel" parent="PetCare.SectionLabel">
+        <item name="android:letterSpacing">0.08</item>
+    </style>
+
+    <!-- "All synced · 3 min ago": muted monospace, not upper-cased, since it is a phrase to read. Also
+         used for "tap to open" beside the pets heading. -->
+    <style name="PetCare.Home.Caption" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- A stat card's bold figure: "6:00 PM", "Rs 5,240", "22 Sep". The card's TextView lets it shrink
+         towards home_stat_value_min_text_size to fit, rather than truncating a long amount. -->
+    <style name="PetCare.Home.StatValue" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textSize">@dimen/home_stat_value_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!--
+        The small pill at the foot of a stat card: "GOOD NOW", "+12% VS AUG", a pet's name.
+
+        The pastel pill's shape (bg_pill tinted), made smaller and set in bold monospace capitals so it
+        reads as a status rather than as a fact. This style gives the neutral grey wash; the pale green
+        ("GOOD NOW") and yellow (a pet's name) versions are applied by HomeFragment.applyTone, because a
+        pill changes meaning during the day and a style can only be chosen when a view is inflated.
+    -->
+    <style name="PetCare.Home.StatPill" parent="">
+        <item name="android:background">@drawable/bg_pill</item>
+        <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="android:paddingStart">@dimen/home_stat_pill_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/home_stat_pill_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/home_stat_pill_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/home_stat_pill_padding_vertical</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- "tap to open" / "3 items" on the right of a section label: the caption, one size smaller so it
+         sits level with the label beside it. -->
+    <style name="PetCare.Home.SectionHint" parent="PetCare.Home.Caption">
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+    </style>
+
+    <!-- The next-up card's ring: yellow on a dark track, thick enough to read as a gauge. See
+         PetCare.CareRing for why a Material progress indicator rather than a custom View. -->
+    <style name="PetCare.Home.NextUpRing" parent="Widget.Material3.CircularProgressIndicator">
+        <item name="indicatorSize">@dimen/next_up_ring_size</item>
+        <item name="trackThickness">@dimen/next_up_ring_thickness</item>
+        <item name="indicatorColor">@color/accent_yellow</item>
+        <item name="trackColor">@color/next_up_ring_track</item>
+        <item name="trackCornerRadius">@dimen/next_up_ring_corner_radius</item>
+    </style>
+
+    <!-- "22" inside the ring. includeFontPadding off so the figure and its caption sit as a tight pair
+         in the ring's centre instead of drifting apart on the font's reserved accent space. -->
+    <style name="PetCare.Home.NextUpMinutes" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textSize">@dimen/next_up_minutes_text_size</item>
+        <item name="android:textColor">@color/next_up_card_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "MIN AWAY" under it: the tiniest label on the screen, so letter-spaced to stay legible. -->
+    <style name="PetCare.Home.NextUpRingCaption" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">8sp</item>
+        <item name="android:textColor">@color/next_up_card_muted</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "NEXT UP": the Places strip's label, which is already the muted monospace capital on a dark
+         ground this card needs. -->
+    <style name="PetCare.Home.NextUpLabel" parent="PetCare.Places.StripLabel" />
+
+    <!-- The task's title: large, bold and white — the card's subject. -->
+    <style name="PetCare.Home.NextUpTitle" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textSize">@dimen/next_up_title_text_size</item>
+        <item name="android:textColor">@color/next_up_card_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- "Krishala · 6:00 PM · Slicker brush" under the title. -->
+    <style name="PetCare.Home.NextUpMeta" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:textColor">@color/next_up_card_muted</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- "MARK DONE": a filled yellow pill in monospace capitals. The accent is named directly, as the
+         other redesigned tabs' yellow buttons do, so it stays the brand yellow on the dark card. -->
+    <style name="PetCare.Home.MarkDoneButton" parent="Widget.Material3.Button">
+        <item name="android:minHeight">@dimen/next_up_button_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/spacing_md</item>
+        <item name="android:paddingEnd">@dimen/spacing_md</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="rippleColor">@color/on_accent_yellow</item>
+    </style>
+
+    <!-- The completed count inside the today's-care ring: a figure, so Bricolage. -->
+    <style name="PetCare.Home.RingCount" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textAppearance">?attr/textAppearanceHeadlineMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- "5 full days", right-aligned on the streak line: bold and full-strength, since it is the figure
+         the label beside it names. -->
+    <style name="PetCare.Home.StreakCount" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- A streak box's weekday, "FR". Centred under its box. -->
+    <style name="PetCare.Home.StreakDayLabel" parent="PetCare.SectionLabel">
+        <item name="android:textSize">9sp</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- A pet's name across the bottom of its card in the sideways row. White on the photo's scrim in
+         both themes, like every name on a pet photo in the app. -->
+    <style name="PetCare.Home.PetCardName" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <item name="android:textColor">@color/on_pet_card</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- The "AI" mark on the insight card: a tiny yellow monospace word on the dark rounded square.
+         Hidden from TalkBack, since the label beside it already says what the card is. -->
+    <style name="PetCare.Home.InsightBadge" parent="">
+        <item name="android:layout_width">@dimen/insight_badge_size</item>
+        <item name="android:layout_height">@dimen/insight_badge_size</item>
+        <item name="android:background">@drawable/bg_insight_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/accent_yellow</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- "TODAY'S INSIGHT": the section label in the softened olive that reads on the yellow. -->
+    <style name="PetCare.Home.InsightLabel" parent="PetCare.SectionLabel">
+        <item name="android:textColor">@color/on_insight_card_muted</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- The insight sentence: bold and dark, with a little extra leading because it runs to three
+         lines and tightly set bold lines are hard to track back across. -->
+    <style name="PetCare.Home.InsightText" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">@color/on_insight_card</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+
+    <!-- "ASK THE ASSISTANT": an outlined pill in the card's dark, so it reads as the card's action
+         without adding a second fill to a panel that is already yellow. -->
+    <style name="PetCare.Home.InsightButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/insight_button_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/spacing_md</item>
+        <item name="android:paddingEnd">@dimen/spacing_md</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="strokeColor">@color/on_insight_card</item>
+        <item name="strokeWidth">@dimen/insight_button_stroke_width</item>
+        <item name="android:textColor">@color/on_insight_card</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="rippleColor">@color/on_insight_card</item>
+    </style>
+
+    <!-- A "coming up" row's date number, "12": the column's figure, in Bricolage. -->
+    <style name="PetCare.Home.ComingUpDate" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "FRI" under the date number. -->
+    <style name="PetCare.Home.ComingUpWeekday" parent="PetCare.SectionLabel">
+        <item name="android:textSize">9sp</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- A "coming up" row's title, bold. -->
+    <style name="PetCare.Home.ComingUpTitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- A quick-action card: an ordinary pressable white card with the dashboard's softer corner. -->
+    <style name="PetCare.Home.QuickActionCard" parent="PetCare.Card.Clickable">
+        <item name="android:minHeight">@dimen/home_quick_action_height</item>
+        <item name="cardCornerRadius">@dimen/corner_radius_lg</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Large</item>
     </style>
 
     <!-- =========================== Bottom navigation bar ===========================

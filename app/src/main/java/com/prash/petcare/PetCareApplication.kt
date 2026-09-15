@@ -69,8 +69,13 @@ class PetCareApplication : Application() {
         CareRoutineRepository(database.careRoutineDao(), database.syncDeletionDao())
     }
 
+    /** Tasks, and the completion history kept beside them — see [CareTaskRepository]. */
     val careTaskRepository: CareTaskRepository by lazy {
-        CareTaskRepository(database.careTaskDao(), database.syncDeletionDao())
+        CareTaskRepository(
+            database.careTaskDao(),
+            database.syncDeletionDao(),
+            database.careCompletionDao()
+        )
     }
 
     val expenseRepository: ExpenseRepository by lazy {

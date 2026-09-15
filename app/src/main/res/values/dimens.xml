@@ -30,6 +30,10 @@
          24dp gutter on top of that pushed content 40dp from the screen edge and left the cards
          looking narrow on a phone. 16dp outside and 16dp inside reads as one consistent rhythm. -->
     <dimen name="screen_padding">16dp</dimen>
+    <!-- The gutter as a negative margin, for a sideways-scrolling row that has to reach the screen's
+         edges from inside a padded column — see fragment_home.xml. Always the exact negative of
+         screen_padding, so the row's first card still lines up with everything above it. -->
+    <dimen name="screen_padding_negative">-16dp</dimen>
 
     <!-- Breathing room above the first item on a screen, under the app bar. -->
     <dimen name="content_top_padding">12dp</dimen>
@@ -83,10 +87,6 @@
     <!-- Height of the photo panel on the add/edit pet form, where the photo is an input rather than
          the subject of the screen. -->
     <dimen name="pet_photo_form_height">180dp</dimen>
-    <!-- The round thumbnail on a dashboard or Pets-tab card. Its corners are not listed here: the
-         circle comes from a shape appearance using a 50% corner size, which works at any size — see
-         ShapeAppearance.PetCare.Circle in styles.xml. -->
-    <dimen name="pet_thumb_size">64dp</dimen>
 
     <!-- Size of a category icon beside a heading or a list row. -->
     <dimen name="category_icon_size">20dp</dimen>
@@ -99,11 +99,10 @@
     <!-- Gap between the edge of a list row and the icon revealed behind it while swiping. -->
     <dimen name="checklist_swipe_icon_margin">24dp</dimen>
 
-    <!-- ============================== Home dashboard ==============================
-         Sizes belonging to the redesigned dashboard. They are gathered here rather than typed into
-         fragment_home.xml for the usual reason — the hero card's height and the row card's photo
-         have to stay in proportion to one another, and a number in a layout is a number nobody
-         revisits. -->
+    <!-- ============================== Shared header and cards ==============================
+         Sizes first introduced by the dashboard and now shared with the other redesigned screens: the
+         header row, the care ring and the soft card corner. The rest of the dashboard's own sizes are in
+         the "Home dashboard (redesign)" section at the end of this file. -->
 
     <!-- The rounded square holding the app's "p" monogram in the dashboard header. -->
     <dimen name="monogram_size">32dp</dimen>
@@ -124,20 +123,10 @@
          the value that rounds each end of the band into a semicircle. -->
     <dimen name="care_ring_corner_radius">4dp</dimen>
 
-    <!-- The large card the first pet gets. Tall enough for a photograph to be the subject rather
-         than a thumbnail, short enough that the second pet's card still shows below it on a phone —
-         which is what tells the user the list continues. -->
-    <dimen name="pet_card_hero_height">230dp</dimen>
-    <!-- The corner radius shared by the hero card, the row cards and the care card. Larger than the
-         app's usual card radius: these are the page's subject, and the softer corner is what
+    <!-- The corner radius shared by the pet cards on every tab and the dashboard's large cards. Larger
+         than the app's usual card radius: these are a page's subject, and the softer corner is what
          separates them from an ordinary list row elsewhere in the app. -->
     <dimen name="pet_card_corner_radius">24dp</dimen>
-    <!-- How far up the hero card the scrim reaches. Roughly the lower two-thirds — enough to carry
-         the name and the pills, little enough that the photo is still the thing being looked at. -->
-    <dimen name="pet_card_scrim_height">150dp</dimen>
-    <!-- The square photo on a follow-on pet's row card, and that card's height. The photo is inset
-         from the card edge on all four sides, so the card is the photo plus twice the inset. -->
-    <dimen name="pet_row_photo_size">76dp</dimen>
 
     <!-- ================================= Pets tab =================================
          The redesigned Pets tab: one tall card per pet, stacked, then an outlined "Add a pet" row.
@@ -236,11 +225,9 @@
     <!-- The two buttons at the foot of the tab: "+ Add task" and "Delegate". -->
     <dimen name="task_action_button_height">52dp</dimen>
 
-    <!-- The quick-action cards along the bottom of the dashboard: an outlined tile with a circled
-         "+" above its label. -->
-    <dimen name="quick_action_height">86dp</dimen>
+    <!-- The circled "+" on each of the dashboard's quick-action cards. The cards' own height is
+         home_quick_action_height, further down with the rest of the redesigned dashboard. -->
     <dimen name="quick_action_icon_size">26dp</dimen>
-    <dimen name="quick_action_stroke_width">1dp</dimen>
 
     <!-- The floating bottom navigation bar. The bar keeps its own space in the Activity's layout
          rather than overlapping the content — see activity_main.xml — and these are the margins that
@@ -282,5 +269,74 @@
     <dimen name="places_action_button_height">52dp</dimen>
     <!-- Gap between saved-place rows. -->
     <dimen name="places_row_spacing">10dp</dimen>
+
+    <!-- ============================ Home dashboard (redesign) ============================
+         The redesigned Home tab, top to bottom. Its large cards reuse pet_card_corner_radius, so the
+         dashboard's cards are the same softly rounded objects as the pet cards on every other tab. -->
+
+    <!-- The header's "AI" pill: the theme toggle's height, with a little horizontal room. -->
+    <dimen name="header_ai_pill_padding_horizontal">10dp</dimen>
+    <!-- The red dot on the pet badge's corner, including its page-coloured ring. -->
+    <dimen name="header_unread_dot_size">9dp</dimen>
+
+    <!-- The coloured dot before "All synced". -->
+    <dimen name="sync_dot_size">6dp</dimen>
+
+    <!-- The three stat cards. A fixed width rather than a third each, so the row can scroll sideways on
+         a narrow phone with the third card peeking in from the edge, as the design draws it, and a long
+         amount such as "Rs 12,480" is never squeezed. -->
+    <dimen name="home_stat_card_width">120dp</dimen>
+    <dimen name="home_stat_card_padding">12dp</dimen>
+    <dimen name="home_stat_card_gap">8dp</dimen>
+    <!-- The bold figure in a stat card. In sp, so it grows with the user's font size; the text view also
+         shrinks it towards the minimum to fit rather than cutting a long amount off. -->
+    <dimen name="home_stat_value_text_size">20sp</dimen>
+    <dimen name="home_stat_value_min_text_size">12sp</dimen>
+    <!-- The small status pill at the foot of a stat card. -->
+    <dimen name="home_stat_pill_padding_horizontal">8dp</dimen>
+    <dimen name="home_stat_pill_padding_vertical">3dp</dimen>
+
+    <!-- The next-up card's ring. Drawn *inside* this box, so a 96dp ring 7dp thick leaves an 82dp hole
+         for the minute count; the corner radius is half the thickness, the most the indicator accepts. -->
+    <dimen name="next_up_ring_size">96dp</dimen>
+    <dimen name="next_up_ring_thickness">7dp</dimen>
+    <dimen name="next_up_ring_corner_radius">3.5dp</dimen>
+    <!-- The minute count in the middle of the ring, and the task title beside it. -->
+    <dimen name="next_up_minutes_text_size">28sp</dimen>
+    <dimen name="next_up_title_text_size">22sp</dimen>
+    <!-- "MARK DONE": a compact pill, shorter than a form button because it sits inside a card. -->
+    <dimen name="next_up_button_height">40dp</dimen>
+
+    <!-- The care streak's seven boxes. Seven share the width, so only the height, gap and corner are
+         fixed. Today's outline is a touch heavier than a missed day's hairline so it can be found. -->
+    <dimen name="streak_day_height">28dp</dimen>
+    <dimen name="streak_day_gap">6dp</dimen>
+    <dimen name="streak_day_corner_radius">8dp</dimen>
+    <dimen name="streak_day_today_stroke">1.5dp</dimen>
+
+    <!-- A pet card in the sideways "Your pets" row: a portrait card, narrow enough that the next pet
+         shows at the edge on any phone, which is what tells the user the row scrolls. -->
+    <dimen name="home_pet_card_width">156dp</dimen>
+    <dimen name="home_pet_card_height">180dp</dimen>
+    <dimen name="home_pet_card_gap">10dp</dimen>
+    <dimen name="home_pet_card_scrim_height">110dp</dimen>
+
+    <!-- The insight card's "AI" badge. -->
+    <dimen name="insight_badge_size">22dp</dimen>
+    <dimen name="insight_badge_corner_radius">6dp</dimen>
+    <!-- "ASK THE ASSISTANT": an outlined pill with a stroke heavy enough to read on the yellow. -->
+    <dimen name="insight_button_height">40dp</dimen>
+    <dimen name="insight_button_stroke_width">1.5dp</dimen>
+
+    <!-- A "coming up this week" row: the date column's width (wide enough for "28" at the default font
+         size, so every bar lines up down the card) and the coloured bar beside it. -->
+    <dimen name="coming_up_date_width">36dp</dimen>
+    <dimen name="coming_up_bar_width">3dp</dimen>
+    <dimen name="coming_up_bar_height">34dp</dimen>
+    <dimen name="coming_up_row_padding_vertical">12dp</dimen>
+    <dimen name="coming_up_arrow_size">18dp</dimen>
+
+    <!-- The three quick-action cards: a "+" circle over a label, left-aligned. -->
+    <dimen name="home_quick_action_height">92dp</dimen>
 
 </resources>

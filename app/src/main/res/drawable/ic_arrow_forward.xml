@@ -1,0 +1,23 @@
+<!--
+    Right-pointing arrow at the end of each "coming up this week" row on the dashboard, meaning "opens
+    the routine this belongs to".
+
+    An arrow rather than the app's usual chevron (ic_chevron_right) because the design draws one: rows
+    in a card read as a list of *destinations*, and the longer shaft carries that at a glance.
+
+    autoMirrored="true" flips it in right-to-left languages, where "forward" points left. The fill is
+    white so the tint applied in the layout comes through unaltered.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:autoMirrored="true"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- The standard Material "arrow_forward" glyph: the arrow_back path reflected. -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,4l-1.41,1.41L16.17,11H4v2h12.17l-5.58,5.59L12,20l8,-8z" />
+
+</vector>

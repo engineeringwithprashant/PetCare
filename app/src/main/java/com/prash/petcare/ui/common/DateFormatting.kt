@@ -1,7 +1,6 @@
 package com.prash.petcare.ui.common
 
 import android.content.Context
-import android.text.format.DateUtils
 import com.prash.petcare.R
 import java.text.DateFormat
 import java.util.Calendar
@@ -111,27 +110,5 @@ private fun ageInMonths(dateOfBirthMillis: Long): Int {
     // would also pick the wrong plural form.
     return months.coerceAtLeast(0)
 }
-
-/**
- * Formats a moment in the near future as the dashboard's appointment list shows it — "Tomorrow,
- * 09:30", "Fri, 14:00", or a full date once it is far enough away.
- *
- * [DateUtils.getRelativeDateTimeString] is used rather than a fixed pattern for three reasons: it
- * produces the phrase already translated into the device's language, it follows the user's own 12-
- * or 24-hour setting, and it switches by itself from a relative word to an absolute date once
- * "Tomorrow" stops being more helpful than "4 Mar".
- *
- * The two spans control that switch. `DAY_IN_MILLIS` as the minimum resolution keeps the day part
- * from counting down in hours; `WEEK_IN_MILLIS` as the transition is the point past which a weekday
- * name stops being unambiguous and a date is clearer.
- */
-fun formatAppointmentTime(context: Context, millis: Long): CharSequence =
-    DateUtils.getRelativeDateTimeString(
-        context,
-        millis,
-        DateUtils.DAY_IN_MILLIS,
-        DateUtils.WEEK_IN_MILLIS,
-        0
-    )
 
 private const val MONTHS_PER_YEAR = 12

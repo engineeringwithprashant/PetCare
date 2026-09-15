@@ -248,9 +248,8 @@
     <color name="pet_card_scrim_transparent">#0017180F</color>
     <color name="pet_card_scrim_opaque">#E617180F</color>
 
-    <!-- Text drawn on the card. The muted value is for the supporting line under the name. -->
+    <!-- Text drawn on the card: the pet's name and the chips' labels. -->
     <color name="on_pet_card">#FFFFFF</color>
-    <color name="on_pet_card_muted">#B9B8A6</color>
 
     <!-- The dark capsule holding a pet's age and weight, and the species chip in the card's top
          corner. Semi-transparent, so a little of the photo shows through and they read as sitting
@@ -358,5 +357,58 @@
     <color name="expense_category_insurance">#26AFA6</color>
     <color name="expense_category_training">#EC6AA2</color>
     <color name="expense_category_other">#76725F</color>
+
+    <!-- ============================== Home dashboard ==============================
+         The redesigned Home tab: the dark "next up" card, the yellow insight card, the header's unread
+         dot, the sync dot and the coloured bars in "coming up this week".
+
+         **The two feature cards do not follow the theme,** for the reason given for the pet cards and
+         the Money tab's total card above: each is a single deliberate treatment. The next-up card is the
+         one dark panel on the page in either mode, so the eye lands on "what to do now" first; the
+         insight card is the one yellow panel, the accent used as a fill with near-black content on it,
+         exactly as the accent is used everywhere else. Their colours are therefore fixed values, and
+         several are *references* to existing ones so the dark cards across the app stay one family. -->
+
+    <!-- The next-up card's ground, title, supporting text and ring track: the Places strip and Money
+         card values, referenced rather than repeated. -->
+    <color name="next_up_card_ground">@color/places_strip_ground</color>
+    <color name="next_up_card_title">@color/total_card_amount</color>
+    <color name="next_up_card_muted">@color/places_strip_muted</color>
+    <color name="next_up_ring_track">@color/total_card_track</color>
+
+    <!-- The insight card: the accent as the ground, its guaranteed-legible dark for the sentence, and a
+         softened olive for the small "TODAY'S INSIGHT" label (about 5:1 on the yellow, enough for a
+         caption while staying visibly quieter than the sentence). The "AI" badge is the dark card
+         ground, with the accent written on it. -->
+    <color name="insight_card_ground">@color/accent_yellow</color>
+    <color name="on_insight_card">@color/on_accent_yellow</color>
+    <color name="on_insight_card_muted">#5A5314</color>
+    <color name="insight_badge_ground">@color/pet_card_ground</color>
+
+    <!-- The dot on the header badge when care is overdue. A clear red, the colour every app uses for
+         "something needs you", in both themes: it shows against the cream page and the near-black one
+         alike. -->
+    <color name="header_unread_dot">#FF4D3D</color>
+
+    <!-- The dot beside "All synced". Green when everything is backed up (the "open now" green, so the
+         app has one green for "all good"), and the accent while changes are still waiting. The offline
+         case uses the theme's outline colour, set in code. -->
+    <color name="sync_dot_synced">@color/open_now_container</color>
+    <color name="sync_dot_pending">@color/accent_yellow</color>
+
+    <!-- **Care category colours**, for the thin bar on each "coming up this week" row. Single values
+         rather than light/dark pairs: a 3dp bar on a white or charcoal card needs a mid-light,
+         saturated colour to show either way, like the spending category colours above.
+
+         Grooming takes the accent, vet visits red and medication blue, as in the design; the rest reuse
+         the spending palette's hues so a colour means roughly the same thing on both tabs. -->
+    <color name="care_category_grooming">@color/accent_yellow</color>
+    <color name="care_category_vet">#E5484D</color>
+    <color name="care_category_medication">#4F93F0</color>
+    <color name="care_category_walk">#34C77B</color>
+    <color name="care_category_feeding">#A39D8A</color>
+    <color name="care_category_training">#EC6AA2</color>
+    <color name="care_category_play">#FF8457</color>
+    <color name="care_category_other">#76725F</color>
 
 </resources>

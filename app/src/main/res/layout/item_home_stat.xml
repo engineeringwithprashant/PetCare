@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One of the three small stat cards under the dashboard's greeting: "WALK WINDOW / 6:00 PM / GOOD
+    NOW", "SPENT · SEP / Rs 5,240 / +12% VS AUG", "NEXT VET / 22 Sep / KRISHALA".
+
+    **One layout pulled in three times** with <include> from fragment_home.xml, rather than three
+    copies of the same card. The three must stay identical in shape — a row of cards with slightly
+    different paddings reads as a mistake — and one file is what makes that a fact. Each <include> is
+    given its own android:id, which ViewBinding turns into a nested binding (binding.statWalk.statValue),
+    so the fragment reaches every view type-safely without findViewById.
+
+    The fragment fills all three texts and swaps the pill's style colours; nothing here is specific to
+    any one card.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/home_stat_card_width"
+    android:layout_height="wrap_content">
+
+    <!-- Label, figure and pill stacked top to bottom. A vertical LinearLayout is exactly that
+         arrangement; nothing is positioned relative to anything but the view above it. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/home_stat_card_padding">
+
+        <!-- "WALK WINDOW": the app's small letter-spaced label. -->
+        <TextView
+            android:id="@+id/statLabel"
+            style="@style/PetCare.SectionLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            tools:text="Walk window" />
+
+        <!--
+            The figure. A fixed height rather than wrap_content because the text **auto-sizes**: a long
+            amount such as "Rs 12,480" shrinks to fit the card's width instead of being cut off with an
+            ellipsis, which on a number would hide exactly the digits that matter. Auto-sizing measures
+            against the view's bounds, so both dimensions need to be settled for it to work reliably.
+            The app: attributes are AppCompat's, which back-port auto-sizing to API 24.
+        -->
+        <TextView
+            android:id="@+id/statValue"
+            style="@style/PetCare.Home.StatValue"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:gravity="center_vertical|start"
+            app:autoSizeMaxTextSize="@dimen/home_stat_value_text_size"
+            app:autoSizeMinTextSize="@dimen/home_stat_value_min_text_size"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform"
+            tools:text="6:00 PM" />
+
+        <!-- The status pill. wrap_content width so it hugs its words like a tag, rather than
+             stretching into a bar across the card. Its colours are one of the three
+             PetCare.Home.StatPill styles, chosen by the fragment. -->
+        <TextView
+            android:id="@+id/statPill"
+            style="@style/PetCare.Home.StatPill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            tools:text="Good now" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

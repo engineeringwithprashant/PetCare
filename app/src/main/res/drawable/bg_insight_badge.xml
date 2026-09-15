@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The small dark rounded square holding "AI" in the corner of the dashboard's yellow insight card.
+
+    A rounded square, the same shape family as the header's "p" monogram, so it reads as a *mark*
+    rather than as a button or an avatar. Near-black on the yellow card in both themes: the card itself
+    does not change with the theme (see colors.xml), so neither does anything drawn on it.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@color/insight_badge_ground" />
+
+    <corners android:radius="@dimen/insight_badge_corner_radius" />
+
+</shape>

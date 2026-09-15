@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One box in the dashboard's care-streak row.
+
+    A state-list drawable, so the fragment never builds a shape in code: it only sets two flags on the
+    box and this file decides what to draw.
+
+     - state_activated = a **full day**, every task done: filled with the accent yellow.
+     - state_selected  = **today**: outlined in the strong text colour, so the current day can be found
+       at once whether or not it is full yet.
+
+    The two combine, which is why there are four items. A selector picks the *first* item whose states
+    all match, so the most specific combinations have to come first — put the plain "activated" item
+    above "activated + selected" and today would lose its outline the moment it filled.
+
+    Every colour is a theme role except the accent, which is the same in both themes by design (see
+    colors.xml). A missed day is the card's own surface with a hairline, so it reads as an empty slot
+    rather than as a warning: the streak rewards care done, it does not scold.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Today, and already full. -->
+    <item android:state_activated="true" android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/accent_yellow" />
+            <stroke
+                android:width="@dimen/streak_day_today_stroke"
+                android:color="?attr/colorOnSurface" />
+            <corners android:radius="@dimen/streak_day_corner_radius" />
+        </shape>
+    </item>
+
+    <!-- A full day in the past. No stroke: the fill alone marks it. -->
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/accent_yellow" />
+            <corners android:radius="@dimen/streak_day_corner_radius" />
+        </shape>
+    </item>
+
+    <!-- Today, not full yet: the quieter surface, outlined. -->
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurfaceVariant" />
+            <stroke
+                android:width="@dimen/streak_day_today_stroke"
+                android:color="?attr/colorOnSurface" />
+            <corners android:radius="@dimen/streak_day_corner_radius" />
+        </shape>
+    </item>
+
+    <!-- A day that was missed, or had nothing scheduled. -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurface" />
+            <stroke
+                android:width="1dp"
+                android:color="?attr/colorOutlineVariant" />
+            <corners android:radius="@dimen/streak_day_corner_radius" />
+        </shape>
+    </item>
+
+</selector>

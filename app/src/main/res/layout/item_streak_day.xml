@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One day in the dashboard's care-streak row: a small rounded box with a two-letter weekday under it.
+
+    Included seven times from fragment_home.xml, each with its own id (streakDay0 … streakDay6), the same
+    way the Tasks tab builds its week strip. Seven fixed includes rather than a RecyclerView: the row
+    is always exactly seven days, never scrolls, and never changes length, so a list with an adapter
+    would be machinery with nothing to do.
+
+    The box's look is entirely bg_streak_day.xml. The fragment only sets two flags on it —
+    `isActivated` for a full day, `isSelected` for today — and the state-list drawable chooses the fill
+    and outline, so no colour is ever set from code.
+
+    The column's width comes from layout_weight on the <include>, which shares the row equally among
+    the seven.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:orientation="vertical">
+
+    <!-- The box. Hidden from TalkBack: the whole row is announced as one sentence by the fragment,
+         and seven unlabelled shapes read out one by one would say nothing. -->
+    <View
+        android:id="@+id/dayBox"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/streak_day_height"
+        android:background="@drawable/bg_streak_day"
+        android:importantForAccessibility="no" />
+
+    <!-- "FR", from the locale's own two-letter weekday. -->
+    <TextView
+        android:id="@+id/dayLabel"
+        style="@style/PetCare.Home.StreakDayLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_xs"
+        android:importantForAccessibility="no"
+        tools:text="Fr" />
+
+</LinearLayout>

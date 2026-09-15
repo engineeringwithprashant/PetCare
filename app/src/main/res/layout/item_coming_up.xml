@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One row of the dashboard's "Coming up this week" card: the date and weekday in a narrow column, a
+    thin bar in the care category's colour, the task's title with its location or routine and time
+    beneath, and an arrow. Tapping the row opens the routine the task belongs to.
+
+    **A ConstraintLayout** because the pieces relate to one another in both directions: the title and
+    subtitle sit between the bar and the arrow and must leave room for both, while the date column, bar
+    and arrow all centre vertically on the text block whatever its height. Chains of LinearLayouts could
+    express it, but only by nesting three deep; constraints say it flat.
+
+    The hairline is a divider view at the top of *every* row, the first included: in the design a line
+    also separates the first row from the card's header, so each row simply brings its own line with it.
+    That is simpler than an ItemDecoration for a list never more than four rows long.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:paddingStart="@dimen/card_padding"
+    android:paddingEnd="@dimen/card_padding">
+
+    <!-- The hairline above the row, spanning the card inside its padding. -->
+    <View
+        android:id="@+id/divider"
+        style="@style/PetCare.PetDetail.AboutDivider"
+        android:layout_width="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- The date column: "12" over "FRI", in a fixed width so every row's bar lines up down the card
+         whether the date has one digit or two. Centred on the text block beside it. -->
+    <LinearLayout
+        android:id="@+id/dateColumn"
+        android:layout_width="@dimen/coming_up_date_width"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:importantForAccessibility="noHideDescendants"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="@id/textBlock"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/textBlock">
+
+        <TextView
+            android:id="@+id/dayOfMonthText"
+            style="@style/PetCare.Home.ComingUpDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="12" />
+
+        <TextView
+            android:id="@+id/weekdayText"
+            style="@style/PetCare.Home.ComingUpWeekday"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            tools:text="Fri" />
+
+    </LinearLayout>
+
+    <!-- The category bar. bg_pill makes a 3dp-wide rectangle a capsule; the adapter tints it. -->
+    <View
+        android:id="@+id/categoryBar"
+        android:layout_width="@dimen/coming_up_bar_width"
+        android:layout_height="@dimen/coming_up_bar_height"
+        android:layout_marginStart="@dimen/spacing_sm"
+        android:background="@drawable/bg_pill"
+        app:layout_constraintBottom_toBottomOf="@id/textBlock"
+        app:layout_constraintStart_toEndOf="@id/dateColumn"
+        app:layout_constraintTop_toTopOf="@id/textBlock" />
+
+    <!-- Title over subtitle. Width 0dp between the bar and the arrow is "fill what is left", which is
+         what lets a long title ellipsize instead of pushing the arrow off the card. The vertical
+         padding lives here, on the tallest element, so the row's height follows the text. -->
+    <LinearLayout
+        android:id="@+id/textBlock"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_md"
+        android:layout_marginEnd="@dimen/spacing_sm"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/coming_up_row_padding_vertical"
+        android:paddingBottom="@dimen/coming_up_row_padding_vertical"
+        app:layout_constraintEnd_toStartOf="@id/arrowIcon"
+        app:layout_constraintStart_toEndOf="@id/categoryBar"
+        app:layout_constraintTop_toBottomOf="@id/divider">
+
+        <TextView
+            android:id="@+id/titleText"
+            style="@style/PetCare.Home.ComingUpTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Coat brush for Krishala" />
+
+        <!-- "Grooming routine · 6:00 PM", in the app's monospace meta style. -->
+        <TextView
+            android:id="@+id/subtitleText"
+            style="@style/PetCare.Places.Meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            tools:text="Grooming routine · 6:00 PM" />
+
+    </LinearLayout>
+
+    <!-- The arrow, in the text colour as the design draws it. Decorative: the row's description
+         already ends "Open routine", so TalkBack skips the image. -->
+    <ImageView
+        android:id="@+id/arrowIcon"
+        android:layout_width="@dimen/coming_up_arrow_size"
+        android:layout_height="@dimen/coming_up_arrow_size"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_arrow_forward"
+        app:layout_constraintBottom_toBottomOf="@id/textBlock"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/textBlock"
+        app:tint="?attr/colorOnSurface" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

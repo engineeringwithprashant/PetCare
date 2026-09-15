@@ -64,26 +64,30 @@
     <string name="login_no_account">New here? Create an account</string>
 
     <!-- ============================== Home dashboard ==============================
-         The screen the app opens on once signed in: a greeting, a card per pet, today's care as a
-         checklist, and the vet visits coming up. -->
+         The screen the app opens on once signed in, top to bottom: the greeting and clock, three stat
+         cards, what is next, today's care and the streak, the pets, an insight, the week ahead, and
+         three quick actions.
 
-    <!-- %1$s is replaced with the signed-in user's name, read back out of the database. -->
-    <string name="home_welcome">Hello, %1$s</string>
-    <!-- Shown in the greeting's place until the name has been read from the database. A neutral
-         greeting rather than a blank line, so the screen never opens with a gap at the top where
-         its largest piece of text will shortly appear. -->
-    <string name="home_welcome_generic">Hello</string>
+         Upper-case labels are written in sentence case here and capitalised by their styles
+         (textAllCaps), so the same words stay correct in a language where blanket capitals are wrong.
+         Every "·" separator is a plain middle dot with spaces, as elsewhere in the app. -->
 
-    <!-- Section headings on the dashboard. Worded as the user's own things rather than as the data
-         behind them — "Your pets", not "Pet list". -->
-    <string name="home_pets_title">Your pets</string>
-    <string name="home_today_title">Today\'s care</string>
-    <string name="home_appointments_title">Upcoming appointments</string>
+    <!-- The greeting's first line, chosen by the time of day. "Hello," at night rather than "Good
+         night," — that phrase is a goodbye, and the app is being opened, not closed. -->
+    <string name="home_greeting_morning">Good morning,</string>
+    <string name="home_greeting_afternoon">Good afternoon,</string>
+    <string name="home_greeting_evening">Good evening,</string>
+    <string name="home_greeting_night">Hello,</string>
+    <!-- The whole greeting across two lines: %1$s is one of the lines above, %2$s the user's first
+         name. The name falls back to the first line alone until it has loaded. -->
+    <string name="home_greeting_format">%1$s\n%2$s</string>
 
-    <!-- ====================== Dashboard header and care card ======================
-         The redesigned dashboard's own text. -->
+    <!-- The sync line under the greeting when everything is backed up. %1$s is a relative time such as
+         "3 min. ago", produced by the device so it arrives already translated. The other states reuse
+         the sync indicator strings further down. -->
+    <string name="home_sync_synced">All synced · %1$s</string>
 
-    <!-- The single letter in the app's monogram, top left of the dashboard. A string resource rather
+    <!-- The single letter in the app's monogram, top left of the header. A string resource rather
          than a literal so it can be transliterated along with the app's name. -->
     <string name="home_monogram">p</string>
 
@@ -93,12 +97,68 @@
     <string name="home_theme_light">Light</string>
     <string name="home_theme_dark">Dark</string>
 
-    <!-- The count beside the "Your pets" heading. Deliberately not a bare number: "2" alone on the
-         right of a heading could be a count of anything on the screen. -->
-    <plurals name="home_pets_in_care">
-        <item quantity="one">%1$d in care</item>
-        <item quantity="other">%1$d in care</item>
+    <!-- The header's "AI" pill and the insight card's badge. -->
+    <string name="home_ai_pill">AI</string>
+    <!-- Shown when the AI pill or "Ask the assistant" is pressed. The app has no assistant yet, and a
+         control that silently did nothing would read as broken. -->
+    <string name="home_assistant_coming_soon">The assistant is coming soon.</string>
+
+    <!-- ============================ Stat cards ============================ -->
+    <string name="home_stat_walk_window">Walk window</string>
+    <!-- %1$s is the current month's short name, e.g. "Spent · Sep". -->
+    <string name="home_stat_spent_format">Spent · %1$s</string>
+    <string name="home_stat_next_vet">Next vet</string>
+    <!-- A stat card with nothing to report. A dash rather than "0" or "None", so an absent figure
+         never reads as a real one. -->
+    <string name="home_stat_empty_value">—</string>
+
+    <!-- The walk window card. The figure is the next walk's time; these are its pill, and the figure
+         when there is no time to show. -->
+    <string name="home_walk_good_now">Good now</string>
+    <string name="home_walk_later">Later</string>
+    <string name="home_walk_any_time">Any time</string>
+    <string name="home_walk_done_value">Done</string>
+    <string name="home_walk_done_pill">Walked</string>
+    <string name="home_walk_none_pill">None today</string>
+
+    <!-- The spending card's pill: the change against last month. %1$d is the whole percentage without
+         a sign (the sign is in the text) and %2$s last month's short name. The "down" form uses a true
+         minus sign, not a hyphen. The last is for a previous month with no spending, where a
+         percentage would divide by zero. -->
+    <string name="home_spent_change_up">+%1$d%% vs %2$s</string>
+    <string name="home_spent_change_down">−%1$d%% vs %2$s</string>
+    <string name="home_spent_change_flat">%1$d%% vs %2$s</string>
+    <string name="home_spent_no_previous">Nothing in %1$s</string>
+
+    <!-- The next vet card's pill when no visit is scheduled. When one is, the pill is the pet's name. -->
+    <string name="home_vet_none_pill">None booked</string>
+
+    <!-- ============================ Next up card ============================ -->
+    <string name="home_next_up_label">Next up</string>
+    <!-- The caption under the number in the ring. -->
+    <string name="home_ring_min_away">min away</string>
+    <string name="home_ring_min_late">min late</string>
+    <plurals name="home_ring_hours_away">
+        <item quantity="one">hr away</item>
+        <item quantity="other">hrs away</item>
     </plurals>
+    <string name="home_ring_any_time">any time</string>
+    <string name="home_ring_done">done</string>
+    <!-- The separator between the parts of the line under the task: pet, time, supplies. -->
+    <string name="home_meta_separator">" · "</string>
+    <string name="home_mark_done">Mark done</string>
+    <!-- The Snackbar after "Mark done", offering to undo. %1$s is the task's title. -->
+    <string name="home_marked_done">%1$s marked done</string>
+    <!-- The card's title and line when there is no task left to name. -->
+    <string name="home_next_up_done_title">All caught up</string>
+    <string name="home_next_up_done_meta">Every task due today is ticked off.</string>
+    <string name="home_next_up_none_title">Nothing scheduled</string>
+    <string name="home_next_up_none_meta">Add a care routine to see what\'s next here.</string>
+    <!-- TalkBack's reading of the ring: the number and its caption as one phrase, e.g. "22 min away". -->
+    <string name="cd_next_up_ring">%1$s %2$s</string>
+
+    <!-- ============================ Today's care card ============================ -->
+    <string name="home_today_title">Today\'s care</string>
 
     <!-- The care card's headline, reporting what is *left* rather than what is done: an owner opens
          the app to find out what still needs doing. The zero case is a separate string because
@@ -111,30 +171,91 @@
     <string name="home_all_caught_up">All caught up for today</string>
     <string name="home_nothing_scheduled">Nothing scheduled today</string>
 
-    <!-- The line under the care card's headline, naming the next task and the pet it belongs to.
-         %1$s is the task's title and %2$s the pet's name. -->
-    <string name="home_next_up">Next up: %1$s for %2$s</string>
-    <!-- Shown in its place once everything due today has been ticked off. -->
-    <string name="home_next_up_done">Every task is ticked off. Enjoy the quiet.</string>
-    <!-- And when no care was scheduled in the first place. -->
-    <string name="home_next_up_none">Add a care routine to see the day here.</string>
-
     <!-- The label under the completed count in the middle of the progress ring — "OF 6". Upper-cased
-         by its style at display time, for the same reason as the navigation labels. %1$d is the
-         total number of tasks due today. -->
+         by its style at display time. %1$d is the total number of tasks due today. -->
     <string name="home_ring_of_total">of %1$d</string>
 
+    <!-- The streak line. %1$d is how many of the last seven days had every task done. -->
+    <string name="home_streak_label">Care streak</string>
+    <plurals name="home_streak_full_days">
+        <item quantity="one">%1$d full day</item>
+        <item quantity="other">%1$d full days</item>
+    </plurals>
+    <!-- TalkBack's reading of the seven boxes as one sentence, rather than seven unlabelled shapes. -->
+    <plurals name="cd_streak">
+        <item quantity="one">%1$d of the last 7 days had every task done</item>
+        <item quantity="other">%1$d of the last 7 days had every task done</item>
+    </plurals>
+
+    <!-- ============================ Your pets ============================ -->
+    <string name="home_pets_title">Your pets</string>
+    <string name="home_pets_hint">tap to open</string>
+
+    <!-- ============================ Insight card ============================
+         The sentence is chosen by rules from today's tasks (see HomeDashboard.insightFor) and filled
+         in here, so it can be translated like any other text. -->
+    <string name="home_insight_label">Today\'s insight</string>
+    <string name="home_ask_assistant">Ask the assistant</string>
+    <string name="home_insight_nothing_scheduled">No care is scheduled today — a good moment to plan a walk or set up a routine.</string>
+    <!-- %1$d is the streak's count of full days. -->
+    <plurals name="home_insight_all_done">
+        <item quantity="one">Everything is done for today — that\'s %1$d full day this week.</item>
+        <item quantity="other">Everything is done for today — that\'s %1$d full days this week.</item>
+    </plurals>
+    <!-- One pet holds most of what is left. %1$s the pet, %2$d its open tasks, %3$d all open tasks,
+         %4$s a possessive pronoun for the pet (below), %5$s that pet's first task, %6$s the time of
+         %7$s, a later task for another pet. Two endings, because "so the evening is clear" only makes
+         sense when the later task is in the evening.
+
+         Plurals chosen by %3$d, the total. It is always at least two in English — the rule needs two
+         open tasks for one pet — but languages such as Polish or Russian word 2–4 differently from 5+,
+         so the count still has to pick the form. -->
+    <plurals name="home_insight_busiest_evening">
+        <item quantity="one">%1$s has %2$d of today\'s %3$d open task — front-load %4$s %5$s before the %6$s %7$s so the evening is clear.</item>
+        <item quantity="other">%1$s has %2$d of today\'s %3$d open tasks — front-load %4$s %5$s before the %6$s %7$s so the evening is clear.</item>
+    </plurals>
+    <plurals name="home_insight_busiest_day">
+        <item quantity="one">%1$s has %2$d of today\'s %3$d open task — front-load %4$s %5$s before the %6$s %7$s so the rest of the day is clear.</item>
+        <item quantity="other">%1$s has %2$d of today\'s %3$d open tasks — front-load %4$s %5$s before the %6$s %7$s so the rest of the day is clear.</item>
+    </plurals>
+    <!-- The pronoun in the sentences above, from the pet's recorded gender; "their" when it was not
+         recorded. -->
+    <string name="home_pronoun_his">his</string>
+    <string name="home_pronoun_her">her</string>
+    <string name="home_pronoun_their">their</string>
+    <!-- Something is late. %1$s the earliest late task, %2$s its pet, %3$d how many are late. -->
+    <plurals name="home_insight_overdue">
+        <item quantity="one">%1$s for %2$s is overdue — knock it out first and the rest of today is back on schedule.</item>
+        <item quantity="other">%1$s for %2$s is the first of %3$d overdue tasks — start there and work forward.</item>
+    </plurals>
+    <!-- The general case. %1$d tasks left, %2$s the next task, %3$s its pet, %4$s its time. -->
+    <plurals name="home_insight_next_timed">
+        <item quantity="one">Just %1$d thing left today: %2$s for %3$s at %4$s.</item>
+        <item quantity="other">%1$d things left today. Next is %2$s for %3$s at %4$s.</item>
+    </plurals>
+    <plurals name="home_insight_next_untimed">
+        <item quantity="one">Just %1$d thing left today: %2$s for %3$s, whenever suits.</item>
+        <item quantity="other">%1$d things left today. Next is %2$s for %3$s, whenever suits.</item>
+    </plurals>
+
+    <!-- ============================ Coming up this week ============================ -->
+    <string name="home_coming_up_title">Coming up this week</string>
+    <plurals name="home_coming_up_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <string name="home_coming_up_empty">Nothing else is scheduled for the next seven days.</string>
+    <!-- The line under a row's title for an item with no time of day: "Grooming routine · due". -->
+    <string name="home_coming_up_due">due</string>
+    <!-- TalkBack's reading of a row, which opens the routine. %1$s the task, %2$s the pet, %3$s the day. -->
+    <string name="cd_coming_up_row">%1$s for %2$s, %3$s. Open routine.</string>
+
     <!-- ============================== Quick actions ==============================
-         The three tiles at the foot of the dashboard. Verb-first, so each reads as the thing it does
+         The three cards at the foot of the dashboard. Verb-first, so each reads as the thing it does
          rather than as the name of a screen. -->
     <string name="home_action_add_task">Add task</string>
     <string name="home_action_log_expense">Log expense</string>
     <string name="home_action_add_pet">Add pet</string>
-
-    <!-- Joins a pet's age to its weight in the dark pill on a pet card, e.g. "2 yrs · 26 kg".
-         %1$s is the age and %2$s the weight. A separate string from the pet list's version because
-         this one has to stay short enough to sit on a photo beside the status pill. -->
-    <string name="home_pet_facts">%1$s · %2$s</string>
 
     <!-- The abbreviated age used on a pet card, where the full "2 years old" would not fit beside
          the weight. Plurals because which forms exist differs by language, even for abbreviations.
@@ -153,47 +274,15 @@
     <string name="home_empty_message">Add your first pet to start tracking their care.</string>
     <string name="home_empty_action">Add a pet</string>
 
-    <!--
-        Today's care summary, shown beside the "Today's care" heading.
-
-        A plurals resource, not a plain string: the wording has to change with the count, and
-        which forms exist differs by language. Android picks the right entry from the quantity
-        passed to getQuantityString, so the code never has to test for "is it 1?" itself.
-        %1$d is the completed count and %2$d the total.
-
-        There is deliberately no wording for a count of zero: the card's own empty line already
-        says nothing is due, and "0 of 0 done" beside it would say the same thing twice.
-    -->
-    <plurals name="home_tasks_summary">
-        <item quantity="one">%1$d of %2$d done</item>
-        <item quantity="other">%1$d of %2$d done</item>
-    </plurals>
-
-    <!-- The pastel pill on a pet's dashboard card, reporting that pet's own day. Three different
-         messages because "3 left", "all done" and "nothing scheduled" are genuinely different
-         things to tell someone, and a single count would blur the last two into "0". -->
+    <!-- One pet's day in a short phrase, used on the pet detail screen's photo card. Three different
+         messages because "3 left", "all done" and "nothing scheduled" are genuinely different things
+         to tell someone, and a single count would blur the last two into "0". -->
     <plurals name="home_pet_tasks_left">
         <item quantity="one">%1$d left today</item>
         <item quantity="other">%1$d left today</item>
     </plurals>
     <string name="home_pet_all_done">All done today</string>
     <string name="home_pet_nothing_due">Nothing due today</string>
-
-    <!-- Shown inside the "Today's care" card when there is genuinely no care scheduled. Phrased as
-         reassurance rather than as an error, because an empty day is a perfectly good day. -->
-    <string name="home_today_empty">No care is scheduled for today. Enjoy the quiet.</string>
-
-    <!-- Shown inside the "Upcoming appointments" card when no vet visits are scheduled. -->
-    <string name="home_appointments_empty">No vet visits coming up.</string>
-    <!-- Joins a pet's name to an appointment's date, e.g. "Bella · Tomorrow, 09:30". %1$s is the
-         pet, %2$s the moment — produced by the device so it arrives already translated. -->
-    <string name="home_appointment_subtitle">%1$s · %2$s</string>
-
-    <!-- Prefixes a dashboard checklist row with the animal it belongs to, since the dashboard mixes
-         every pet's care into one list. %1$s is the pet's name, %2$s the time of day. -->
-    <string name="home_task_subtitle">%1$s · %2$s</string>
-    <!-- The same, for a task with no time of day recorded. -->
-    <string name="home_task_subtitle_no_time">%1$s</string>
 
     <!-- ============================== Sync indicator ==============================
          A single line on the home screen saying how the Firestore backup is getting on. Worded
@@ -276,10 +365,6 @@
 
     <!-- The outlined row at the foot of the list. Upper-cased by its style; the "+" is an icon. -->
     <string name="pets_add_pet_row">Add a pet</string>
-
-    <!-- ============================== Pet list item ============================== -->
-    <!-- Joins species and breed into one subtitle, e.g. "Dog · Labrador". -->
-    <string name="pet_species_and_breed">%1$s · %2$s</string>
 
     <!-- ============================== No pets to pick ==============================
          The Tasks and Money tabs filter by pet with a row of chips. When the account has no pets at
@@ -687,11 +772,6 @@
     <!-- The same, naming the task, for the check button on a Tasks-tab card. %1$s is its title. -->
     <string name="cd_task_done_named">Mark %1$s as done</string>
     <string name="cd_add_expense">Record an expense</string>
-    <!-- The category symbol beside a dashboard task. %1$s is the category's own name, so TalkBack
-         reads "Feeding" rather than announcing an unnamed image. -->
-    <string name="cd_task_category">%1$s</string>
-    <!-- The chevron on a card that opens another screen. -->
-    <string name="cd_open_pet">Open this pet</string>
     <!-- The round back button over the pet detail screen's photo. -->
     <string name="cd_back">Back</string>
     <!-- The "⋮" button on a routine card. Names the routine, because a list of identical "More
@@ -711,6 +791,16 @@
         <item quantity="one">%1$d pet in care. Open your account.</item>
         <item quantity="other">%1$d pets in care. Open your account.</item>
     </plurals>
+    <!-- Added to the pet badge's description when the red dot is showing, so TalkBack users hear what
+         the dot means. %1$d is how many of today's tasks are past their time. -->
+    <plurals name="cd_overdue_tasks">
+        <item quantity="one">%1$d task is overdue.</item>
+        <item quantity="other">%1$d tasks are overdue.</item>
+    </plurals>
+    <!-- Joins the two sentences above: the badge's own description, then the overdue count. -->
+    <string name="cd_badge_with_overdue">%1$s %2$s</string>
+    <!-- The header's AI pill. -->
+    <string name="cd_open_assistant">Open the assistant</string>
     <!-- The progress ring. Announced as one sentence rather than leaving TalkBack to read the count
          and the "of 6" beneath it as two unrelated numbers. %1$d is the completed count and %2$d the
          total due today; the plural form is chosen by the *total*, so a day with a single task does

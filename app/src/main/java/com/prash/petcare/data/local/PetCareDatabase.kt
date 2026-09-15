@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.prash.petcare.data.local.converter.Converters
+import com.prash.petcare.data.local.dao.CareCompletionDao
 import com.prash.petcare.data.local.dao.CareRoutineDao
 import com.prash.petcare.data.local.dao.CareTaskDao
 import com.prash.petcare.data.local.dao.ExpenseDao
@@ -15,6 +16,7 @@ import com.prash.petcare.data.local.dao.PetDao
 import com.prash.petcare.data.local.dao.PlaceDao
 import com.prash.petcare.data.local.dao.SyncDeletionDao
 import com.prash.petcare.data.local.dao.UserDao
+import com.prash.petcare.data.local.entity.CareCompletion
 import com.prash.petcare.data.local.entity.CareRoutine
 import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.entity.Expense
@@ -41,9 +43,10 @@ import com.prash.petcare.data.local.entity.User
         CareTask::class,
         Expense::class,
         SyncDeletion::class,
-        Place::class
+        Place::class,
+        CareCompletion::class
     ],
-    version = 7,
+    version = 8,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -61,6 +64,7 @@ abstract class PetCareDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
     abstract fun syncDeletionDao(): SyncDeletionDao
     abstract fun placeDao(): PlaceDao
+    abstract fun careCompletionDao(): CareCompletionDao
 
     companion object {
 
@@ -253,6 +257,74 @@ abstract class PetCareDatabase : RoomDatabase() {
         }
 
         /**
+         * Version 7 to 8: adds the `care_completions` history table behind the dashboard's care streak.
+         *
+         * A new table, so — like [MIGRATION_5_6] — no existing row is touched. The CREATE statements
+         * reproduce what Room generates from [CareCompletion] exactly (column types, `NOT NULL`s, both
+         * foreign keys with their CASCADE rules, and the three indexes named the way Room names them),
+         * because Room validates the file against the entity on every open and refuses to start on any
+         * difference.
+         *
+         * **Seeding from what the tasks already know.** Before this version the only record of a tick
+         * was each task's `completedAt` — the *last* time it was done. That single timestamp per task
+         * is copied in as one history row each, so a task ticked off earlier today still counts towards
+         * today's streak box after the upgrade, rather than the history starting completely empty.
+         * Older days cannot be recovered: the timestamps that described them were overwritten long ago,
+         * which is the very problem this table exists to fix.
+         *
+         * `dayStart` has to be *local* midnight, matching what the repository writes from Kotlin. SQLite
+         * works it out in one expression: `'unixepoch'` reads the seconds, `'localtime'` shifts them into
+         * the device's time zone, `'start of day'` truncates to midnight there, and `'utc'` shifts that
+         * midnight back so `strftime('%s')` returns it as an epoch value. `OR IGNORE` is belt and braces:
+         * the table is empty and each task contributes at most one row, so no conflict can arise.
+         */
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `care_completions` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `taskId` INTEGER NOT NULL,
+                        `petId` INTEGER NOT NULL,
+                        `dayStart` INTEGER NOT NULL,
+                        `completedAt` INTEGER NOT NULL,
+                        FOREIGN KEY(`taskId`) REFERENCES `care_tasks`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE,
+                        FOREIGN KEY(`petId`) REFERENCES `pets`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS `index_care_completions_taskId_dayStart`
+                    ON `care_completions` (`taskId`, `dayStart`)
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_care_completions_petId` ON `care_completions` (`petId`)"
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS `index_care_completions_completedAt`
+                    ON `care_completions` (`completedAt`)
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT OR IGNORE INTO `care_completions` (`taskId`, `petId`, `dayStart`, `completedAt`)
+                    SELECT `id`, `petId`,
+                        CAST(strftime('%s', `completedAt` / 1000, 'unixepoch', 'localtime',
+                            'start of day', 'utc') AS INTEGER) * 1000,
+                        `completedAt`
+                    FROM `care_tasks`
+                    WHERE `completedAt` IS NOT NULL
+                    """.trimIndent()
+                )
+            }
+        }
+
+        /**
          * The one shared instance.
          *
          * `@Volatile` means a write here is immediately visible to every thread, which stops one
@@ -288,7 +360,8 @@ abstract class PetCareDatabase : RoomDatabase() {
                         MIGRATION_3_4,
                         MIGRATION_4_5,
                         MIGRATION_5_6,
-                        MIGRATION_6_7
+                        MIGRATION_6_7,
+                        MIGRATION_7_8
                     )
                     .build()
                     .also { INSTANCE = it }

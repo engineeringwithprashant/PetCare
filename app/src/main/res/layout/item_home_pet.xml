@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One pet in the dashboard's sideways "Your pets" row: a dark portrait card with the pet's photo, a
+    small species chip in the top-left corner, and the pet's name across the bottom. Tapping it opens the
+    pet's detail screen.
+
+    **Why the card is dark in both themes.** Everything written on it sits on a photograph, and a
+    photograph does not change with the display mode — so white text over a dark scrim is the only
+    pairing legible in both. It is the same object as the pet cards on the Pets tab and the pet detail
+    screen, just smaller. See the pet-card note in colors.xml.
+
+    **How the layers stack.** A FrameLayout, because the photo, the scrim and the two labels are
+    genuinely piled on top of one another and each is simply pinned to a corner or edge with
+    layout_gravity. The order they are *declared* in is the order they are painted: photo, then scrim
+    over it, then the text on top. Declaring the text before the scrim would bury it.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/home_pet_card_width"
+    android:layout_height="@dimen/home_pet_card_height"
+    android:layout_marginEnd="@dimen/home_pet_card_gap"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="@color/pet_card_ground"
+    app:cardElevation="0dp"
+    app:rippleColor="@color/accent_yellow"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Large"
+    app:strokeWidth="0dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- The photograph, filling the card and cropped to it; the card's rounded outline clips it,
+             so the image needs no shape of its own. The adapter loads it asynchronously — see
+             ui/common/PetPhotoBinder.kt for why a recycled card needs more than one assignment. -->
+        <ImageView
+            android:id="@+id/petPhotoImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_pet_photo_dark"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_pet_placeholder" />
+
+        <!-- The gradient that keeps the name legible over a pale photo. Pinned to the bottom with a
+             fixed height, so the top of the picture is left untouched. -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/home_pet_card_scrim_height"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_pet_card_scrim" />
+
+        <!-- "CAT", top-left. Upper-cased by its style rather than in the string. -->
+        <TextView
+            android:id="@+id/speciesChip"
+            style="@style/PetCare.SpeciesChip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="@dimen/home_stat_card_padding"
+            tools:text="Cat" />
+
+        <!-- The pet's name, bottom-left, up to two lines for a long one. -->
+        <TextView
+            android:id="@+id/petNameText"
+            style="@style/PetCare.Home.PetCardName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="@dimen/home_stat_card_padding"
+            tools:text="Krishala" />
+
+    </FrameLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -1,11 +1,14 @@
 package com.prash.petcare.data.repository
 
+import com.prash.petcare.data.local.dao.CareCompletionDao
 import com.prash.petcare.data.local.dao.CareTaskDao
 import com.prash.petcare.data.local.dao.SyncDeletionDao
+import com.prash.petcare.data.local.entity.CareCompletion
 import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.entity.SyncDeletion
 import com.prash.petcare.data.local.entity.SyncEntityType
 import com.prash.petcare.data.local.relation.TaskReminder
+import com.prash.petcare.util.CareSchedule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
@@ -15,12 +18,19 @@ import kotlinx.coroutines.flow.first
  * See [UserRepository] for why this layer exists and how it fits the MVVM chain, and
  * [PetRepository] for why the sync timestamps and tombstones are maintained in this layer.
  *
+ * **Completion history.** This repository also owns the `care_completions` table. Every tick and
+ * un-tick made anywhere in the app passes through [setTaskCompleted], so writing the history *here* —
+ * rather than asking each screen to remember to — is what guarantees the dashboard's care streak can
+ * never disagree with what was actually ticked. See [CareCompletion].
+ *
  * @property careTaskDao Injected through the constructor so tests can substitute a fake.
  * @property syncDeletionDao Where deletions are recorded for the sync layer to send on.
+ * @property careCompletionDao Where each day's ticks are kept once the task itself has moved on.
  */
 class CareTaskRepository(
     private val careTaskDao: CareTaskDao,
-    private val syncDeletionDao: SyncDeletionDao
+    private val syncDeletionDao: SyncDeletionDao,
+    private val careCompletionDao: CareCompletionDao
 ) {
 
     /** Observes every task for one pet, soonest due first. */
@@ -145,14 +155,26 @@ class CareTaskRepository(
     /**
      * Clears every completion a pet recorded inside a time window, leaving the tasks themselves
      * untouched. Used to start a day's checklist over.
+     *
+     * The history rows for the same window go too, so a day that was reset no longer counts as a
+     * full day in the care streak.
      */
-    suspend fun clearCompletionsForPet(petId: Long, fromMillis: Long, toMillis: Long) =
+    suspend fun clearCompletionsForPet(petId: Long, fromMillis: Long, toMillis: Long) {
         careTaskDao.clearCompletionsForPet(
             petId = petId,
             fromMillis = fromMillis,
             toMillis = toMillis,
             updatedAt = System.currentTimeMillis()
         )
+        careCompletionDao.deleteForPetBetween(petId, fromMillis, toMillis)
+    }
+
+    /**
+     * Observes an owner's completion history from [fromMillis] onwards — what the dashboard's care
+     * streak is drawn from.
+     */
+    fun observeCompletionsForOwnerSince(ownerId: Long, fromMillis: Long): Flow<List<CareCompletion>> =
+        careCompletionDao.observeForOwnerSince(ownerId, fromMillis)
 
     /**
      * Ticks a task off, or clears it again.
@@ -162,11 +184,35 @@ class CareTaskRepository(
      * a stale "completed at" behind on an outstanding task.
      */
     suspend fun setTaskCompleted(taskId: Long, isCompleted: Boolean) {
+        // Read before writing: the history row needs the task's pet, and un-ticking needs to know
+        // which day the tick being undone was recorded against. A task that has just been deleted
+        // elsewhere has nothing to tick, so there is nothing to do.
+        val task = careTaskDao.getById(taskId) ?: return
+
         val now = System.currentTimeMillis()
         // completedAt is cleared when un-ticking, but updatedAt still moves: the row changed, and
         // that is what the sync layer is asking about.
         val completedAt = if (isCompleted) now else null
         careTaskDao.setCompleted(taskId, isCompleted, completedAt, now)
+
+        // Then the history. Two separate statements rather than one transaction: if the second were
+        // ever lost, the worst outcome is one streak box drawn wrongly for a day — the checklist
+        // itself, which is what the user acts on, is already correct.
+        if (isCompleted) {
+            careCompletionDao.insert(
+                CareCompletion(
+                    taskId = taskId,
+                    petId = task.petId,
+                    dayStart = CareSchedule.startOfDay(now),
+                    completedAt = now
+                )
+            )
+        } else {
+            // The day of the tick being undone, not today: un-ticking at 00:05 a task done at 23:55
+            // must remove yesterday's row, which is the one that tick created.
+            val tickedDay = CareSchedule.startOfDay(task.completedAt ?: now)
+            careCompletionDao.deleteForTaskOnDay(taskId, tickedDay)
+        }
     }
 
     // -------------------------------------------------------------------------------------------
@@ -192,6 +238,26 @@ class CareTaskRepository(
     fun observePendingTaskCount(ownerId: Long): Flow<Int> =
         careTaskDao.observePendingSyncCount(ownerId)
 
-    /** Writes tasks pulled from Firestore into Room, keeping the timestamps they arrived with. */
-    suspend fun upsertTasksFromSync(tasks: List<CareTask>) = careTaskDao.upsertAll(tasks)
+    /**
+     * Writes tasks pulled from Firestore into Room, keeping the timestamps they arrived with.
+     *
+     * A task ticked on another device arrives carrying its `completedAt`, and that tick is added to
+     * the local history as well, so the care streak on this phone counts care done on the other one.
+     * Only additions are made — see [CareCompletionDao.insertAllIfAbsent] for why an existing row is
+     * kept. The tasks are written first because each history row has a foreign key to its task.
+     */
+    suspend fun upsertTasksFromSync(tasks: List<CareTask>) {
+        careTaskDao.upsertAll(tasks)
+
+        val ticks = tasks.mapNotNull { task ->
+            val completedAt = task.completedAt ?: return@mapNotNull null
+            CareCompletion(
+                taskId = task.id,
+                petId = task.petId,
+                dayStart = CareSchedule.startOfDay(completedAt),
+                completedAt = completedAt
+            )
+        }
+        if (ticks.isNotEmpty()) careCompletionDao.insertAllIfAbsent(ticks)
+    }
 }

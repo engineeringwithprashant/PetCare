@@ -88,8 +88,8 @@
          order as res/menu/bottom_nav_menu.xml, and each id matches an item there — see the note at
          the top of that file for why the ids have to agree. -->
 
-    <!-- Tab 1. The dashboard: greeting and sync status, a card per pet, today's care as a
-         checklist, and the next vet appointments. -->
+    <!-- Tab 1. The dashboard: greeting, clock and sync status, three stat cards, the next task,
+         today's care and streak, the pets, an insight, the week ahead and quick actions. -->
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.prash.petcare.ui.home.HomeFragment"
@@ -101,10 +101,16 @@
             android:id="@+id/action_home_to_pet_detail"
             app:destination="@id/petDetailFragment" />
 
-        <!-- The dashboard's empty state offers to add the first pet. -->
+        <!-- The "Add pet" quick action and the empty state open an empty pet form. -->
         <action
             android:id="@+id/action_home_to_add_edit_pet"
             app:destination="@id/addEditPetFragment" />
+
+        <!-- A "coming up this week" row opens the routine its task belongs to — the screen where that
+             task can be seen alongside its siblings, edited or rescheduled. -->
+        <action
+            android:id="@+id/action_home_to_routine_detail"
+            app:destination="@id/routineDetailFragment" />
     </fragment>
 
     <!-- Tab 2. Every pet the user has, and the way in to adding another. -->
