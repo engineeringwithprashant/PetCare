@@ -1,9 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One care routine in the pet detail screen's list.
+    One care routine on the pet detail screen, under the "Care routines" heading.
 
-    Kept shallow because this layout is inflated per visible row and recycled as the list scrolls;
-    a deep hierarchy here would be re-measured constantly and is the usual cause of janky scrolling.
+    Laid out left to right:
+      - **The routine's name** in bold, with **its schedule** ("Every day", "Weekly") muted beneath —
+        and "· Paused" added to the schedule when the routine is switched off.
+      - **The task count** ("3 tasks") in a small neutral pill.
+      - **The overflow button** ("⋮"), which opens edit / pause-or-resume / delete.
+
+    Tapping anywhere else on the card opens the routine itself, where its tasks are managed.
+
+    **Why a ConstraintLayout here.** The row has a flexible column (name and schedule, which must
+    shrink and ellipsize for a long name) between two things that must keep their natural size (the
+    pill and the button). ConstraintLayout expresses "take the space between these two" with a
+    0dp-wide view constrained to its neighbours, and does it in one flat level, which matters because
+    this layout is inflated for every routine in the list.
+
+    The card is the app's default rounded white card (PetCare.Card.Clickable) with the pet cards'
+    larger corner applied as an overlay, so it matches the "About" card above it.
 -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -12,34 +26,75 @@
     style="@style/PetCare.Card.Clickable"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/card_spacing">
+    android:layout_marginBottom="@dimen/card_spacing"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
 
+    <!-- End padding is smaller than start padding because the overflow button carries 8dp of its own
+         padding around the glyph; with the full card padding as well, the dots would sit visibly
+         further from the edge than the name does from the other. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/card_padding">
+        android:paddingStart="@dimen/card_padding"
+        android:paddingTop="@dimen/card_padding"
+        android:paddingEnd="@dimen/spacing_xs"
+        android:paddingBottom="@dimen/card_padding">
 
+        <!-- The routine's name. Width 0dp between the parent's start and the task count: it takes
+             whatever the pill and button leave, and ellipsizes rather than pushing them off the card.
+             Bold, per the design, so it is clearly the card's heading. -->
         <TextView
             android:id="@+id/routineTitleText"
             style="@style/PetCare.ListTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="@dimen/spacing_sm"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@id/routineScheduleText"
+            app:layout_constraintEnd_toStartOf="@id/taskCountText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
             tools:text="Morning care" />
 
-        <!-- How often it repeats, plus a "Paused" note when the routine is switched off. -->
+        <!-- How often it repeats, muted, plus "· Paused" when the routine is switched off. The name
+             and this line form a packed vertical chain, so the pair is centred as a block against the
+             pill and button however tall the text turns out to be. -->
         <TextView
             android:id="@+id/routineScheduleText"
             style="@style/PetCare.ListSubtitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="2dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/routineTitleText"
+            app:layout_constraintStart_toStartOf="@id/routineTitleText"
             app:layout_constraintTop_toBottomOf="@id/routineTitleText"
             tools:text="Every day" />
+
+        <!-- The number of tasks in the routine. Centred vertically on the card by constraining both
+             its top and bottom to the parent. -->
+        <TextView
+            android:id="@+id/taskCountText"
+            style="@style/PetCare.RoutineCard.TaskCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/overflowButton"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="3 tasks" />
+
+        <!-- The overflow menu button. Its content description names the routine — set by the adapter
+             — so a screen reader user can tell one card's menu from the next. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/overflowButton"
+            style="@style/PetCare.RoutineCard.OverflowButton"
+            android:layout_width="@dimen/routine_card_overflow_size"
+            android:layout_height="@dimen/routine_card_overflow_size"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:contentDescription="More options for Morning care" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

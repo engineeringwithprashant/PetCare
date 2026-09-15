@@ -257,6 +257,25 @@
          *on* the picture rather than as opaque tiles punched out of it. -->
     <color name="pet_card_chip">#7A0E0F0A</color>
 
+    <!-- ========================== Pet detail: photo card ==========================
+         The pet detail screen's large photo card follows the pet-card rules above — dark in both
+         themes, white on a scrim — and adds three marks of its own on top of the photograph. They are
+         single values rather than light/dark pairs for the same reason: the photo behind them does not
+         change with the theme. -->
+
+    <!-- The round back button in the photo's top-left corner: a near-white disc with the dark arrow
+         on it. Light rather than the translucent dark chip, because it is the one control on the
+         photo and has to be found instantly, over a dark scrim-free patch of picture or a pale one. -->
+    <color name="pet_detail_back_button">#F2EFE3</color>
+    <color name="on_pet_detail_back_button">@color/on_accent_yellow</color>
+
+    <!-- The gender symbol beside the species chip. Blue for male and pink for female, the
+         conventions people already read these symbols in, so the colour confirms the shape rather than
+         asking to be learned. Both sit on the translucent dark chip (pet_card_chip), so they are the
+         lighter, brighter end of each hue: a mid blue would sink into the dark chip. -->
+    <color name="gender_male">#6CB4FF</color>
+    <color name="gender_female">#FF8AC4</color>
+
     <!-- ========================= Bottom navigation bar =========================
          The bar is a dark capsule floating over the page in *both* themes, for the same reason the
          pet cards are dark in both: it is chrome rather than content, and a single treatment makes

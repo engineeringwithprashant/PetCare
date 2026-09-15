@@ -16,6 +16,9 @@ import androidx.room.PrimaryKey
  * @property ownerId Foreign key to [User.id]; this is what makes a Pet "belong to" a User.
  * @property name The pet's name, shown throughout the UI.
  * @property species Fixed list of animal types — see [PetSpecies].
+ * @property gender Male, female or not recorded — see [PetGender]. Non-null with an explicit
+ *   [PetGender.UNKNOWN] rather than nullable, so "not recorded" is a value every screen has to
+ *   handle on purpose. Added in database version 7; see `PetCareDatabase.MIGRATION_6_7`.
  * @property breed Optional free text, since breed is not meaningful for every species.
  * @property dateOfBirth Optional birth date as epoch milliseconds. Null when the owner does not
  *   know it, which is common for rescue animals.
@@ -66,6 +69,11 @@ data class Pet(
     val ownerId: Long,
     val name: String,
     val species: PetSpecies,
+    // Defaulted so every existing `Pet(...)` call — and a row rebuilt from an older Firestore
+    // document with no gender field — compiles and means "not recorded" without having to say so.
+    // No @ColumnInfo(defaultValue) here, deliberately: see the note on MIGRATION_3_4 for why the
+    // SQL default lives only in the migration.
+    val gender: PetGender = PetGender.UNKNOWN,
     val breed: String? = null,
     val dateOfBirth: Long? = null,
     val weightKg: Double? = null,

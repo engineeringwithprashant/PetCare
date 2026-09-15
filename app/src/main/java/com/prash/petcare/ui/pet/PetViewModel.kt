@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Pet
+import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.data.local.entity.PetSpecies
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.util.PetPhotoStorage
@@ -35,6 +36,9 @@ import kotlinx.coroutines.launch
  * @property isLoading True while an existing pet is being fetched.
  * @property isSaving True while a save or delete is in flight, so buttons can be disabled.
  * @property species Currently selected species; the dropdown reflects this.
+ * @property gender Currently selected gender; the toggle group reflects this. Held here rather than
+ *   read off the buttons at save time for the same reason as [species]: a toggle group does not
+ *   restore its own selection across rotation the way an EditText restores its text.
  * @property dateOfBirth Chosen birth date as epoch milliseconds, or null if not set.
  * @property photoPath Path to the photo in internal storage, or null if there is none.
  */
@@ -43,6 +47,7 @@ data class PetFormState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val species: PetSpecies = PetSpecies.DOG,
+    val gender: PetGender = PetGender.UNKNOWN,
     val dateOfBirth: Long? = null,
     val photoPath: String? = null,
     @param:StringRes val nameError: Int? = null,
@@ -148,6 +153,7 @@ class PetViewModel(
             _formState.value = _formState.value.copy(
                 isLoading = false,
                 species = pet.species,
+                gender = pet.gender,
                 dateOfBirth = pet.dateOfBirth,
                 photoPath = pet.photoPath
             )
@@ -160,6 +166,11 @@ class PetViewModel(
     /** Records the species chosen in the dropdown. */
     fun onSpeciesSelected(species: PetSpecies) {
         _formState.value = _formState.value.copy(species = species)
+    }
+
+    /** Records the gender chosen in the toggle group. */
+    fun onGenderSelected(gender: PetGender) {
+        _formState.value = _formState.value.copy(gender = gender)
     }
 
     /** Records the date chosen in the date picker. */
@@ -241,6 +252,7 @@ class PetViewModel(
             val pet = existing?.copy(
                 name = trimmedName,
                 species = state.species,
+                gender = state.gender,
                 breed = breed.trimToNull(),
                 dateOfBirth = state.dateOfBirth,
                 weightKg = if (trimmedWeight.isEmpty()) null else weight,
@@ -252,6 +264,7 @@ class PetViewModel(
                 ownerId = ownerId,
                 name = trimmedName,
                 species = state.species,
+                gender = state.gender,
                 breed = breed.trimToNull(),
                 dateOfBirth = state.dateOfBirth,
                 weightKg = if (trimmedWeight.isEmpty()) null else weight,

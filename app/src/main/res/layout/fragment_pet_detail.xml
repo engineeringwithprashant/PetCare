@@ -1,291 +1,543 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Pet detail: one animal's record, and the care routines set up for it.
+    Pet detail: one animal's photo card, what to know about them, and the care routines set up for
+    them. Rebuilt to match design/pet-detail-mockup.png.
 
-    The screen reads top to bottom as an introduction to the pet: a large photo, then who it is, then
-    three facts at a glance as pastel pills, then the things a sitter or a vet would need to be told.
+    From top to bottom:
+      - **The header** — monogram, the pet's first name, theme toggle and pet count — shared with the
+        tabs through <include>. It stays fixed while the page scrolls under it.
+      - **The photo card** — the pet's photo filling a large dark card, a gradient over its lower
+        half, a round back button and the species chip (with a gender symbol beside it) at the top,
+        and the pet's full name with age, weight and today's-status pills across the bottom.
+      - **The action row** — CHECKLIST, EXPENSES, EDIT PET.
+      - **The "About" card** — five label / value rows.
+      - **Care routines** — a heading with a small "+" button, then one card per routine, or an empty
+        state.
 
-    **Why the photo is the header rather than a thumbnail.** This is the only screen in the app
-    about *one* animal, and the photo is how the user recognises that they are in the right place.
-    Everywhere else the photo is a 64dp circle in a list, where its job is to distinguish one row
-    from another; here its job is to be the subject.
+    The bottom navigation bar is not part of this layout; it belongs to activity_main.xml and stays
+    exactly as it is on the tabs.
 
-    **Why the three pills are not just more rows in the card below.** Age, weight and species are
-    the facts glanced at rather than read — and glanceable is exactly what a pill is and what a
-    label-and-value row is not. The card beneath holds the things that have to be *read*: feeding
-    instructions, allergies, what the animal likes to play with.
+    **Why a NestedScrollView holding a RecyclerView with wrap_content height.** The whole page scrolls
+    as one, routines included, so the list must not become a small scrolling box inside a scrolling
+    page. nestedScrollingEnabled="false" hands scrolling to the parent and lets the list lay out in
+    full. The cost is that every routine card is inflated at once instead of being recycled, which is
+    fine for the handful of routines a pet realistically has — the Pets tab, whose list has no such
+    bound, is built the other way round.
 
-    The whole screen scrolls as one, so the routine list is a RecyclerView with wrap_content height
-    and nestedScrollingEnabled="false" inside a NestedScrollView. That hands scrolling to the parent
-    and lets the list render in full rather than becoming a small scrolling box inside a scrolling
-    page. The trade-off is that every routine row is inflated at once instead of being recycled,
-    which is fine for the handful of routines a pet realistically has.
+    **Why a vertical LinearLayout at the root.** The header takes the height it needs and the scroll
+    view takes the rest (0dp with layout_weight="1") — the same structure as fragment_pets.xml, so
+    the header sits in exactly the same place when the user taps from the Pets tab into a pet.
 -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".ui.pet.PetDetailFragment">
 
+    <!-- The shared header. Its android:id makes ViewBinding expose it as the nested binding
+         `binding.header`. The fragment sets its title to the pet's first name. -->
+    <include
+        android:id="@+id/header"
+        layout="@layout/view_tab_header" />
+
+    <!-- clipToPadding="false" lets the last routine card scroll up *through* the bottom padding rather
+         than stopping at its edge, so it can clear the bottom navigation bar. -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingBottom="@dimen/list_padding_bottom_fab">
+        android:paddingBottom="@dimen/list_padding_bottom">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingStart="@dimen/screen_padding"
-            android:paddingTop="@dimen/content_top_padding"
+            android:paddingTop="@dimen/spacing_xs"
             android:paddingEnd="@dimen/screen_padding">
 
-            <!-- ========================= Photo header =========================
-                 A ShapeableImageView rather than an ImageView inside a rounded card: it clips the
-                 bitmap itself to the rounded outline, where a card would leave the photo's square
-                 corners painted over its own. The largest radius in the app's shape scale, because
-                 this is the largest surface in the app. -->
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/petPhotoImage"
+            <!-- ============================ Photo card ============================
+                 Dark in both themes, like the Home tab's large pet card: everything written on it
+                 sits on a photograph, and white text over a dark scrim is the only pairing that stays
+                 legible in either mode. See the pet-card note in colors.xml.
+
+                 Not clickable — unlike the list cards, this one is already the destination — so it
+                 declares no ripple and no focus. The larger pet-card corner is applied as a shape
+                 overlay so the photo is clipped to the same outline. -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/heroCard"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/pet_photo_height"
-                android:background="@drawable/bg_photo_rounded"
-                android:contentDescription="@string/cd_pet_photo"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_pet_placeholder"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Large" />
+                android:layout_height="@dimen/pet_detail_hero_height"
+                app:cardBackgroundColor="@color/pet_card_ground"
+                app:cardElevation="0dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge"
+                app:strokeWidth="0dp">
 
-            <!-- ========================= Name and breed =========================
-                 The name appears here as well as in the app bar, and deliberately so: the bar's copy
-                 is what identifies the screen once the photo has scrolled away, and this one is part
-                 of the introduction the photo begins. -->
-            <TextView
-                android:id="@+id/petNameText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                android:textColor="?attr/colorOnBackground"
-                tools:text="Bella" />
+                <!--
+                    A ConstraintLayout used as a stack: the photo, the scrim and the marks on top all
+                    anchor to the same parent, and they are painted in the order they are declared —
+                    photo first, scrim over it, text and buttons over that. Declaring the text before
+                    the scrim would bury it.
+                -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
-            <!-- Breed alone, since the species has a pill of its own directly below. Hidden by the
-                 fragment when no breed was recorded, rather than leaving an empty line between the
-                 name and the pills. -->
-            <TextView
-                android:id="@+id/petBreedText"
-                style="@style/PetCare.Subtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
-                tools:text="Labrador Retriever" />
+                    <!-- The photograph, filling the card. centerCrop scales it to cover the card and
+                         trims the overflow, where fitCenter would letterbox a portrait photo. The dark
+                         ground shows behind the paw-print placeholder when the pet has no photo. The
+                         bitmap is loaded off the main thread by ui/common/PetPhotoBinder.kt. -->
+                    <ImageView
+                        android:id="@+id/petPhotoImage"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:background="@drawable/bg_pet_photo_dark"
+                        android:contentDescription="@string/cd_pet_photo"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_pet_placeholder"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- ========================= The stat pills =========================
-                 Age, weight and species, each in its own pastel colour so the three are told apart
-                 without reading them. A plain horizontal LinearLayout rather than a ChipGroup: these
-                 are read, never tapped, and a chip would bring a touch target and a ripple that
-                 invite a press that does nothing.
+                    <!-- An invisible line at exactly half the card's height. A percentage guideline
+                         rather than a fixed dp value, so "the lower half" stays the lower half if the
+                         card's height is ever changed. -->
+                    <androidx.constraintlayout.widget.Guideline
+                        android:id="@+id/heroMidline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        app:layout_constraintGuide_percent="0.5" />
 
-                 Each pill is hidden individually when its fact was never recorded — a rescue
-                 animal's birthday is often genuinely unknown — so the row can end up holding one
-                 pill, or three. -->
+                    <!-- The dark gradient over the lower half: top edge on the midline, bottom edge on
+                         the card's bottom. It fades in rather than starting as a hard band — see
+                         bg_pet_card_scrim.xml. -->
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:background="@drawable/bg_pet_card_scrim"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/heroMidline" />
+
+                    <!-- The round back button, top-left over the photo. Returns to wherever the pet
+                         was opened from. Its 48dp view carries a 4dp inset, so an 8dp margin puts the
+                         visible disc 12dp from the card's corner. -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/backButton"
+                        style="@style/PetCare.PetDetail.BackButton"
+                        android:layout_width="@dimen/pet_detail_back_button_touch_size"
+                        android:layout_height="@dimen/pet_detail_back_button_touch_size"
+                        android:layout_margin="@dimen/spacing_sm"
+                        android:contentDescription="@string/cd_back"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <!-- The species chip, top-right: small, upper-case, yellow. Vertically centred on
+                         the back button (top and bottom constrained to it) so the two marks along the
+                         card's top edge share a line. Upper-cased by its style rather than in the
+                         string, so the label stays correct in a language where capitals are wrong. -->
+                    <TextView
+                        android:id="@+id/speciesChip"
+                        style="@style/PetCare.SpeciesChip.Accent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/card_padding"
+                        app:layout_constraintBottom_toBottomOf="@id/backButton"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/backButton"
+                        tools:text="Cat" />
+
+                    <!-- The Mars or Venus symbol, immediately to the start side of the species chip
+                         and centred on it. The fragment sets the icon, its blue or pink tint and its
+                         spoken description — and hides it altogether when the gender is unknown, in
+                         which case the chip simply stands alone. The contentDescription is @null
+                         only until then: it depends on the pet, so it cannot be fixed here. -->
+                    <ImageView
+                        android:id="@+id/genderBadge"
+                        style="@style/PetCare.PetDetail.GenderBadge"
+                        android:layout_marginEnd="@dimen/spacing_xs"
+                        android:contentDescription="@null"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toBottomOf="@id/speciesChip"
+                        app:layout_constraintEnd_toStartOf="@id/speciesChip"
+                        app:layout_constraintTop_toTopOf="@id/speciesChip"
+                        tools:src="@drawable/ic_gender_female"
+                        tools:tint="@color/gender_female"
+                        tools:visibility="visible" />
+
+                    <!--
+                        The pet's full name, large and bold, across the scrim.
+
+                        Anchored *upwards* from the pill row rather than the pills being placed under
+                        it: the pills sit a fixed distance from the card's bottom edge and the name
+                        grows upwards from there, so a one-line and a two-line name both leave the
+                        pills in the same place. Width 0dp between the card's edges, so a long name
+                        wraps (to two lines at most) instead of running off the card.
+
+                        accessibilityHeading lets TalkBack users jump straight to it; the header's
+                        title is only the first name.
+                    -->
+                    <TextView
+                        android:id="@+id/petNameText"
+                        style="@style/PetCare.PetDetail.Name"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/card_padding"
+                        android:layout_marginEnd="@dimen/card_padding"
+                        android:layout_marginBottom="@dimen/spacing_sm"
+                        android:accessibilityHeading="true"
+                        app:layout_constraintBottom_toTopOf="@id/pillFlow"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        tools:targetApi="p"
+                        tools:text="Krishala Pant Thapa Baby" />
+
+                    <!-- The three pills. They carry no constraints of their own: the Flow below
+                         positions them. Age and weight use the translucent dark pill, since they are
+                         standing facts; today's status uses the yellow accent pill, because it is the
+                         one thing on the card that changes day to day. The fragment hides the age or
+                         weight pill when that fact was never recorded. -->
+                    <TextView
+                        android:id="@+id/agePill"
+                        style="@style/PetCare.Pill.OnPhoto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="0 months old" />
+
+                    <TextView
+                        android:id="@+id/weightPill"
+                        style="@style/PetCare.Pill.OnPhoto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="25.0 kg" />
+
+                    <TextView
+                        android:id="@+id/statusPill"
+                        style="@style/PetCare.Pill.Accent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="Nothing due today" />
+
+                    <!--
+                        Lays out the three pills in a row that wraps.
+
+                        A ConstraintLayout Flow helper rather than a horizontal LinearLayout. "3 years
+                        old", "24.5 kg" and "Nothing due today" together are very nearly the width of
+                        the card on a small phone, and at a larger font size they are wider. A
+                        LinearLayout would squeeze the last pill until its text was cut off; Flow in
+                        "chain" wrap mode instead moves whatever does not fit onto a second line.
+
+                        horizontalStyle="packed" with a bias of 0 keeps each line's pills together at
+                        the start edge rather than spreading them across the card. Pills the fragment
+                        hides (visibility gone) are skipped, so no gap is left where they were.
+                    -->
+                    <androidx.constraintlayout.helper.widget.Flow
+                        android:id="@+id/pillFlow"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/card_padding"
+                        android:layout_marginEnd="@dimen/card_padding"
+                        android:layout_marginBottom="@dimen/card_padding"
+                        app:constraint_referenced_ids="agePill,weightPill,statusPill"
+                        app:flow_horizontalBias="0"
+                        app:flow_horizontalGap="@dimen/pill_spacing"
+                        app:flow_horizontalStyle="packed"
+                        app:flow_verticalGap="@dimen/pill_spacing"
+                        app:flow_wrapMode="chain"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ============================ Action row ============================
+                 Three buttons sharing the width equally (0dp + layout_weight="1" each), so the row
+                 lines up with the card above whatever the length of each label. One filled yellow
+                 button and two outlined ones: the checklist is what a user opens this screen for day
+                 to day, so it carries the accent; three filled buttons would give no steer at all.
+
+                 baselineAligned="false" because the buttons are all one height and aligning their
+                 text baselines would cost an extra measuring pass for nothing. -->
             <LinearLayout
-                android:id="@+id/pillRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_md"
+                android:baselineAligned="false"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/agePill"
-                    style="@style/PetCare.Pill.Mint"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/checklistButton"
+                    style="@style/PetCare.PetDetail.ActionButton.Filled"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    tools:text="3 years old" />
+                    android:layout_weight="1"
+                    android:text="@string/pet_detail_checklist" />
 
-                <TextView
-                    android:id="@+id/weightPill"
-                    style="@style/PetCare.Pill.Sky"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/expensesButton"
+                    style="@style/PetCare.PetDetail.ActionButton.Outlined"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/pill_spacing"
-                    tools:text="24.5 kg" />
+                    android:layout_marginStart="@dimen/pet_detail_action_gap"
+                    android:layout_weight="1"
+                    android:text="@string/pet_detail_expenses" />
 
-                <TextView
-                    android:id="@+id/speciesPill"
-                    style="@style/PetCare.Pill.Lilac"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/editPetButton"
+                    style="@style/PetCare.PetDetail.ActionButton.Outlined"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/pill_spacing"
-                    tools:text="Dog" />
+                    android:layout_marginStart="@dimen/pet_detail_action_gap"
+                    android:layout_weight="1"
+                    android:text="@string/pet_detail_edit" />
 
             </LinearLayout>
 
-            <!-- ======================= What to tell a sitter =======================
-                 The recorded details, in one card. Each block is hidden by the fragment when its
-                 field is empty, so a pet with only a name does not show a column of blank headings —
-                 and the whole card goes when every block is empty, rather than rendering as an
-                 empty white rectangle. -->
+            <!-- ============================ About card ============================
+                 The things a sitter or a vet would need to be told, as a two-column table: a small
+                 upper-case label on the left, the value on the right, hairlines between rows.
+
+                 Every row is always shown. An empty field reads "None recorded" rather than hiding,
+                 so the card has the same shape for every pet and a blank reads as "nobody has told
+                 us" instead of as something that failed to load.
+
+                 The card is the app's default rounded white surface (charcoal in dark mode) with the
+                 pet cards' larger corner, so it pairs with the photo card above. -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/detailsCard"
-                style="@style/PetCare.Card.Feature"
+                android:id="@+id/aboutCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_lg">
+                android:layout_marginTop="@dimen/spacing_md"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="@dimen/card_padding">
+                    android:orientation="vertical">
 
+                    <!-- The section label. accessibilityHeading so TalkBack can jump to the card. -->
                     <TextView
-                        style="@style/PetCare.CardHeader"
+                        style="@style/PetCare.PetDetail.AboutLabel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/pet_detail_about_title" />
+                        android:accessibilityHeading="true"
+                        android:paddingStart="@dimen/card_padding"
+                        android:paddingTop="@dimen/card_padding"
+                        android:paddingEnd="@dimen/card_padding"
+                        android:paddingBottom="@dimen/pet_detail_about_row_padding_vertical"
+                        android:text="@string/pet_detail_about_title"
+                        tools:targetApi="p" />
 
-                    <!-- Date of birth is kept here as well as being summarised by the age pill
-                         above. The pill answers "how old is this animal?" at a glance; the exact
-                         date is what a vet form asks for, and deriving it back from "3 years old"
-                         is not possible. -->
+                    <View style="@style/PetCare.PetDetail.AboutDivider" />
+
+                    <!--
+                        One row: a horizontal LinearLayout with a fixed-width label and a value taking
+                        the rest (0dp + layout_weight="1").
+
+                        The label's fixed width is what lines every value up in one column down the
+                        card. LinearLayout's default baseline alignment then sets the label level with
+                        the *first line* of the value, so a long dietary note wraps downwards while its
+                        label stays beside its opening words. The four rows below repeat this shape.
+                    -->
                     <LinearLayout
-                        android:id="@+id/dobBlock"
-                        style="@style/PetCare.DetailBlock"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/card_padding"
+                        android:paddingTop="@dimen/pet_detail_about_row_padding_vertical"
+                        android:paddingEnd="@dimen/card_padding"
+                        android:paddingBottom="@dimen/pet_detail_about_row_padding_vertical">
 
                         <TextView
-                            style="@style/PetCare.DetailLabel"
-                            android:layout_width="match_parent"
+                            style="@style/PetCare.PetDetail.AboutLabel"
+                            android:layout_width="@dimen/pet_detail_about_label_width"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/spacing_sm"
                             android:text="@string/pet_detail_dob_label" />
 
                         <TextView
                             android:id="@+id/dobValueText"
-                            style="@style/PetCare.DetailValue"
-                            android:layout_width="match_parent"
+                            style="@style/PetCare.PetDetail.AboutValue"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            tools:text="4 Mar 2021" />
+                            android:layout_weight="1"
+                            tools:text="Sep 12, 2026" />
                     </LinearLayout>
 
+                    <View style="@style/PetCare.PetDetail.AboutDivider" />
+
                     <LinearLayout
-                        android:id="@+id/dietaryBlock"
-                        style="@style/PetCare.DetailBlock"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/card_padding"
+                        android:paddingTop="@dimen/pet_detail_about_row_padding_vertical"
+                        android:paddingEnd="@dimen/card_padding"
+                        android:paddingBottom="@dimen/pet_detail_about_row_padding_vertical">
 
                         <TextView
-                            style="@style/PetCare.DetailLabel"
-                            android:layout_width="match_parent"
+                            style="@style/PetCare.PetDetail.AboutLabel"
+                            android:layout_width="@dimen/pet_detail_about_label_width"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/spacing_sm"
                             android:text="@string/pet_detail_dietary_label" />
 
                         <TextView
                             android:id="@+id/dietaryValueText"
-                            style="@style/PetCare.DetailValue"
-                            android:layout_width="match_parent"
+                            style="@style/PetCare.PetDetail.AboutValue"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             tools:text="Two cups of dry food, morning and evening" />
                     </LinearLayout>
 
+                    <View style="@style/PetCare.PetDetail.AboutDivider" />
+
                     <LinearLayout
-                        android:id="@+id/allergiesBlock"
-                        style="@style/PetCare.DetailBlock"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/card_padding"
+                        android:paddingTop="@dimen/pet_detail_about_row_padding_vertical"
+                        android:paddingEnd="@dimen/card_padding"
+                        android:paddingBottom="@dimen/pet_detail_about_row_padding_vertical">
 
                         <TextView
-                            style="@style/PetCare.DetailLabel"
-                            android:layout_width="match_parent"
+                            style="@style/PetCare.PetDetail.AboutLabel"
+                            android:layout_width="@dimen/pet_detail_about_label_width"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/spacing_sm"
                             android:text="@string/pet_detail_allergies_label" />
 
                         <TextView
                             android:id="@+id/allergiesValueText"
-                            style="@style/PetCare.DetailValue"
-                            android:layout_width="match_parent"
+                            style="@style/PetCare.PetDetail.AboutValue"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            tools:text="Chicken" />
+                            android:layout_weight="1"
+                            tools:text="None recorded" />
                     </LinearLayout>
 
+                    <View style="@style/PetCare.PetDetail.AboutDivider" />
+
                     <LinearLayout
-                        android:id="@+id/toysBlock"
-                        style="@style/PetCare.DetailBlock"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/card_padding"
+                        android:paddingTop="@dimen/pet_detail_about_row_padding_vertical"
+                        android:paddingEnd="@dimen/card_padding"
+                        android:paddingBottom="@dimen/pet_detail_about_row_padding_vertical">
 
                         <TextView
-                            style="@style/PetCare.DetailLabel"
-                            android:layout_width="match_parent"
+                            style="@style/PetCare.PetDetail.AboutLabel"
+                            android:layout_width="@dimen/pet_detail_about_label_width"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/spacing_sm"
                             android:text="@string/pet_detail_toys_label" />
 
                         <TextView
                             android:id="@+id/toysValueText"
-                            style="@style/PetCare.DetailValue"
-                            android:layout_width="match_parent"
+                            style="@style/PetCare.PetDetail.AboutValue"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            tools:text="Rope toy, tennis ball" />
+                            android:layout_weight="1"
+                            tools:text="Banana leaf" />
+                    </LinearLayout>
+
+                    <View style="@style/PetCare.PetDetail.AboutDivider" />
+
+                    <!-- The last row has no divider after it: the card's own bottom edge ends it. -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/card_padding"
+                        android:paddingTop="@dimen/pet_detail_about_row_padding_vertical"
+                        android:paddingEnd="@dimen/card_padding"
+                        android:paddingBottom="@dimen/card_padding">
+
+                        <TextView
+                            style="@style/PetCare.PetDetail.AboutLabel"
+                            android:layout_width="@dimen/pet_detail_about_label_width"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/spacing_sm"
+                            android:text="@string/pet_detail_cared_for_by_label" />
+
+                        <TextView
+                            android:id="@+id/caredForByValueText"
+                            style="@style/PetCare.PetDetail.AboutValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            tools:text="Prashant" />
                     </LinearLayout>
 
                 </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ============================ Actions ============================
-                 One filled button and two outlined ones. The checklist is what a user opens this
-                 screen for day to day, so it carries the yellow accent; three filled buttons in a
-                 row would give no steer at all on which to reach for. -->
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/checklistButton"
+            <!-- ========================== Care routines ==========================
+                 The heading on the left takes all the leftover width (0dp + weight), which pushes the
+                 small "+" to the far end. gravity="center_vertical" centres the two against each
+                 other, since the button is taller than the text. -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_lg"
-                android:text="@string/pet_detail_checklist" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/expensesButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_sm"
-                android:text="@string/pet_detail_expenses" />
+                <TextView
+                    style="@style/PetCare.PetDetail.SectionTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:accessibilityHeading="true"
+                    android:text="@string/pet_detail_routines_title"
+                    tools:targetApi="p" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/editPetButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_sm"
-                android:text="@string/pet_detail_edit" />
+                <!-- Opens the new-routine form for this pet. It replaces the floating action button
+                     the screen used to have, which covered the bottom of the routine list. The 48dp
+                     view draws a 36dp circle — see PetCare.PetDetail.AddRoutineButton. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/addRoutineButton"
+                    style="@style/PetCare.PetDetail.AddRoutineButton"
+                    android:layout_width="@dimen/pet_detail_add_routine_touch_size"
+                    android:layout_height="@dimen/pet_detail_add_routine_touch_size"
+                    android:contentDescription="@string/cd_add_routine" />
 
-            <!-- ========================= Care routines ========================= -->
+            </LinearLayout>
 
-            <TextView
-                style="@style/PetCare.SectionHeader"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_lg"
-                android:text="@string/pet_detail_routines_title" />
-
+            <!-- One card per routine (item_routine.xml). Hidden by the fragment when there are none. -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/routinesRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md"
+                android:layout_marginTop="@dimen/spacing_xs"
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="2"
                 tools:listitem="@layout/item_routine" />
 
+            <!-- Shown in the list's place when the pet has no routines: an icon, a heading, and a
+                 sentence explaining what a routine is and that "+" makes one — more use than a bare
+                 "No routines", which says nothing about what to do next. Both this and the list stay
+                 hidden while loading, so the empty state never flashes up first. -->
             <LinearLayout
                 android:id="@+id/emptyRoutinesContainer"
                 style="@style/PetCare.EmptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md"
+                android:paddingTop="@dimen/spacing_lg"
+                android:paddingBottom="@dimen/spacing_lg"
                 android:visibility="gone"
                 tools:visibility="visible">
 
@@ -309,15 +561,7 @@
             </LinearLayout>
 
         </LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addRoutineFab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/screen_padding"
-        android:contentDescription="@string/cd_add_routine"
-        app:srcCompat="@drawable/ic_add" />
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Form for creating a care routine.
+    Form for creating a care routine, or editing an existing one's name and schedule.
 
     A routine is just a name and a repeat schedule; the care tasks that make it up are added
-    afterwards from the routine's own screen.
+    afterwards from the routine's own screen. One layout serves both modes — AddRoutineFragment
+    changes the title and the save button's label, and every field is otherwise identical.
 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"

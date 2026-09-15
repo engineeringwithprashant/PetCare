@@ -206,7 +206,9 @@
          Everything below is pushed *on top of* a tab rather than being one, so each shows a back
          arrow and returns to wherever it was opened from. -->
 
-    <!-- A single pet: its details, plus the care routines set up for it. -->
+    <!-- A single pet: its photo card, details and care routines. It draws its own header and back
+         button over the photo, so MainActivity hides the shared app bar here — see
+         MainActivity.updateChromeFor. -->
     <fragment
         android:id="@+id/petDetailFragment"
         android:name="com.prash.petcare.ui.pet.PetDetailFragment"
@@ -261,7 +263,9 @@
             app:argType="long" />
     </fragment>
 
-    <!-- Create a care routine for a pet. -->
+    <!-- Create a care routine for a pet, or edit one. The pet detail screen reaches it both ways
+         through the single action_pet_detail_to_add_routine: its "+" button passes only the pet, and
+         the "Edit" item on a routine card's menu passes the routine's id as well. -->
     <fragment
         android:id="@+id/addRoutineFragment"
         android:name="com.prash.petcare.ui.routine.AddRoutineFragment"
@@ -270,6 +274,14 @@
 
         <argument
             android:name="petId"
+            app:argType="long" />
+
+        <!-- Which routine to edit. The default of -1 means "none", which is how the screen knows it
+             is creating a routine rather than changing one — the same convention as the pet, task and
+             expense forms. -->
+        <argument
+            android:name="routineId"
+            android:defaultValue="-1L"
             app:argType="long" />
     </fragment>
 

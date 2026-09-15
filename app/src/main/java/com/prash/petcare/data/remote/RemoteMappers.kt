@@ -5,6 +5,7 @@ import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.entity.Expense
 import com.prash.petcare.data.local.entity.ExpenseCategory
 import com.prash.petcare.data.local.entity.Pet
+import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.data.local.entity.PetSpecies
 import com.prash.petcare.data.local.entity.Place
 import com.prash.petcare.data.local.entity.PlaceCategory
@@ -44,6 +45,7 @@ private const val FIELD_ROUTINE_ID = "routineId"
 private const val FIELD_NAME = "name"
 private const val FIELD_TITLE = "title"
 private const val FIELD_SPECIES = "species"
+private const val FIELD_GENDER = "gender"
 private const val FIELD_BREED = "breed"
 private const val FIELD_DATE_OF_BIRTH = "dateOfBirth"
 private const val FIELD_WEIGHT_KG = "weightKg"
@@ -119,6 +121,8 @@ fun Pet.toRemoteMap(): Map<String, Any?> = mapOf(
     FIELD_OWNER_ID to ownerId,
     FIELD_NAME to name,
     FIELD_SPECIES to species.name,
+    // Written as the enum's name, the same text Room stores, so the document and the row agree.
+    FIELD_GENDER to gender.name,
     FIELD_BREED to breed,
     FIELD_DATE_OF_BIRTH to dateOfBirth,
     FIELD_WEIGHT_KG to weightKg,
@@ -147,6 +151,10 @@ fun petFromRemote(document: Map<String, Any?>, ownerId: Long): Pet? {
         ownerId = ownerId,
         name = name,
         species = document.enumOr(FIELD_SPECIES, PetSpecies.OTHER),
+        // Documents uploaded before gender existed have no such field, and a newer app version
+        // might one day send a value this build does not know. Both fall back to UNKNOWN — "not
+        // recorded" is the honest reading of either, and neither is a reason to drop the pet.
+        gender = document.enumOr(FIELD_GENDER, PetGender.UNKNOWN),
         breed = document.stringOrNull(FIELD_BREED),
         dateOfBirth = document.longOrNull(FIELD_DATE_OF_BIRTH),
         weightKg = document.doubleOrNull(FIELD_WEIGHT_KG),

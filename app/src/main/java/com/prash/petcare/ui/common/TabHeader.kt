@@ -6,7 +6,8 @@ import com.prash.petcare.databinding.ViewTabHeaderBinding
 import java.text.NumberFormat
 
 /*
- * Wires up the header shared by the Home and Pets tabs (res/layout/view_tab_header.xml).
+ * Wires up the header shared by the redesigned tabs and the pet detail screen
+ * (res/layout/view_tab_header.xml).
  *
  * In MVVM terms this is still part of the **View** layer: it only sets text, icons and click
  * listeners. It is a pair of extension functions on the generated [ViewTabHeaderBinding] rather than
@@ -32,8 +33,20 @@ import java.text.NumberFormat
  * @param onBadgeClick What pressing the pet-count badge does — both tabs open the profile screen.
  */
 fun ViewTabHeaderBinding.setUp(@StringRes title: Int, onBadgeClick: () -> Unit) {
+    setUp(title = root.context.getString(title), onBadgeClick = onBadgeClick)
+}
+
+/**
+ * The same, for a title that is data rather than a fixed resource — the pet detail screen shows the
+ * pet's first name here. The resource version above simply resolves its string and calls this one, so
+ * both routes draw the toggle and attach the taps identically.
+ *
+ * The title can be set again later with [showTitle] once the data it depends on has loaded, without
+ * re-attaching the listeners.
+ */
+fun ViewTabHeaderBinding.setUp(title: CharSequence, onBadgeClick: () -> Unit) {
     val context = root.context
-    headerTitle.setText(title)
+    showTitle(title)
 
     // The control reports the *present* mode rather than the one a tap would bring about, which is
     // how a light/dark switch is nearly always read. Its content description says the opposite,
@@ -54,6 +67,11 @@ fun ViewTabHeaderBinding.setUp(@StringRes title: Int, onBadgeClick: () -> Unit) 
     themeToggle.setOnClickListener { ThemePreference.toggle(context) }
 
     petCountBadge.setOnClickListener { onBadgeClick() }
+}
+
+/** Replaces the header's title — for a screen whose title arrives with its data. */
+fun ViewTabHeaderBinding.showTitle(title: CharSequence) {
+    headerTitle.text = title
 }
 
 /**

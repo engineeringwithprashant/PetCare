@@ -1,12 +1,15 @@
 package com.prash.petcare.ui.pet
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
+import androidx.core.widget.ImageViewCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -14,15 +17,21 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.prash.petcare.R
+import com.prash.petcare.data.local.entity.CareRoutine
 import com.prash.petcare.data.local.entity.Pet
+import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.databinding.FragmentPetDetailBinding
 import com.prash.petcare.ui.checklist.ChecklistFragment
 import com.prash.petcare.ui.common.formatAge
 import com.prash.petcare.ui.common.formatStoredDate
+import com.prash.petcare.ui.common.formatWeight
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.loadPetPhoto
-import com.prash.petcare.ui.common.setToolbarTitle
+import com.prash.petcare.ui.common.setUp
+import com.prash.petcare.ui.common.showPetCount
+import com.prash.petcare.ui.common.showTitle
 import com.prash.petcare.ui.expense.ExpensesFragment
 import com.prash.petcare.ui.routine.AddRoutineFragment
 import com.prash.petcare.ui.routine.RoutineAdapter
@@ -30,12 +39,17 @@ import com.prash.petcare.ui.routine.RoutineDetailFragment
 import kotlinx.coroutines.launch
 
 /**
- * Shows one pet's recorded details and the care routines set up for it.
+ * Shows one pet: a large photo card, the facts a sitter would need, and the care routines set up for
+ * it — built to match design/pet-detail-mockup.png.
  *
- * This is the hub for everything to do with a single animal: from here the user can edit the pet,
- * open today's checklist, review what has been spent on it, create a routine, or open a routine to
- * manage its tasks. It is read-only itself — every change happens on the screen it sends the user
- * to.
+ * This is the hub for everything to do with a single animal. From here the user can open the pet's
+ * checklist or spending, edit the pet, create a routine, and open, edit, pause or delete an existing
+ * routine.
+ *
+ * As the **View** in MVVM it holds no business logic. It renders whatever [PetDetailViewModel]
+ * publishes, and forwards taps: navigation it performs itself (that needs a NavController, which a
+ * ViewModel must not hold), while the two routine actions that change data — pause/resume and delete
+ * — are handed to the ViewModel, after a confirmation dialog in the case of delete.
  */
 class PetDetailFragment : Fragment() {
 
@@ -49,11 +63,26 @@ class PetDetailFragment : Fragment() {
         PetDetailViewModel.factory(petId)
     }
 
-    /** Guards against re-decoding the same image every time unrelated state changes. */
+    /**
+     * Guards against re-decoding the same photo on every state emission.
+     *
+     * The state re-emits whenever anything on the screen changes — a task ticked on another tab, a
+     * routine paused — and without this check the photo would be read from disk again each time,
+     * flashing the placeholder for the result that is already showing. Cleared in [onDestroyView]
+     * so a rebuilt view draws the photo again.
+     */
     private var renderedPhotoPath: String? = null
 
+    /**
+     * The routine cards' adapter. Holds no view or coroutine scope of its own, so — unlike the Pets
+     * tab's photo adapter — it can safely live as long as the fragment and be re-attached to each new
+     * view.
+     */
     private val routineAdapter = RoutineAdapter(
-        onRoutineClick = { routine -> openRoutineDetail(routine.id) }
+        onRoutineClick = { routine -> openRoutineDetail(routine.id) },
+        onEditClick = { routine -> openRoutineForm(routineId = routine.id) },
+        onToggleActiveClick = { routine -> viewModel.toggleRoutineActive(routine) },
+        onDeleteClick = { routine -> confirmDeleteRoutine(routine) }
     )
 
     override fun onCreateView(
@@ -67,6 +96,13 @@ class PetDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // The header shared with the tabs. Its title starts empty and becomes the pet's first name
+        // as soon as the pet loads (see render). The badge opens the profile screen, as it does on
+        // the tabs — this screen hides the shared toolbar too, and with it the overflow menu that
+        // was the other way there.
+        binding.header.setUp(title = "", onBadgeClick = ::openProfile)
+
         setUpRecyclerView()
         setUpClickListeners()
         observeViewModel()
@@ -77,17 +113,16 @@ class PetDetailFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = routineAdapter
             // Deliberately not setHasFixedSize(true): this list sits inside a NestedScrollView with
-            // wrap_content height, so it must be allowed to re-measure as routines are added.
+            // wrap_content height, so it must be allowed to re-measure as routines come and go.
         }
     }
 
     private fun setUpClickListeners() {
-        binding.addRoutineFab.setOnClickListener {
-            findNavController().navigate(
-                R.id.action_pet_detail_to_add_routine,
-                bundleOf(AddRoutineFragment.ARG_PET_ID to petId)
-            )
-        }
+        // The back button on the photo stands in for the toolbar's up arrow, which is hidden here.
+        // navigateUp returns to whichever screen opened the pet — the Pets tab or the dashboard.
+        binding.backButton.setOnClickListener { findNavController().navigateUp() }
+
+        binding.addRoutineButton.setOnClickListener { openRoutineForm(routineId = null) }
 
         binding.checklistButton.setOnClickListener {
             findNavController().navigate(
@@ -104,7 +139,7 @@ class PetDetailFragment : Fragment() {
         }
 
         binding.editPetButton.setOnClickListener {
-            // The owner comes from the loaded pet rather than being passed down from the home
+            // The owner comes from the loaded pet rather than being passed down from the previous
             // screen, so the two can never disagree about who owns this animal. If the pet has not
             // loaded yet there is nothing to edit, so the tap is ignored.
             val pet = viewModel.uiState.value.pet ?: return@setOnClickListener
@@ -126,6 +161,51 @@ class PetDetailFragment : Fragment() {
         )
     }
 
+    /**
+     * Opens the routine form: empty for the "+" button, filled in for a card's "Edit".
+     *
+     * One destination serves both, told apart by whether a routine id is passed — the same convention
+     * the pet, task and expense forms use. With no id the argument falls back to its nav-graph default
+     * of -1, which the form reads as "create".
+     */
+    private fun openRoutineForm(routineId: Long?) {
+        val arguments = bundleOf(AddRoutineFragment.ARG_PET_ID to petId)
+        if (routineId != null) {
+            arguments.putLong(AddRoutineFragment.ARG_ROUTINE_ID, routineId)
+        }
+        findNavController().navigate(R.id.action_pet_detail_to_add_routine, arguments)
+    }
+
+    /** Opens the account screen from the header's pet-count badge, as every tab's badge does. */
+    private fun openProfile() {
+        findNavController().navigate(R.id.profileFragment)
+    }
+
+    /**
+     * Asks before deleting a routine.
+     *
+     * Deleting also removes every task inside it and cannot be undone, so the dialog spells out that
+     * consequence and points at Pause — in the same menu the user has just come from — as the
+     * reversible alternative, since that is often what someone reaching for delete actually wants.
+     */
+    private fun confirmDeleteRoutine(routine: CareRoutine) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.delete_routine_dialog_title)
+            .setMessage(getString(R.string.delete_routine_dialog_message_from_menu, routine.title))
+            // Cancel does nothing and is the dismissive choice, so the safe option is the easy one.
+            .setNegativeButton(R.string.delete_routine_dialog_cancel, null)
+            .setPositiveButton(R.string.delete_routine_dialog_confirm) { _, _ ->
+                viewModel.deleteRoutine(routine)
+            }
+            .show()
+    }
+
+    /**
+     * Collects state for as long as the screen is visible.
+     *
+     * `repeatOnLifecycle(STARTED)` starts collecting when the screen appears and cancels when it
+     * stops, so no work happens in the background and no view is touched after it is destroyed.
+     */
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -136,111 +216,124 @@ class PetDetailFragment : Fragment() {
 
     /** Applies the current state to the views. */
     private fun render(state: PetDetailUiState) {
-        state.pet?.let { bindPet(it) }
+        binding.header.showTitle(state.petFirstName)
+        binding.header.showPetCount(state.petCount)
+
+        state.pet?.let { pet ->
+            bindHeroCard(pet, state)
+            bindAboutCard(pet, state.ownerName)
+        }
 
         routineAdapter.submitList(state.routines)
 
-        // The list and the empty message occupy the same slot, so exactly one shows. Both stay
-        // hidden while loading, which stops "No routines yet" flashing up before the first result.
+        // The list and the empty state occupy the same slot, so exactly one shows. Both stay hidden
+        // while loading, which stops "No care routines yet" flashing up before the first result.
         binding.routinesRecyclerView.isVisible = state.routines.isNotEmpty()
         binding.emptyRoutinesContainer.isVisible = state.hasNoRoutines
     }
 
-    /** Fills in the pet's header, stat pills and detail blocks. */
-    private fun bindPet(pet: Pet) {
-        // The name appears twice, and deliberately so: in the app bar, which is what identifies the
-        // screen once the photo has scrolled away, and as the heading below the photo, which is
-        // part of the introduction the photo begins.
-        setToolbarTitle(pet.name)
+    /** Fills the photo card: the photo, species chip, gender symbol, full name and three pills. */
+    private fun bindHeroCard(pet: Pet, state: PetDetailUiState) {
+        renderPhoto(pet.photoPath)
+
         binding.petNameText.text = pet.name
 
-        // Breed alone here, since the species has a pill of its own. Hidden when none was recorded
-        // rather than leaving an empty line between the name and the pills — breed is not
-        // meaningful for every species, so this is a common case rather than an edge one.
-        val breed = pet.breed?.takeIf { it.isNotBlank() }
-        binding.petBreedText.text = breed.orEmpty()
-        binding.petBreedText.isVisible = breed != null
+        // The species enum stores database values (DOG, CAT), so it is translated to a readable label
+        // first. The chip's style upper-cases it at draw time.
+        binding.speciesChip.text = getString(pet.species.labelRes())
 
-        bindPills(pet)
-        renderPhoto(pet.photoPath)
-        bindDetailCard(pet)
-    }
+        bindGenderBadge(pet.gender)
 
-    /**
-     * Fills the three pastel pills — age, weight and species.
-     *
-     * Each hides itself when its fact was never recorded, so the row shows only what is actually
-     * known. Species is the one that is always present, since it is a required field on the form,
-     * which means the row can never end up empty and does not need hiding as a whole.
-     *
-     * Age is derived from the date of birth rather than stored — see ui.common.formatAge — while the
-     * exact date stays in the card below. The two are complementary: the pill answers "how old is
-     * this animal?" at a glance, and the date is what a vet form asks for.
-     */
-    private fun bindPills(pet: Pet) {
+        // Age is derived from the date of birth rather than stored — see ui.common.formatAge — and
+        // uses the long form ("3 years old") the design shows. Each of the two fact pills hides itself
+        // when its fact was never recorded; the Flow in the layout closes the gap it leaves.
         val age = pet.dateOfBirth?.let { formatAge(requireContext(), it) }
         binding.agePill.text = age.orEmpty()
         binding.agePill.isVisible = age != null
 
-        val weight = pet.weightKg
-            ?.let { getString(R.string.pet_detail_weight_format, it.toString()) }
+        // Through the shared formatter, so this pet's weight reads exactly as it does on the Pets and
+        // Home cards ("25 kg", "4.5 kg") — see ui/common/WeightFormatting.kt.
+        val weight = pet.weightKg?.let {
+            getString(R.string.pet_detail_weight_format, formatWeight(it))
+        }
         binding.weightPill.text = weight.orEmpty()
         binding.weightPill.isVisible = weight != null
 
-        // The species enum stores database values (DOG, CAT), so it is translated to a readable
-        // label before display.
-        binding.speciesPill.text = getString(pet.species.labelRes())
+        binding.statusPill.text = statusText(state)
     }
 
     /**
-     * Fills the "About" card — the things a sitter or a vet would need to be told.
+     * The yellow pill's wording: "Nothing due today", "2 left today" — or "All done today".
      *
-     * Each block hides itself when its field was never filled in, so the card shows only what the
-     * owner actually recorded rather than a column of empty headings. Weight is absent from this
-     * card because it is a pill instead: it is glanced at rather than read, which is what a pill is
-     * for.
+     * The third message is the dashboard's, reused so that a pet whose tasks are all ticked off reads
+     * the same here as on the card the user tapped to arrive. Without it that case would read
+     * "0 left today", which looks like a bug on a day that was actually completed.
      */
-    private fun bindDetailCard(pet: Pet) {
-        val hasDob = bindDetailBlock(
-            binding.dobBlock,
-            binding.dobValueText,
-            pet.dateOfBirth?.let { formatStoredDate(it) }
+    private fun statusText(state: PetDetailUiState): String = when {
+        state.tasksOutstanding > 0 -> resources.getQuantityString(
+            R.plurals.home_pet_tasks_left,
+            state.tasksOutstanding,
+            state.tasksOutstanding
         )
-        val hasDietary =
-            bindDetailBlock(binding.dietaryBlock, binding.dietaryValueText, pet.dietaryNotes)
-        val hasAllergies =
-            bindDetailBlock(binding.allergiesBlock, binding.allergiesValueText, pet.allergies)
-        val hasToys =
-            bindDetailBlock(binding.toysBlock, binding.toysValueText, pet.favouriteToys)
 
-        // With every block hidden the card would render as a white rectangle holding nothing but
-        // its own heading, so it goes too.
-        binding.detailsCard.isVisible = hasDob || hasDietary || hasAllergies || hasToys
+        state.tasksDueToday > 0 -> getString(R.string.home_pet_all_done)
+
+        else -> getString(R.string.home_pet_nothing_due)
     }
 
     /**
-     * Shows or hides one label-and-value pair.
+     * Shows the Mars symbol in blue for a male pet, the Venus symbol in pink for a female one, and
+     * nothing at all when the gender is unknown.
      *
-     * @return true if the block has content and is now visible, which the caller uses to decide
-     *   whether the surrounding card is worth showing at all.
+     * Hidden rather than showing a "?" for unknown: a question mark on the photo would read as
+     * something the user needs to fix, when an unrecorded gender is perfectly normal.
+     *
+     * The tint is applied through [ImageViewCompat] so it works identically back to minSdk 24, and the
+     * content description is set with it, since TalkBack cannot describe a symbol from its shape.
      */
-    private fun bindDetailBlock(container: View, valueView: TextView, value: String?): Boolean {
-        val hasValue = !value.isNullOrBlank()
-        if (hasValue) {
-            valueView.text = value
+    private fun bindGenderBadge(gender: PetGender) {
+        val (iconRes, colorRes, labelRes) = when (gender) {
+            PetGender.MALE -> Triple(R.drawable.ic_gender_male, R.color.gender_male, R.string.gender_male)
+            PetGender.FEMALE ->
+                Triple(R.drawable.ic_gender_female, R.color.gender_female, R.string.gender_female)
+            PetGender.UNKNOWN -> {
+                binding.genderBadge.isVisible = false
+                return
+            }
         }
-        container.isVisible = hasValue
-        return hasValue
+
+        binding.genderBadge.setImageResource(iconRes)
+        ImageViewCompat.setImageTintList(
+            binding.genderBadge,
+            ColorStateList.valueOf(ContextCompat.getColor(requireContext(), colorRes))
+        )
+        binding.genderBadge.contentDescription = getString(labelRes)
+        binding.genderBadge.isVisible = true
+    }
+
+    /**
+     * Fills the "About" card's five rows.
+     *
+     * Every row is always visible and an empty value becomes "None recorded", so the card keeps the
+     * same shape for every pet — see the note on the card in fragment_pet_detail.xml.
+     */
+    private fun bindAboutCard(pet: Pet, ownerName: String) {
+        binding.dobValueText.showValue(pet.dateOfBirth?.let { formatStoredDate(it) })
+        binding.dietaryValueText.showValue(pet.dietaryNotes)
+        binding.allergiesValueText.showValue(pet.allergies)
+        binding.toysValueText.showValue(pet.favouriteToys)
+        binding.caredForByValueText.showValue(ownerName)
+    }
+
+    /** Shows [value], or "None recorded" when it is null or blank. */
+    private fun TextView.showValue(value: String?) {
+        text = value?.takeIf { it.isNotBlank() } ?: getString(R.string.pet_detail_none_recorded)
     }
 
     /**
      * Loads and shows the pet's photo, or the placeholder when there is none.
      *
-     * Guarded against re-decoding the same image: [render] runs on every state emission — a routine
-     * being paused, a task ticked elsewhere — and without this the photo would be read from disk
-     * again each time, for a result identical to what is already on screen.
-     *
-     * The load itself is shared with the list rows, which need the same care about a view being
+     * The load itself is shared with the list cards, which need the same care about a view being
      * rebound mid-decode; see ui/common/PetPhotoBinder.kt.
      */
     private fun renderPhoto(path: String?) {
@@ -252,6 +345,9 @@ class PetDetailFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Detach the adapter from the dying RecyclerView: the adapter outlives the view, and the
+        // RecyclerView would otherwise be kept alive through the adapter's observer list.
+        binding.routinesRecyclerView.adapter = null
         renderedPhotoPath = null
         _binding = null
     }

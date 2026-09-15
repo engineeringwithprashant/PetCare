@@ -188,8 +188,11 @@ class MainActivity : AppCompatActivity() {
         val isTasksTab = destinationId == R.id.checklistFragment && hasNoPetArgument
         val isMoneyTab = destinationId == R.id.expensesFragment && hasNoPetArgument
 
+        // The pet detail screen is not a tab, but it draws the same header — with the pet's name as
+        // its title — and puts its back button on the photo instead of in a toolbar, as in the design.
         val hasOwnHeader = destinationId == R.id.homeFragment ||
             destinationId == R.id.petsFragment ||
+            destinationId == R.id.petDetailFragment ||
             destinationId == R.id.placesFragment ||
             isTasksTab ||
             isMoneyTab

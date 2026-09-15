@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The overflow ("⋮") menu on a care routine card on the pet detail screen.
+
+    A menu resource shown in a PopupMenu, rather than three small buttons on every card: edit, pause
+    and delete are occasional actions, and putting them on the card itself would crowd out the name,
+    schedule and task count that are the reason to look at it. Tapping the card body still opens the
+    routine, so the everyday path stays one tap.
+
+    The pause item's *title* is swapped to "Resume" by RoutineAdapter when the routine is already
+    paused, so the menu always offers the action that would actually change something. Both states
+    share one id because they are one toggle.
+
+    Delete is last, and separated from the others by position rather than colour: Material menus do
+    not tint individual items, and the confirmation dialog that follows is the real safeguard.
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_routine_edit"
+        android:title="@string/routine_menu_edit" />
+
+    <item
+        android:id="@+id/action_routine_toggle_active"
+        android:title="@string/routine_menu_pause" />
+
+    <item
+        android:id="@+id/action_routine_delete"
+        android:title="@string/routine_menu_delete" />
+
+</menu>

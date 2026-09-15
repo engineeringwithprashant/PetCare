@@ -90,6 +90,66 @@
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!--
+            Gender picker: Male, Female or Unknown.
+
+            A MaterialButtonToggleGroup rather than a third dropdown like species. There are only
+            three choices, and all of them fit on one line, so showing them side by side lets the
+            user see and change the answer with a single tap instead of opening a menu to find out
+            what the options are.
+
+            singleSelection="true" makes the group behave like radio buttons — choosing one clears
+            the others — and selectionRequired="true" stops the user tapping the highlighted option
+            off and leaving nothing chosen. Together they guarantee the value always maps to exactly
+            one PetGender constant. "Unknown" is a real option rather than "nothing selected" for
+            the same reason: see PetGender.UNKNOWN.
+
+            The small heading above it takes the place of the floating hint the text fields have,
+            which a button group has no slot for.
+        -->
+        <TextView
+            style="@style/PetCare.SectionLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/pet_gender_label" />
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/genderToggleGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <!-- Equal thirds via layout_weight, so the three options are the same size whatever
+                 the length of each word in a given language. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/genderMaleButton"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/gender_male" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/genderFemaleButton"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/gender_female" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/genderUnknownButton"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/gender_unknown" />
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/breedInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"

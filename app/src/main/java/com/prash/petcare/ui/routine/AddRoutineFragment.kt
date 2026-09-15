@@ -11,16 +11,23 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.RepeatUnit
 import com.prash.petcare.databinding.FragmentAddRoutineBinding
+import com.prash.petcare.ui.common.setToolbarTitle
 import kotlinx.coroutines.launch
 
 /**
- * Form for creating a care routine.
+ * Form for creating a care routine, or renaming and rescheduling an existing one.
  *
- * A routine is the schedule a group of tasks share — "every morning", "every Sunday". Once created
- * the user lands back on the pet detail screen and opens the routine to add tasks to it.
+ * A routine is the schedule a group of tasks share — "every morning", "every Sunday". The class keeps
+ * its original "Add" name because creating is still what it is mostly for; editing arrives through
+ * the same destination with a real `routineId`, from the "Edit" item on a routine card's menu on the
+ * pet detail screen. Which mode is in use is entirely the ViewModel's to interpret — this fragment
+ * renders whatever state comes back.
+ *
+ * As the **View** in MVVM it holds no logic: validation and persistence live in [RoutineViewModel].
  */
 class AddRoutineFragment : Fragment() {
 
@@ -30,7 +37,13 @@ class AddRoutineFragment : Fragment() {
 
     private val petId: Long by lazy { requireArguments().getLong(ARG_PET_ID) }
 
-    private val viewModel: RoutineViewModel by viewModels { RoutineViewModel.factory(petId) }
+    private val routineId: Long by lazy {
+        requireArguments().getLong(ARG_ROUTINE_ID, RoutineViewModel.NO_ROUTINE_ID)
+    }
+
+    private val viewModel: RoutineViewModel by viewModels {
+        RoutineViewModel.factory(petId, routineId)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -87,6 +100,14 @@ class AddRoutineFragment : Fragment() {
 
     /** Applies the current state to the views. */
     private fun render(state: RoutineFormState) {
+        // The mode is the screen's title, and the save button says what pressing it will do.
+        setToolbarTitle(
+            getString(if (state.isEditMode) R.string.edit_routine_title else R.string.add_routine_title)
+        )
+        binding.saveRoutineButton.setText(
+            if (state.isEditMode) R.string.routine_save_changes else R.string.routine_save
+        )
+
         binding.routineNameInputLayout.error = state.titleError?.let { getString(it) }
 
         // Reflects the ViewModel's choice back onto the toggle. `check` is a no-op when the right
@@ -106,9 +127,16 @@ class AddRoutineFragment : Fragment() {
 
     private fun handleEvent(event: RoutineEvent) {
         when (event) {
-            // The pet detail screen behind this one is already observing the database, so it will
-            // show the new routine as soon as this screen closes.
+            // Written once, from a one-shot event, so it never overwrites the user's typing. After a
+            // rotation the EditText restores its own text, and the event is not repeated.
+            is RoutineEvent.PrefillForm -> binding.routineNameInput.setText(event.title)
+
+            // The pet detail screen behind this one is already observing the database, so it shows
+            // the new or changed routine as soon as this screen closes.
             is RoutineEvent.Saved -> findNavController().navigateUp()
+
+            is RoutineEvent.Error ->
+                Snackbar.make(binding.root, getString(event.messageRes), Snackbar.LENGTH_LONG).show()
         }
     }
 
@@ -118,7 +146,8 @@ class AddRoutineFragment : Fragment() {
     }
 
     companion object {
-        /** Navigation argument name; must match the one declared in nav_graph.xml. */
+        /** Navigation argument names; must match those declared in nav_graph.xml. */
         const val ARG_PET_ID = "petId"
+        const val ARG_ROUTINE_ID = "routineId"
     }
 }

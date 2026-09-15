@@ -2,6 +2,7 @@ package com.prash.petcare.data.local.converter
 
 import androidx.room.TypeConverter
 import com.prash.petcare.data.local.entity.ExpenseCategory
+import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.data.local.entity.PetSpecies
 import com.prash.petcare.data.local.entity.PlaceCategory
 import com.prash.petcare.data.local.entity.RepeatUnit
@@ -32,6 +33,12 @@ class Converters {
 
     @TypeConverter
     fun toPetSpecies(value: String): PetSpecies = PetSpecies.valueOf(value)
+
+    @TypeConverter
+    fun fromPetGender(gender: PetGender): String = gender.name
+
+    @TypeConverter
+    fun toPetGender(value: String): PetGender = PetGender.valueOf(value)
 
     @TypeConverter
     fun fromTaskCategory(category: TaskCategory): String = category.name

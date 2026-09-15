@@ -1,0 +1,29 @@
+<!--
+    The Mars symbol (♂): a ring with an arrow leaving it towards the top-right. Shown beside the
+    species chip on the pet detail screen for a male pet.
+
+    Drawn as a vector rather than typed as the Unicode character "♂". Whether that character renders
+    at all, and in what style, depends on the fonts installed on the device — some draw it as a
+    colour emoji, some as a thin text glyph, some not at all. A path looks identical everywhere.
+
+    The fill is white; the ImageView applies the blue tint (@color/gender_male), so this one shape can
+    be recoloured without a second file.
+
+    fillType="evenOdd" is what makes the ring a ring: the inner circle is a second closed shape inside
+    the first, and even-odd filling leaves any region enclosed an even number of times empty.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- First sub-path: the inner edge of the ring, a 3.5-radius circle centred at (9.5, 14.5).
+         Second: the outer edge (radius 5.5) running out along the arrow's shaft to the square
+         arrowhead in the top-right corner and back. The standard Material "male" glyph. -->
+    <path
+        android:fillColor="@android:color/white"
+        android:fillType="evenOdd"
+        android:pathData="M9.5,11c1.93,0 3.5,1.57 3.5,3.5S11.43,18 9.5,18S6,16.43 6,14.5S7.57,11 9.5,11zM9.5,9C6.46,9 4,11.46 4,14.5S6.46,20 9.5,20s5.5,-2.46 5.5,-5.5c0,-1.16 -0.36,-2.23 -0.97,-3.12L18,7.42V10h2V4h-6v2h2.58l-3.97,3.97C11.73,9.36 10.66,9 9.5,9z" />
+
+</vector>

@@ -526,8 +526,189 @@
         <item name="tint">?attr/colorOnPrimaryContainer</item>
     </style>
 
-    <!-- ============================== Pet detail rows ==============================
-         The repeated label-and-value pairs on the pet detail screen. -->
+    <!-- ============================ Pet detail screen ============================
+         The redesigned single-pet screen (fragment_pet_detail.xml, item_routine.xml). It speaks the
+         same visual language as the other redesigned tabs — the dark photo card and pills from the
+         Home tab, the full-pill yellow and outlined buttons from Places, monospace field labels from
+         Places and Money — so a pet opened from any tab feels like part of the same app. -->
+
+    <!-- The pet's full name across the photo's scrim: large, bold and white. White in both themes
+         because it sits on a photograph, not on the page — see the pet-card note in colors.xml. The
+         letters are drawn a touch tighter, which is how large bold type is normally set; at default
+         spacing a 28sp name looks loose. -->
+    <style name="PetCare.PetDetail.Name" parent="">
+        <item name="android:textSize">@dimen/pet_detail_name_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/on_pet_card</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!--
+        The round back button in the photo's top-left corner.
+
+        A Material icon button rather than an ImageView with a click listener, so it brings the
+        ripple, focus highlight and "button" role TalkBack announces. Its 48dp view is inset by 4dp on
+        every side, which draws a 40dp disc while keeping the full 48dp touch target; the padding then
+        centres the 20dp arrow within the view. The circle comes from the 50%-corner shape appearance.
+
+        Fixed colours, not theme roles: it sits on a photograph in both themes.
+    -->
+    <style name="PetCare.PetDetail.BackButton" parent="Widget.Material3.Button.IconButton.Filled">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">@dimen/pet_detail_back_button_inset</item>
+        <item name="android:insetBottom">@dimen/pet_detail_back_button_inset</item>
+        <item name="android:insetLeft">@dimen/pet_detail_back_button_inset</item>
+        <item name="android:insetRight">@dimen/pet_detail_back_button_inset</item>
+        <item name="android:padding">14dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Circle</item>
+        <item name="icon">@drawable/ic_arrow_back</item>
+        <item name="iconSize">20dp</item>
+        <item name="iconPadding">0dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconTint">@color/on_pet_detail_back_button</item>
+        <item name="backgroundTint">@color/pet_detail_back_button</item>
+        <item name="rippleColor">@color/accent_yellow</item>
+    </style>
+
+    <!-- The small round badge holding the Mars or Venus symbol beside the species chip. The
+         translucent dark capsule the card's other on-photo marks use (bg_pet_card_chip.xml), which
+         at a square size comes out as a circle. The tint — blue or pink — is set by the fragment,
+         since it depends on the pet. -->
+    <style name="PetCare.PetDetail.GenderBadge" parent="">
+        <item name="android:layout_width">@dimen/pet_detail_gender_badge_size</item>
+        <item name="android:layout_height">@dimen/pet_detail_gender_badge_size</item>
+        <item name="android:background">@drawable/bg_pet_card_chip</item>
+        <item name="android:padding">@dimen/pet_detail_gender_icon_padding</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <!--
+        "CHECKLIST": the filled yellow pill at the start of the action row.
+
+        The accent and its content colour are named directly rather than through colorPrimary, like
+        the Places tab's "Book a visit", so the button stays the brand yellow whatever a surrounding
+        theme overlay does. Insets are zeroed because the row's own 46dp height is already a
+        comfortable target, and the horizontal padding is kept small because three buttons share a
+        phone's width and "EXPENSES" has to fit on one line in its third.
+    -->
+    <style name="PetCare.PetDetail.ActionButton.Filled" parent="Widget.Material3.Button">
+        <item name="android:minHeight">@dimen/pet_detail_action_button_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/spacing_sm</item>
+        <item name="android:paddingEnd">@dimen/spacing_sm</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "EXPENSES" and "EDIT PET": the outlined partners of the button above. A surface fill, so they
+         read as solid white pills on the cream page as in the design (and charcoal in dark mode), with
+         a hairline outline that keeps their edge visible on the page in either theme. Same metrics as
+         the filled button; the two styles cannot share a parent because Material's filled and
+         outlined buttons are different base styles. -->
+    <style name="PetCare.PetDetail.ActionButton.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/pet_detail_action_button_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/spacing_sm</item>
+        <item name="android:paddingEnd">@dimen/spacing_sm</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:maxLines">1</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- A field name in the "About" card's left column — "DATE OF BIRTH", "ALLERGIES" — and the
+         "ABOUT" label above them. The app's section label, set in monospace like the field labels on
+         the Places and Money tabs. Allowed a second line (SectionLabel allows one) so a long label at a
+         large font size wraps inside its fixed-width column instead of being cut off. -->
+    <style name="PetCare.PetDetail.AboutLabel" parent="PetCare.SectionLabel">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:maxLines">2</item>
+    </style>
+
+    <!-- The recorded value in the right column. Normal weight and full-strength colour: this is the
+         information itself, where the label beside it only names it. -->
+    <style name="PetCare.PetDetail.AboutValue" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- The hairline between two rows of the "About" card. -->
+    <style name="PetCare.PetDetail.AboutDivider" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">?attr/colorOutlineVariant</item>
+    </style>
+
+    <!-- "Care routines": a bold heading on the page, a step larger than a card title because it
+         introduces a whole section of cards. -->
+    <style name="PetCare.PetDetail.SectionTitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- The small round yellow "+" beside "Care routines". A 48dp view with 6dp insets, so the drawn
+         circle is 36dp — small enough to sit beside a heading — while the touch target stays at the
+         48dp minimum. Padding centres the 18dp plus in the view. -->
+    <style name="PetCare.PetDetail.AddRoutineButton" parent="Widget.Material3.Button.IconButton.Filled">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">@dimen/pet_detail_add_routine_inset</item>
+        <item name="android:insetBottom">@dimen/pet_detail_add_routine_inset</item>
+        <item name="android:insetLeft">@dimen/pet_detail_add_routine_inset</item>
+        <item name="android:insetRight">@dimen/pet_detail_add_routine_inset</item>
+        <item name="android:padding">15dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Circle</item>
+        <item name="icon">@drawable/ic_add</item>
+        <item name="iconSize">18dp</item>
+        <item name="iconPadding">0dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconTint">@color/on_accent_yellow</item>
+        <item name="backgroundTint">@color/accent_yellow</item>
+    </style>
+
+    <!-- The task count on a routine card ("3 tasks"): the Tasks tab's pale supplies tag, since it is
+         the same kind of small neutral fact. -->
+    <style name="PetCare.RoutineCard.TaskCount" parent="PetCare.Pill.Supplies" />
+
+    <!-- The "⋮" button on a routine card. A plain (unfilled) icon button, muted, so it reads as
+         secondary to the routine's name. -->
+    <style name="PetCare.RoutineCard.OverflowButton" parent="Widget.Material3.Button.IconButton">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:padding">8dp</item>
+        <item name="icon">@drawable/ic_more_vert</item>
+        <item name="iconSize">24dp</item>
+        <item name="iconPadding">0dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconTint">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- ============================ Label-and-value rows ============================
+         The stacked label-over-value pairs on the profile screen. (The pet detail screen used these
+         before its redesign; it now lays its rows out side by side with the PetDetail styles above.) -->
 
     <!-- Wrapper around one pair, so the two can be shown or hidden as a unit. -->
     <style name="PetCare.DetailBlock" parent="">

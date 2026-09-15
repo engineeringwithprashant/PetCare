@@ -1,0 +1,23 @@
+<!--
+    Left-pointing arrow for the round back button on the pet detail screen's photo.
+
+    A vector drawable, so it stays sharp at every density from one file. The fill is white here but
+    irrelevant in practice: the MaterialButton showing it applies its own iconTint.
+
+    autoMirrored="true" flips the arrow in right-to-left languages such as Arabic and Hebrew, where
+    "back" points the other way. Without it the button would point *forwards* for those users.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:autoMirrored="true"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- The shaft from the right edge to the tip, with the two strokes of the arrowhead meeting at
+         the left. The standard Material "arrow_back" glyph. -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M20,11H7.83l5.59,-5.59L12,4l-8,8 8,8 1.41,-1.41L7.83,13H20v-2z" />
+
+</vector>

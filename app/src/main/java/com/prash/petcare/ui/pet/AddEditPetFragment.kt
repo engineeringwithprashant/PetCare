@@ -21,6 +21,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Pet
+import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.data.local.entity.PetSpecies
 import com.prash.petcare.databinding.FragmentAddEditPetBinding
 import com.prash.petcare.ui.common.formatStoredDate
@@ -95,6 +96,7 @@ class AddEditPetFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setUpSpeciesDropdown()
+        setUpGenderToggle()
         setUpClickListeners()
         observeViewModel()
     }
@@ -112,6 +114,20 @@ class AddEditPetFragment : Fragment() {
 
         binding.speciesInput.setOnItemClickListener { _, _, position, _ ->
             viewModel.onSpeciesSelected(PetSpecies.entries[position])
+        }
+    }
+
+    /**
+     * Forwards a tap on the Male / Female / Unknown group to the ViewModel.
+     *
+     * The group reports both the button being selected and the one being cleared, so `isChecked`
+     * is tested — without it every tap would record two genders in quick succession, the one
+     * chosen and the one moved away from, and whichever arrived last would win.
+     */
+    private fun setUpGenderToggle() {
+        binding.genderToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            viewModel.onGenderSelected(genderForButton(checkedId))
         }
     }
 
@@ -244,6 +260,11 @@ class AddEditPetFragment : Fragment() {
         // `false` stops the dropdown treating this as typed input and filtering its own list.
         binding.speciesInput.setText(getString(state.species.labelRes()), false)
 
+        // Reflects the ViewModel's choice back onto the group — which is what restores it after a
+        // rotation and fills it in for an existing pet. `check` does nothing when that button is
+        // already selected, so this cannot loop with the listener above.
+        binding.genderToggleGroup.check(buttonForGender(state.gender))
+
         binding.dateOfBirthInput.setText(state.dateOfBirth?.let { formatStoredDate(it) }.orEmpty())
 
         binding.choosePhotoButton.setText(
@@ -322,6 +343,26 @@ class AddEditPetFragment : Fragment() {
         binding.dietaryNotesInput.setText(pet.dietaryNotes.orEmpty())
         binding.allergiesInput.setText(pet.allergies.orEmpty())
         binding.favouriteToysInput.setText(pet.favouriteToys.orEmpty())
+    }
+
+    /**
+     * The two directions between a toggle button id and a [PetGender].
+     *
+     * Kept as a matched pair next to each other so a fourth option would be added to both at once.
+     * The `when` over the enum has no `else`, so adding a constant to [PetGender] will not compile
+     * until it has a button here.
+     */
+    private fun buttonForGender(gender: PetGender): Int = when (gender) {
+        PetGender.MALE -> R.id.genderMaleButton
+        PetGender.FEMALE -> R.id.genderFemaleButton
+        PetGender.UNKNOWN -> R.id.genderUnknownButton
+    }
+
+    private fun genderForButton(buttonId: Int): PetGender = when (buttonId) {
+        R.id.genderMaleButton -> PetGender.MALE
+        R.id.genderFemaleButton -> PetGender.FEMALE
+        // The group holds only three buttons, so this is the Unknown button.
+        else -> PetGender.UNKNOWN
     }
 
     override fun onDestroyView() {

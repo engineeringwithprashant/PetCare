@@ -310,6 +310,15 @@
     <string name="pet_dietary_label">Dietary notes</string>
     <string name="pet_allergies_label">Allergies</string>
     <string name="pet_toys_label">Favourite toys</string>
+    <!-- The heading above the Male / Female / Unknown buttons. Upper-cased by its style. -->
+    <string name="pet_gender_label">Gender</string>
+
+    <!-- Display names for the PetGender enum, used on the form's buttons and as the spoken
+         description of the gender symbol on the pet detail screen. The constants themselves (MALE,
+         FEMALE) are database values and must never be shown to the user. -->
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="gender_unknown">Unknown</string>
 
     <string name="pet_photo_choose">Choose photo</string>
     <string name="pet_photo_change">Change photo</string>
@@ -388,32 +397,70 @@
         <item quantity="one">%1$d month old</item>
         <item quantity="other">%1$d months old</item>
     </plurals>
-    <!-- Section headings on the redesigned detail screen, each introducing one card. -->
+    <!-- The small letter-spaced label at the top of the "About" card. Upper-cased by its style. -->
     <string name="pet_detail_about_title">About</string>
 
+    <!-- The three buttons under the photo. Sentence case here and upper-cased by their style at draw
+         time, so the words stay correct in a language where blanket capitals are wrong. Kept to one
+         or two words each, because the three share one row. -->
     <string name="pet_detail_edit">Edit pet</string>
-    <string name="pet_detail_checklist">Today\'s checklist</string>
+    <string name="pet_detail_checklist">Checklist</string>
     <string name="pet_detail_routines_title">Care routines</string>
     <string name="pet_detail_no_routines_title">No care routines yet</string>
-    <string name="pet_detail_no_routines_message">Create a routine to schedule this pet\'s regular care.</string>
+    <!-- Says what a routine *is* by example as well as how to make one, since "routine" alone does not
+         tell a new user why they would want one. -->
+    <string name="pet_detail_no_routines_message">Tap + to set up a routine, such as morning feeding or a weekly groom. The tasks you add to it will appear on the checklist on the days it runs.</string>
+
+    <!-- The row labels in the "About" card, upper-cased by their style. No "Weight" row: weight is
+         shown as a pill on the photo, which carries its own unit ("24.5 kg"). -->
     <string name="pet_detail_dob_label">Date of birth</string>
-    <!-- No "Weight" label: weight is shown as a pastel pill on the detail screen rather than as a
-         labelled row, and a pill carries its own unit ("24.5 kg") without needing one. -->
     <string name="pet_detail_dietary_label">Dietary notes</string>
     <string name="pet_detail_allergies_label">Allergies</string>
     <string name="pet_detail_toys_label">Favourite toys</string>
+    <string name="pet_detail_cared_for_by_label">Cared for by</string>
+    <!-- Shown in place of a value the owner never filled in. Every row stays visible with this in it,
+         rather than hiding, so the card has the same shape for every pet and an empty field reads as
+         "nobody has told us" rather than as a row that failed to load. -->
+    <string name="pet_detail_none_recorded">None recorded</string>
     <!-- %1$s is the weight value; the unit is kept out of the number so it can be translated. -->
     <string name="pet_detail_weight_format">%1$s kg</string>
     <!-- Marks a routine the user has switched off. %1$s is its schedule, e.g. "Every day". -->
     <string name="routine_paused_format">%1$s · Paused</string>
 
-    <!-- ============================ Create routine screen ============================ -->
+    <!-- A routine card's schedule line on the pet detail screen: "Every day", "Weekly". Shorter than
+         the schedule_* names above ("Every week") because the card also has to fit the task count and
+         the overflow button on the same width. -->
+    <string name="routine_card_schedule_daily">Every day</string>
+    <string name="routine_card_schedule_weekly">Weekly</string>
+    <string name="routine_card_schedule_monthly">Monthly</string>
+    <string name="routine_card_schedule_yearly">Yearly</string>
+    <!-- How many tasks a routine contains, on its card. %1$d is the count. -->
+    <plurals name="routine_card_task_count">
+        <item quantity="one">%1$d task</item>
+        <item quantity="other">%1$d tasks</item>
+    </plurals>
+
+    <!-- The overflow menu on a routine card. Pause and Resume swap depending on the routine's state,
+         so the menu always offers the action that would change something. -->
+    <string name="routine_menu_edit">Edit</string>
+    <string name="routine_menu_pause">Pause</string>
+    <string name="routine_menu_resume">Resume</string>
+    <string name="routine_menu_delete">Delete</string>
+    <!-- The delete confirmation when it is opened from that menu. It points at Pause, which sits in
+         the same menu, rather than at the routine screen's "Active" switch. %1$s is the routine's
+         name. -->
+    <string name="delete_routine_dialog_message_from_menu">%1$s will be permanently deleted, along with every care task in it. This cannot be undone. To stop it for a while instead, choose Pause.</string>
+
+    <!-- ========================= Create / edit routine screen ========================= -->
+    <!-- The same screen serves both modes, so it has two titles and two save labels. -->
     <string name="add_routine_title">New care routine</string>
+    <string name="edit_routine_title">Edit care routine</string>
     <string name="routine_name_label">Routine name</string>
     <string name="routine_schedule_label">How often does it repeat?</string>
     <string name="routine_toggle_daily">Daily</string>
     <string name="routine_toggle_weekly">Weekly</string>
     <string name="routine_save">Create routine</string>
+    <string name="routine_save_changes">Save changes</string>
 
     <!-- ============================ Routine detail screen ============================ -->
     <string name="routine_detail_tasks_title">Tasks in this routine</string>
@@ -645,6 +692,12 @@
     <string name="cd_task_category">%1$s</string>
     <!-- The chevron on a card that opens another screen. -->
     <string name="cd_open_pet">Open this pet</string>
+    <!-- The round back button over the pet detail screen's photo. -->
+    <string name="cd_back">Back</string>
+    <!-- The "⋮" button on a routine card. Names the routine, because a list of identical "More
+         options" buttons gives a TalkBack user no way to tell which card each belongs to. %1$s is
+         the routine's name. -->
+    <string name="cd_routine_options">More options for %1$s</string>
 
     <!-- The dashboard header's controls.
 

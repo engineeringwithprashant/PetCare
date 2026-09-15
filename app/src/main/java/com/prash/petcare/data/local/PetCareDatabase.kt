@@ -43,7 +43,7 @@ import com.prash.petcare.data.local.entity.User
         SyncDeletion::class,
         Place::class
     ],
-    version = 6,
+    version = 7,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -226,6 +226,33 @@ abstract class PetCareDatabase : RoomDatabase() {
         }
 
         /**
+         * Version 6 to 7: adds the `gender` column to the `pets` table.
+         *
+         * One ADD COLUMN, so — like [MIGRATION_1_2] — no rows are copied and nothing is at risk.
+         * The difference from that migration is that [Pet.gender] is a *non-null* property, which
+         * Room maps to `TEXT NOT NULL`. SQLite will not add a NOT NULL column to a table that
+         * already has rows unless it is told what to put in them, so the statement carries
+         * `DEFAULT 'UNKNOWN'`: every pet that existed before the upgrade becomes "not recorded",
+         * which is exactly the truth — the app never asked.
+         *
+         * The default is written with the enum constant's *name*, because that is the text
+         * [com.prash.petcare.data.local.converter.Converters] reads back. A value such as 'Unknown'
+         * would make `PetGender.valueOf` throw the first time an old pet was loaded.
+         *
+         * As explained on [MIGRATION_3_4], the entity itself declares no default. Room only compares
+         * a column's default when the entity states one, so the SQL default here satisfies SQLite
+         * without making a migrated database disagree with a freshly created one.
+         *
+         * The rows are deliberately *not* marked as pending sync. Nothing the user entered has
+         * changed, and the next edit to each pet uploads the new field anyway.
+         */
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE pets ADD COLUMN gender TEXT NOT NULL DEFAULT 'UNKNOWN'")
+            }
+        }
+
+        /**
          * The one shared instance.
          *
          * `@Volatile` means a write here is immediately visible to every thread, which stops one
@@ -260,7 +287,8 @@ abstract class PetCareDatabase : RoomDatabase() {
                         MIGRATION_2_3,
                         MIGRATION_3_4,
                         MIGRATION_4_5,
-                        MIGRATION_5_6
+                        MIGRATION_5_6,
+                        MIGRATION_6_7
                     )
                     .build()
                     .also { INSTANCE = it }

@@ -80,9 +80,6 @@
     <dimen name="pill_spacing">8dp</dimen>
 
     <!-- ================================ Pet imagery ================================ -->
-    <!-- Height of the photo header on the pet detail screen. Tall enough to be the first thing the
-         eye lands on, short enough that the name and stats below it stay above the fold. -->
-    <dimen name="pet_photo_height">220dp</dimen>
     <!-- Height of the photo panel on the add/edit pet form, where the photo is an input rather than
          the subject of the screen. -->
     <dimen name="pet_photo_form_height">180dp</dimen>
@@ -163,6 +160,47 @@
     <!-- The full-width "+ Add a pet" row at the foot of the list. At least 48dp is Android's minimum
          touch target; the extra keeps it in proportion with the tall cards above. -->
     <dimen name="pets_add_row_height">56dp</dimen>
+
+    <!-- ============================== Pet detail screen ==============================
+         The redesigned single-pet screen: the photo card, the action row, the "About" card and the
+         care routine cards. Corners reuse pet_card_corner_radius, so this pet's photo card is the same
+         object it was on the Pets and Home tabs, only larger. -->
+
+    <!-- The photo card. Taller than any list card because this screen is about one animal and the
+         photo is its subject — but short enough that the action row below still shows on a small
+         phone, which is what tells the user there is more to scroll to. -->
+    <dimen name="pet_detail_hero_height">300dp</dimen>
+    <!-- The pet's full name across the scrim: a step up from PetCare.Headline's 24sp, because here it
+         is the title of the whole page. In sp so it grows with the user's font size. -->
+    <dimen name="pet_detail_name_text_size">28sp</dimen>
+    <!-- The round back button over the photo. The view is 48dp — Android's minimum touch target —
+         and 4dp insets on every side draw the visible disc at 40dp inside it, so the button looks
+         light on the photo without being any harder to hit. -->
+    <dimen name="pet_detail_back_button_touch_size">48dp</dimen>
+    <dimen name="pet_detail_back_button_inset">4dp</dimen>
+    <!-- The round gender badge beside the species chip, sized to the chip's own height so the two sit
+         as a matched pair, and the Mars/Venus glyph inside it. -->
+    <dimen name="pet_detail_gender_badge_size">24dp</dimen>
+    <dimen name="pet_detail_gender_icon_padding">4dp</dimen>
+
+    <!-- The CHECKLIST / EXPENSES / EDIT PET row. -->
+    <dimen name="pet_detail_action_button_height">46dp</dimen>
+    <dimen name="pet_detail_action_gap">8dp</dimen>
+
+    <!-- The "About" card. The label column has a fixed width so every value starts at the same x
+         position down the card, which is what makes it read as a table rather than as five
+         sentences. Wide enough for "FAVOURITE TOYS" on one line at the default font size; a larger
+         font wraps the label rather than squeezing the value. -->
+    <dimen name="pet_detail_about_label_width">120dp</dimen>
+    <dimen name="pet_detail_about_row_padding_vertical">14dp</dimen>
+
+    <!-- The small yellow "+" beside "Care routines". The circle is 36dp; the button's view is 48dp
+         with 6dp insets on each side, so the touch target still meets Android's 48dp minimum. -->
+    <dimen name="pet_detail_add_routine_touch_size">48dp</dimen>
+    <dimen name="pet_detail_add_routine_inset">6dp</dimen>
+
+    <!-- The "⋮" overflow button on a routine card: a 40dp icon button. -->
+    <dimen name="routine_card_overflow_size">40dp</dimen>
 
     <!-- ================================= Tasks tab =================================
          The redesigned Tasks tab: week strip, progress card, filter chips, task cards and the two
