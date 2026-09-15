@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    IBM Plex Mono — the "instrument panel" face: upper-case micro-labels ("YOUR PETS", "AGE"), times,
+    distances, phone numbers and meta lines.
+
+    Monospaced so columns of figures ("0.5 km", "1.2 km") line up character for character, and so a
+    small label reads as a *reading off a gauge* next to the grotesque headlines and body text.
+
+    Medium (500) for normal text and SemiBold (600) for bold. At the 10–12sp sizes this face is used
+    at, Regular looks thin and Bold closes up the letters, so the two middle weights are the ones
+    worth shipping.
+-->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <font
+        android:font="@font/ibm_plex_mono_medium"
+        android:fontStyle="normal"
+        android:fontWeight="500"
+        app:font="@font/ibm_plex_mono_medium"
+        app:fontStyle="normal"
+        app:fontWeight="500" />
+
+    <font
+        android:font="@font/ibm_plex_mono_semibold"
+        android:fontStyle="normal"
+        android:fontWeight="600"
+        app:font="@font/ibm_plex_mono_semibold"
+        app:fontStyle="normal"
+        app:fontWeight="600" />
+
+</font-family>

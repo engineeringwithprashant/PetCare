@@ -31,11 +31,12 @@
 
         <!-- The time sits on the same baseline as the title, at the opposite edge. It is given a
              wrap_content width and the title 0dp, so a long title truncates rather than pushing
-             the time off screen. -->
+             the time off screen. Set in IBM Plex Mono, the app's face for times. -->
         <TextView
             android:id="@+id/taskTimeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/ibm_plex_mono"
             android:layout_marginStart="@dimen/spacing_sm"
             android:textAppearance="?attr/textAppearanceLabelLarge"
             android:textColor="?attr/colorAccentText"

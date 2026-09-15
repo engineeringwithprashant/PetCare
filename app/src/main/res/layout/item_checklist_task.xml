@@ -53,10 +53,13 @@
             android:importantForAccessibility="noHideDescendants"
             android:orientation="vertical">
 
+            <!-- The time, in IBM Plex Mono: the app's face for times and other read-off figures,
+                 and fixed-width digits keep "8:00" and "10:30" optically centred in the badge. -->
             <TextView
                 android:id="@+id/taskTimeText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/ibm_plex_mono"
                 android:maxLines="1"
                 android:textAppearance="?attr/textAppearanceLabelLarge"
                 android:textColor="@color/task_time_badge_text"
@@ -68,6 +71,7 @@
                 android:id="@+id/taskMeridiemText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/ibm_plex_mono"
                 android:textAllCaps="true"
                 android:textAppearance="?attr/textAppearanceLabelSmall"
                 android:textColor="@color/task_time_badge_text"

@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import com.prash.petcare.R
 
 /**
@@ -101,7 +102,10 @@ class DistanceAxisView @JvmOverloads constructor(
         textSize = sp(10f)
         // Monospace so "0.5 km" and "1.5 km" are the same width and the labels sit evenly under
         // their ticks — the strip's typographic voice throughout, see PetCare.Places.StripLabel.
-        typeface = Typeface.MONOSPACE
+        // A Paint cannot read a font resource from XML the way a TextView can, so the bundled
+        // IBM Plex Mono file is loaded explicitly; the platform monospace is the fallback if the
+        // resource ever fails to load.
+        typeface = ResourcesCompat.getFont(context, R.font.ibm_plex_mono_medium) ?: Typeface.MONOSPACE
     }
 
     private val chipFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -115,7 +119,11 @@ class DistanceAxisView @JvmOverloads constructor(
     private val chipTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = ContextCompat.getColor(context, R.color.on_accent_yellow)
         textSize = sp(10f)
-        typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+        // The SemiBold *file* rather than Typeface.create(…, BOLD): asking for bold on a single
+        // loaded font can make older Android versions thicken the strokes artificially, whereas the
+        // real SemiBold cut is drawn as the type designer intended.
+        typeface = ResourcesCompat.getFont(context, R.font.ibm_plex_mono_semibold)
+            ?: Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
         letterSpacing = 0.06f
     }
 

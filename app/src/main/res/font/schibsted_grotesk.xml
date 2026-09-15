@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Schibsted Grotesk at its *reading* weights — the family for body copy.
+
+    Schibsted Grotesk is the app's workhorse: body text, buttons, chips and task titles. It is split
+    into two family resources rather than one because Android's TextView only has two ways to ask for
+    a weight on every supported API level: textStyle="normal" (it looks for the file closest to 400)
+    and textStyle="bold" (closest to 700). A single family holding all four weights could therefore
+    never reach Medium or SemiBold. So:
+
+     - this family  — Regular (400) for normal text, Bold (700) for bold. Used by the Body roles.
+     - schibsted_grotesk_ui — Medium (500) and SemiBold (600). Used by the Title and Label roles
+       (buttons, chips, list titles), which Material 3 draws a step heavier than body text.
+
+    The android: and app: attribute pairs let both modern Android and AppCompat (API 24–25) read it.
+-->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <font
+        android:font="@font/schibsted_grotesk_regular"
+        android:fontStyle="normal"
+        android:fontWeight="400"
+        app:font="@font/schibsted_grotesk_regular"
+        app:fontStyle="normal"
+        app:fontWeight="400" />
+
+    <font
+        android:font="@font/schibsted_grotesk_bold"
+        android:fontStyle="normal"
+        android:fontWeight="700"
+        app:font="@font/schibsted_grotesk_bold"
+        app:fontStyle="normal"
+        app:fontWeight="700" />
+
+</font-family>

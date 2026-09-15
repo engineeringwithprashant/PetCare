@@ -21,11 +21,13 @@
     android:layout_width="0dp"
     android:layout_weight="1">
 
-    <!-- "MO", "TU"… Upper-cased by textAllCaps so the locale's own short weekday names can be used. -->
+    <!-- "MO", "TU"… Upper-cased by textAllCaps so the locale's own short weekday names can be used.
+         IBM Plex Mono, the app's face for upper-case micro-labels. -->
     <TextView
         android:id="@+id/weekdayText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/ibm_plex_mono"
         android:importantForAccessibility="no"
         android:letterSpacing="0.08"
         android:textAllCaps="true"
@@ -33,10 +35,12 @@
         android:textColor="@color/week_day_label_text"
         tools:text="Th" />
 
+    <!-- The date number. Bricolage Grotesque, the app's face for numbers, at the Title size. -->
     <TextView
         android:id="@+id/dateText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/bricolage_grotesque"
         android:importantForAccessibility="no"
         android:textAppearance="?attr/textAppearanceTitleMedium"
         android:textColor="@color/week_day_date_text"

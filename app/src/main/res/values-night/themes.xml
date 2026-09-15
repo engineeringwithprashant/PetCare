@@ -91,6 +91,24 @@
         <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.PetCare.Medium</item>
         <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.PetCare.Large</item>
 
+        <!-- The type scale is identical too — dark mode never changes a typeface. See type.xml. -->
+        <item name="textAppearanceDisplayLarge">@style/TextAppearance.PetCare.DisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/TextAppearance.PetCare.DisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/TextAppearance.PetCare.DisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.PetCare.HeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.PetCare.HeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.PetCare.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.PetCare.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.PetCare.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.PetCare.TitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.PetCare.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.PetCare.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.PetCare.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.PetCare.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.PetCare.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.PetCare.LabelSmall</item>
+        <item name="android:textAppearance">@style/TextAppearance.PetCare.Default</item>
+
         <item name="materialCardViewStyle">@style/PetCare.Card</item>
         <item name="bottomNavigationStyle">@style/PetCare.BottomNav</item>
 

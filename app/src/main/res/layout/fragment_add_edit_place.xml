@@ -224,7 +224,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_sm"
-                        android:fontFamily="monospace"
+                        android:fontFamily="@font/ibm_plex_mono"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorOnSurface"
                         tools:text="27.67658, 85.31621" />

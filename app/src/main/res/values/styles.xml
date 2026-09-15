@@ -114,7 +114,14 @@
 
     <!-- ================================= Typography =================================
          A small set of named roles covers the whole app. Using a role rather than picking a text
-         appearance per screen is what keeps headings the same size everywhere. -->
+         appearance per screen is what keeps headings the same size everywhere.
+
+         Typefaces mostly arrive through the text appearance each role names — type.xml maps
+         Headline roles to Bricolage Grotesque and Title/Body/Label roles to Schibsted Grotesk. A
+         style names a font directly only where its part in the design differs from its Material
+         role: a *number* or *name* set at a Title size (Bricolage), or an upper-case micro-label
+         (IBM Plex Mono). A fontFamily set on the style outranks the one in its textAppearance, which
+         is what lets those few styles keep Material's size while swapping the face. -->
 
     <!-- The dashboard greeting — the largest text in the app, and the only place it appears. -->
     <style name="PetCare.Greeting" parent="">
@@ -140,8 +147,14 @@
 
         The same treatment as PetCare.DetailLabel further down, and deliberately so: both are saying
         "here is the name of the thing you are about to read".
+
+        Set in IBM Plex Mono, the app's "instrument panel" face: a monospaced label reads as a
+        reading on a gauge rather than as a sentence, which is exactly the distinction this style
+        exists to draw. Every style that inherits from it (field labels, stat labels) gets it too.
     -->
     <style name="PetCare.SectionLabel" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:textAllCaps">true</item>
@@ -262,8 +275,11 @@
 
     <!-- The species chip in a pet card's top corner: "CAT", "DOG". Upper-case and letter-spaced so
          it reads as a category marker rather than as a word somebody wrote on the photo, and small
-         enough to stay out of the way of the picture. -->
+         enough to stay out of the way of the picture. In IBM Plex Mono, like the app's other
+         upper-case micro-labels. -->
     <style name="PetCare.SpeciesChip" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:background">@drawable/bg_pet_card_chip</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textColor">@color/on_pet_card</item>
@@ -311,8 +327,12 @@
         <item name="android:paddingBottom">@dimen/pets_stat_padding_vertical</item>
     </style>
 
-    <!-- The figure itself: bold, and one step below the pet's name so the name stays the heading. -->
+    <!-- The figure itself: bold, and one step below the pet's name so the name stays the heading.
+         A number, so it is set in Bricolage Grotesque at the Title size rather than in the Schibsted
+         face its Title role would otherwise give it. -->
     <style name="PetCare.PetStat.Value" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
         <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:textStyle">bold</item>
@@ -535,8 +555,10 @@
     <!-- The pet's full name across the photo's scrim: large, bold and white. White in both themes
          because it sits on a photograph, not on the page — see the pet-card note in colors.xml. The
          letters are drawn a touch tighter, which is how large bold type is normally set; at default
-         spacing a 28sp name looks loose. -->
+         spacing a 28sp name looks loose. A name, so Bricolage Grotesque. -->
     <style name="PetCare.PetDetail.Name" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
         <item name="android:textSize">@dimen/pet_detail_name_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/on_pet_card</item>
@@ -641,7 +663,8 @@
          the Places and Money tabs. Allowed a second line (SectionLabel allows one) so a long label at a
          large font size wraps inside its fixed-width column instead of being cut off. -->
     <style name="PetCare.PetDetail.AboutLabel" parent="PetCare.SectionLabel">
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:maxLines">2</item>
     </style>
 
@@ -719,6 +742,8 @@
     <!-- The quieter heading above a value, e.g. "Date of birth". Letter-spaced and upper-case, so a
          column of them reads as a set of field names rather than as more sentences. -->
     <style name="PetCare.DetailLabel" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:textAllCaps">true</item>
@@ -870,8 +895,14 @@
 
         No textColor here. A text *appearance* that named a colour would override the state list the
         bar applies through itemTextColor, and every tab would end up looking identically selected.
+
+        IBM Plex Mono, like the app's other upper-case micro-labels. It is named here rather than
+        inherited because this style extends Material's LabelSmall *directly* — not through the
+        theme's ?attr/textAppearanceLabelSmall — so it would otherwise keep Material's system font.
     -->
     <style name="TextAppearance.PetCare.NavLabel" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textSize">10sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
@@ -880,14 +911,15 @@
 
     <!-- ================================= Places tab =================================
          The Places tab's small print — labels, distances, subtitles, the GPS chip — is set in the
-         platform **monospace** face, as in the design. A distance list is the one place in the app
-         where columns of figures are compared at a glance ("0.5 km", "1.2 km", "1.9 km"), and fixed
-         character widths make those figures line up. Headings and names stay in the normal face, so
-         the monospace reads as "data" beside them. -->
+         **IBM Plex Mono** monospace face, as in the design. A distance list is the one place in the
+         app where columns of figures are compared at a glance ("0.5 km", "1.2 km", "1.9 km"), and
+         fixed character widths make those figures line up. Headings and names stay in the grotesque
+         faces, so the monospace reads as "data" beside them. -->
 
     <!-- The meta line under a place's name — "Vet clinic · Pulchowk" — and the distance on a row. -->
     <style name="PetCare.Places.Meta" parent="">
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:maxLines">1</item>
@@ -898,7 +930,8 @@
          app's section labels but in the strip's fixed muted colour, since the strip is dark in both
          themes. -->
     <style name="PetCare.Places.StripLabel" parent="">
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textColor">@color/places_strip_muted</item>
         <item name="android:textStyle">bold</item>
@@ -922,20 +955,27 @@
 
     <!-- The small field name under an info block's value: "TODAY", "PHONE". -->
     <style name="PetCare.Places.FieldLabel" parent="PetCare.SectionLabel">
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:layout_marginTop">2dp</item>
     </style>
 
-    <!-- An info block's value: "8:00 – 20:00", "01-5521…". The Pets tab's stat value, so a figure in
-         a bordered block looks the same on both tabs. -->
-    <style name="PetCare.Places.InfoValue" parent="PetCare.PetStat.Value" />
+    <!-- An info block's value: "8:00 – 20:00", "01-5521…". The Pets tab's stat value for size, colour
+         and weight, so a figure in a bordered block matches across tabs — but in IBM Plex Mono rather
+         than Bricolage, because opening hours and phone numbers are read digit by digit, which is the
+         monospace face's job. -->
+    <style name="PetCare.Places.InfoValue" parent="PetCare.PetStat.Value">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+    </style>
 
     <!-- "OPEN NOW": the pastel pill's shape, filled green. Bold monospace capitals so it reads as a
          status badge rather than as words in the heading beside it. -->
     <style name="PetCare.Places.OpenNowPill" parent="PetCare.Pill">
         <item name="android:backgroundTint">@color/open_now_container</item>
         <item name="android:textColor">@color/on_open_now</item>
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
@@ -944,7 +984,8 @@
 
     <!-- "GPS tag saved · 1.2 km walk": the pale supplies tag from the Tasks tab, in monospace. -->
     <style name="PetCare.Places.GpsChip" parent="PetCare.Pill.Supplies">
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
     </style>
 
     <!--
@@ -962,7 +1003,8 @@
         <item name="android:paddingStart">@dimen/spacing_sm</item>
         <item name="android:paddingEnd">@dimen/spacing_sm</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
@@ -1031,7 +1073,8 @@
         <item name="android:layout_height">@dimen/places_badge_size</item>
         <item name="android:background">@drawable/bg_place_badge</item>
         <item name="android:gravity">center</item>
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textStyle">bold</item>
         <item name="android:maxLines">1</item>
@@ -1049,8 +1092,11 @@
     <!-- The month's total. Very large, bold and white on the dark card, with the letters drawn a
          touch closer together: at this size the default spacing reads as gappy, and the design sets
          the figure tight. includeFontPadding is off so the figure sits snugly under its label rather
-         than floating in the extra space a font reserves for accents. -->
+         than floating in the extra space a font reserves for accents. The biggest number in the app,
+         so Bricolage Grotesque. -->
     <style name="PetCare.Expenses.TotalAmount" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
         <item name="android:textSize">@dimen/expenses_total_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/total_card_amount</item>
@@ -1074,14 +1120,18 @@
 
     <!-- A legend row's percentage: small and muted, so the amount beside it is what the eye lands on. -->
     <style name="PetCare.Expenses.LegendShare" parent="">
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
     <!-- An amount, bold — on a legend row (page) or an expense card (surface). The colour is set by
-         the layout, since the two sit on different grounds. -->
+         the layout, since the two sit on different grounds. A number, so Bricolage Grotesque at the
+         Title size. -->
     <style name="PetCare.Expenses.Amount" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
         <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
         <item name="android:textStyle">bold</item>
         <item name="android:maxLines">1</item>
@@ -1097,7 +1147,8 @@
         <item name="android:layout_height">@dimen/expenses_badge_size</item>
         <item name="android:background">@drawable/bg_expense_badge</item>
         <item name="android:gravity">center</item>
-        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
