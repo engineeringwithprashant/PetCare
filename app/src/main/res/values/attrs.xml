@@ -67,4 +67,12 @@
     <attr name="colorPillPeach" format="color" />
     <attr name="colorOnPillPeach" format="color" />
 
+    <!-- Pale green — the profile screen's "VERIFIED" pill. Not part of the four-hue stat-pill family
+         above, which exists so three facts side by side can be told apart; this one always means the
+         same thing, and green is what it means. It is exposed the same way for the same reason: the
+         light and dark values are not a lighter and darker version of each other, so a layout has to
+         reach them through a role rather than naming a colour. -->
+    <attr name="colorPillVerified" format="color" />
+    <attr name="colorOnPillVerified" format="color" />
+
 </resources>

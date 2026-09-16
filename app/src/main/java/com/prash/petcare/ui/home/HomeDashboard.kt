@@ -257,12 +257,17 @@ object HomeDashboard {
      * @param completions The completion history from at least [STREAK_DAYS] days ago onwards.
      * @param nowMillis The current moment — a parameter, never read from the clock here, so tests can
      *   fix it. Days and hours are read in the device's default time zone, as CareSchedule reads them.
+     * @param firstDayOfWeek Which day the care streak's week begins on, from the profile screen's
+     *   "Week starts" preference — a [Calendar] constant such as [Calendar.MONDAY]. A parameter for
+     *   the same reason [nowMillis] is: this object reads no settings and no clock of its own, which
+     *   is what keeps it a pure function that can be tested by passing values in.
      */
     fun build(
         userFullName: String?,
         petCare: List<PetCareData>,
         completions: List<CareCompletion>,
-        nowMillis: Long
+        nowMillis: Long,
+        firstDayOfWeek: Int
     ): HomeUiState {
         val todayStart = CareSchedule.startOfDay(nowMillis)
         val todayEnd = CareSchedule.endOfDay(nowMillis)
@@ -272,7 +277,7 @@ object HomeDashboard {
 
         val today = todayTasks(petCare, todayStart, todayEnd)
         val open = today.filter { !it.isDone }
-        val streak = streak(petCare, completions, nowMillis)
+        val streak = streak(petCare, completions, nowMillis, firstDayOfWeek)
         val fullDays = streak.count { it.isFull }
 
         return HomeUiState(
@@ -380,7 +385,18 @@ object HomeDashboard {
             .minByOrNull { it.dueAtMillis }
 
     /**
-     * The seven streak boxes, oldest first and today last.
+     * The seven streak boxes: the days of the current week, in order.
+     *
+     * **A calendar week, beginning on the day the user chose.** It used to be a rolling window of the
+     * last seven days ending today, which has no "first day" to speak of — so the profile screen's
+     * "Week starts" preference had nothing to act on here. Showing the week the user's own calendar
+     * shows is what makes that setting mean the same thing on this card as it does on the Tasks tab's
+     * strip, and it lines the weekday labels up with the strip rather than sliding them along by one
+     * each morning.
+     *
+     * Days later in the week than today have not happened yet, and are simply not full. They draw
+     * identically to a day that was missed — see bg_streak_day.xml, whose empty slot is deliberately
+     * not a warning — so no extra state is needed to tell the two apart visually.
      *
      * A day is **full** when care was due and every due task has a completion recorded *within that
      * day*. The completion is matched by its timestamp falling between the day's midnights rather than
@@ -399,19 +415,15 @@ object HomeDashboard {
     fun streak(
         petCare: List<PetCareData>,
         completions: List<CareCompletion>,
-        nowMillis: Long
+        nowMillis: Long,
+        firstDayOfWeek: Int
     ): List<StreakDay> {
         val todayStart = CareSchedule.startOfDay(nowMillis)
 
-        // Each box's midnight, stepped back with Calendar rather than by subtracting 24 hours, so a
+        // The same helper the Tasks tab's week strip uses, so the two can never disagree about which
+        // seven days this week is. It steps with Calendar and snaps each day back to midnight, so a
         // week containing a clock change still lands every box on a midnight.
-        val dayStarts = (STREAK_DAYS - 1 downTo 0).map { daysBack ->
-            val calendar = Calendar.getInstance().apply {
-                timeInMillis = todayStart
-                add(Calendar.DAY_OF_MONTH, -daysBack)
-            }
-            CareSchedule.startOfDay(calendar.timeInMillis)
-        }
+        val dayStarts = CareSchedule.weekContaining(nowMillis, firstDayOfWeek)
 
         return dayStarts.map { dayStart ->
             val dayEnd = CareSchedule.endOfDay(dayStart)

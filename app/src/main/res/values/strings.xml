@@ -542,6 +542,11 @@
     <string name="pet_detail_none_recorded">None recorded</string>
     <!-- %1$s is the weight value; the unit is kept out of the number so it can be translated. -->
     <string name="pet_detail_weight_format">%1$s kg</string>
+    <!-- The same weight in pounds, when the profile screen's "Weight units" preference is set to
+         Imperial. The number is converted at display time only; the database always holds kilograms.
+         A separate string rather than a placeholder for the unit, because a translator needs to see
+         the whole phrase — some languages put the unit before the figure. -->
+    <string name="pet_detail_weight_format_imperial">%1$s lb</string>
     <!-- Marks a routine the user has switched off. %1$s is its schedule, e.g. "Every day". -->
     <string name="routine_paused_format">%1$s · Paused</string>
 
@@ -777,18 +782,6 @@
          show a prompt and the only way back is the system settings screen. -->
     <string name="permission_open_settings">Settings</string>
 
-    <!-- ================================ Profile screen ================================
-         Reached from the top app bar's overflow menu. Read-only: it reports who is signed in and
-         how their data is being backed up, and offers the way out. -->
-    <string name="profile_account_title">Your account</string>
-    <string name="profile_name_label">Name</string>
-    <string name="profile_email_label">Email address</string>
-    <string name="profile_member_since_label">Member since</string>
-    <string name="profile_backup_title">Backup</string>
-    <!-- Explains what the sync status line beneath it means, so the profile screen answers "is my
-         data safe?" rather than merely restating the dashboard's indicator. -->
-    <string name="profile_backup_message">Your pets, care and spending are saved on this device first, and uploaded whenever you are online.</string>
-    <string name="profile_sign_out">Sign out</string>
     <!-- Confirmation before signing out. It says what is *not* lost, because the main worry at this
          point is whether signing out discards anything. -->
     <string name="profile_sign_out_dialog_title">Sign out?</string>
@@ -1307,5 +1300,271 @@
          and saying so is more use than "No items". -->
     <string name="notifications_empty_title">Nothing needs you</string>
     <string name="notifications_empty_message">Reminders, missed care and milestones for your pets will show up here.</string>
+
+    <!-- ================================ Profile screen ================================
+         The screen the header's monogram opens: who is signed in, how the app behaves for them, and
+         the way out. -->
+
+    <!-- The header's monogram, which opens this screen. A screen reader announces a description in
+         place of the label, so this has to carry the action rather than the letter "p". -->
+    <string name="cd_open_profile">Open your profile</string>
+
+    <!-- ============================ The identity card ============================ -->
+
+    <string name="cd_change_photo">Change your profile photo</string>
+    <!-- Spoken in place of the photo well when no photo has been added, so a screen reader says what
+         the empty circle is rather than skipping it. -->
+    <string name="cd_profile_photo_empty">No profile photo</string>
+    <string name="cd_profile_photo">Your profile photo</string>
+
+    <!-- The role pill on the card, and the same words wherever the role is written out. -->
+    <string name="profile_role_owner">Owner</string>
+    <string name="profile_role_carer">Carer</string>
+
+    <!-- The dark pill beside it: "2 PETS". Pluralised because "1 PETS" is wrong in a way users
+         notice immediately. -->
+    <plurals name="profile_pet_count_pill">
+        <item quantity="one">%d pet</item>
+        <item quantity="other">%d pets</item>
+    </plurals>
+
+    <!-- Shown in place of the phone line when no number has been recorded. An invitation rather than
+         a blank, so the empty line explains itself instead of looking like something that failed to
+         load. -->
+    <string name="profile_no_phone">No phone number yet</string>
+
+    <!-- ============================== The stat row ============================== -->
+
+    <string name="profile_stat_pets_label">Pets in care</string>
+    <string name="profile_stat_streak_label">Day streak</string>
+    <string name="profile_stat_tasks_label">Tasks this week</string>
+
+    <!-- ============================== ACCOUNT ============================== -->
+
+    <string name="profile_section_account">Account</string>
+
+    <!-- The four-letter codes in the square badges. Not translatable: they are fixed-width
+         abbreviations chosen to fit a 44dp square, and a translation would almost certainly not. -->
+    <string name="profile_badge_name" translatable="false">NAME</string>
+    <string name="profile_badge_mail" translatable="false">MAIL</string>
+    <string name="profile_badge_phone" translatable="false">PHON</string>
+    <string name="profile_badge_password" translatable="false">PASS</string>
+
+    <string name="profile_row_name_title">Name &amp; details</string>
+    <!-- "Prashant Pant · owner account" — the name and the role, so the row summarises what pressing
+         EDIT would let the user change. -->
+    <string name="profile_row_name_subtitle">%1$s · %2$s account</string>
+    <string name="profile_action_edit">Edit</string>
+
+    <string name="profile_row_email_title">Email address</string>
+    <string name="profile_row_phone_title">Phone number</string>
+    <!-- The phone row's second line. The number, then what it is for — this is the number delegation
+         messages are sent *from*, and saying so is the difference between a stored fact and a fact
+         the user understands the point of. -->
+    <string name="profile_row_phone_subtitle">%1$s · used for delegation SMS</string>
+    <string name="profile_row_phone_subtitle_empty">Add one so carers know who is texting</string>
+
+    <!--
+        The pale green pill on the email and phone rows.
+
+        **It is a label, not a claim the app can back up.** Nothing in this app verifies an address or
+        a number — there is no mail server and no SMS round trip — so the pill reports that the value
+        was entered and accepted at sign-up, which is the only thing that is true. It is drawn as a
+        status rather than as a button precisely so it never invites a tap that would have to do
+        nothing. See the note on the security card, which makes the same distinction out loud.
+    -->
+    <string name="profile_status_verified">Verified</string>
+
+    <string name="profile_row_password_title">Change password</string>
+    <!-- "Last changed 3 months ago", worked out from the stored timestamp. -->
+    <string name="profile_row_password_subtitle">Last changed %1$s</string>
+    <!-- Shown when the password has never been changed since the account was made. Deliberately not
+         "changed when you signed up": those are different facts, and claiming a change that never
+         happened would be a small lie the user could not check. -->
+    <string name="profile_row_password_subtitle_never">Not changed since you signed up</string>
+    <string name="profile_action_update">Update</string>
+
+    <!-- ============================== SECURITY ============================== -->
+
+    <string name="profile_section_security">Security</string>
+
+    <string name="profile_row_two_factor_title">Two-factor authentication</string>
+    <!-- The switch is disabled and stores nothing, so its subtitle says so plainly rather than
+         reporting a state. -->
+    <string name="profile_row_two_factor_subtitle">Off · coming in a later release</string>
+
+    <string name="profile_row_fingerprint_title">Unlock with fingerprint</string>
+    <!--
+        Two subtitles, and neither claims the app is locked.
+
+        The preference is genuinely stored, but nothing enforces it yet: that would need the biometric
+        library and a lock screen in front of the navigation graph. Saying "required to open the app"
+        would be telling the user their pets' records are protected when they are not, which is the one
+        kind of inaccuracy a security setting must never commit. See SettingsStore.fingerprintUnlock.
+    -->
+    <string name="profile_row_fingerprint_on">On · saved, enforced in a later release</string>
+    <string name="profile_row_fingerprint_off">Off</string>
+
+    <string name="profile_row_reminders_title">Care reminders</string>
+    <!-- This one *is* wired: ReminderManager reads it and withdraws every alarm when it is off. The
+         subtitle says when a reminder actually arrives — at the task's own time. There is no lead
+         time anywhere in the app, so promising one would be describing a feature that does not
+         exist. -->
+    <string name="profile_row_reminders_on">On · at each task\'s time</string>
+    <string name="profile_row_reminders_off">Off · no reminders will be posted</string>
+
+    <!-- The pale note under the three switches. It exists because a disabled switch with no
+         explanation reads as a bug; saying why it is there turns it into a stated plan. -->
+    <string name="profile_security_note">Two-factor authentication ships in a later release — the switch is here so the flow is already in place.</string>
+
+    <!-- ============================== PREFERENCES ============================== -->
+
+    <string name="profile_section_preferences">Preferences</string>
+
+    <string name="profile_row_weight_title">Weight units</string>
+    <string name="profile_weight_metric">Metric</string>
+    <string name="profile_weight_imperial">Imperial</string>
+
+    <string name="profile_row_reminder_channel_title">Reminders</string>
+    <string name="profile_channel_push">Push</string>
+    <string name="profile_channel_sms">SMS</string>
+    <!-- Said out loud on the row, because the choice reaches less than its two words suggest: the app
+         has no number of its own to text from, so care reminders stay notifications and only the
+         delegation messages the user sends by hand go out as SMS. -->
+    <string name="profile_row_reminder_channel_subtitle">Care reminders are always notifications; SMS applies to delegation</string>
+
+    <string name="profile_row_week_start_title">Week starts</string>
+    <string name="profile_week_sunday">Sun</string>
+    <string name="profile_week_monday">Mon</string>
+
+    <string name="profile_row_currency_title">Currency</string>
+    <string name="profile_currency_npr" translatable="false">NPR</string>
+    <string name="profile_currency_usd" translatable="false">USD</string>
+    <!-- The honest half of the currency setting. The app has no exchange-rate source, so switching
+         changes the symbol and leaves every digit alone — and a user who was not told that would read
+         a relabelled rupee figure as a dollar one. -->
+    <string name="profile_row_currency_subtitle">Symbol only — amounts are not converted</string>
+
+    <!-- ========================== DELEGATION CONTACTS ==========================
+         The people the user hands a checklist to. Not a "care team": nobody is invited, nobody signs
+         in, and no access is granted — see DelegationContactStore. -->
+
+    <string name="profile_section_contacts">Delegation contacts</string>
+    <string name="profile_row_contact_subtitle_empty">Tap to text them today\'s checklist</string>
+    <string name="profile_contact_role">Helper</string>
+
+    <!-- The pill beside the card's heading. -->
+    <plurals name="profile_contacts_saved">
+        <item quantity="one">%d saved</item>
+        <item quantity="other">%d saved</item>
+    </plurals>
+    <string name="profile_contacts_none">None yet</string>
+
+    <!-- The empty state inside the card, and the row that adds someone. -->
+    <string name="profile_contacts_empty">Save the people who look after your pets, so handing over a checklist is one tap instead of a search through your contacts.</string>
+    <string name="profile_contacts_add">Add a contact</string>
+    <string name="cd_remove_contact">Remove %1$s</string>
+
+    <!-- The add-contact dialog. -->
+    <string name="profile_add_contact_title">Add a delegation contact</string>
+    <string name="profile_add_contact_name_hint">Name</string>
+    <string name="profile_add_contact_phone_hint">Phone number</string>
+    <string name="profile_add_contact_note_hint">What they help with (optional)</string>
+    <string name="profile_add_contact_save">Save</string>
+    <string name="profile_add_contact_incomplete">A name and a phone number are both needed.</string>
+
+    <!-- Removing one. A confirmation, because the number is not recoverable from the app once gone. -->
+    <string name="profile_remove_contact_title">Remove %1$s?</string>
+    <string name="profile_remove_contact_message">Their name and number are forgotten. Nothing about your pets or their care changes.</string>
+    <string name="profile_remove_contact_confirm">Remove</string>
+
+    <!-- Shown when a contact is tapped but there is nothing outstanding to hand over. -->
+    <string name="profile_delegate_nothing">Nothing is outstanding to delegate right now.</string>
+
+    <!-- ============================== DATA &amp; PRIVACY ============================== -->
+
+    <string name="profile_section_data">Data &amp; privacy</string>
+
+    <string name="profile_row_export_title">Export my records</string>
+    <string name="profile_row_export_subtitle">Pets, tasks and expenses as CSV</string>
+    <!-- The name offered in the system save dialog. Dated, so exporting twice does not silently
+         suggest overwriting the first file. -->
+    <string name="profile_export_file_name">petcare-records-%1$s.csv</string>
+    <string name="profile_export_success">Records saved.</string>
+    <string name="profile_export_failed">Could not write the file. Nothing was exported.</string>
+    <string name="profile_export_empty">There are no records to export yet.</string>
+
+    <string name="profile_row_backup_title">Backup &amp; sync</string>
+    <!-- "Last backup 3 minutes ago", from the same sync status the dashboard reports, so the two can
+         never give differently-worded answers to the same question. -->
+    <string name="profile_row_backup_subtitle">Last backup %1$s</string>
+    <string name="profile_row_backup_never">Not backed up yet</string>
+    <string name="profile_row_backup_syncing">Backing up now</string>
+    <string name="profile_row_backup_offline">Offline — will back up when you reconnect</string>
+    <plurals name="profile_row_backup_pending">
+        <item quantity="one">%d change waiting to back up</item>
+        <item quantity="other">%d changes waiting to back up</item>
+    </plurals>
+
+    <string name="profile_row_delete_title">Delete account</string>
+    <string name="profile_row_delete_subtitle">Removes every pet and record permanently</string>
+
+    <!--
+        Deleting the account: two dialogs, not one.
+
+        The first explains and offers a way out. The second asks the user to type the word, which is
+        the standard pattern for an action with no undo — it stops a mis-tap on the first dialog's
+        confirm button from destroying every record on the device, and the typing is a moment in which
+        the user re-reads what they are about to do.
+    -->
+    <string name="profile_delete_title">Delete your account?</string>
+    <string name="profile_delete_message">Every pet, routine, task, expense and saved place on this device is deleted, along with your account. This cannot be undone.</string>
+    <string name="profile_delete_continue">Continue</string>
+    <string name="profile_delete_confirm_title">Type DELETE to confirm</string>
+    <string name="profile_delete_confirm_hint">DELETE</string>
+    <!-- Not translatable: it is the exact text the field is compared against, and translating one half
+         of that comparison without the other would lock the user out of their own confirmation. -->
+    <string name="profile_delete_confirm_word" translatable="false">DELETE</string>
+    <string name="profile_delete_confirm_button">Delete everything</string>
+    <string name="profile_delete_mismatch">That did not match, so nothing was deleted.</string>
+
+    <!-- ============================== Footer ============================== -->
+
+    <string name="profile_log_out">Log out</string>
+    <!-- "PetCare 1.0 · records stored on this device". The version comes from BuildConfig, so the line
+         cannot claim a version the build is not. -->
+    <string name="profile_version_format">PetCare %1$s · records stored on this device</string>
+
+    <!-- ========================== Editing the account ========================== -->
+
+    <string name="account_details_title">Name &amp; details</string>
+    <string name="account_details_name_label">Full name</string>
+    <string name="account_details_phone_label">Phone number</string>
+    <string name="account_details_phone_helper">Optional. Shown on your profile so carers know who is texting them.</string>
+    <string name="account_details_role_label">Your role</string>
+    <string name="account_details_role_helper">Owner if the pets are yours; carer if you look after someone else\'s.</string>
+    <!-- The email is shown but not editable, and the screen says why rather than leaving a greyed-out
+         field to be puzzled over. -->
+    <string name="account_details_email_label">Email address</string>
+    <string name="account_details_email_helper">Your sign-in address, and where your backup is filed. It cannot be changed here.</string>
+    <string name="account_details_save">Save changes</string>
+    <string name="account_details_name_required">A name is needed.</string>
+    <string name="account_details_saved">Details saved.</string>
+    <string name="account_details_gone">That account no longer exists.</string>
+
+    <!-- ========================== Changing the password ========================== -->
+
+    <string name="change_password_title">Change password</string>
+    <string name="change_password_current_label">Current password</string>
+    <string name="change_password_new_label">New password</string>
+    <string name="change_password_confirm_label">Confirm new password</string>
+    <string name="change_password_helper">At least %1$d characters.</string>
+    <string name="change_password_save">Change password</string>
+    <string name="change_password_changed">Password changed.</string>
+    <string name="change_password_current_required">Enter your current password.</string>
+    <string name="change_password_current_wrong">That is not your current password.</string>
+    <string name="change_password_too_short">Use at least %1$d characters.</string>
+    <string name="change_password_mismatch">The two new passwords do not match.</string>
+    <string name="change_password_same">That is the password you already have.</string>
 
 </resources>

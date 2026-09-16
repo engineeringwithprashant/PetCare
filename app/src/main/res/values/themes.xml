@@ -98,6 +98,9 @@
         <item name="colorOnPillLilac">@color/pill_light_on_lilac</item>
         <item name="colorPillPeach">@color/pill_light_peach</item>
         <item name="colorOnPillPeach">@color/pill_light_on_peach</item>
+        <!-- The profile screen's "VERIFIED" pill. Pale green in light mode; see attrs.xml. -->
+        <item name="colorPillVerified">@color/verified_pill_light</item>
+        <item name="colorOnPillVerified">@color/on_verified_pill_light</item>
 
         <!-- ============================== Shape scale ==============================
              Material components read their corner radius from these three attributes. Overriding

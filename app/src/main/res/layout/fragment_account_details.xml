@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The form behind the profile screen's "EDIT" pill: the account's own name, contact number and role,
+    with the email shown but locked.
+
+    Reached from the profile screen, so it shows the shared app bar with its back arrow rather than
+    drawing the tab header — it is a step *into* something, not a step sideways, and the arrow back to
+    where the user came from is the right chrome for that.
+
+    **Why it is a ScrollView.** Four fields fit on a phone today, but not at a large font scale and not
+    with the keyboard up — and MainActivity applies the keyboard inset as padding on the root, so a
+    ScrollView here re-measures into the smaller space and scrolls the focused field into view by
+    itself. Every other form in the app is built the same way, for the same reason.
+
+    A vertical LinearLayout inside it: fields stacked, nothing positioned relative to anything but its
+    neighbour.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="@dimen/list_padding_bottom"
+    tools:context=".ui.profile.AccountDetailsFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_padding"
+        android:paddingTop="@dimen/content_top_padding"
+        android:paddingEnd="@dimen/screen_padding">
+
+        <!-- The name. The one required field on the form — see AccountDetailsViewModel.onSave for why
+             it is the only thing validated. Its error is shown on the layout, which is what the
+             `errorEnabled` slot reserves room for so the fields below do not jump when it appears. -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/nameInputLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/account_details_name_label"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/nameInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName|textCapWords"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- The phone number. Optional, and the helper says what it is for rather than only that it
+             may be left blank — a field whose purpose is stated is one people are willing to fill in.
+
+             inputType="phone" brings up the dialling keypad and allows the "+", spaces and dashes a
+             real number is written with. The app never parses it; it is shown as typed. -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:hint="@string/account_details_phone_label"
+            app:helperText="@string/account_details_phone_helper"
+            app:helperTextEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/phoneInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!--
+            The email, shown and locked.
+
+            Present rather than omitted, because the address is one of the account's defining facts and
+            a form without it would look as though it had been forgotten. Disabled rather than merely
+            read-only, so it is drawn greyed, cannot take focus, and is announced by TalkBack as
+            unavailable — all three of which say "not editable" more clearly than a field that accepts
+            typing and then silently discards it.
+
+            The helper text carries the reason. It is not an arbitrary restriction: the address is the
+            sign-in identifier *and* the key the Firestore sync files this account's data under, so
+            changing it here would strand everything already uploaded. See UserRepository.updateDetails.
+        -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:enabled="false"
+            android:hint="@string/account_details_email_label"
+            app:helperText="@string/account_details_email_helper"
+            app:helperTextEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:inputType="textEmailAddress"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- ================================ The role ================================ -->
+
+        <TextView
+            style="@style/PetCare.SectionLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:text="@string/account_details_role_label" />
+
+        <!--
+            Owner or carer.
+
+            A MaterialButtonToggleGroup rather than the two-half toggle the profile screen uses for its
+            preferences. The difference is deliberate: those are compact controls squeezed to the right
+            of a row, where a pair of real buttons would not fit; here there is a full screen width and
+            a form label above, so the standard Material component — which brings the single-selection
+            behaviour, the touch targets and the "selected" announcement for free — is simply the right
+            thing.
+
+            singleSelection with selectionRequired means exactly one is always chosen, so the form can
+            never be saved with no role and the fragment never has to handle that case.
+        -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/roleToggleGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/roleOwnerButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/profile_role_owner" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/roleCarerButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/profile_role_carer" />
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <TextView
+            style="@style/PetCare.Subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="@string/account_details_role_helper" />
+
+        <!-- The one action on the screen, so it is the filled accent button — which everywhere in this
+             app means "this is the thing to do". -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/saveButton"
+            style="@style/PetCare.TaskActionButton.Filled"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:text="@string/account_details_save" />
+
+    </LinearLayout>
+
+</ScrollView>

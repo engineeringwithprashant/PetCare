@@ -26,9 +26,10 @@ import com.prash.petcare.databinding.FragmentPetDetailBinding
 import com.prash.petcare.ui.checklist.ChecklistFragment
 import com.prash.petcare.ui.common.formatAge
 import com.prash.petcare.ui.common.formatStoredDate
-import com.prash.petcare.ui.common.formatWeight
+import com.prash.petcare.ui.common.formatWeightWithUnit
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.loadPetPhoto
+import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.common.showTitle
@@ -101,7 +102,11 @@ class PetDetailFragment : Fragment() {
         // as soon as the pet loads (see render). The badge opens the profile screen, as it does on
         // the tabs — this screen hides the shared toolbar too, and with it the overflow menu that
         // was the other way there.
-        binding.header.setUp(title = "", onBadgeClick = ::openNotifications)
+        binding.header.setUp(
+            title = "",
+            onBadgeClick = ::openNotifications,
+            onMonogramClick = ::openProfile
+        )
 
         setUpRecyclerView()
         setUpClickListeners()
@@ -254,7 +259,7 @@ class PetDetailFragment : Fragment() {
         // Through the shared formatter, so this pet's weight reads exactly as it does on the Pets and
         // Home cards ("25 kg", "4.5 kg") — see ui/common/WeightFormatting.kt.
         val weight = pet.weightKg?.let {
-            getString(R.string.pet_detail_weight_format, formatWeight(it))
+            formatWeightWithUnit(requireContext(), it, state.weightUnit)
         }
         binding.weightPill.text = weight.orEmpty()
         binding.weightPill.isVisible = weight != null

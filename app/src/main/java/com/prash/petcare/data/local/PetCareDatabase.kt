@@ -46,7 +46,7 @@ import com.prash.petcare.data.local.entity.User
         Place::class,
         CareCompletion::class
     ],
-    version = 8,
+    version = 9,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -325,6 +325,49 @@ abstract class PetCareDatabase : RoomDatabase() {
         }
 
         /**
+         * Version 8 to 9: adds the profile fields to the `users` table.
+         *
+         * Four ADD COLUMN statements, so — like [MIGRATION_1_2] — no rows are copied and nothing
+         * existing is at risk. What each new column has to contain for the accounts already on the
+         * device is the whole of the thinking here:
+         *
+         * **`phone`, `passwordChangedAt` and `photoUri` are nullable with no default**, which is
+         * exactly how Room maps `String?` and `Long?`. Null is the truthful value in all three
+         * cases: the app never asked for a number or a photo, and a password that has never been
+         * changed since sign-up genuinely has no change date. Defaulting `passwordChangedAt` to
+         * `createdAt` was tempting and is wrong — it would have the profile screen report a change
+         * that never took place.
+         *
+         * **`role` is `TEXT NOT NULL DEFAULT 'OWNER'`**, the same shape as the `gender` column in
+         * [MIGRATION_6_7] and for the same reason: SQLite will not add a NOT NULL column to a table
+         * that already has rows unless it is told what to put in them. 'OWNER' is written as the
+         * enum constant's *name*, because that is the text
+         * [com.prash.petcare.data.local.converter.Converters] reads back — a value such as 'Owner'
+         * would make `UserRole.valueOf` throw the first time an existing account was loaded.
+         *
+         * **`photoUri`, not `photoPath`.** The property is `photoPath`, but [User] maps it to a
+         * column named `photoUri` with `@ColumnInfo`, matching how [Pet] stores the same thing. Room
+         * validates the file against the entity on every open, so the column has to be created under
+         * the name the entity declares rather than the name the property has.
+         *
+         * As explained on [MIGRATION_3_4], the entity itself declares no `defaultValue`. Room only
+         * compares a column's default when the entity states one, so the SQL default here satisfies
+         * SQLite without making a migrated database disagree with a freshly created one.
+         *
+         * Nothing needs marking as pending sync: the `users` table is not synced to Firestore at all
+         * — only the account's email is used, as the remote key — so these columns never leave the
+         * device. See [com.prash.petcare.data.sync.SyncManager].
+         */
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE users ADD COLUMN phone TEXT")
+                db.execSQL("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'OWNER'")
+                db.execSQL("ALTER TABLE users ADD COLUMN passwordChangedAt INTEGER")
+                db.execSQL("ALTER TABLE users ADD COLUMN photoUri TEXT")
+            }
+        }
+
+        /**
          * The one shared instance.
          *
          * `@Volatile` means a write here is immediately visible to every thread, which stops one
@@ -361,7 +404,8 @@ abstract class PetCareDatabase : RoomDatabase() {
                         MIGRATION_4_5,
                         MIGRATION_5_6,
                         MIGRATION_6_7,
-                        MIGRATION_7_8
+                        MIGRATION_7_8,
+                        MIGRATION_8_9
                     )
                     .build()
                     .also { INSTANCE = it }

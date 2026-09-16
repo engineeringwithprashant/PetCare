@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentPetsBinding
+import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
@@ -92,7 +93,11 @@ class PetsFragment : Fragment() {
 
         // The header shared with the dashboard. The badge opens the notifications screen, as it does
         // on every screen that draws this header. See ui/common/TabHeader.kt.
-        binding.header.setUp(title = R.string.nav_pets, onBadgeClick = ::openNotifications)
+        binding.header.setUp(
+            title = R.string.nav_pets,
+            onBadgeClick = ::openNotifications,
+            onMonogramClick = ::openProfile
+        )
 
         setUpRecyclerView()
         binding.emptyAddPetButton.setOnClickListener { openNewPetForm() }

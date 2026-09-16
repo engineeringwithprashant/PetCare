@@ -8,6 +8,7 @@ import com.prash.petcare.data.local.entity.PlaceCategory
 import com.prash.petcare.data.local.entity.RepeatUnit
 import com.prash.petcare.data.local.entity.SyncEntityType
 import com.prash.petcare.data.local.entity.TaskCategory
+import com.prash.petcare.data.local.entity.UserRole
 
 /**
  * Teaches Room how to store the app's enum types in SQLite.
@@ -63,6 +64,12 @@ class Converters {
 
     @TypeConverter
     fun toPlaceCategory(value: String): PlaceCategory = PlaceCategory.valueOf(value)
+
+    @TypeConverter
+    fun fromUserRole(role: UserRole): String = role.name
+
+    @TypeConverter
+    fun toUserRole(value: String): UserRole = UserRole.valueOf(value)
 
     @TypeConverter
     fun fromSyncEntityType(type: SyncEntityType): String = type.name

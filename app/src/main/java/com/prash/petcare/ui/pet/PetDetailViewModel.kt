@@ -7,6 +7,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
 import com.prash.petcare.data.local.entity.CareRoutine
+import com.prash.petcare.data.local.SettingsStore
+import com.prash.petcare.data.local.WeightUnit
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
@@ -59,6 +61,8 @@ data class PetDetailUiState(
     val routines: List<PetRoutine> = emptyList(),
     val tasksDueToday: Int = 0,
     val tasksDoneToday: Int = 0,
+    /** Which unit the weight pill is written in, from the profile screen's preference. */
+    val weightUnit: WeightUnit = WeightUnit.METRIC,
     val isLoading: Boolean = true
 ) {
     /** True when the "no routines yet" message should replace the list. */
@@ -99,6 +103,7 @@ class PetDetailViewModel(
     petRepository: PetRepository,
     private val careRoutineRepository: CareRoutineRepository,
     private val careTaskRepository: CareTaskRepository,
+    settingsStore: SettingsStore,
     petId: Long
 ) : ViewModel() {
 
@@ -151,8 +156,11 @@ class PetDetailViewModel(
         pet,
         careRoutineRepository.observeRoutinesForPet(petId),
         careTaskRepository.observeTasksForPet(petId),
-        ownerDetails
-    ) { pet, routines, tasks, (ownerName, petCount) ->
+        ownerDetails,
+        // One more input, so switching units on the profile screen redraws the weight pill by the
+        // same path an edit to the pet does.
+        settingsStore.weightUnit
+    ) { pet, routines, tasks, (ownerName, petCount), weightUnit ->
         // Tasks whose routine was deleted have a null routine id and belong to no card, so they
         // simply drop out of the counts.
         val countsByRoutine = tasks.groupingBy { it.routineId }.eachCount()
@@ -172,6 +180,7 @@ class PetDetailViewModel(
             },
             tasksDueToday = dueToday.size,
             tasksDoneToday = dueToday.count { CareSchedule.isDoneOn(it, dayStart, dayEnd) },
+            weightUnit = weightUnit,
             isLoading = false
         )
     }.stateIn(
@@ -231,6 +240,7 @@ class PetDetailViewModel(
                     petRepository = application.petRepository,
                     careRoutineRepository = application.careRoutineRepository,
                     careTaskRepository = application.careTaskRepository,
+                    settingsStore = application.settingsStore,
                     petId = petId
                 )
             }

@@ -37,6 +37,7 @@ import com.prash.petcare.ui.common.SwipeActionCallback
 import com.prash.petcare.ui.common.bindOptions
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.setToolbarTitle
+import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
@@ -232,6 +233,41 @@ class ChecklistFragment : Fragment() {
         setUpSwipeGestures()
         setUpClickListeners()
         observeViewModel()
+        startPrefilledDelegation(savedInstanceState)
+    }
+
+    /**
+     * Picks up a recipient chosen on the profile screen and goes straight to the confirmation preview.
+     *
+     * Tapping a saved delegation contact navigates here with that person's name and number attached —
+     * see the `delegateToName` and `delegateToPhone` arguments in nav_graph.xml. All this does is hand
+     * them to the ViewModel exactly as the system contact picker would, which moves the flow to its
+     * Preview stage and makes the existing renderer put up the confirmation dialog.
+     *
+     * **Nothing is skipped that matters.** The channel dialog and the contact picker are bypassed
+     * because the user has already answered both questions; the message is still built from the tasks
+     * actually outstanding, the SEND_SMS permission is still requested with its rationale, and the
+     * exact text is still shown for confirmation before a single message goes out. A second path that
+     * skipped any of *those* would be the dangerous one.
+     *
+     * `savedInstanceState == null` is what keeps this to the first arrival. Without it a rotation
+     * would re-run the whole navigation argument and reopen the preview after the user had dismissed
+     * it — the arguments stay attached to the destination for as long as it is on the back stack.
+     */
+    private fun startPrefilledDelegation(savedInstanceState: Bundle?) {
+        if (savedInstanceState != null) return
+
+        val name = arguments?.getString(ARG_DELEGATE_NAME) ?: return
+        val phone = arguments?.getString(ARG_DELEGATE_PHONE) ?: return
+
+        // Nothing outstanding means nothing to hand over, and a preview of an empty checklist would be
+        // a confusing thing to confirm. The same guard startDelegation applies, for the same reason.
+        if (viewModel.uiState.value.outstandingCount == 0) {
+            showMessage(getString(R.string.profile_delegate_nothing))
+            return
+        }
+
+        viewModel.onRecipientChosen(name, phone)
     }
 
     override fun onResume() {
@@ -260,9 +296,12 @@ class ChecklistFragment : Fragment() {
         if (isTab) {
             // The badge opens the notifications screen, as on every other screen that draws this
             // header.
-            binding.header.setUp(title = R.string.nav_tasks) {
-                findNavController().navigate(R.id.notificationsFragment)
-            }
+            binding.header.setUp(
+                title = R.string.nav_tasks,
+                onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
+                // The monogram opens the profile screen, as on every other screen that draws it.
+                onMonogramClick = ::openProfile
+            )
         }
 
         dayCells = listOf(
@@ -942,6 +981,14 @@ class ChecklistFragment : Fragment() {
     companion object {
         /** Navigation argument name; must match the one declared in nav_graph.xml. */
         const val ARG_PET_ID = "petId"
+
+        /**
+         * The delegation prefill arguments, sent by the profile screen when a saved contact is
+         * tapped. Must match the names declared on this destination in nav_graph.xml, and the ones
+         * ProfileFragment puts in the bundle.
+         */
+        const val ARG_DELEGATE_NAME = "delegateToName"
+        const val ARG_DELEGATE_PHONE = "delegateToPhone"
 
         /** The chip key for "All" in either filter row — never a category name or a pet id. */
         private const val KEY_ALL = "all"

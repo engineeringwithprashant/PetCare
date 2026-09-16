@@ -16,6 +16,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentNotificationsBinding
+import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showAssistantPill
 import com.prash.petcare.ui.common.showPetCount
@@ -87,7 +88,11 @@ class NotificationsFragment : Fragment() {
         // this screen, and a control that reopens the screen already being looked at is a dead end.
         // The same reasoning hides the "Profile" item from the overflow menu while the profile screen
         // is open — see MainActivity.onPrepareOptionsMenu.
-        binding.header.setUp(title = R.string.nav_notifications, onBadgeClick = null)
+        binding.header.setUp(
+            title = R.string.nav_notifications,
+            onBadgeClick = null,
+            onMonogramClick = ::openProfile
+        )
         binding.header.showAssistantPill(::openAssistant)
 
         setUpRecyclerView()

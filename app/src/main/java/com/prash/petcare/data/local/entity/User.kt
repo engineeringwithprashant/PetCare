@@ -1,5 +1,6 @@
 package com.prash.petcare.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -22,6 +23,20 @@ import androidx.room.PrimaryKey
  *   sign-up screen submits the same form twice.
  * @property passwordHash The *hashed* password, never the plain text the user typed. Storing a
  *   raw password would expose the account to anyone who could read the device's database file.
+ * @property phone Optional contact number, shown on the profile screen. Nullable because every
+ *   account created before this column existed has none, and because the app never requires one —
+ *   nothing breaks without it. It is the user's *own* number, kept so the profile can display it;
+ *   delegation still sends to a recipient chosen per message, never to this.
+ * @property role How the user describes their part in the pets' care — see [UserRole]. Non-null with
+ *   a default, because an account always plays *some* part, and [UserRole.OWNER] is the truthful
+ *   answer for every account that existed before the app asked.
+ * @property passwordChangedAt When the password was last changed, as epoch milliseconds, or null if
+ *   it has never been changed since the account was made. Deliberately *not* defaulted to
+ *   [createdAt]: "never changed" and "changed the day you signed up" are different facts, and the
+ *   profile screen says so rather than implying a change that never happened.
+ * @property photoPath Optional absolute path to a profile photo copied into the app's internal
+ *   storage, exactly as [Pet.photoPath] works and for the same reason — see
+ *   [com.prash.petcare.util.PetPhotoStorage] on why a picked image is copied rather than referenced.
  * @property createdAt When the account was created, as epoch milliseconds.
  */
 @Entity(
@@ -36,5 +51,13 @@ data class User(
     val fullName: String,
     val email: String,
     val passwordHash: String,
+    val phone: String? = null,
+    val role: UserRole = UserRole.OWNER,
+    val passwordChangedAt: Long? = null,
+    // Named "photoUri" in SQLite, matching Pet's identical column. The property says what the value
+    // really is — an absolute file path — while the column keeps the name Pet already established,
+    // so the two tables describe the same kind of thing the same way.
+    @ColumnInfo(name = "photoUri")
+    val photoPath: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

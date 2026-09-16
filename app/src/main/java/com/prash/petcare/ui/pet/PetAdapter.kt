@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.prash.petcare.R
 import com.prash.petcare.databinding.ItemPetBinding
 import com.prash.petcare.ui.common.formatAgeShort
-import com.prash.petcare.ui.common.formatWeight
+import com.prash.petcare.ui.common.formatWeightWithUnit
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.loadPetPhoto
 import kotlinx.coroutines.CoroutineScope
@@ -117,10 +117,12 @@ class PetAdapter(
             // The short forms ("5 mo", "3 yrs") because each block is only a third of the card wide.
             binding.ageValueText.showStat(pet.dateOfBirth?.let { formatAgeShort(context, it) })
 
+            // "25 kg" or "55.1 lb". The unit is part of the value because the label underneath says
+            // WEIGHT, not which unit it is in — so without it the figure would be a bare number that
+            // means two different things depending on a setting. Which unit comes from the card
+            // rather than from this adapter; see PetCard.weightUnit.
             binding.weightValueText.showStat(
-                pet.weightKg?.let {
-                    context.getString(R.string.pet_detail_weight_format, formatWeight(it))
-                }
+                pet.weightKg?.let { formatWeightWithUnit(context, it, card.weightUnit) }
             )
 
             // NumberFormat rather than toString(), so the digit is in the device's own numerals.

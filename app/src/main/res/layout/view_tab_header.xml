@@ -22,6 +22,10 @@
     toolbar's overflow menu are not on screen; the profile screen they lead to is still reached from
     that menu wherever the toolbar is shown.
 
+    **The monogram opens the profile screen**, from every screen that draws this header. Those screens
+    hide the shared toolbar, whose overflow menu used to be the only route to the account — so without
+    this, the profile screen would be unreachable from most of the app. See TabHeader.kt.
+
     **The badge opens the notifications screen.** It counts pets and carries the red dot for care
     that needs attention, so pressing it to see what needs attention is the reading it already
     invites. It is the only route to that screen, which is why every screen drawing this header
@@ -48,20 +52,35 @@
     android:paddingEnd="@dimen/screen_padding"
     android:paddingBottom="@dimen/spacing_sm">
 
-    <!-- The app's monogram: a "p" on a rounded yellow square. A TextView rather than an icon, so the
-         letter is drawn from a font and stays crisp at any density without a drawable per size — in
-         Bricolage Grotesque, the app's character face, so the mark matches the headlines. Its
-         background supplies the shape — see bg_monogram.xml.
+    <!--
+        The app's monogram: a "p" on a rounded yellow square, and the way in to the profile screen.
 
-         importantForAccessibility="no" because the next view already announces the screen: a screen
-         reader would otherwise open each tab by reading out the letter "p". -->
+        A TextView rather than an icon, so the letter is drawn from a font and stays crisp at any
+        density without a drawable per size — in Bricolage Grotesque, the app's character face, so the
+        mark matches the headlines. Its background supplies the shape — see bg_monogram.xml.
+
+        **It is now a control, where it used to be decoration.** Tapping the app's own mark to reach
+        "your account" is the arrangement a great many apps already use, and it gives the profile
+        screen a route from every screen that draws this header — which matters because those screens
+        hide the shared toolbar, and its overflow menu was previously the only way in. The foreground
+        ripple is drawn *over* the yellow square rather than replacing its background, so the mark
+        keeps its colour and shape and only gains the press feedback.
+
+        It is no longer hidden from accessibility: it does something now, so it needs a label saying
+        what. On the profile screen itself the tap is unhooked and the label removed again — see
+        TabHeader.kt, which does the same for the badge on the notifications screen.
+    -->
     <TextView
+        android:id="@+id/monogram"
         android:layout_width="@dimen/monogram_size"
         android:layout_height="@dimen/monogram_size"
         android:background="@drawable/bg_monogram"
+        android:clickable="true"
+        android:contentDescription="@string/cd_open_profile"
+        android:focusable="true"
         android:fontFamily="@font/bricolage_grotesque"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
         android:gravity="center"
-        android:importantForAccessibility="no"
         android:text="@string/home_monogram"
         android:textAppearance="?attr/textAppearanceTitleMedium"
         android:textColor="@color/on_accent_yellow"

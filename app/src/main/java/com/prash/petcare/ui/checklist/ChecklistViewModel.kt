@@ -14,6 +14,7 @@ import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.local.entity.TaskCategory
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
+import com.prash.petcare.data.local.SettingsStore
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.util.CareSchedule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -255,6 +256,7 @@ class ChecklistViewModel(
     petRepository: PetRepository,
     careRoutineRepository: CareRoutineRepository,
     private val careTaskRepository: CareTaskRepository,
+    private val settingsStore: SettingsStore,
     ownerId: Long,
     initialPetId: Long
 ) : ViewModel() {
@@ -359,8 +361,14 @@ class ChecklistViewModel(
      * alive for five seconds after the screen stops observing — long enough to survive a rotation,
      * short enough that a backgrounded screen stops doing work.
      */
-    val uiState: StateFlow<ChecklistUiState> = combine(petCare, filters) { care, chosen ->
-        buildState(care, chosen)
+    val uiState: StateFlow<ChecklistUiState> = combine(
+        petCare,
+        filters,
+        // The week-start preference is an input rather than something read inside buildState, so
+        // changing it on the profile screen rebuilds the strip by the same path a ticked task does.
+        settingsStore.weekStart
+    ) { care, chosen, weekStart ->
+        buildState(care, chosen, weekStart.calendarDay)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -373,7 +381,11 @@ class ChecklistViewModel(
      * A plain function of its inputs, called from inside the flow above, so all the arithmetic for
      * one frame happens against one consistent snapshot.
      */
-    private fun buildState(care: List<PetCare>, chosen: Filters): ChecklistUiState {
+    private fun buildState(
+        care: List<PetCare>,
+        chosen: Filters,
+        firstDayOfWeek: Int
+    ): ChecklistUiState {
         // "Today" is recomputed on every emission, so the boundaries stay correct past midnight.
         val today = CareSchedule.startOfToday()
         val day = chosen.day ?: today
@@ -385,7 +397,7 @@ class ChecklistViewModel(
 
         val rows = rowsOn(inScope, day, chosen.category)
 
-        val weekDays = CareSchedule.weekContaining(today).map { weekDay ->
+        val weekDays = CareSchedule.weekContaining(today, firstDayOfWeek).map { weekDay ->
             WeekDay(
                 dayStart = weekDay,
                 isToday = weekDay == today,
@@ -622,6 +634,7 @@ class ChecklistViewModel(
                     petRepository = application.petRepository,
                     careRoutineRepository = application.careRoutineRepository,
                     careTaskRepository = application.careTaskRepository,
+                    settingsStore = application.settingsStore,
                     ownerId = ownerId,
                     initialPetId = petId
                 )

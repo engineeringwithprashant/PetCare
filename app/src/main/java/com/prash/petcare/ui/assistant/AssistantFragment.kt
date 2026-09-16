@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.chip.Chip
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentAssistantBinding
+import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
@@ -76,7 +77,11 @@ class AssistantFragment : Fragment() {
         // The shared header, as on every redesigned screen. The AI pill is deliberately *not* shown
         // here: it is the control that opens this screen, and a button that reopens the screen it is
         // already on reads as broken.
-        binding.header.setUp(title = R.string.nav_assistant, onBadgeClick = ::openNotifications)
+        binding.header.setUp(
+            title = R.string.nav_assistant,
+            onBadgeClick = ::openNotifications,
+            onMonogramClick = ::openProfile
+        )
 
         setUpList()
         setUpInput()

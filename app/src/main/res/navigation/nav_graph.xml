@@ -39,6 +39,22 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/loginFragment">
 
+    <!--
+        ======================== Global actions ========================
+
+        An action declared as a direct child of <navigation> rather than of a <fragment> is a **global
+        action**: it can be taken from any destination in the graph. That is exactly what the profile
+        screen needs — the app's monogram in the shared header opens it, and seven different screens
+        draw that header. Seven ordinary actions would say the same thing seven times and give seven
+        chances for one to drift out of step.
+
+        Nothing is popped. The profile screen is a step sideways out of whichever tab the user is on,
+        like the assistant and the notifications screen, so back returns them to where they were.
+    -->
+    <action
+        android:id="@+id/action_global_to_profile"
+        app:destination="@id/profileFragment" />
+
     <!-- ============================== Authentication ============================== -->
 
     <!-- Sign-in screen. Entry point of the app. -->
@@ -176,6 +192,25 @@
         <action
             android:id="@+id/action_checklist_to_add_edit_task"
             app:destination="@id/addEditTaskFragment" />
+
+        <!-- Who to delegate today's care to, sent by tapping a saved contact on the profile screen.
+
+             Both are nullable and default to null, so every other route into this screen is
+             unaffected and simply arrives with no recipient chosen. When they *are* supplied, the
+             screen skips the channel dialog and the system contact picker and goes straight to the
+             confirmation preview — the contact has already been chosen, and asking again would be
+             asking a question the user has just answered. The message is still never sent without
+             that confirmation. -->
+        <argument
+            android:name="delegateToName"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="delegateToPhone"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
     </fragment>
 
     <!-- Tab 4. The user's saved vets, groomers, parks and shops, laid out by distance from home, with
@@ -221,17 +256,65 @@
 
     <!-- ============================== Account screens ============================== -->
 
-    <!-- The signed-in account's details, reached from the top app bar's overflow menu. Read-only:
-         it reports who is signed in and how their data is backed up.
+    <!--
+        The signed-in account: who they are, how the app behaves for them, and the way out.
 
-         **It used to be reached from the header's pet-count badge as well, and no longer is** — that
-         badge now opens the notifications screen below. The destination is untouched and the overflow
-         menu still leads here; only the badge was rewired. -->
+        **Reached from the app's monogram** in the shared header, through the global action at the top
+        of this file, from every screen that draws that header. The toolbar's overflow menu still
+        leads here as well, for the screens that show a toolbar instead.
+
+        Like the assistant and the notifications screen it is not a tab and has no bottom-bar item of
+        its own, so NavigationUI leaves whichever tab the user came from highlighted while it is open:
+        opening and closing it cannot move them between tabs. It draws the shared header rather than
+        the app bar — see MainActivity.updateChromeFor.
+    -->
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.prash.petcare.ui.profile.ProfileFragment"
         android:label="@string/menu_profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
+
+        <!-- The "EDIT" pill on the "Name & details" row: the form for the account's own name, phone
+             number and role. -->
+        <action
+            android:id="@+id/action_profile_to_account_details"
+            app:destination="@id/accountDetailsFragment" />
+
+        <!-- The "UPDATE" pill on the "Change password" row. -->
+        <action
+            android:id="@+id/action_profile_to_change_password"
+            app:destination="@id/changePasswordFragment" />
+
+        <!-- Tapping a saved delegation contact opens the Tasks tab with that person already chosen,
+             so the checklist goes straight to its confirmation preview — see the two prefill
+             arguments on checklistFragment. No petId is passed, so the checklist arrives at its
+             default of -1 and offers the pet chips exactly as it does from the bottom bar. -->
+        <action
+            android:id="@+id/action_profile_to_checklist"
+            app:destination="@id/checklistFragment" />
+
+        <!-- The header's AI pill, which this screen shows as the dashboard does. -->
+        <action
+            android:id="@+id/action_profile_to_assistant"
+            app:destination="@id/assistantFragment" />
+    </fragment>
+
+    <!-- Edit the signed-in account's own name, contact number and role. The email is deliberately not
+         editable here — it is the login identifier and the key the Firestore sync files this account's
+         data under, so changing it would strand everything already uploaded. See UserRepository. -->
+    <fragment
+        android:id="@+id/accountDetailsFragment"
+        android:name="com.prash.petcare.ui.profile.AccountDetailsFragment"
+        android:label="@string/account_details_title"
+        tools:layout="@layout/fragment_account_details" />
+
+    <!-- Set a new password, after confirming the current one. Takes no arguments: the account is the
+         signed-in one, read from SessionViewModel like every other screen's. -->
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.prash.petcare.ui.profile.ChangePasswordFragment"
+        android:label="@string/change_password_title"
+        tools:layout="@layout/fragment_change_password" />
 
     <!--
         Everything the app has noticed about the user's pets: care coming up, care that was missed,

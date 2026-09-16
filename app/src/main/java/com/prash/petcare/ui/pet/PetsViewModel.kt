@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
+import com.prash.petcare.data.local.SettingsStore
+import com.prash.petcare.data.local.WeightUnit
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
@@ -37,7 +39,13 @@ import kotlinx.coroutines.flow.stateIn
 data class PetCard(
     val pet: Pet,
     val ownerName: String,
-    val tasksDueToday: Int
+    val tasksDueToday: Int,
+    /**
+     * Which unit the card writes the pet's weight in, from the profile screen's preference. Carried
+     * on the card rather than read by the adapter, so switching to imperial makes this a *different*
+     * card — which is what has DiffUtil redraw it by itself, with no manual refresh.
+     */
+    val weightUnit: WeightUnit
 )
 
 /**
@@ -84,6 +92,7 @@ class PetsViewModel(
     petRepository: PetRepository,
     careRoutineRepository: CareRoutineRepository,
     careTaskRepository: CareTaskRepository,
+    settingsStore: SettingsStore,
     userId: Long
 ) : ViewModel() {
 
@@ -144,13 +153,21 @@ class PetsViewModel(
      */
     val uiState: StateFlow<PetsUiState> = combine(
         userRepository.observeUser(userId),
-        petsWithDueCounts
-    ) { user, pets ->
+        petsWithDueCounts,
+        // One more input, so changing the unit on the profile screen redraws these cards by the same
+        // path adding a pet does.
+        settingsStore.weightUnit
+    ) { user, pets, weightUnit ->
         val ownerName = user?.fullName.orEmpty()
 
         PetsUiState(
             pets = pets.map { (pet, dueToday) ->
-                PetCard(pet = pet, ownerName = ownerName, tasksDueToday = dueToday)
+                PetCard(
+                    pet = pet,
+                    ownerName = ownerName,
+                    tasksDueToday = dueToday,
+                    weightUnit = weightUnit
+                )
             },
             isLoading = false
         )
@@ -179,6 +196,7 @@ class PetsViewModel(
                     petRepository = application.petRepository,
                     careRoutineRepository = application.careRoutineRepository,
                     careTaskRepository = application.careTaskRepository,
+                    settingsStore = application.settingsStore,
                     userId = userId
                 )
             }

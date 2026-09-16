@@ -1138,11 +1138,14 @@
         <item name="cornerRadius">@dimen/pill_corner_radius</item>
         <item name="backgroundTint">@color/accent_yellow</item>
         <item name="android:textColor">@color/on_accent_yellow</item>
-        <!-- 10sp mono capitals, letter-spaced to match the card's other uppercase marks. Set here
+        <!-- 12sp mono capitals, letter-spaced to match the card's other uppercase marks. Set here
              rather than left to the Material button's own label appearance, which would give it the
-             body face and make it read as a form control rather than as part of this card. -->
-        <item name="android:textSize">10sp</item>
-        <item name="android:letterSpacing">0.12</item>
+             body face and make it read as a form control rather than as part of this card.
+
+             This style used to declare textSize and letterSpacing *twice* — 10sp/0.12 followed by
+             12sp/0.08. A later item silently wins in a style, so 12sp/0.08 was always what the button
+             actually drew and the first pair had never had any effect. The dead pair is removed and
+             these values left exactly as they were rendering, so the card is unchanged. -->
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textSize">12sp</item>
@@ -1758,5 +1761,330 @@
 
     <!-- "Care reminder · 2h ago": the meta line shared with the Places and Money tabs. -->
     <style name="PetCare.Notifications.Meta" parent="PetCare.Places.Meta" />
+
+    <!-- ================================ Profile screen ================================
+         The screen the header's monogram opens.
+
+         Its one piece of visual grammar is the **settings row**: a title in bold, a muted subtitle
+         beneath, and a control on the right — repeated down five cards with hairlines between. The
+         styles below describe that row once, which is what stops ACCOUNT, SECURITY, PREFERENCES,
+         contacts and DATA &amp; PRIVACY drifting into five differently proportioned lists. -->
+
+    <!-- ============================ The dark identity card ============================
+         The user's name, email and phone on a dark panel, with the photo well beside them. Its colours
+         are fixed rather than theme roles, because the card is dark in both modes by design — see the
+         profile section of colors.xml. -->
+
+    <!-- The user's name: the largest text on the screen and its subject. -->
+    <style name="PetCare.Profile.Name" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceHeadlineSmall</item>
+        <item name="android:textSize">@dimen/profile_name_text_size</item>
+        <item name="android:textColor">@color/on_profile_card</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- The email and phone lines under it. Quieter than the name but still a fact to be read, so body
+         type rather than a micro-label. -->
+    <style name="PetCare.Profile.CardMeta" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">@color/on_profile_card_muted</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- The yellow role pill ("OWNER"). The accent as a fill with its guaranteed-legible dark on top,
+         exactly as the accent is used everywhere else in the app, so it reads as the one thing on the
+         card worth noticing after the name. Upper-case and letter-spaced in IBM Plex Mono, like the
+         app's other micro-labels. -->
+    <style name="PetCare.Profile.RolePill" parent="PetCare.Pill">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:background">@drawable/bg_pill</item>
+        <item name="android:backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:paddingStart">@dimen/spacing_sm</item>
+        <item name="android:paddingEnd">@dimen/spacing_sm</item>
+    </style>
+
+    <!-- The dark pet-count pill beside it ("2 PETS"). The same shape and type, in the translucent chip
+         the pet cards use, so the pair reads as one row of two facts of differing importance. -->
+    <style name="PetCare.Profile.CountPill" parent="PetCare.Profile.RolePill">
+        <item name="android:backgroundTint">@color/profile_count_pill</item>
+        <item name="android:textColor">@color/on_profile_card</item>
+    </style>
+
+    <!-- The yellow "+" on the photo well's corner. A filled Material icon button, so it brings the
+         ripple, the focus state and the "button" role TalkBack announces; the circle comes from the
+         50%-corner shape appearance, so it stays round at any size. -->
+    <style name="PetCare.Profile.AddPhotoButton" parent="Widget.Material3.Button.IconButton.Filled">
+        <item name="android:layout_width">@dimen/profile_add_photo_touch_size</item>
+        <item name="android:layout_height">@dimen/profile_add_photo_touch_size</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">@dimen/profile_add_photo_inset</item>
+        <item name="android:insetBottom">@dimen/profile_add_photo_inset</item>
+        <item name="android:insetLeft">@dimen/profile_add_photo_inset</item>
+        <item name="android:insetRight">@dimen/profile_add_photo_inset</item>
+        <item name="android:padding">0dp</item>
+        <item name="backgroundTint">@color/accent_yellow</item>
+        <item name="iconTint">@color/on_accent_yellow</item>
+        <item name="iconSize">14dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">0dp</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.PetCare.Circle</item>
+        <!-- A ring in the card's own colour, separating the yellow disc from the photo well's rim it
+             overlaps. Without it the two circles read as one shape with a bite taken out. Drawn as
+             the button's own stroke rather than as a background drawable, because a MaterialButton
+             builds its shape from backgroundTint and shapeAppearance — a background set underneath
+             would be covered by the very fill it was meant to sit behind. -->
+        <item name="strokeColor">@color/profile_card_ground</item>
+        <item name="strokeWidth">@dimen/profile_add_photo_ring</item>
+    </style>
+
+    <!-- ============================== The stat row ============================== -->
+
+    <!-- One of the three cards. Its width is shared out by layout_weight, so only the padding and the
+         corner are set here. -->
+    <style name="PetCare.Profile.StatCard" parent="PetCare.Card">
+        <item name="cardCornerRadius">@dimen/home_stat_card_corner_radius</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+    </style>
+
+    <!-- The bold figure. A number, so Bricolage Grotesque rather than the face its Title role would
+         otherwise give it — the same choice the dashboard's stat cards make. -->
+    <style name="PetCare.Profile.StatValue" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <item name="android:textSize">@dimen/profile_stat_value_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- The uppercase micro-label under it: "PETS IN CARE", "DAY STREAK". Two lines allowed, because
+         "TASKS THIS WEEK" does not fit on one at a third of the screen's width. -->
+    <style name="PetCare.Profile.StatLabel" parent="PetCare.SectionLabel">
+        <item name="android:textSize">@dimen/profile_stat_label_text_size</item>
+        <item name="android:layout_marginTop">@dimen/home_stat_line_spacing</item>
+        <item name="android:maxLines">2</item>
+    </style>
+
+    <!-- ============================== The settings rows ============================== -->
+
+    <!-- The small uppercase heading at the top of each card: "ACCOUNT", "SECURITY". The app's section
+         label, given the row padding so it sits on the same rhythm as the rows beneath it. -->
+    <style name="PetCare.Profile.SectionLabel" parent="PetCare.SectionLabel">
+        <item name="android:paddingTop">@dimen/profile_row_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/profile_row_padding_vertical</item>
+    </style>
+
+    <!-- One row: a horizontal band with its own vertical padding. gravity centres whatever it holds
+         against a control of a different height, and baselineAligned is off for the reason given in
+         fragment_notifications.xml — a LinearLayout would otherwise line a switch up with the title's
+         baseline and push it down the row. -->
+    <style name="PetCare.Profile.Row" parent="">
+        <item name="android:orientation">horizontal</item>
+        <item name="android:baselineAligned">false</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingTop">@dimen/profile_row_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/profile_row_padding_vertical</item>
+    </style>
+
+    <!-- A row the user can press. Adds the ripple and the "button" role; the ripple is a foreground so
+         it draws over the row's children rather than behind them. -->
+    <style name="PetCare.Profile.Row.Clickable" parent="PetCare.Profile.Row">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+    </style>
+
+    <!-- The row's first line. -->
+    <style name="PetCare.Profile.RowTitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- The same line in red, for "Delete account". The error colour rather than the accent, because
+         the accent everywhere else in this app means "this is the thing to do". -->
+    <style name="PetCare.Profile.RowTitle.Destructive" parent="PetCare.Profile.RowTitle">
+        <item name="android:textColor">?attr/colorError</item>
+    </style>
+
+    <!-- The muted second line. Two lines allowed: several of these are a short sentence rather than a
+         label ("used for delegation SMS"), and truncating an explanation to one line would cut it off
+         mid-clause. -->
+    <style name="PetCare.Profile.RowSubtitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- The hairline between two rows. Inset to begin where the row's text does rather than at the
+         card's edge, which is the convention that makes a stack read as grouped rows of one list
+         instead of as separate panels. -->
+    <style name="PetCare.Profile.RowDivider" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/profile_row_divider_height</item>
+        <item name="android:background">?attr/colorOutlineVariant</item>
+    </style>
+
+    <!-- The square code badge on an account row: "NAME", "MAIL", "PHON", "PASS". The notifications
+         screen's badge in the quieter surface, so a small square code is the same object on both. -->
+    <style name="PetCare.Profile.Badge" parent="">
+        <item name="android:layout_width">@dimen/profile_badge_size</item>
+        <item name="android:layout_height">@dimen/profile_badge_size</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:background">@drawable/bg_alert_badge</item>
+        <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textSize">@dimen/profile_badge_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- The circular initial avatar on a delegation-contact row. A circle rather than a square, for
+         the reason given in bg_profile_avatar.xml: a letter in a circle is how a *person* is drawn. -->
+    <style name="PetCare.Profile.Avatar" parent="">
+        <item name="android:layout_width">@dimen/profile_avatar_size</item>
+        <item name="android:layout_height">@dimen/profile_avatar_size</item>
+        <item name="android:background">@drawable/bg_profile_avatar</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- ============================== The action pills ==============================
+         The small pill on the right of an account row. Three variants, and which one a row gets says
+         what pressing it would do — or that nothing would. -->
+
+    <!-- The quiet outlined one: "EDIT". A real action, but a secondary one sitting beside a fact. -->
+    <style name="PetCare.Profile.ActionPill" parent="PetCare.SmallPillButton">
+        <item name="android:minHeight">@dimen/profile_segment_height</item>
+        <item name="android:paddingStart">@dimen/spacing_md</item>
+        <item name="android:paddingEnd">@dimen/spacing_md</item>
+    </style>
+
+    <!-- The accent one: "UPDATE", on the change-password row. Filled, because unlike the other rows
+         this is the one on this card the user might have come here to do. -->
+    <style name="PetCare.Profile.ActionPill.Accent" parent="PetCare.Profile.ActionPill">
+        <item name="android:backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <!-- "VERIFIED": pale green, and a TextView rather than a button. It is a *status*, not a control —
+         nothing happens if it is pressed, and drawing it as a button would promise otherwise. -->
+    <style name="PetCare.Profile.StatusPill" parent="PetCare.Pill">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:backgroundTint">?attr/colorPillVerified</item>
+        <item name="android:textColor">?attr/colorOnPillVerified</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <!-- The role pill on a delegation-contact row. The quiet surface rather than green: it labels a
+         row rather than confirming anything. -->
+    <style name="PetCare.Profile.StatusPill.Neutral" parent="PetCare.Profile.StatusPill">
+        <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- The accent version, for the contacts card's own heading pill ("2 SAVED"). -->
+    <style name="PetCare.Profile.StatusPill.Accent" parent="PetCare.Profile.StatusPill">
+        <item name="android:backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+    </style>
+
+    <!-- ========================= The two-option preference toggle =========================
+         Metric/Imperial, Push/SMS, Sun/Mon, NPR/USD. -->
+
+    <!-- The capsule groove both halves sit in. -->
+    <style name="PetCare.Profile.SegmentTrack" parent="">
+        <item name="android:layout_height">@dimen/profile_segment_height</item>
+        <item name="android:background">@drawable/bg_profile_segment_track</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">@dimen/profile_segment_inset</item>
+    </style>
+
+    <!--
+        One half of it.
+
+        A TextView with a state-list background rather than two MaterialButtons or a Material
+        button-group: the halves are a single control the user reads as "one of these two", and a pair
+        of buttons brings two touch targets, two ripples and two minimum widths that would make the
+        control far wider than the row has room for. `state_selected` drives both the fill
+        (bg_profile_segment.xml) and the text colour (res/color/profile_segment_text.xml), so the
+        fragment sets one boolean per half and nothing is styled in code.
+
+        duplicateParentState is deliberately *not* used: each half has its own selected state, and
+        inheriting the parent's would select both at once.
+    -->
+    <style name="PetCare.Profile.Segment" parent="">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@drawable/bg_profile_segment</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">@dimen/profile_segment_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/profile_segment_padding_horizontal</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:textColor">@color/profile_segment_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- ============================== Footer ==============================
+         The pale note under the security rows, the "LOG OUT" button and the version line. -->
+
+    <!-- The note card explaining that two-factor ships later. -->
+    <style name="PetCare.Profile.Note" parent="">
+        <item name="android:background">@drawable/bg_profile_note</item>
+        <item name="android:padding">@dimen/profile_note_padding</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!--
+        "LOG OUT".
+
+        Outlined rather than filled, and in the muted text colour rather than the accent or the error
+        red. Filled would put the yellow — which everywhere else in this app means "this is the thing
+        to do" — on the one button that ends the session. Red would overstate it: signing out destroys
+        nothing, and the app keeps the red for the delete-account row directly above, where it is
+        earned. Outlined and quiet says what this is: available, deliberate, not the default.
+    -->
+    <style name="PetCare.Profile.LogOutButton" parent="PetCare.AddRowButton">
+        <item name="android:minHeight">@dimen/profile_logout_button_height</item>
+        <item name="cornerRadius">@dimen/corner_radius_md</item>
+        <item name="icon">@drawable/ic_logout</item>
+    </style>
+
+    <!-- "PetCare 1.0 · records stored on this device". The quietest text on the screen: it is there to
+         be found, not read. -->
+    <style name="PetCare.Profile.Version" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:gravity">center</item>
+    </style>
 
 </resources>

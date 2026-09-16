@@ -82,6 +82,10 @@
         <item name="colorOnPillLilac">@color/pill_dark_on_lilac</item>
         <item name="colorPillPeach">@color/pill_dark_peach</item>
         <item name="colorOnPillPeach">@color/pill_dark_on_peach</item>
+        <!-- The same pill inverted for dark mode: a deep ground with pale text, like the stat pills
+             above, so "the green one means verified" stays true in either theme. -->
+        <item name="colorPillVerified">@color/verified_pill_dark</item>
+        <item name="colorOnPillVerified">@color/on_verified_pill_dark</item>
 
         <!-- The shape scale and the default component styles are identical in both themes: dark
              mode changes what colour a card is, never how round it is. They are repeated rather

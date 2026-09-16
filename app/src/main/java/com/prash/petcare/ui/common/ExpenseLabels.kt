@@ -100,60 +100,72 @@ fun ExpenseCategory.colorRes(): Int = when (this) {
 }
 
 /**
- * The currency symbol written before every amount in the app: Nepalese rupees.
+ * Builds the prefix written before every amount: the chosen symbol and a non-breaking space.
  *
- * A fixed symbol rather than `NumberFormat.getCurrencyInstance()`, which picks the currency from the
- * device's *region*. The app records what the user spent in rupees; a phone set to English (United
- * States) would otherwise relabel every one of those amounts as dollars without changing a digit —
- * the same numbers, silently claiming to be a different currency.
+ * A symbol chosen by the app rather than `NumberFormat.getCurrencyInstance()`, which picks the
+ * currency from the device's *region*. The app records what the user spent in one currency; a phone
+ * set to English (United States) would otherwise relabel every one of those amounts as dollars
+ * without changing a digit — the same numbers, silently claiming to be a different currency.
  *
- * Followed by a non-breaking space ("Rs 4,665"), so a line that wraps can never leave "Rs" stranded
- * at the end of one line and the number at the start of the next. Kept in step with the
- * `currency_symbol` string the expense form uses as its field prefix.
+ * **Which symbol is a setting, not a conversion.** The user chooses it on the profile screen and the
+ * digits are left exactly as stored: there is no exchange-rate source anywhere in the app, so turning
+ * rupees into dollars would mean inventing a rate that goes stale the day it is written. See
+ * [com.prash.petcare.data.local.CurrencyPreference], and the note the profile row carries so nobody
+ * reads a relabelled figure as a converted one.
+ *
+ * The space is non-breaking, so a line that wraps can never leave "Rs" stranded at the end of one
+ * line and the number at the start of the next.
  */
-private const val CURRENCY_PREFIX = "Rs\u00A0"
+private fun prefixFor(symbol: String): String = symbol + " "
 
 /**
  * Formats a stored amount as money for display: "Rs 4,665", or "Rs 425.50".
  *
- * **Paise only when there are any.** Most pet spending is in whole rupees, and ".00" on every row
- * of a list is noise that makes the figures harder to compare; an amount that does have paise shows
- * both digits so "Rs 425.5" never appears. The total card always shows them — see [splitCurrency].
+ * **Minor units only when there are any.** Most pet spending is in whole rupees, and ".00" on every
+ * row of a list is noise that makes the figures harder to compare; an amount that does have them
+ * shows both digits so "Rs 425.5" never appears. The total card always shows them — see
+ * [splitCurrency].
  *
  * The digits follow the device's locale for grouping and the decimal separator. The formatter is
  * created per call on purpose: [NumberFormat] is not thread-safe, and a formatter cached for the old
  * locale would survive the user changing language.
+ *
+ * @param symbol Which symbol to write in front, from
+ *   [com.prash.petcare.data.local.CurrencyPreference.symbol]. Passed in rather than read here, so this
+ *   file stays a pure function of its arguments — which is what lets a screen re-render from a flow
+ *   when the setting changes, instead of having to be told to refresh.
  */
-fun formatCurrency(amount: Double): String {
+fun formatCurrency(amount: Double, symbol: String): String {
     val isWhole = abs(amount - round(amount)) < HALF_PAISA
     val format = NumberFormat.getNumberInstance().apply {
         val decimals = if (isWhole) 0 else 2
         minimumFractionDigits = decimals
         maximumFractionDigits = decimals
     }
-    return CURRENCY_PREFIX + format.format(amount)
+    return prefixFor(symbol) + format.format(amount)
 }
 
 /**
  * An amount split into the part before the decimal separator and the part from it onwards:
  * ("Rs 5,240", ".00").
  *
- * For the total card, where the paise are drawn smaller than the rupees. The split is done on the
+ * For the total card, where the minor units are drawn smaller than the major ones. The split is done on the
  * *formatted* string, at the locale's own separator, so rounding is settled first — 5,239.999 becomes
  * "5,240" and ".00" rather than "5,239" and ".100" — and a locale that writes "5.240,00" splits at
  * the comma.
  */
-fun splitCurrency(amount: Double): Pair<String, String> {
+fun splitCurrency(amount: Double, symbol: String): Pair<String, String> {
     val formatted = NumberFormat.getNumberInstance().apply {
         minimumFractionDigits = 2
         maximumFractionDigits = 2
     }.format(amount)
 
+    val prefix = prefixFor(symbol)
     val separatorIndex = formatted.lastIndexOf(DecimalFormatSymbols.getInstance().decimalSeparator)
     return if (separatorIndex < 0) {
-        (CURRENCY_PREFIX + formatted) to ""
+        (prefix + formatted) to ""
     } else {
-        (CURRENCY_PREFIX + formatted.substring(0, separatorIndex)) to formatted.substring(separatorIndex)
+        (prefix + formatted.substring(0, separatorIndex)) to formatted.substring(separatorIndex)
     }
 }
 

@@ -178,11 +178,13 @@ class MainActivity : AppCompatActivity() {
      * one pet from its detail page, the same screens hide that header and rely on this toolbar instead,
      * for their title and back arrow — see [restoreUpArrowForPetScopedScreen].
      *
-     * **The account actions are the one cost of hiding the bar.** The header's count badge used to
-     * double as the way into the profile screen for exactly that reason; it now opens the
-     * notifications screen instead, which is what a count with a red dot on it reads as. The profile
-     * screen is unchanged and still reached from this toolbar's overflow menu on every screen that
-     * shows the toolbar. See [com.prash.petcare.ui.common.setUp].
+     * **The account actions used to be the one cost of hiding the bar, and no longer are.** The
+     * header's count badge once doubled as the way into the profile screen; it now opens the
+     * notifications screen, which is what a count with a red dot on it reads as. The account is
+     * reached instead by pressing the app's **monogram** at the left of that same header — available
+     * on every screen that draws it, which is precisely the set of screens this method hides the
+     * toolbar on. The toolbar's overflow menu still leads there too, for the screens that show it.
+     * See [com.prash.petcare.ui.common.setUp] and [com.prash.petcare.ui.common.openProfile].
      */
     private fun updateChromeFor(destinationId: Int, arguments: Bundle?) {
         val isAuthScreen =
@@ -204,6 +206,9 @@ class MainActivity : AppCompatActivity() {
             // The notifications screen, for the same reason, and reached the same way: from the
             // header's pet-count badge rather than from the bottom bar.
             destinationId == R.id.notificationsFragment ||
+            // The profile screen, likewise — reached from the header's monogram, and drawing that
+            // same header with "Profile" as its title.
+            destinationId == R.id.profileFragment ||
             isTasksTab ||
             isMoneyTab
 

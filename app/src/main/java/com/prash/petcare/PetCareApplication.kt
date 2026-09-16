@@ -6,7 +6,9 @@ import com.prash.petcare.data.assistant.AssistantRepository
 import com.prash.petcare.data.assistant.OpenAiAssistantRepository
 import com.prash.petcare.data.remote.assistant.OpenAiApi
 import com.prash.petcare.data.local.AlertReadStore
+import com.prash.petcare.data.local.DelegationContactStore
 import com.prash.petcare.data.local.PetCareDatabase
+import com.prash.petcare.data.local.SettingsStore
 import com.prash.petcare.data.local.WeatherCache
 import com.prash.petcare.data.remote.FirestoreSyncService
 import com.prash.petcare.data.remote.weather.WeatherApi
@@ -103,6 +105,27 @@ class PetCareApplication : Application() {
      * SharedPreferences rather than in the database the alerts are derived from.
      */
     val alertReadStore: AlertReadStore by lazy { AlertReadStore(this) }
+
+    /**
+     * The display and security settings the profile screen controls.
+     *
+     * Shared across the whole process for the same reason [alertReadStore] is, and more strongly: it
+     * is read by nearly every screen. The Pets tab asks it which unit to write a weight in, the Money
+     * tab which symbol to put before an amount, the Tasks tab which day the week starts on — and each
+     * holds its value in a [kotlinx.coroutines.flow.StateFlow], so a per-ViewModel instance would mean
+     * a setting changed on the profile screen never reaching the tab behind it.
+     *
+     * See [SettingsStore] for why these live in SharedPreferences rather than in the Room database.
+     */
+    val settingsStore: SettingsStore by lazy { SettingsStore(this) }
+
+    /**
+     * The people the user hands a checklist to, for the profile screen's delegation card.
+     *
+     * One instance for the same reason as the stores above: it publishes its list as a flow, and the
+     * profile card has to redraw the moment a contact is added or removed.
+     */
+    val delegationContactStore: DelegationContactStore by lazy { DelegationContactStore(this) }
 
     /**
      * Where the phone is, for capturing a new place's geotag and measuring distances to saved ones.
@@ -214,7 +237,8 @@ class PetCareApplication : Application() {
         ReminderManager(
             careTaskRepository = careTaskRepository,
             scheduler = reminderScheduler,
-            notifier = reminderNotifier
+            notifier = reminderNotifier,
+            settingsStore = settingsStore
         )
     }
 

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One half of a two-option preference toggle: filled when it is the chosen option, invisible when it
+    is not.
+
+    A state-list drawable keyed on `state_selected`, so the fragment sets one boolean per half and this
+    file decides what is drawn. That is the same arrangement the care-streak boxes use
+    (bg_streak_day.xml) and the reason is the same: no shape is ever built in code.
+
+    **The chosen half is `?attr/colorSelectedContainer`** — near-black in light mode, the accent in
+    dark — which is the app's single piece of grammar for "this one is chosen": the selected day on the
+    Tasks strip, a checked filter chip and the Delegate button all use it. See attrs.xml for why the
+    two values are not simply a lighter and darker version of each other.
+
+    The unchosen half is fully transparent rather than a pale fill, so the track behind it
+    (bg_profile_segment_track.xml) shows through and the control reads as one groove with a pill slid
+    to one end — not as two buttons of differing brightness.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSelectedContainer" />
+            <corners android:radius="@dimen/pill_corner_radius" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="@dimen/pill_corner_radius" />
+        </shape>
+    </item>
+
+</selector>

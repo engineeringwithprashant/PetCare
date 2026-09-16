@@ -540,4 +540,108 @@
          it sits in is the size the answer will roughly be. -->
     <dimen name="assistant_thinking_width">72dp</dimen>
 
+    <!-- ============================== Profile screen ==============================
+         The screen the header's monogram opens: the dark identity card, a row of three stats, and a
+         stack of settings cards.
+
+         Its large cards reuse pet_card_corner_radius, so the identity card is the same softly rounded
+         object as the pet cards and the dashboard's. -->
+
+    <!-- The dark identity card. Its padding is a step above the app's usual card_padding: this is the
+         page's subject and the one card the eye should land on, and a tight inset would make it read
+         as another settings panel. -->
+    <dimen name="profile_card_padding">18dp</dimen>
+
+    <!--
+        The circular photo well, and the gap between it and the column of text beside it.
+
+        96dp is chosen so the well is comfortably taller than the three lines of text next to it
+        (name, email, phone), which is what makes the card read as a portrait with details rather than
+        as a paragraph with an icon. The gap is its own dimension rather than the general spacing_md,
+        for the reason given on home_today_ring_spacing: a circle's bounding box touches its neighbour
+        at only one point, so the same nominal gap reads as tighter beside a circle than between two
+        straight edges.
+    -->
+    <dimen name="profile_photo_size">96dp</dimen>
+    <dimen name="profile_photo_gap">18dp</dimen>
+    <dimen name="profile_photo_well_stroke">1dp</dimen>
+
+    <!-- The small yellow "+" on the well's corner. The disc is 30dp inside a 44dp view, so the touch
+         target stays close to Android's 48dp minimum while the mark itself stays small enough not to
+         cover the face in the photo behind it. The ring is what separates the yellow from the well's
+         own rim — see bg_profile_add_photo.xml. -->
+    <dimen name="profile_add_photo_touch_size">44dp</dimen>
+    <dimen name="profile_add_photo_inset">7dp</dimen>
+    <dimen name="profile_add_photo_ring">2dp</dimen>
+
+    <!-- The user's name across the card. A step above PetCare.Headline's 24sp, as on the pet detail
+         screen, because here it is the title of the whole page. In sp, so it grows with the user's
+         font-size setting. -->
+    <dimen name="profile_name_text_size">26sp</dimen>
+
+    <!-- ============================== The stat row ==============================
+         "2 PETS IN CARE", "5 DAY STREAK", "18 TASKS THIS WEEK".
+
+         Three cards sharing the width equally rather than a fixed width with a sideways scroll, unlike
+         the dashboard's: there are exactly three, they are never added to, and all three must be
+         visible at once for the row to read as a summary. The figures are short — a count, a count and
+         a count — so equal thirds hold them comfortably on any phone. -->
+    <dimen name="profile_stat_card_padding">13dp</dimen>
+    <dimen name="profile_stat_card_gap">8dp</dimen>
+    <!-- The bold figure, and the uppercase micro-label beneath it. The dashboard's sizes, so a stat
+         card is the same object on both screens. -->
+    <dimen name="profile_stat_value_text_size">22sp</dimen>
+    <dimen name="profile_stat_label_text_size">8.5sp</dimen>
+
+    <!-- ============================== The settings rows ==============================
+         Every card below the stat row is a section label over a stack of rows separated by hairlines.
+         One set of dimensions covers all of them, which is what keeps ACCOUNT, SECURITY, PREFERENCES,
+         contacts and DATA & PRIVACY reading as one list broken into groups rather than five differently
+         proportioned cards. -->
+
+    <!-- A row's own vertical padding. 14dp above and below two lines of text lands the row near 64dp,
+         comfortably past Android's 48dp minimum for anything tappable. -->
+    <dimen name="profile_row_padding_vertical">14dp</dimen>
+    <!-- Gap between a row's badge and its text, and between its text and the control on the right. -->
+    <dimen name="profile_row_gap">14dp</dimen>
+    <!-- The hairline between two rows. It is inset to start at the text rather than at the card's
+         edge, which is the convention that makes a list read as grouped rows — see the layout. -->
+    <dimen name="profile_row_divider_height">1dp</dimen>
+
+    <!-- The square code badge on an account row ("NAME", "MAIL", "PHON", "PASS"). Only the size is
+         declared: the badge takes its shape from bg_alert_badge.xml, which already carries the
+         notifications screen's corner radius — so a small square code is literally the same object on
+         both screens rather than two that happen to match. -->
+    <dimen name="profile_badge_size">44dp</dimen>
+    <!-- The badge's four-letter code. Smaller than the notification badge's three-letter one, so
+         "NAME" still fits on one line inside the same square. -->
+    <dimen name="profile_badge_text_size">9sp</dimen>
+
+    <!-- The circular initial avatar on a delegation-contact row. A touch smaller than the square code
+         badge: a single letter needs less room than a four-letter code, and the smaller circle keeps
+         the contact rows visibly lighter than the account rows above them. -->
+    <dimen name="profile_avatar_size">40dp</dimen>
+
+    <!-- The two-option preference toggle. 34dp keeps it shorter than the 44dp badge beside it on other
+         rows, so the preference rows read as lighter than the account rows — they hold a choice, not a
+         destination. The padding is what gives each half its width, since the labels differ in length
+         ("Metric" against "Imperial"). -->
+    <dimen name="profile_segment_height">34dp</dimen>
+    <dimen name="profile_segment_padding_horizontal">14dp</dimen>
+    <!-- The inset between the track and the filled pill inside it, so the chosen half reads as sitting
+         *in* the groove rather than as covering it. -->
+    <dimen name="profile_segment_inset">3dp</dimen>
+
+    <!-- The pale note card under the security rows. -->
+    <dimen name="profile_note_padding">14dp</dimen>
+
+    <!-- The chevron on a data-and-privacy row. The size the dashboard's "coming up" rows use, so the
+         "there is more this way" arrow is the same mark throughout the app. -->
+    <dimen name="profile_chevron_size">18dp</dimen>
+
+    <!-- The footer: the outlined "LOG OUT" button and the version line under it. The button takes the
+         Tasks tab's action-button height, so the one full-width button on this screen is the same
+         object as the full-width buttons elsewhere. -->
+    <dimen name="profile_logout_button_height">52dp</dimen>
+
 </resources>

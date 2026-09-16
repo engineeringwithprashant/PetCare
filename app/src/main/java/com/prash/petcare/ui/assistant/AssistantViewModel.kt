@@ -17,6 +17,7 @@ import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.data.local.SettingsStore
 import com.prash.petcare.ui.common.formatCurrency
 import com.prash.petcare.ui.home.HomeDashboard
 import com.prash.petcare.ui.home.PetCareData
@@ -133,6 +134,7 @@ class AssistantViewModel(
     careTaskRepository: CareTaskRepository,
     expenseRepository: ExpenseRepository,
     private val assistantRepository: AssistantRepository,
+    private val settingsStore: SettingsStore,
     userId: Long
 ) : ViewModel() {
 
@@ -197,7 +199,12 @@ class AssistantViewModel(
             monthSpendByCategory = spending?.breakdown.orEmpty(),
             // Formatted here rather than in the repository, which must not reach up into `ui` —
             // see the note on AssistantContext.monthSpendFormatted.
-            monthSpendFormatted = spending?.let { formatCurrency(it.total) },
+            // The symbol is read once, here, rather than collected: this snapshot is built to be sent
+            // with a single question, so the value at the moment of asking is the right one and there
+            // is nothing on screen that would need redrawing if it changed afterwards.
+            monthSpendFormatted = spending?.let {
+                formatCurrency(it.total, settingsStore.currency.value.symbol)
+            },
             monthSpendChangePercent = spending?.changePercent
         )
     }
@@ -356,6 +363,7 @@ class AssistantViewModel(
                 AssistantViewModel(
                     userRepository = application.userRepository,
                     petRepository = application.petRepository,
+                    settingsStore = application.settingsStore,
                     careRoutineRepository = application.careRoutineRepository,
                     careTaskRepository = application.careTaskRepository,
                     expenseRepository = application.expenseRepository,

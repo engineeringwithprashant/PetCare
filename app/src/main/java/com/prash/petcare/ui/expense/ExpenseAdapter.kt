@@ -99,7 +99,7 @@ class ExpenseAdapter(
             // the characters it covers, so the two parts share a baseline and line up exactly as in
             // the design — two TextViews side by side would need baseline constraints and would still
             // drift at large font scales.
-            val (whole, fraction) = splitCurrency(month.total)
+            val (whole, fraction) = splitCurrency(month.total, item.currencySymbol)
             binding.totalAmountText.text = SpannableStringBuilder(whole).apply {
                 val start = length
                 append(fraction)
@@ -170,7 +170,7 @@ class ExpenseAdapter(
             binding.categoryNameText.setText(spend.category.labelRes())
             binding.categoryShareText.text =
                 context.getString(R.string.expenses_category_share_format, (spend.share * 100).roundToInt())
-            binding.categoryAmountText.text = formatCurrency(spend.amount)
+            binding.categoryAmountText.text = formatCurrency(spend.amount, item.currencySymbol)
         }
     }
 
@@ -201,7 +201,7 @@ class ExpenseAdapter(
                 categoryName,
                 formatStoredDate(expense.incurredOn)
             )
-            binding.expenseAmountText.text = formatCurrency(expense.amount)
+            binding.expenseAmountText.text = formatCurrency(expense.amount, item.currencySymbol)
 
             // Notes are not shown on the card — the design gives each expense exactly two lines —
             // but they are still spoken, so a TalkBack user loses nothing the sighted user could open
@@ -209,7 +209,7 @@ class ExpenseAdapter(
             val notes = expense.notes?.takeIf { it.isNotBlank() }
             binding.root.contentDescription = listOfNotNull(
                 expense.title,
-                formatCurrency(expense.amount),
+                formatCurrency(expense.amount, item.currencySymbol),
                 binding.expenseSubtitleText.text,
                 notes
             ).joinToString(context.getString(R.string.list_separator))

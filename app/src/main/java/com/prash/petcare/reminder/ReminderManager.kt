@@ -1,10 +1,12 @@
 package com.prash.petcare.reminder
 
 import android.util.Log
+import com.prash.petcare.data.local.SettingsStore
 import com.prash.petcare.data.local.relation.TaskReminder
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.util.CareSchedule
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -33,11 +35,16 @@ import kotlinx.coroutines.sync.withLock
  *   repository, never a DAO directly, in keeping with the app's layering.
  * @param scheduler Registers and withdraws the system alarms.
  * @param notifier Posts the notification when one fires.
+ * @param settingsStore Read for one value: whether the user has switched care reminders off on the
+ *   profile screen. A data-layer object holding no Android view types, so depending on it here is the
+ *   same kind of dependency as the repository above. See [applyPlan] for why the switch is applied by
+ *   planning an empty list rather than by skipping the planning.
  */
 class ReminderManager(
     private val careTaskRepository: CareTaskRepository,
     private val scheduler: ReminderScheduler,
-    private val notifier: ReminderNotifier
+    private val notifier: ReminderNotifier,
+    private val settingsStore: SettingsStore
 ) {
 
     /**
@@ -83,7 +90,17 @@ class ReminderManager(
      */
     fun startObserving(scope: CoroutineScope) {
         scope.launch {
-            careTaskRepository.observeReminders()
+            // Combined with the switch rather than observed separately, because the plan depends on
+            // both and either can change on its own: adding a task while reminders are off must not
+            // register an alarm, and switching them back on must re-register every task that already
+            // exists. `combine` re-emits on a change to either side, so both cases arrive here as one
+            // more list to apply.
+            combine(
+                careTaskRepository.observeReminders(),
+                settingsStore.careRemindersEnabled
+            ) { reminders, enabled ->
+                if (enabled) reminders else emptyList()
+            }
                 .distinctUntilChanged()
                 .collect { reminders -> applyPlan(reminders) }
         }
@@ -96,8 +113,20 @@ class ReminderManager(
      * alarms — see [BootReceiver].
      */
     suspend fun syncAll() {
-        applyPlan(careTaskRepository.getReminders())
+        // An empty plan when reminders are switched off, matching [startObserving]. Without this,
+        // a reboot would quietly re-register every alarm the user had turned off.
+        applyPlan(currentPlan())
     }
+
+    /**
+     * The reminders that should currently hold alarms: every task's, or none at all when the user has
+     * switched care reminders off on the profile screen.
+     *
+     * One place answering it, called from [syncAll] and [onAlarmFired], so the switch cannot be
+     * honoured on one path and forgotten on the other.
+     */
+    private suspend fun currentPlan(): List<TaskReminder> =
+        if (settingsStore.careRemindersEnabled.value) careTaskRepository.getReminders() else emptyList()
 
     /**
      * Handles a reminder coming due: show it, then schedule the one after it.
@@ -122,7 +151,11 @@ class ReminderManager(
      * @param taskId The task whose reminder has come due.
      */
     suspend fun onAlarmFired(taskId: Long) {
-        val reminders = careTaskRepository.getReminders()
+        // A third reason to show nothing, and the newest: the user has switched care reminders off
+        // since this alarm was registered. [currentPlan] returns an empty list in that case, so the
+        // reminder below is not found, nothing is posted, and the closing [applyPlan] withdraws every
+        // remaining alarm — which is exactly what should happen to a plan that is now empty.
+        val reminders = currentPlan()
         val reminder = reminders.firstOrNull { it.taskId == taskId }
 
         if (reminder == null) {

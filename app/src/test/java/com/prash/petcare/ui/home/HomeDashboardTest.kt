@@ -65,7 +65,7 @@ class HomeDashboardTest {
 
     @Test
     fun `the greeting uses the first word of the name and the evening`() {
-        val state = HomeDashboard.build("Prashant Pant", emptyList(), emptyList(), now())
+        val state = HomeDashboard.build("Prashant Pant", emptyList(), emptyList(), now(), Calendar.MONDAY)
 
         assertEquals("Prashant", state.firstName)
         assertEquals(PartOfDay.EVENING, state.partOfDay)
@@ -88,7 +88,7 @@ class HomeDashboardTest {
             )
         )
 
-        val state = HomeDashboard.build(null, listOf(care), emptyList(), now())
+        val state = HomeDashboard.build(null, listOf(care), emptyList(), now(), Calendar.MONDAY)
 
         assertEquals("Brush coat", state.nextUp?.task?.title)
         // 18:00 − 17:38.
@@ -106,7 +106,7 @@ class HomeDashboardTest {
             tasks = listOf(task(id = 100, petId = 1, routineId = 10, title = "Lunch", time = 13 * 60))
         )
 
-        val state = HomeDashboard.build(null, listOf(care), emptyList(), now())
+        val state = HomeDashboard.build(null, listOf(care), emptyList(), now(), Calendar.MONDAY)
 
         assertEquals(1, state.overdueCount)
         assertEquals(13 * 60 - (17 * 60 + 38), state.nextUp?.minutesAway)
@@ -138,16 +138,36 @@ class HomeDashboardTest {
     // Care streak
     // -------------------------------------------------------------------------------------------
 
+    /**
+     * The streak is the current calendar week, so which box is today depends on what day it is when
+     * the test runs. Every assertion below therefore finds a day by its midnight rather than by a
+     * fixed index — indices would pass on a Wednesday and fail on a Sunday.
+     */
+    private fun List<StreakDay>.day(daysAgo: Int): StreakDay? =
+        firstOrNull { it.dayStart == dayStart(daysAgo) }
+
     @Test
-    fun `the streak is seven days ending today`() {
-        val streak = HomeDashboard.streak(emptyList(), emptyList(), now())
+    fun `the streak is the seven days of the current week, containing today exactly once`() {
+        val streak = HomeDashboard.streak(emptyList(), emptyList(), now(), Calendar.MONDAY)
 
         assertEquals(7, streak.size)
-        assertEquals(CareSchedule.startOfDay(now()), streak.last().dayStart)
-        assertTrue(streak.last().isToday)
-        assertFalse(streak.first().isToday)
-        assertEquals(dayStart(daysAgo = 6), streak.first().dayStart)
+        // Consecutive days, in order: each box's midnight is the one after the box before it.
+        assertEquals(CareSchedule.weekContaining(now(), Calendar.MONDAY), streak.map { it.dayStart })
+        assertEquals(1, streak.count { it.isToday })
+        assertEquals(CareSchedule.startOfDay(now()), streak.first { it.isToday }.dayStart)
     }
+
+    @Test
+    fun `the week begins on the day the setting names`() {
+        val monday = HomeDashboard.streak(emptyList(), emptyList(), now(), Calendar.MONDAY)
+        val sunday = HomeDashboard.streak(emptyList(), emptyList(), now(), Calendar.SUNDAY)
+
+        assertEquals(Calendar.MONDAY, weekdayOf(monday.first().dayStart))
+        assertEquals(Calendar.SUNDAY, weekdayOf(sunday.first().dayStart))
+    }
+
+    private fun weekdayOf(millis: Long): Int =
+        Calendar.getInstance().apply { timeInMillis = millis }.get(Calendar.DAY_OF_WEEK)
 
     @Test
     fun `a past day is full only when every task due that day was done that day`() {
@@ -169,11 +189,13 @@ class HomeDashboardTest {
             completion(taskId = 100, daysAgo = 1, hour = 8)
         )
 
-        val streak = HomeDashboard.streak(listOf(care), completions, now())
+        val streak = HomeDashboard.streak(listOf(care), completions, now(), Calendar.MONDAY)
 
-        assertTrue(streak[4].isFull)   // two days ago
-        assertFalse(streak[5].isFull)  // yesterday
-        assertFalse(streak[6].isFull)  // today, nothing done yet
+        // Only days inside the current week are present, so each is checked when it is there. Run on
+        // a Monday, "two days ago" belongs to last week and is legitimately absent.
+        streak.day(daysAgo = 2)?.let { assertTrue(it.isFull) }
+        streak.day(daysAgo = 1)?.let { assertFalse(it.isFull) }
+        assertFalse(streak.first { it.isToday }.isFull)  // today, nothing done yet
     }
 
     @Test
@@ -191,10 +213,10 @@ class HomeDashboardTest {
             completedAt = CareSchedule.endOfDay(dayStart(daysAgo = 1)) - 30_000
         )
 
-        val streak = HomeDashboard.streak(listOf(care), listOf(lateTick), now())
+        val streak = HomeDashboard.streak(listOf(care), listOf(lateTick), now(), Calendar.MONDAY)
 
-        assertTrue(streak[5].isFull)
-        assertFalse(streak[6].isFull)
+        streak.day(daysAgo = 1)?.let { assertTrue(it.isFull) }
+        assertFalse(streak.first { it.isToday }.isFull)
     }
 
     @Test
@@ -206,9 +228,10 @@ class HomeDashboardTest {
             tasks = listOf(task(id = 100, petId = 1, routineId = 10, title = "Walk", time = 7 * 60))
         )
 
-        val streak = HomeDashboard.streak(listOf(care), emptyList(), now())
+        val streak = HomeDashboard.streak(listOf(care), emptyList(), now(), Calendar.MONDAY)
 
-        assertTrue(streak.take(6).none { it.isFull })
+        // Every day but today: either before the routine began, or still to come.
+        assertTrue(streak.filterNot { it.isToday }.none { it.isFull })
     }
 
     @Test
@@ -221,9 +244,15 @@ class HomeDashboardTest {
             )
         )
 
-        val state = HomeDashboard.build(null, listOf(care), completions = emptyList(), nowMillis = now())
+        val state = HomeDashboard.build(
+            null,
+            listOf(care),
+            completions = emptyList(),
+            nowMillis = now(),
+            firstDayOfWeek = Calendar.MONDAY
+        )
 
-        assertTrue(state.streak.last().isFull)
+        assertTrue(state.streak.first { it.isToday }.isFull)
         assertEquals(1, state.streakFullDays)
     }
 

@@ -29,11 +29,13 @@ import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.data.repository.WeatherState
 import com.prash.petcare.data.sync.SyncStatus
+import com.prash.petcare.data.local.CurrencyPreference
 import com.prash.petcare.databinding.FragmentHomeBinding
 import com.prash.petcare.databinding.ItemHomeStatBinding
 import com.prash.petcare.databinding.ItemStreakDayBinding
 import com.prash.petcare.ui.common.formatCurrency
 import com.prash.petcare.ui.common.formatTimeOfDay
+import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showAssistantPill
 import com.prash.petcare.ui.common.showPetCount
@@ -108,6 +110,13 @@ class HomeFragment : Fragment() {
      * as when the status itself changes — the words go stale with time even when nothing is syncing.
      */
     private var latestSyncStatus: SyncStatus = SyncStatus.Idle
+
+    /**
+     * The currency symbol the spend card writes, kept for the same reason as [latestSyncStatus]: the
+     * preference and the spending figure arrive on two independent streams, and either changing has
+     * to be able to redraw the card without waiting for the other.
+     */
+    private var latestCurrencySymbol: String = CurrencyPreference.NPR.symbol
 
     /**
      * The latest temperature, and the latest scheduled-walk state, kept for the same reason as
@@ -206,7 +215,11 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // The shared header: title, theme toggle and badge, plus this tab's AI pill. See TabHeader.kt.
-        binding.header.setUp(title = R.string.nav_home, onBadgeClick = ::openNotifications)
+        binding.header.setUp(
+            title = R.string.nav_home,
+            onBadgeClick = ::openNotifications,
+            onMonogramClick = ::openProfile
+        )
         binding.header.showAssistantPill(::openAssistant)
 
         streakCells = listOf(
@@ -288,6 +301,15 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.uiState.collect(::render) }
+                launch {
+                    // Kept and re-rendered rather than folded into the state, for the same reason as
+                    // the sync status above: the symbol and the spending arrive on independent
+                    // streams, and each has to be able to redraw the card without the other.
+                    viewModel.currencySymbol.collect { symbol ->
+                        latestCurrencySymbol = symbol
+                        viewModel.uiState.value.let(::renderSpending)
+                    }
+                }
                 launch {
                     viewModel.syncStatus.collect { status ->
                         latestSyncStatus = status
@@ -506,15 +528,19 @@ class HomeFragment : Fragment() {
     }
 
     /**
-     * "SPENT · SEP / Rs 5,240 / +12% VS AUG". Amounts use the app's fixed rupee formatting — see
-     * [formatCurrency] for why the currency is not taken from the device's region.
+     * "SPENT · SEP / Rs 5,240 / +12% VS AUG".
+     *
+     * The symbol comes from the profile screen's currency preference, held in [latestCurrencySymbol]
+     * so this card can be redrawn when the setting changes as well as when the spending does — see
+     * [formatCurrency] for why the currency is never taken from the device's region, and why the
+     * digits are not converted.
      */
     private fun renderSpending(state: HomeUiState) {
         val card = binding.statSpent
         val month = state.spending ?: return
 
         card.statLabel.text = getString(R.string.home_stat_spent_format, monthFormat.format(Date(month.monthStart)))
-        card.statValue.text = formatCurrency(month.total)
+        card.statValue.text = formatCurrency(month.total, latestCurrencySymbol)
 
         val previousMonth = monthFormat.format(Date(month.previousMonthStart))
         val change = month.changePercent

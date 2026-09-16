@@ -27,7 +27,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import com.prash.petcare.data.local.SettingsStore
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -66,6 +68,7 @@ class HomeViewModel(
     private val careTaskRepository: CareTaskRepository,
     expenseRepository: ExpenseRepository,
     private val weatherRepository: WeatherRepository,
+    private val settingsStore: SettingsStore,
     syncManager: SyncManager,
     userId: Long
 ) : ViewModel() {
@@ -183,17 +186,38 @@ class HomeViewModel(
      * keeps it alive for five seconds after the last observer leaves — long enough to survive a
      * rotation, short enough that a backgrounded screen stops doing work.
      */
+    /**
+     * Which currency symbol the "SPENT" stat card writes its figure with.
+     *
+     * Published separately from [uiState] rather than folded into it, for the same reason the sync
+     * status is: the dashboard's data and a display preference change on completely different
+     * rhythms, and rebuilding a week of streak days because a symbol changed would be work for
+     * nothing. The fragment collects both and redraws the one card.
+     */
+    val currencySymbol: StateFlow<String> = settingsStore.currency
+        .map { it.symbol }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = settingsStore.currency.value.symbol
+        )
+
     val uiState: StateFlow<HomeUiState> = combine(
         userRepository.observeUser(userId),
         petCareFlow,
         completionsFlow,
-        clock
-    ) { user, petCare, completions, now ->
+        clock,
+        // The week-start preference is one more input rather than something read inside the builder,
+        // so changing it on the profile screen redraws the streak by exactly the path a ticked task
+        // takes — and HomeDashboard stays a pure function that reads no settings of its own.
+        settingsStore.weekStart
+    ) { user, petCare, completions, now, weekStart ->
         HomeDashboard.build(
             userFullName = user?.fullName,
             petCare = petCare,
             completions = completions,
-            nowMillis = now
+            nowMillis = now,
+            firstDayOfWeek = weekStart.calendarDay
         )
     }
         .flowOn(Dispatchers.Default)
@@ -287,6 +311,7 @@ class HomeViewModel(
                     careTaskRepository = application.careTaskRepository,
                     expenseRepository = application.expenseRepository,
                     weatherRepository = application.weatherRepository,
+                    settingsStore = application.settingsStore,
                     syncManager = application.syncManager,
                     userId = userId
                 )

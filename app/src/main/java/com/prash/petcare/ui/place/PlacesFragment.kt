@@ -36,6 +36,7 @@ import com.prash.petcare.ui.common.formatDistanceKm
 import com.prash.petcare.ui.common.formatTimeOfDay
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.placeSubtitle
+import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
@@ -111,9 +112,12 @@ class PlacesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // The badge opens the notifications screen, as on every other screen that draws this header.
-        binding.header.setUp(title = R.string.nav_places) {
-            findNavController().navigate(R.id.notificationsFragment)
-        }
+        binding.header.setUp(
+            title = R.string.nav_places,
+            onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
+            // The monogram opens the profile screen, as on every other screen that draws it.
+            onMonogramClick = ::openProfile
+        )
 
         binding.placesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())

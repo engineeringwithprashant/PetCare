@@ -34,9 +34,20 @@ import java.text.NumberFormat
  * @param title The screen's name, e.g. [R.string.nav_pets].
  * @param onBadgeClick What pressing the pet-count badge does — every screen opens the notifications
  *   screen. Null on the notifications screen itself, which unhooks the badge: see below.
+ * @param onMonogramClick What pressing the app's monogram does — every screen opens the profile
+ *   screen, through [openProfile]. Null on the profile screen itself, which unhooks it for the same
+ *   reason the notifications screen unhooks the badge.
  */
-fun ViewTabHeaderBinding.setUp(@StringRes title: Int, onBadgeClick: (() -> Unit)?) {
-    setUp(title = root.context.getString(title), onBadgeClick = onBadgeClick)
+fun ViewTabHeaderBinding.setUp(
+    @StringRes title: Int,
+    onBadgeClick: (() -> Unit)?,
+    onMonogramClick: (() -> Unit)?
+) {
+    setUp(
+        title = root.context.getString(title),
+        onBadgeClick = onBadgeClick,
+        onMonogramClick = onMonogramClick
+    )
 }
 
 /**
@@ -47,7 +58,11 @@ fun ViewTabHeaderBinding.setUp(@StringRes title: Int, onBadgeClick: (() -> Unit)
  * The title can be set again later with [showTitle] once the data it depends on has loaded, without
  * re-attaching the listeners.
  */
-fun ViewTabHeaderBinding.setUp(title: CharSequence, onBadgeClick: (() -> Unit)?) {
+fun ViewTabHeaderBinding.setUp(
+    title: CharSequence,
+    onBadgeClick: (() -> Unit)?,
+    onMonogramClick: (() -> Unit)?
+) {
     val context = root.context
     showTitle(title)
 
@@ -81,6 +96,21 @@ fun ViewTabHeaderBinding.setUp(title: CharSequence, onBadgeClick: (() -> Unit)?)
         petCountBadge.setOnClickListener(null)
         petCountBadge.isClickable = false
         petCountBadge.isFocusable = false
+    }
+
+    // The same treatment for the monogram, and for the same reason: on the profile screen it would
+    // reopen the screen already being looked at. Unhooking it clears the ripple, takes it out of the
+    // keyboard and TalkBack focus order, and removes the "Open your profile" label — a description
+    // promising an action the view no longer has would be worse than the mark being silent. The
+    // layout's own `importantForAccessibility` is left alone; clearing the description is enough,
+    // since an unfocusable, unlabelled decorative square is already skipped.
+    if (onMonogramClick != null) {
+        monogram.setOnClickListener { onMonogramClick() }
+    } else {
+        monogram.setOnClickListener(null)
+        monogram.isClickable = false
+        monogram.isFocusable = false
+        monogram.contentDescription = null
     }
 }
 

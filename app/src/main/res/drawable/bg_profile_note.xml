@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The pale note card under the security rows, explaining that two-factor authentication ships later.
+
+    A soft filled panel with no shadow, so it reads as an aside *within* the card rather than as
+    another card stacked on it. `colorSurfaceVariant` is the app's "quieter surface" role — the same
+    fill the preference toggles' track uses — which keeps the two quiet things on this screen the same
+    quiet.
+
+    No stroke: the fill alone separates it from the white card it sits on, and an outline as well would
+    describe the same edge twice.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="?attr/colorSurfaceVariant" />
+
+    <corners android:radius="@dimen/corner_radius_sm" />
+
+</shape>

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
+import com.prash.petcare.data.local.SettingsStore
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
 import com.prash.petcare.data.local.entity.Expense
@@ -46,13 +47,23 @@ sealed interface ExpenseListItem {
      */
     val itemId: String
 
-    /** The dark total card: this month's total, its stacked bar, and the caption beneath. */
-    data class Summary(val month: MonthSummary) : ExpenseListItem {
+    /**
+     * The dark total card: this month's total, its stacked bar, and the caption beneath.
+     *
+     * @property currencySymbol Which symbol the amounts are written with, from the profile screen's
+     *   currency preference. Carried on the item rather than read by the adapter, so changing the
+     *   setting makes this a *different* item — which is what has DiffUtil redraw the card by itself,
+     *   with no manual refresh and no adapter property to keep in step.
+     */
+    data class Summary(val month: MonthSummary, val currencySymbol: String) : ExpenseListItem {
         override val itemId: String get() = "summary"
     }
 
     /** One legend row: a category's dot, name, share of the month, and amount. */
-    data class CategoryTotal(val spend: CategorySpend) : ExpenseListItem {
+    data class CategoryTotal(
+        val spend: CategorySpend,
+        val currencySymbol: String
+    ) : ExpenseListItem {
         override val itemId: String get() = "category-${spend.category.name}"
     }
 
@@ -62,7 +73,7 @@ sealed interface ExpenseListItem {
     }
 
     /** A single recorded expense. */
-    data class ExpenseRow(val expense: Expense) : ExpenseListItem {
+    data class ExpenseRow(val expense: Expense, val currencySymbol: String) : ExpenseListItem {
         override val itemId: String get() = "expense-${expense.id}"
     }
 }
@@ -128,12 +139,16 @@ sealed interface ExpenseEvent {
  * newest first, as its heading "ALL EXPENSES" says — which is also what keeps last month's receipts
  * reachable for editing.
  *
+ * @param settingsStore Read for one value: which currency symbol amounts are written with. A
+ *   data-layer object holding no Android view types, so depending on it here does not compromise what
+ *   makes a ViewModel testable and rotation-proof — the same reasoning as the repositories above.
  * @param ownerId Whose pets the chips offer. Ignored when a specific pet was passed in.
  * @param initialPetId The pet to show, or [NO_PET_ID] for the tab.
  */
 class ExpenseViewModel(
     private val petRepository: PetRepository,
     private val expenseRepository: ExpenseRepository,
+    private val settingsStore: SettingsStore,
     ownerId: Long,
     initialPetId: Long
 ) : ViewModel() {
@@ -170,19 +185,29 @@ class ExpenseViewModel(
             val chosen = pets.firstOrNull { it.id == selected }
             val scope = chosen?.let { listOf(it) } ?: pets
 
-            spendingFor(scope).map { expenses ->
+            // The currency preference is folded in here rather than read inside buildState, so that
+            // changing it on the profile screen re-emits the list exactly as a new expense would —
+            // the symbol travels on each item and DiffUtil redraws the rows that now read differently.
+            combine(spendingFor(scope), settingsStore.currency) { expenses, currency ->
                 buildState(
                     expenses = expenses,
                     pet = null,
                     pets = pets,
-                    selectedPetId = chosen?.id ?: ALL_PETS
+                    selectedPetId = chosen?.id ?: ALL_PETS,
+                    currencySymbol = currency.symbol
                 )
             }
         }
     } else {
         petRepository.observePet(initialPetId).flatMapLatest { pet ->
-            spendingFor(listOfNotNull(pet)).map { expenses ->
-                buildState(expenses = expenses, pet = pet, pets = emptyList(), selectedPetId = initialPetId)
+            combine(spendingFor(listOfNotNull(pet)), settingsStore.currency) { expenses, currency ->
+                buildState(
+                    expenses = expenses,
+                    pet = pet,
+                    pets = emptyList(),
+                    selectedPetId = initialPetId,
+                    currencySymbol = currency.symbol
+                )
             }
         }
     }.stateIn(
@@ -223,17 +248,18 @@ class ExpenseViewModel(
         expenses: List<Expense>,
         pet: Pet?,
         pets: List<Pet>,
-        selectedPetId: Long
+        selectedPetId: Long,
+        currencySymbol: String
     ): ExpensesUiState {
         val items = if (expenses.isEmpty()) {
             emptyList()
         } else {
             val month = MonthlySpending.summarise(expenses, System.currentTimeMillis())
             buildList {
-                add(ExpenseListItem.Summary(month))
-                addAll(month.breakdown.map { ExpenseListItem.CategoryTotal(it) })
+                add(ExpenseListItem.Summary(month, currencySymbol))
+                addAll(month.breakdown.map { ExpenseListItem.CategoryTotal(it, currencySymbol) })
                 add(ExpenseListItem.AllExpensesHeader)
-                addAll(expenses.map { ExpenseListItem.ExpenseRow(it) })
+                addAll(expenses.map { ExpenseListItem.ExpenseRow(it, currencySymbol) })
             }
         }
 
@@ -299,6 +325,7 @@ class ExpenseViewModel(
                 ExpenseViewModel(
                     petRepository = application.petRepository,
                     expenseRepository = application.expenseRepository,
+                    settingsStore = application.settingsStore,
                     ownerId = ownerId,
                     initialPetId = petId
                 )

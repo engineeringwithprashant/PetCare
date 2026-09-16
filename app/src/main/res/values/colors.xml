@@ -411,4 +411,41 @@
     <color name="care_category_play">#FF8457</color>
     <color name="care_category_other">#76725F</color>
 
+    <!-- ================================ Profile screen ================================
+         The large dark header card carrying the photo, the name and the two pills, and the pale green
+         "VERIFIED" pill on the account rows.
+
+         **The header card does not follow the theme**, for the reason given for the pet cards, the
+         Places strip and the Money tab's total card above: it is a single deliberate treatment — the
+         one dark panel on the page in either mode, so the eye lands on "this is you" first — and it
+         carries a *photograph*, which does not change with the theme. Its values are therefore fixed,
+         and several are references to existing ones so the dark panels across the app stay one family. -->
+
+    <!-- The card's ground and the text on it: the Places strip and Money card values, referenced
+         rather than repeated. -->
+    <color name="profile_card_ground">@color/places_strip_ground</color>
+    <color name="on_profile_card">@color/total_card_amount</color>
+    <!-- The email and phone lines under the name. Quiet against the card but comfortably legible,
+         measuring about 6:1 on the ground above. -->
+    <color name="on_profile_card_muted">@color/places_strip_muted</color>
+
+    <!-- The circular photo well. A step lighter than the card so an empty well reads as a space for a
+         picture, with a faint rim marking its edge where the two are close. -->
+    <color name="profile_photo_well">#24261A</color>
+    <color name="profile_photo_well_stroke">#3A3C2C</color>
+
+    <!-- The dark pet-count pill beside the yellow role pill. The translucent chip the pet cards use,
+         so a dark pill on a dark panel is the same object here as it is on a photograph. -->
+    <color name="profile_count_pill">@color/pet_card_chip</color>
+
+    <!-- The "VERIFIED" pill on the email and phone rows. A pale green wash with dark green text: green
+         because verified is a *status* and green is what "confirmed" looks like, pale because these
+         pills are read and never pressed — a saturated fill would make four quiet rows look like four
+         buttons. It is a pastel stat pill in everything but name, so it follows those rules (see the
+         pill section above) and comes as a light/dark pair. -->
+    <color name="verified_pill_light">#DCF2E1</color>
+    <color name="on_verified_pill_light">#14401F</color>
+    <color name="verified_pill_dark">#1C3624</color>
+    <color name="on_verified_pill_dark">#B9E5C6</color>
+
 </resources>

@@ -24,6 +24,7 @@ import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.SwipeActionCallback
 import com.prash.petcare.ui.common.bindOptions
 import com.prash.petcare.ui.common.setToolbarTitle
+import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
@@ -105,9 +106,12 @@ class ExpensesFragment : Fragment() {
         if (isTab) {
             // The badge opens the notifications screen, as on every other screen that draws this
             // header.
-            binding.header.setUp(title = R.string.expenses_header_title) {
-                findNavController().navigate(R.id.notificationsFragment)
-            }
+            binding.header.setUp(
+                title = R.string.expenses_header_title,
+                onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
+                // The monogram opens the profile screen, as on every other screen that draws it.
+                onMonogramClick = ::openProfile
+            )
         }
     }
 
