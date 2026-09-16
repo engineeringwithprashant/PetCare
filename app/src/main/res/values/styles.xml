@@ -59,6 +59,21 @@
         <item name="cornerSize">@dimen/pet_card_corner_radius</item>
     </style>
 
+    <!-- The dashboard's sideways pet cards: 22dp, between the summary cards' 18dp and the two large
+         cards' 28dp, which is the ranking the spec sets for the three kinds of card on this screen. -->
+    <style name="ShapeAppearance.PetCare.HomePetCard" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">22dp</item>
+    </style>
+
+    <!-- The dashboard's two large cards — the dark next-up card and the white today's-care card.
+         A step rounder than every other card on the screen (28dp against the pet cards' 24dp and the
+         summary cards' 18dp), which is part of what marks them out as the page's major objects. -->
+    <style name="ShapeAppearance.PetCare.NextUp" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/next_up_card_corner_radius</item>
+    </style>
+
     <!--
         A circle, used to clip pet photos on the dashboard cards and the picker chips.
 
@@ -855,26 +870,35 @@
     <style name="PetCare.Home.Greeting" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
-        <item name="android:textAppearance">?attr/textAppearanceHeadlineLarge</item>
+        <item name="android:textSize">34sp</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">-0.02</item>
+        <!-- -1.5px at 34px, as an em value. Tight tracking is what lets a two-word greeting fill the
+             line without wrapping into the clock beside it. -->
+        <item name="android:letterSpacing">-0.044</item>
+        <!-- line-height 0.94: below 1, so the two lines of the greeting close up into a single
+             block. includeFontPadding off, or the font's reserved accent space would undo it. -->
+        <item name="android:includeFontPadding">false</item>
+        <item name="lineHeight">32sp</item>
     </style>
 
     <!-- "5:38 PM" on the right of the greeting: a figure, so Bricolage, a step below the greeting. -->
     <style name="PetCare.Home.Clock" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
-        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <item name="android:textSize">20sp</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
         <item name="android:textStyle">bold</item>
+        <!-- -0.8px at 20px. -->
+        <item name="android:letterSpacing">-0.04</item>
         <item name="android:maxLines">1</item>
     </style>
 
     <!-- "THU 11 SEP" under the clock: the app's section label, a little less widely spaced so the date
          stays about as wide as the time above it. -->
     <style name="PetCare.Home.DateLabel" parent="PetCare.SectionLabel">
-        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textSize">9.5sp</item>
+        <item name="android:letterSpacing">0.12</item>
     </style>
 
     <!-- "All synced · 3 min ago": muted monospace, not upper-cased, since it is a phrase to read. Also
@@ -888,14 +912,87 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- A stat card's bold figure: "6:00 PM", "Rs 5,240", "22 Sep". The card's TextView lets it shrink
-         towards home_stat_value_min_text_size to fit, rather than truncating a long amount. -->
+    <!--
+        A stat card's uppercase label: "WALK WINDOW", "SPENT · SEP", "NEXT VET".
+
+        Its own style rather than the shared PetCare.SectionLabel, which it inherits everything else
+        from, because this one label sits directly above a 22sp figure and needs a size of its own to
+        stay in proportion with it. Changing SectionLabel instead would have moved every section
+        heading in the app to suit one card.
+    -->
+    <!--
+        The dashboard's own uppercase section label: "TODAY'S CARE", "CARE STREAK", "YOUR PETS".
+
+        A Home-specific style rather than a change to the shared PetCare.SectionLabel, which every
+        other tab also uses. The dashboard is specified as one composition with its own type scale;
+        retuning the shared label to suit it would silently resize headings on Tasks, Places, Money
+        and Pets, none of which were part of that specification.
+    -->
+    <style name="PetCare.Home.SectionLabel" parent="PetCare.SectionLabel">
+        <item name="android:textSize">10sp</item>
+        <item name="android:letterSpacing">0.16</item>
+    </style>
+
+    <!--
+        "OF 6" under the ring's count. The smallest label in the card, and deliberately so: it is the
+        denominator of the figure above it, not a statement of its own.
+    -->
+    <style name="PetCare.Home.RingTotal" parent="PetCare.SectionLabel">
+        <item name="android:textSize">8sp</item>
+        <item name="android:letterSpacing">0.14</item>
+    </style>
+
+    <!--
+        "All caught up for today" — the dominant element in the today's-care card.
+
+        18sp keeps it below the next-up card's 20sp title, which is what preserves the ranking
+        between the two cards, while standing well clear of the 10sp label above it. The 21sp line
+        height (1.15x) keeps a two-line headline reading as one sentence.
+    -->
+    <style name="PetCare.Home.TodayHeadline" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+        <!-- -0.6px at 18px. -->
+        <item name="android:letterSpacing">-0.033</item>
+        <item name="lineHeight">21sp</item>
+    </style>
+
+    <style name="PetCare.Home.StatLabel" parent="PetCare.SectionLabel">
+        <item name="android:textSize">@dimen/home_stat_label_text_size</item>
+        <!-- 0.14em, a touch tighter than the shared section label's 0.14 at a larger size. Letter
+             spacing is expressed in ems on Android, so it scales with the type and does not have to
+             be restated if the size ever moves. -->
+        <item name="android:letterSpacing">0.14</item>
+        <!-- One line, and deliberately no ellipsize: the card is wrap_content over a minimum width,
+             so it widens to fit rather than ever needing to truncate this. -->
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!--
+        A stat card's bold figure: "22°C", "Rs 4,665", "22 Sep".
+
+        Bricolage Grotesque, the display face, which ships only at ExtraBold (800) — so `bold` here
+        lands on that single file rather than synthesising extra weight. `includeFontPadding="false"`
+        together with a lineHeight equal to the text size gives the line-height-of-1 the figure wants:
+        on its own line, a number needs none of the leading a paragraph does, and trimming it is part
+        of what keeps the card near 100dp.
+
+        `app:lineHeight` rather than `android:lineHeight`, which is API 28 and this app supports 24;
+        AppCompat back-ports it onto the AppCompatTextView every TextView already inflates as.
+    -->
     <style name="PetCare.Home.StatValue" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
         <item name="android:textSize">@dimen/home_stat_value_text_size</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:textStyle">bold</item>
+        <!-- -0.8px at 19px, expressed as the em value Android wants. -->
+        <item name="android:letterSpacing">-0.042</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="lineHeight">@dimen/home_stat_value_text_size</item>
         <item name="android:maxLines">1</item>
     </style>
 
@@ -913,10 +1010,14 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textSize">10sp</item>
+        <!-- 8.5sp, the same size as the card's label, so the three lines read as one stack with the
+             figure as the only large element. The spec asks for weight 700; IBM Plex Mono ships here
+             at 500 and 600, so `bold` lands on SemiBold (600) — the nearest available, and close
+             enough at this size that the difference is not visible. -->
+        <item name="android:textSize">8.5sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:letterSpacing">0.04</item>
+        <item name="android:letterSpacing">0.1</item>
         <item name="android:paddingStart">@dimen/home_stat_pill_padding_horizontal</item>
         <item name="android:paddingEnd">@dimen/home_stat_pill_padding_horizontal</item>
         <item name="android:paddingTop">@dimen/home_stat_pill_padding_vertical</item>
@@ -927,8 +1028,15 @@
 
     <!-- "tap to open" / "3 items" on the right of a section label: the caption, one size smaller so it
          sits level with the label beside it. -->
-    <style name="PetCare.Home.SectionHint" parent="PetCare.Home.Caption">
-        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+    <style name="PetCare.Home.SectionHint" parent="">
+        <!-- The UI weights of the body face (Medium/SemiBold), not the mono label face: this is a
+             short instruction to read, sitting opposite a mono capital label it contrasts with. -->
+        <item name="android:fontFamily">@font/schibsted_grotesk_ui</item>
+        <item name="fontFamily">@font/schibsted_grotesk_ui</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:maxLines">1</item>
     </style>
 
     <!-- The next-up card's ring: yellow on a dark track, thick enough to read as a gauge. See
@@ -949,40 +1057,70 @@
         <item name="android:textSize">@dimen/next_up_minutes_text_size</item>
         <item name="android:textColor">@color/next_up_card_title</item>
         <item name="android:textStyle">bold</item>
+        <!-- -0.9px at 21px. -->
+        <item name="android:letterSpacing">-0.043</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "MIN AWAY" under it: the tiniest label on the screen, so letter-spaced to stay legible. -->
+    <!-- "MIN AWAY" under the number: the tiniest label on the screen, so letter-spaced to stay
+         legible. Medium (500) rather than bold — inside the ring it sits directly under an ExtraBold
+         figure, and a second heavy weight there turns the pair into a single dark blob. -->
     <style name="PetCare.Home.NextUpRingCaption" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textSize">8sp</item>
+        <item name="android:textSize">8.5sp</item>
         <item name="android:textColor">@color/next_up_card_muted</item>
-        <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:letterSpacing">0.1</item>
+        <item name="android:letterSpacing">0.14</item>
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "NEXT UP": the Places strip's label, which is already the muted monospace capital on a dark
-         ground this card needs. -->
-    <style name="PetCare.Home.NextUpLabel" parent="PetCare.Places.StripLabel" />
+    <!--
+        "NEXT UP" — the card's uppercase micro-label.
 
-    <!-- The task's title: large, bold and white — the card's subject. -->
+        Declared in full rather than inheriting from the Places strip label it used to borrow. The
+        two happened to agree, but they answer to different specifications now, and a change made for
+        the Places tab should not quietly resize a label on the dashboard's most important card.
+
+        A full-strength muted ink rather than a translucent white: setting alpha on the view would
+        fade the text against whatever is behind it and make it inconsistent between the two themes,
+        where a named colour is the same decision made once. See colors.xml.
+    -->
+    <style name="PetCare.Home.NextUpLabel" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/next_up_card_muted</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.16</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- The task's title: large, bold and white — the card's subject. lineHeight is 1.1x the text
+         size, tight enough that a two-line title still reads as one heading rather than two lines. -->
     <style name="PetCare.Home.NextUpTitle" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
         <item name="android:textSize">@dimen/next_up_title_text_size</item>
         <item name="android:textColor">@color/next_up_card_title</item>
         <item name="android:textStyle">bold</item>
+        <!-- -0.7px at 20px. -->
+        <item name="android:letterSpacing">-0.035</item>
+        <item name="lineHeight">22sp</item>
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
     </style>
 
     <!-- "Krishala · 6:00 PM · Slicker brush" under the title. -->
+    <!-- "Krishala · 6:00 PM · Slicker brush". Body copy, so Schibsted Grotesk at its reading weight
+         rather than the display or mono faces — this is the one line on the card meant to be read as
+         a sentence. 11.5sp with a 16sp line height (1.4x) is the spec's body setting. -->
     <style name="PetCare.Home.NextUpMeta" parent="">
-        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:fontFamily">@font/schibsted_grotesk</item>
+        <item name="fontFamily">@font/schibsted_grotesk</item>
+        <item name="android:textSize">11.5sp</item>
+        <item name="lineHeight">16sp</item>
         <item name="android:textColor">@color/next_up_card_muted</item>
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
@@ -995,11 +1133,16 @@
         <item name="android:minWidth">0dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
-        <item name="android:paddingStart">@dimen/spacing_md</item>
-        <item name="android:paddingEnd">@dimen/spacing_md</item>
+        <item name="android:paddingStart">@dimen/next_up_button_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/next_up_button_padding_horizontal</item>
         <item name="cornerRadius">@dimen/pill_corner_radius</item>
         <item name="backgroundTint">@color/accent_yellow</item>
         <item name="android:textColor">@color/on_accent_yellow</item>
+        <!-- 10sp mono capitals, letter-spaced to match the card's other uppercase marks. Set here
+             rather than left to the Material button's own label appearance, which would give it the
+             body face and make it read as a form control rather than as part of this card. -->
+        <item name="android:textSize">10sp</item>
+        <item name="android:letterSpacing">0.12</item>
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textSize">12sp</item>
@@ -1010,19 +1153,33 @@
     </style>
 
     <!-- The completed count inside the today's-care ring: a figure, so Bricolage. -->
+    <!--
+        The completed count inside the today's-care ring.
+
+        An explicit 19sp rather than the theme's HeadlineMedium (28sp) it used to borrow. The ring is
+        the card's *secondary* element — the sentence beside it is what the user reads — and a 28sp
+        figure inside a 74dp circle made the circle the loudest thing in the card. 19sp also matches
+        the stat cards' figures, so every small number on the dashboard is now set at one size.
+    -->
     <style name="PetCare.Home.RingCount" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
-        <item name="android:textAppearance">?attr/textAppearanceHeadlineMedium</item>
+        <item name="android:textSize">19sp</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:textStyle">bold</item>
+        <!-- -0.8px at 19px. -->
+        <item name="android:letterSpacing">-0.042</item>
         <item name="android:includeFontPadding">false</item>
     </style>
 
     <!-- "5 full days", right-aligned on the streak line: bold and full-strength, since it is the figure
          the label beside it names. -->
     <style name="PetCare.Home.StreakCount" parent="">
-        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <!-- Body face at its bold weight, not the mono label face: "5 full days" is a phrase the
+             user reads, and it sits opposite a mono capital label that it should contrast with. -->
+        <item name="android:fontFamily">@font/schibsted_grotesk</item>
+        <item name="fontFamily">@font/schibsted_grotesk</item>
+        <item name="android:textSize">11sp</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:textStyle">bold</item>
         <item name="android:maxLines">1</item>
@@ -1030,7 +1187,9 @@
 
     <!-- A streak box's weekday, "FR". Centred under its box. -->
     <style name="PetCare.Home.StreakDayLabel" parent="PetCare.SectionLabel">
-        <item name="android:textSize">9sp</item>
+        <!-- 8.5sp: the two-letter initials are a key to the boxes above them, not a row of their
+             own, and IBM Plex Mono stays legible this small because the text is always upper-case. -->
+        <item name="android:textSize">8.5sp</item>
         <item name="android:letterSpacing">0.06</item>
         <item name="android:gravity">center</item>
     </style>
@@ -1040,7 +1199,10 @@
     <style name="PetCare.Home.PetCardName" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
-        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <!-- 15sp, not the theme's TitleLarge (22sp) it used to borrow. A pet's name sits over its
+             photograph as a caption, and at 22sp it competed with the next-up card's 20sp title for
+             the eye — which is the ranking this pass exists to fix. -->
+        <item name="android:textSize">15sp</item>
         <item name="android:textColor">@color/on_pet_card</item>
         <item name="android:textStyle">bold</item>
         <item name="android:maxLines">2</item>

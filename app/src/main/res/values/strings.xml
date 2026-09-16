@@ -138,7 +138,18 @@
     <string name="home_spent_change_up">+%1$d%% vs %2$s</string>
     <string name="home_spent_change_down">−%1$d%% vs %2$s</string>
     <string name="home_spent_change_flat">%1$d%% vs %2$s</string>
-    <string name="home_spent_no_previous">Nothing in %1$s</string>
+    <!--
+        The pill when the previous month recorded no spending at all, so no percentage can be worked
+        out without dividing by zero.
+
+        **Why it is this short.** A stat pill is one line with `ellipsize="end"` inside a 120dp card,
+        which leaves about 80dp for text after the card's and the pill's own padding. "Nothing in
+        Aug" is fourteen upper-case monospaced characters and overflowed that, so the card read
+        "NOTHING IN …". "None in Aug" is eleven — the same length as "+12% vs Aug", the pill that
+        already fits in this exact slot — which is what makes it safe for every month name rather
+        than only the short ones.
+    -->
+    <string name="home_spent_no_previous">None in %1$s</string>
 
     <!-- The next vet card's pill when no visit is scheduled. When one is, the pill is the pet's name. -->
     <string name="home_vet_none_pill">None booked</string>

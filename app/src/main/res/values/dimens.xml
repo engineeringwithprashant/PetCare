@@ -117,11 +117,40 @@
     <!-- The progress ring on the "today's care" card.
          The ring is drawn *inside* this box, so the thickness eats into it: a 96dp ring 8dp thick
          leaves an 80dp hole, which is what the completed count has to fit into. -->
-    <dimen name="care_ring_size">92dp</dimen>
-    <dimen name="care_ring_thickness">8dp</dimen>
+    <!--
+        The gap between the Today's-care ring and the heading block beside it.
+
+        Its own dimension rather than the general spacing_md (16dp) it used, because this is not
+        generic spacing: it separates a circle from a column of text, and a circle's bounding box
+        touches its neighbour at only one point, so the same nominal gap reads as tighter here than
+        it would between two straight edges. Measured off design/home-mockup-top.png, where the gap
+        is 13 of the mockup's pixels, and the specification puts it at 16dp.
+    -->
+    <dimen name="home_today_ring_spacing">16dp</dimen>
+    <!-- The card's own padding, and the gap between its two blocks (the ring row and the streak).
+         Tighter than the app's usual card_padding because this card holds four things and is asked
+         to stay compact. -->
+    <dimen name="home_today_card_padding">18dp</dimen>
+    <dimen name="home_today_block_gap">14dp</dimen>
+    <!--
+        The today's-care ring: 74dp across with a 56dp hole, which is a 9dp band.
+
+        **It is deliberately the secondary element in its card.** The headline beside it is what the
+        user reads; the ring is a glance. At the 92dp it was, the circle outweighed the sentence next
+        to it and the card had to grow tall to hold them both. Capped at 74dp it sits comfortably
+        beside two lines of 18sp text, which is what makes the whole card more compact.
+
+        As on the next-up ring, the spec's "disc inside the ring" is expressed as the band's
+        thickness: (74 - 56) / 2 is 9dp, and the card's own surface shows through the middle exactly
+        as a centred disc of the same colour would.
+    -->
+    <dimen name="care_ring_size">74dp</dimen>
+    <dimen name="care_ring_thickness">9dp</dimen>
     <!-- Exactly half the thickness, which is the largest radius the progress indicator accepts and
          the value that rounds each end of the band into a semicircle. -->
-    <dimen name="care_ring_corner_radius">4dp</dimen>
+    <!-- Half the band's thickness, the most the component accepts: both ends become semicircles and
+         a part-finished day reads as a capsule rather than a cut segment. -->
+    <dimen name="care_ring_corner_radius">4.5dp</dimen>
 
     <!-- The corner radius shared by the pet cards on every tab and the dashboard's large cards. Larger
          than the app's usual card radius: these are a page's subject, and the softer corner is what
@@ -302,33 +331,136 @@
     <!-- The three stat cards. A fixed width rather than a third each, so the row can scroll sideways on
          a narrow phone with the third card peeking in from the edge, as the design draws it, and a long
          amount such as "Rs 12,480" is never squeezed. -->
-    <dimen name="home_stat_card_width">120dp</dimen>
-    <dimen name="home_stat_card_padding">12dp</dimen>
+    <!--
+        ================== The Home screen's own spacing scale ==================
+
+        These are deliberately *not* the app-wide screen_padding and card_spacing. The dashboard is
+        specified as a single composition — gutters, section gaps and card radii all chosen together
+        — and the other four tabs are not. Giving Home its own names is what lets it be tuned to that
+        specification without dragging Tasks, Places, Money and Pets along with it.
+
+        The negative gutter is the exact inverse of the padding: the stat row and the pet row bleed
+        out to the screen edges by cancelling the parent's padding, then re-apply it as their own so
+        the first card still lines up with the greeting above.
+    -->
+    <dimen name="home_screen_padding">18dp</dimen>
+    <dimen name="home_screen_padding_negative">-18dp</dimen>
+    <!-- The scroll area's own top and bottom insets. The bottom is deep because the floating bottom
+         navigation is drawn over the scrolling content — without it the last card would come to rest
+         underneath the bar and look cut off. -->
+    <dimen name="home_scroll_padding_top">8dp</dimen>
+    <dimen name="home_scroll_padding_bottom">130dp</dimen>
+    <!-- The gap between two top-level sections: greeting, stat row, next-up card, today's care,
+         pets. One value used everywhere, which is what gives the column its even rhythm. -->
+    <dimen name="home_section_gap">18dp</dimen>
+
+    <!--
+        ============================ The stat cards ============================
+
+        A stat card is a *summary*, not a headline: three short lines that should read at a glance
+        and take as little vertical space as possible, so the dark next-up card below stays the
+        dominant object on the screen.
+
+        **Width is a minimum, not a fixed size.** The card is wrap_content with this as its minWidth,
+        which is what lets an unusually long figure widen its own card instead of being shrunk or
+        truncated to fit a fixed one. In practice every value fits inside 116dp, so the three cards
+        are uniform; the minimum is what guarantees they *stay* uniform.
+
+        The three gaps and the padding are what land the card near 100dp tall: 13 + 11 + 8 + 19 + 8 +
+        21 + 13. Adding whitespace anywhere here is what made earlier versions too tall.
+    -->
+    <dimen name="home_stat_card_min_width">116dp</dimen>
+    <dimen name="home_stat_card_padding">13dp</dimen>
+    <dimen name="home_stat_card_corner_radius">18dp</dimen>
+    <!-- One gap, used both under the label and under the figure: the card is an evenly spaced stack
+         of three lines rather than a figure with satellites. -->
+    <dimen name="home_stat_line_spacing">8dp</dimen>
+    <!-- The card's uppercase micro-label. 8.5sp is the smallest the app sets anywhere and is only
+         legible because IBM Plex Mono is wide-set and this text is always upper-case. -->
+    <dimen name="home_stat_label_text_size">8.5sp</dimen>
     <dimen name="home_stat_card_gap">8dp</dimen>
-    <!-- The bold figure in a stat card. In sp, so it grows with the user's font size; the text view also
-         shrinks it towards the minimum to fit rather than cutting a long amount off. -->
-    <dimen name="home_stat_value_text_size">20sp</dimen>
-    <dimen name="home_stat_value_min_text_size">12sp</dimen>
+    <!--
+        The bold figure in a stat card. In sp, so it grows with the user's font size; the text view
+        also shrinks it towards the minimum to fit rather than cutting a long amount off.
+
+        19sp against an 8.5sp label is a ratio of well over two, which is what makes the figure read
+        as the card's subject without the card having to be tall. It is deliberately *below* the
+        next-up card's 20sp title: these are summaries and that is the headline.
+
+        **There is no longer a minimum.** Auto-sizing was removed from this view — see
+        item_home_stat.xml — because the card can now widen instead, which is a better answer than
+        shrinking the one thing the card exists to show. The dimension is kept as a single named size.
+    -->
+    <dimen name="home_stat_value_text_size">19sp</dimen>
     <!-- The small status pill at the foot of a stat card. -->
     <dimen name="home_stat_pill_padding_horizontal">8dp</dimen>
-    <dimen name="home_stat_pill_padding_vertical">3dp</dimen>
+    <!-- 5dp rather than 3dp. The pill keeps its capsule shape at any height, so the padding is what
+         decides it: 5dp above and below an 8.5sp line lands the pill at about 21dp, which is the
+         third of the card's three lines the spacing was calculated around. -->
+    <dimen name="home_stat_pill_padding_vertical">5dp</dimen>
 
     <!-- The next-up card's ring. Drawn *inside* this box, so a 96dp ring 7dp thick leaves an 82dp hole
          for the minute count; the corner radius is half the thickness, the most the indicator accepts. -->
+    <!--
+        ======================== The dark next-up card ========================
+
+        The screen's dominant object: the one card that answers "what do I do now". Everything here
+        is sized to keep it visibly heavier than the summary cards above and the care card below —
+        see next_up_card_min_height on the layout for why the floor matters more than the padding.
+    -->
+    <dimen name="next_up_card_min_height">140dp</dimen>
+    <dimen name="next_up_card_padding">20dp</dimen>
+    <dimen name="next_up_card_corner_radius">28dp</dimen>
+    <!-- Between the ring and the column of words. Wider than the card's other gaps because it
+         separates two whole blocks rather than two lines. -->
+    <dimen name="next_up_content_gap">18dp</dimen>
+
+    <!--
+        The countdown ring: 96dp across with a 72dp hole, which is a 12dp band.
+
+        The spec describes this as a conic-gradient ring with a smaller disc centred on it. A
+        CircularProgressIndicator already *is* that shape — an arc of accent over a faint track — so
+        the disc is expressed as what it actually is here: the thickness of the band. (96 - 72) / 2
+        is 12dp, and the card's own background shows through the middle exactly as a centred disc of
+        the same colour would.
+    -->
     <dimen name="next_up_ring_size">96dp</dimen>
-    <dimen name="next_up_ring_thickness">7dp</dimen>
-    <dimen name="next_up_ring_corner_radius">3.5dp</dimen>
+    <dimen name="next_up_ring_thickness">12dp</dimen>
+    <!-- Half the thickness, which is the most the component accepts: at exactly half, both ends of
+         the band are semicircles and a part-finished countdown reads as a capsule rather than a
+         segment cut with a knife. -->
+    <dimen name="next_up_ring_corner_radius">6dp</dimen>
     <!-- The minute count in the middle of the ring, and the task title beside it. -->
-    <dimen name="next_up_minutes_text_size">28sp</dimen>
-    <dimen name="next_up_title_text_size">22sp</dimen>
+    <!-- The number inside the ring. 21sp inside a 72dp hole leaves the figure room to breathe above
+         its unit label; at the 28sp it was, a three-digit count touched the band. -->
+    <dimen name="next_up_minutes_text_size">21sp</dimen>
+    <!-- The task title — the card's subject, and the largest type on the dashboard after the
+         greeting. It stays a step above the 19sp stat figures and the 18sp care headline, which is
+         what ranks the three cards against each other. -->
+    <dimen name="next_up_title_text_size">20sp</dimen>
     <!-- "MARK DONE": a compact pill, shorter than a form button because it sits inside a card. -->
-    <dimen name="next_up_button_height">40dp</dimen>
+    <!-- "MARK DONE". 11dp of padding above and below a 10sp line comes to about 35dp, which keeps
+         the pill compact enough to sit under the subtitle inside a 140dp card. It stays above the
+         44dp the button's own touch target reserves, so the tap area is unaffected by the smaller
+         visual height. -->
+    <dimen name="next_up_button_height">35dp</dimen>
+    <dimen name="next_up_button_padding_horizontal">15dp</dimen>
 
     <!-- The care streak's seven boxes. Seven share the width, so only the height, gap and corner are
          fixed. Today's outline is a touch heavier than a missed day's hairline so it can be found. -->
-    <dimen name="streak_day_height">28dp</dimen>
-    <dimen name="streak_day_gap">6dp</dimen>
-    <dimen name="streak_day_corner_radius">8dp</dimen>
+    <!--
+        A care-streak day box, and the space between two of them.
+
+        Measured off design/home-mockup-top.png: the boxes there are 33x24 of the mockup's pixels,
+        which at this screen's scale is a box noticeably taller than the 28dp it was, separated by a
+        hairline rather than a visible gutter. Widening the box while *narrowing* the gap is what
+        makes the week read as one continuous strip of days — at 6dp apart they read as seven
+        unrelated chips. The width is not set here: the row divides itself into seven equal weighted
+        columns, so the boxes grow to fill whatever the gap leaves.
+    -->
+    <dimen name="streak_day_height">30dp</dimen>
+    <dimen name="streak_day_gap">5dp</dimen>
+    <dimen name="streak_day_corner_radius">9dp</dimen>
     <dimen name="streak_day_today_stroke">1.5dp</dimen>
 
     <!--

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One of the three small stat cards under the dashboard's greeting: "WALK WINDOW / 18°C / GOOD
-    NOW", "SPENT · SEP / Rs 5,240 / +12% VS AUG", "NEXT VET / 22 Sep / KRISHALA".
+    One of the three small summary cards under the dashboard's greeting: "WALK WINDOW / 22°C / GOOD
+    NOW", "SPENT · SEP / Rs 4,665 / NONE IN AUG", "NEXT VET / — / NONE BOOKED".
 
     **One layout pulled in three times** with <include> from fragment_home.xml, rather than three
     copies of the same card. The three must stay identical in shape — a row of cards with slightly
@@ -9,61 +9,79 @@
     given its own android:id, which ViewBinding turns into a nested binding (binding.statWalk.statValue),
     so the fragment reaches every view type-safely without findViewById.
 
-    The fragment fills all three texts and swaps the pill's style colours; nothing here is specific to
-    any one card.
+    **These are summaries, not headlines.** The card is exactly three lines evenly spaced inside a
+    tight padding, and it is meant to land near 100dp tall so that the dark next-up card below stays
+    the dominant object on the screen. Anything added here — a fourth line, a taller figure, a
+    roomier padding — takes that dominance away, which is why the card carries no decoration of its
+    own beyond its border.
+
+    The fragment fills all three texts and swaps the pill's colours; nothing here is specific to any
+    one card.
 -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="@dimen/home_stat_card_width"
-    android:layout_height="wrap_content">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:minWidth="@dimen/home_stat_card_min_width"
+    app:cardCornerRadius="@dimen/home_stat_card_corner_radius"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
 
-    <!-- Label, figure and pill stacked top to bottom. A vertical LinearLayout is exactly that
-         arrangement; nothing is positioned relative to anything but the view above it. -->
+    <!--
+        Label, figure and pill stacked top to bottom with one even gap between them. A vertical
+        LinearLayout is exactly that arrangement; nothing is positioned relative to anything but the
+        view above it.
+
+        The gap is applied as a top margin on the two lower children rather than as spacing on the
+        parent, because LinearLayout has no gap property below API 33 and the app supports API 24.
+    -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="@dimen/home_stat_card_padding">
 
-        <!-- "WALK WINDOW": the app's small letter-spaced label. -->
+        <!-- "WALK WINDOW": the card's uppercase micro-label, in the mono face. maxLines with no
+             ellipsize keeps it on one line — the card widens to fit rather than the text being cut,
+             so there is nothing to ellipsise. -->
         <TextView
             android:id="@+id/statLabel"
-            style="@style/PetCare.SectionLabel"
-            android:layout_width="match_parent"
+            style="@style/PetCare.Home.StatLabel"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
             tools:text="Walk window" />
 
         <!--
-            The figure. A fixed height rather than wrap_content because the text **auto-sizes**: a long
-            amount such as "Rs 12,480" shrinks to fit the card's width instead of being cut off with an
-            ellipsis, which on a number would hide exactly the digits that matter. Auto-sizing measures
-            against the view's bounds, so both dimensions need to be settled for it to work reliably.
-            The app: attributes are AppCompat's, which back-port auto-sizing to API 24.
+            The figure — the card's subject.
+
+            **wrap_content, with no auto-sizing.** Every earlier version pinned this view's height and
+            let the text shrink to fit the card, which meant the one thing the card exists to show was
+            the first thing sacrificed: "Rs 4,665" quietly rendered smaller than the card next to it.
+            Now the card is wrap_content over a minimum width, so a long amount widens its own card
+            and the figure is always drawn at its stated size. The row already scrolls sideways, so a
+            card that is a few dp wider costs nothing.
+
+            lineHeight equals the text size (line-height: 1), which trims the leading a figure on its
+            own line does not need and is part of what keeps the card short.
         -->
         <TextView
             android:id="@+id/statValue"
             style="@style/PetCare.Home.StatValue"
-            android:layout_width="match_parent"
-            android:layout_height="28dp"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:gravity="center_vertical|start"
-            app:autoSizeMaxTextSize="@dimen/home_stat_value_text_size"
-            app:autoSizeMinTextSize="@dimen/home_stat_value_min_text_size"
-            app:autoSizeStepGranularity="1sp"
-            app:autoSizeTextType="uniform"
-            tools:text="18°C" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/home_stat_line_spacing"
+            tools:text="22°C" />
 
-        <!-- The status pill. wrap_content width so it hugs its words like a tag, rather than
-             stretching into a bar across the card. Its colours are one of the three
-             PetCare.Home.StatPill styles, chosen by the fragment. -->
+        <!-- The status pill. wrap_content so it hugs its words like a tag rather than stretching into
+             a bar across the card. Its colours are one of the three tones the fragment applies. -->
         <TextView
             android:id="@+id/statPill"
             style="@style/PetCare.Home.StatPill"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_sm"
+            android:layout_marginTop="@dimen/home_stat_line_spacing"
             tools:text="Good now" />
 
     </LinearLayout>

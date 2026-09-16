@@ -31,7 +31,7 @@
     app:cardBackgroundColor="@color/pet_card_ground"
     app:cardElevation="0dp"
     app:rippleColor="@color/accent_yellow"
-    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Large"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.HomePetCard"
     app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
