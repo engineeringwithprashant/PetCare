@@ -33,12 +33,18 @@ import com.prash.petcare.R
  * @param onDenied Called when the user refuses. `permanently` is true when the system will not show
  *   the prompt again, so the caller can offer the settings screen instead of asking a question that
  *   can no longer be answered.
+ * @param permissions Which location permissions to ask for, most important first. Defaults to the
+ *   fine-and-coarse pair the Places screens need. The home screen's weather card overrides it with
+ *   coarse alone: a temperature is the same across a whole city, so asking for GPS accuracy to fetch
+ *   one would be requesting more than the feature uses — and a prompt that asks for less is one the
+ *   user is more likely to grant.
  */
 class LocationPermissionRequester(
     private val fragment: Fragment,
     @param:StringRes private val rationaleMessage: Int,
     private val onGranted: () -> Unit,
-    private val onDenied: (permanently: Boolean) -> Unit
+    private val onDenied: (permanently: Boolean) -> Unit,
+    private val permissions: Array<String> = arrayOf(FINE, COARSE)
 ) {
 
     private val launcher =
@@ -51,7 +57,8 @@ class LocationPermissionRequester(
             } else {
                 // After a refusal, "should show rationale" being false means the user ticked "don't
                 // ask again" (or refused twice), and further requests return instantly with no dialog.
-                onDenied(!fragment.shouldShowRequestPermissionRationale(FINE))
+                // Asked of the first permission requested, which is the one the caller most wanted.
+                onDenied(!fragment.shouldShowRequestPermissionRationale(permissions.first()))
             }
         }
 
@@ -83,7 +90,7 @@ class LocationPermissionRequester(
             .setMessage(rationaleMessage)
             .setNegativeButton(R.string.permission_not_now, null)
             .setPositiveButton(R.string.permission_continue) { _, _ ->
-                launcher.launch(arrayOf(FINE, COARSE))
+                launcher.launch(permissions)
             }
             .show()
     }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One of the three small stat cards under the dashboard's greeting: "WALK WINDOW / 6:00 PM / GOOD
+    One of the three small stat cards under the dashboard's greeting: "WALK WINDOW / 18°C / GOOD
     NOW", "SPENT · SEP / Rs 5,240 / +12% VS AUG", "NEXT VET / 22 Sep / KRISHALA".
 
     **One layout pulled in three times** with <include> from fragment_home.xml, rather than three
@@ -53,7 +53,7 @@
             app:autoSizeMinTextSize="@dimen/home_stat_value_min_text_size"
             app:autoSizeStepGranularity="1sp"
             app:autoSizeTextType="uniform"
-            tools:text="6:00 PM" />
+            tools:text="18°C" />
 
         <!-- The status pill. wrap_content width so it hugs its words like a tag, rather than
              stretching into a bar across the card. Its colours are one of the three

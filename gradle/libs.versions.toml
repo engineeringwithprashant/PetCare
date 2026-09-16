@@ -32,6 +32,10 @@ coroutinesPlayServices = "1.10.2"
 # location library only - the Google Maps SDK is deliberately not a dependency; see
 # data.location.LocationRepository.
 playServicesLocation = "21.4.0"
+# Retrofit turns the Open-Meteo REST endpoint into a Kotlin interface, and its Gson converter turns
+# the JSON reply into the response classes. One version for both: the converter is published from the
+# same build as Retrofit itself and is not guaranteed to work against a different release.
+retrofit = "2.11.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,6 +71,11 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
+# Retrofit: the HTTP client behind the home screen's live temperature. `converter-gson` is the piece
+# that parses the JSON body into WeatherResponse; without a converter Retrofit can only hand back a
+# raw response body.
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

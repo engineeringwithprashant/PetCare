@@ -83,6 +83,16 @@ dependencies {
     // user's own maps app through a geo: intent, so no map ever needs drawing inside PetCare.
     implementation(libs.play.services.location)
 
+    // Retrofit: the app's one plain-HTTP data source, used for the Open-Meteo forecast behind the
+    // home screen's walk-window temperature. Firestore brings its own transport, so this is not a
+    // duplicate of it — see data.remote.weather.WeatherApi.
+    //
+    // Retrofit is used rather than a hand-rolled HttpURLConnection call because it gives the request
+    // a typed Kotlin interface, parses the JSON through the converter below, and returns from a
+    // `suspend` function without any thread handling of its own.
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+
     // Lifecycle-aware ViewModels and flow collection.
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

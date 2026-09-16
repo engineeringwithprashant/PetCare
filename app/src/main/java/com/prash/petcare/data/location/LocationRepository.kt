@@ -101,6 +101,37 @@ class LocationRepository(context: Context) {
         }
     }
 
+    /**
+     * The last position the device happened to record, or null when there is none to be had.
+     *
+     * **Why this exists beside [getCurrentLocation].** That method actively computes a new fix,
+     * which is right for a geotag and for measuring distances, but it can take seconds and it wakes
+     * the radios to do it. The weather card needs neither: a temperature is the same across a whole
+     * city, so yesterday's cached position is every bit as good an answer as a fresh satellite lock,
+     * and the card should appear at once rather than after a spinner. `lastLocation` returns
+     * whatever fix any app on the phone obtained most recently, from memory, costing nothing.
+     *
+     * Null is an ordinary answer, not an error: permission may not have been granted, or the device
+     * may have no stored fix at all — common on a fresh install. Callers are expected to have a
+     * fallback, as [com.prash.petcare.data.repository.WeatherRepository] does.
+     */
+    // The permission is checked on the first line; lint cannot follow a check made through a helper.
+    @SuppressLint("MissingPermission")
+    suspend fun getLastKnownLocation(): Coordinates? {
+        if (!hasLocationPermission()) return null
+
+        return try {
+            fusedClient.lastLocation.await()?.let { Coordinates(it.latitude, it.longitude) }
+        } catch (e: CancellationException) {
+            // Never swallowed — see SyncManager.runSyncCycle for why.
+            throw e
+        } catch (e: Exception) {
+            // As in getCurrentLocation: a SecurityException if the permission vanished between the
+            // check and the call, or an ApiException if Play services is missing or out of date.
+            null
+        }
+    }
+
     private fun isGranted(permission: String): Boolean =
         ContextCompat.checkSelfPermission(appContext, permission) == PackageManager.PERMISSION_GRANTED
 

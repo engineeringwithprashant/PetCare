@@ -74,11 +74,14 @@ data class TodayTask(
 )
 
 /**
- * The "walk window" stat card.
+ * The walk-window card's **fallback**, drawn from the walks already on the calendar.
  *
- * The design showed a temperature here, but the app has no weather source. What an owner actually
- * wants from that card — *is now a good time to take the dog out?* — can be answered honestly from the
- * walks already scheduled, so that is what it reports.
+ * The card normally shows the live temperature where the user is — see
+ * [com.prash.petcare.data.repository.WeatherRepository]. This answers the same question, *is now a
+ * good time to take the dog out?*, from data the app always has, and is what the card falls back to
+ * when no reading can be had and none is cached. It is computed on every build rather than only when
+ * needed, because it costs one pass over a list already in hand and having it ready means the card
+ * never has to wait for a second calculation at the moment the network fails.
  */
 sealed interface WalkWindow {
     /** No walk is scheduled today. */

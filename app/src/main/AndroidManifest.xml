@@ -54,6 +54,17 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!--
+        Lets the app open network connections: the Firestore sync, and the Open-Meteo forecast behind
+        the home screen's walk-window temperature (see data.remote.weather.WeatherApi).
+
+        A normal permission, granted at install with nothing to ask the user at runtime. It was not
+        needed until now only because the Firestore SDK declares it in its own manifest and manifest
+        merging folded it in; declaring it here states the app's own requirement rather than relying
+        on a library's, which would vanish if that library ever did.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
         Permissions for the Places tab, which geotags each saved vet, groomer, park or shop.
 
         ACCESS_FINE_LOCATION is what capturing a place's position really needs: GPS accuracy, so the

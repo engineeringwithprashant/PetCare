@@ -112,8 +112,18 @@
          never reads as a real one. -->
     <string name="home_stat_empty_value">—</string>
 
-    <!-- The walk window card. The figure is the next walk's time; these are its pill, and the figure
-         when there is no time to show. -->
+    <!-- The walk window card's live temperature. %1$d is the reading rounded to whole degrees; the
+         degree sign is a real ° (U+00B0), never a masculine ordinal or a superscript o. -->
+    <string name="home_weather_temperature">%1$d°C</string>
+    <!-- The pill under that temperature: whether it suits a walk. See util/WalkComfort.kt for where
+         the comfortable range is set and why. -->
+    <string name="home_weather_too_hot">Too hot</string>
+    <string name="home_weather_too_cold">Too cold</string>
+    <!-- Shown in the pill on a first launch, while the very first reading is being fetched and there
+         is no cached one to show in the meantime. -->
+    <string name="home_weather_checking">Checking</string>
+    <!-- The walk window card's fallback, used when no temperature can be had. The figure is then the
+         next walk's time; these are its pill, and the figure when there is no time to show. -->
     <string name="home_walk_good_now">Good now</string>
     <string name="home_walk_later">Later</string>
     <string name="home_walk_any_time">Any time</string>
@@ -1082,6 +1092,10 @@
     <string name="permission_location_title">Use your location?</string>
     <string name="permission_location_capture_message">PetCare saves this place\'s GPS position so it can show how far away it is and open directions in your maps app. Your location is only read when you press capture, and is stored with this place only.</string>
     <string name="permission_location_distance_message">PetCare uses your current location to work out how far each saved place is from you. It is only read while this tab is open and is never stored or shared.</string>
+    <!-- Shown before the home screen asks for approximate location, so the walk-window card can
+         report the weather where the user actually is. It names the fallback, because that is what
+         makes refusing an easy choice rather than a loss. -->
+    <string name="permission_location_weather_message">PetCare uses your approximate location to show the temperature where you are, so the walk window knows whether it is a good time to go out. Without it the card shows the weather for Kathmandu instead.</string>
     <string name="permission_location_capture_denied">Without location access, PetCare cannot geotag this place. Your other details are kept if you allow it later.</string>
     <string name="permission_location_distance_denied">Distances stay hidden without location access. Your saved places and directions still work.</string>
 

@@ -3,7 +3,9 @@ package com.prash.petcare
 import android.app.Application
 import com.google.firebase.firestore.FirebaseFirestore
 import com.prash.petcare.data.local.PetCareDatabase
+import com.prash.petcare.data.local.WeatherCache
 import com.prash.petcare.data.remote.FirestoreSyncService
+import com.prash.petcare.data.remote.weather.WeatherApi
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
@@ -12,6 +14,7 @@ import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.data.repository.PlaceRepository
 import com.prash.petcare.data.repository.SyncDeletionRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.data.repository.WeatherRepository
 import com.prash.petcare.data.sync.NetworkMonitor
 import com.prash.petcare.data.sync.SyncManager
 import com.prash.petcare.reminder.ReminderManager
@@ -95,6 +98,27 @@ class PetCareApplication : Application() {
      * data source like Room rather than as something a screen reads directly.
      */
     val locationRepository: LocationRepository by lazy { LocationRepository(this) }
+
+    /**
+     * The live temperature behind the home screen's walk-window card.
+     *
+     * Created here, like everything else, but for one reason beyond consistency: this repository
+     * holds the current reading in a [kotlinx.coroutines.flow.StateFlow] of its own, so sharing a
+     * single instance is what lets the card redraw instantly when the user returns to the home tab
+     * instead of re-fetching. A per-ViewModel instance would throw that away on every rotation.
+     *
+     * It is given the other two data sources it arbitrates between rather than building them: the
+     * location repository is the app's single location client, and [WeatherApi.create] is called
+     * once here because a Retrofit instance carries an HTTP client, a connection pool and a thread
+     * pool that should exist once per process rather than once per request.
+     */
+    val weatherRepository: WeatherRepository by lazy {
+        WeatherRepository(
+            weatherApi = WeatherApi.create(),
+            cache = WeatherCache(this),
+            locationRepository = locationRepository
+        )
+    }
 
     /**
      * Mirrors the signed-in account's data between Room and Firestore.

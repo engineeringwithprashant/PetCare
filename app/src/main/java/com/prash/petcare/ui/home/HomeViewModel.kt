@@ -11,6 +11,8 @@ import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.data.repository.WeatherRepository
+import com.prash.petcare.data.repository.WeatherState
 import com.prash.petcare.data.sync.SyncManager
 import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.util.CareSchedule
@@ -49,6 +51,8 @@ import java.util.Calendar
  * @param careTaskRepository Source of the tasks and their completion history, and where "Mark done"
  *   is written back.
  * @param expenseRepository Source of the spending behind the "spent this month" card.
+ * @param weatherRepository Source of the live temperature on the walk-window card. The app's only
+ *   non-Room, non-Firestore data source; the ViewModel sees a state, never a network call.
  * @param syncManager The background sync. This screen is the only one that touches it, for the two
  *   reasons described in [syncStatus] and the `init` block below. It is a data-layer object holding no
  *   Android view types, so depending on it here does not compromise what makes a ViewModel testable.
@@ -61,6 +65,7 @@ class HomeViewModel(
     careRoutineRepository: CareRoutineRepository,
     private val careTaskRepository: CareTaskRepository,
     expenseRepository: ExpenseRepository,
+    private val weatherRepository: WeatherRepository,
     syncManager: SyncManager,
     userId: Long
 ) : ViewModel() {
@@ -85,6 +90,21 @@ class HomeViewModel(
      * would rebuild the whole dashboard every time the status moved from "syncing" to "synced".
      */
     val syncStatus: StateFlow<SyncStatus> = syncManager.status
+
+    /**
+     * The temperature on the walk-window card, passed straight through from its repository.
+     *
+     * Kept out of [uiState] for the same reason [syncStatus] is, and the reason is worth stating
+     * because the card sits in the middle of the dashboard rather than off to one side. The weather
+     * is not derived from the user's pets: it changes on its own schedule, it arrives from the
+     * network long after the Room queries have returned, and folding it into the `combine` above
+     * would rebuild the streak, the insight and every pet card the moment a temperature landed.
+     *
+     * The fragment draws the card from this *and* from [HomeUiState.walkWindow] together, because
+     * the scheduled walk remains the fallback whenever there is no reading — see
+     * HomeFragment.renderWalkWindow.
+     */
+    val weather: StateFlow<WeatherState> = weatherRepository.state
 
     /**
      * Each pet together with its active routines, its tasks and its expenses.
@@ -197,6 +217,46 @@ class HomeViewModel(
         }
     }
 
+    /**
+     * Asks for an up-to-date temperature for the walk-window card.
+     *
+     * Called by the fragment each time the home tab comes into view, and again the moment location
+     * permission is granted. It is deliberately cheap to call: the repository serves its cached
+     * reading without a request while that reading is under half an hour old, so returning to the
+     * tab repeatedly costs nothing — see [WeatherRepository.refresh].
+     *
+     * Pushed rather than pulled: unlike the Room queries, there is no stream that re-emits when the
+     * weather changes, so something has to ask. `viewModelScope` is what lets the request outlive a
+     * rotation that happens while it is in flight.
+     */
+    fun refreshWeather() {
+        viewModelScope.launch {
+            weatherRepository.refresh()
+        }
+    }
+
+    /** Backs [markLocationAsked]. Not exposed: the only useful operation on it is the one below. */
+    private var hasAskedForLocation = false
+
+    /**
+     * Claims the single chance to ask for location permission, returning true to whoever gets it.
+     *
+     * The fragment needs to ask once and only once, and "once" cannot be tracked in the fragment
+     * itself: a rotation destroys it and a new one would ask all over again, so the user would face
+     * the same dialog every time they turned their phone. A ViewModel outlives exactly those
+     * recreations, which makes it the right place for a fact about this *visit* to the screen rather
+     * than this instance of the view.
+     *
+     * A plain boolean rather than a flow: nothing observes it, and it is read once per visit from the
+     * main thread. It holds no Android type, so this does not compromise what makes the ViewModel
+     * testable.
+     */
+    fun markLocationAsked(): Boolean {
+        if (hasAskedForLocation) return false
+        hasAskedForLocation = true
+        return true
+    }
+
     companion object {
 
         private const val MINUTE_MILLIS = 60_000L
@@ -226,6 +286,7 @@ class HomeViewModel(
                     careRoutineRepository = application.careRoutineRepository,
                     careTaskRepository = application.careTaskRepository,
                     expenseRepository = application.expenseRepository,
+                    weatherRepository = application.weatherRepository,
                     syncManager = application.syncManager,
                     userId = userId
                 )

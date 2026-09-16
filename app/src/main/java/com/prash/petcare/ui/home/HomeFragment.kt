@@ -1,5 +1,6 @@
 package com.prash.petcare.ui.home
 
+import android.Manifest
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.format.DateFormat
@@ -26,6 +27,7 @@ import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.PetGender
+import com.prash.petcare.data.repository.WeatherState
 import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.databinding.FragmentHomeBinding
 import com.prash.petcare.databinding.ItemHomeStatBinding
@@ -38,13 +40,16 @@ import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.pet.AddEditPetFragment
 import com.prash.petcare.ui.pet.PetDetailFragment
 import com.prash.petcare.ui.pet.PetViewModel
+import com.prash.petcare.ui.place.LocationPermissionRequester
 import com.prash.petcare.ui.routine.RoutineDetailFragment
 import com.prash.petcare.ui.session.SessionViewModel
+import com.prash.petcare.util.WalkComfort
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /**
  * The Home tab: the dashboard the app opens on once signed in.
@@ -103,6 +108,45 @@ class HomeFragment : Fragment() {
      * as when the status itself changes — the words go stale with time even when nothing is syncing.
      */
     private var latestSyncStatus: SyncStatus = SyncStatus.Idle
+
+    /**
+     * The latest temperature, and the latest scheduled-walk state, kept for the same reason as
+     * [latestSyncStatus].
+     *
+     * The walk-window card is drawn from **both** — the temperature when there is one, the next
+     * walk's time when there is not — and they arrive on two independent streams: the walk comes from
+     * Room with the rest of the dashboard, the temperature from the network some seconds later. Each
+     * collector therefore stores its half and asks for the whole card to be redrawn, rather than
+     * trying to draw a card it only knows half of.
+     */
+    private var latestWeather: WeatherState = WeatherState.Loading
+    private var latestWalkWindow: WalkWindow = WalkWindow.NoneToday
+
+    /**
+     * Approximate location for the weather card, asked for the first time the dashboard is shown.
+     *
+     * **Why this screen asks on arrival**, where the Places tab deliberately waits for a button. There
+     * is nothing to wait for here: the card is not something the user chooses to use, it is simply
+     * part of the dashboard, so there is no later moment that would explain the request better than
+     * the first sight of the card it feeds. The rationale dialog still comes first, so the system
+     * prompt is never the opening move.
+     *
+     * **Refusing costs nothing**, which is what makes asking acceptable: the repository falls back to
+     * Kathmandu's coordinates and the card shows a temperature either way. So there is no denial
+     * handling beyond refreshing — no dialog, no message, nothing for the user to resolve.
+     *
+     * Coarse alone, not the fine-and-coarse pair the Places screens request: a temperature is the
+     * same across a whole city. See [LocationPermissionRequester].
+     */
+    private val locationPermission = LocationPermissionRequester(
+        fragment = this,
+        rationaleMessage = R.string.permission_location_weather_message,
+        // Granted: fetch again straight away, so the card moves from the fallback city to the real
+        // one without waiting for the user to leave the tab and come back.
+        onGranted = { viewModel.refreshWeather() },
+        onDenied = { viewModel.refreshWeather() },
+        permissions = arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
+    )
 
     /**
      * The clock time of the latest dashboard state, so a sync status arriving between ticks is measured
@@ -176,6 +220,27 @@ class HomeFragment : Fragment() {
     }
 
     /**
+     * Refreshes the temperature each time the dashboard comes into view, and asks for location once.
+     *
+     * `onStart` rather than `onViewCreated`, as on the Places tab: returning from another app does
+     * not recreate the view, but half an hour may well have passed. The call is cheap to repeat —
+     * the repository answers from its cache without a request while the reading is fresh.
+     *
+     * The permission is asked for through the ViewModel's one-shot flag rather than a field here, so
+     * that rotating the phone, or leaving the app and coming back, does not ask a second time. Only
+     * when it has not already been granted, since [LocationPermissionRequester.request] would
+     * otherwise show a rationale for something the user has already agreed to.
+     */
+    override fun onStart() {
+        super.onStart()
+        viewModel.refreshWeather()
+
+        if (!locationPermission.hasPermission() && viewModel.markLocationAsked()) {
+            locationPermission.request()
+        }
+    }
+
+    /**
      * Prepares the two lists.
      *
      * Neither calls `setHasFixedSize(true)`: both sit inside the page's NestedScrollView with wrap_content
@@ -229,6 +294,12 @@ class HomeFragment : Fragment() {
                         renderSyncStatus()
                     }
                 }
+                launch {
+                    viewModel.weather.collect { weather ->
+                        latestWeather = weather
+                        renderWalkWindow()
+                    }
+                }
             }
         }
     }
@@ -246,7 +317,8 @@ class HomeFragment : Fragment() {
         binding.emptyStateContainer.isVisible = state.hasNoPets
         if (state.isLoading) return
 
-        renderWalkWindow(state.walkWindow)
+        latestWalkWindow = state.walkWindow
+        renderWalkWindow()
         renderSpending(state)
         renderNextVet(state.nextVet)
         renderNextUp(state)
@@ -346,12 +418,70 @@ class HomeFragment : Fragment() {
     // ---------------------------------------------------------------------------------------------
 
     /**
-     * The walk window card. The design's temperature is replaced by the next scheduled walk, since the
-     * app has no weather source — see [WalkWindow].
+     * The walk window card: "WALK WINDOW / 18°C / GOOD NOW", as the design has it.
+     *
+     * **Two sources, one card.** The figure is the live temperature where the user is, and the pill
+     * says whether that suits a walk. Neither is always available, so the card degrades in two steps
+     * rather than ever going blank:
+     *
+     * - a reading, fresh or cached → the temperature and its verdict;
+     * - nothing yet, still fetching → a dash and "CHECKING", so the card holds its shape instead of
+     *   appearing broken. Only reachable on a first launch; once anything has been cached, the
+     *   repository serves that while it refetches;
+     * - nothing at all, and nothing cached → [renderScheduledWalk], the card's original behaviour,
+     *   which answers the same question ("is now a good time?") from the walks already on the
+     *   calendar. A weatherless card is still a useful one.
+     *
+     * Takes no parameters because it is called from two places on two different rhythms — see
+     * [latestWeather]. Guarded against a null binding for the same reason [renderSyncStatus] is: the
+     * weather can arrive from the network after the view has been destroyed.
      */
-    private fun renderWalkWindow(walk: WalkWindow) {
+    private fun renderWalkWindow() {
+        val binding = _binding ?: return
         val card = binding.statWalk
         card.statLabel.setText(R.string.home_stat_walk_window)
+
+        when (val weather = latestWeather) {
+            is WeatherState.Available -> {
+                // Whole degrees: the card is a glance, and a decimal place implies a precision the
+                // forecast does not have. getString formats the number in the device's own digits.
+                card.show(
+                    getString(R.string.home_weather_temperature, weather.temperatureCelsius.roundToInt()),
+                    // The comfortable case reuses the card's existing "Good now" wording, which said
+                    // the same thing about the scheduled walk and is exactly what the design shows.
+                    when (weather.comfort) {
+                        WalkComfort.GOOD -> R.string.home_walk_good_now
+                        WalkComfort.TOO_HOT -> R.string.home_weather_too_hot
+                        WalkComfort.TOO_COLD -> R.string.home_weather_too_cold
+                    },
+                    // Mint for good walking weather, as the design shows. The two warnings take the
+                    // neutral wash rather than a colour of their own: "too hot" and "too cold" are
+                    // opposite facts but the same advice — not now — and inventing a warm and a cold
+                    // pill role would mean two more colours to keep legible in both themes for a
+                    // distinction the words already make.
+                    if (weather.comfort == WalkComfort.GOOD) PillTone.GOOD else PillTone.NEUTRAL
+                )
+            }
+
+            WeatherState.Loading -> card.show(
+                getString(R.string.home_stat_empty_value),
+                R.string.home_weather_checking,
+                PillTone.NEUTRAL
+            )
+
+            WeatherState.Unavailable -> renderScheduledWalk(latestWalkWindow)
+        }
+    }
+
+    /**
+     * The walk-window card's fallback, used when no temperature can be had at all.
+     *
+     * This was the card's whole behaviour before it had a weather source, and it is kept because it
+     * degrades honestly: rather than an empty card or a stale guess, it answers the same question
+     * from data the app definitely has — see [WalkWindow].
+     */
+    private fun renderScheduledWalk(walk: WalkWindow) {
+        val card = binding.statWalk
 
         when (walk) {
             WalkWindow.NoneToday ->
