@@ -80,7 +80,46 @@ class AssistantFragment : Fragment() {
 
         setUpList()
         setUpInput()
+        keepNewestMessageVisibleWhenListShrinks()
         observeViewModel()
+    }
+
+    /**
+     * Keeps the newest message in view when the list is made shorter — which is what the keyboard
+     * opening amounts to.
+     *
+     * The Activity makes the room: it applies the keyboard's inset as padding on the root, so the
+     * whole layout re-measures and this list is handed a shorter box. See
+     * MainActivity.applyWindowInsets.
+     *
+     * **Why a layout listener rather than an inset listener here.** Both would work, but an
+     * `OnApplyWindowInsetsListener` on a fragment's root *replaces* the default dispatch and would
+     * stop insets reaching anything inside it — a trap for whatever is added to this screen later.
+     * Watching the height instead needs no such care, and it is also the more honest trigger: the
+     * list should return to the bottom whenever it shrinks, whatever shrank it.
+     *
+     * `stackFromEnd` already holds the bottom through an ordinary re-measure. This covers the case
+     * it does not: when the last message is taller than the space left, the anchor is kept but the
+     * end of a long bubble can finish below the viewport.
+     *
+     * The scroll is posted so it runs after the layout pass that triggered it, rather than against
+     * the geometry being replaced.
+     */
+    private fun keepNewestMessageVisibleWhenListShrinks() {
+        binding.messagesRecyclerView.addOnLayoutChangeListener {
+            view, _, top, _, bottom, _, oldTop, _, oldBottom ->
+            val shrank = (bottom - top) < (oldBottom - oldTop)
+            if (shrank) view.post { scrollToNewestMessage() }
+        }
+    }
+
+    /** Puts the last message at the bottom of the list, if there is one. */
+    private fun scrollToNewestMessage() {
+        val binding = _binding ?: return
+        val lastPosition = (messageAdapter?.itemCount ?: 0) - 1
+        if (lastPosition >= 0) {
+            binding.messagesRecyclerView.scrollToPosition(lastPosition)
+        }
     }
 
     /**
@@ -180,12 +219,10 @@ class AssistantFragment : Fragment() {
      * and the answer would land just off the bottom edge.
      */
     private fun renderMessages(messages: List<AssistantMessage>) {
-        messageAdapter?.submitList(messages) {
-            val binding = _binding ?: return@submitList
-            if (messages.isNotEmpty()) {
-                binding.messagesRecyclerView.scrollToPosition(messages.size - 1)
-            }
-        }
+        // The scroll runs in submitList's completion callback, which fires after the new item has
+        // been laid out — scrolling before that would target a position the list does not have yet,
+        // and a message sent with the keyboard open would land just off the bottom edge.
+        messageAdapter?.submitList(messages) { scrollToNewestMessage() }
     }
 
     /**

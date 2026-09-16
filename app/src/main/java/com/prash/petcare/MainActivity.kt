@@ -89,6 +89,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Order matters: the inset listener decides whether the bottom tabs are shown, which depends
+        // on the current destination, so the NavController has to exist before it can first fire.
         setUpNavigation()
         applyWindowInsets()
     }
@@ -201,7 +203,9 @@ class MainActivity : AppCompatActivity() {
             isMoneyTab
 
         binding.appBarLayout.isVisible = !isAuthScreen && !hasOwnHeader
-        binding.bottomNav.isVisible = !isAuthScreen
+        // Not set directly: whether the tabs show also depends on the keyboard, which this method
+        // knows nothing about — see updateBottomNavVisibility.
+        updateBottomNavVisibility()
 
         // The overflow menu holds the account actions, which only mean something once there is an
         // account. invalidateOptionsMenu asks the framework to rebuild the menu, which calls
@@ -283,7 +287,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Pushes the system bars out of the way of the content.
+     * Pushes the system bars **and the soft keyboard** out of the way of the content.
      *
      * With edge-to-edge enabled the status and navigation bars overlap the layout, so the space
      * they occupy is applied back as padding. Doing this at runtime rather than with a fixed margin
@@ -292,13 +296,68 @@ class MainActivity : AppCompatActivity() {
      * Applied to the root LinearLayout, so the top inset lands above the app bar and the bottom
      * inset below the navigation tabs — which is what keeps the tabs clear of the gesture handle on
      * a device that uses one.
+     *
+     * **Why the keyboard has to be handled here, when the manifest already says `adjustResize`.**
+     * It does, and that declaration is correct and still needed — but it is not sufficient once
+     * [enableEdgeToEdge] has been called. Going edge-to-edge sets `decorFitsSystemWindows` to false,
+     * and from Android 11 (API 30) a window in that mode is **not resized** when the keyboard opens:
+     * the system reports the keyboard as one more inset and leaves it to the app to make room. So
+     * before this, the keyboard simply drew on top of whatever was at the bottom of the screen — the
+     * assistant's input row, or the last field of a form — and nothing moved.
+     *
+     * **`max`, not a sum.** An open keyboard already covers the area the navigation bar occupies, so
+     * adding the two together would reserve that space twice and leave a visible gap under the
+     * keyboard. Taking the larger of the two is what makes this correct with a gesture handle
+     * (a small bottom inset) and with three-button navigation (a large one) alike.
+     *
+     * Because the padding is on the root, every screen inherits the fix — the assistant, and the
+     * add/edit pet, task and expense forms, which are each wrapped in a ScrollView and so re-measure
+     * into the smaller space and scroll the focused field into view by themselves.
      */
     private fun applyWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            val ime = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+
+            view.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                maxOf(systemBars.bottom, ime.bottom)
+            )
+
+            // The tabs are pointless while the user is typing and would otherwise sit as a band
+            // between the keyboard and the field above it. Hiding them puts the assistant's input
+            // row directly above the keyboard and gives every form an extra row of space.
+            isKeyboardVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())
+            updateBottomNavVisibility()
+
             windowInsets
         }
+    }
+
+    /**
+     * Whether the soft keyboard is on screen, as last reported by the inset listener.
+     *
+     * Kept as state because two independent rules decide whether the tabs are shown — which screen
+     * the user is on, and whether they are typing — and each is told about its own change only. The
+     * flag is what lets [updateBottomNavVisibility] apply both whichever one fired.
+     */
+    private var isKeyboardVisible = false
+
+    /**
+     * Shows the bottom tabs unless the sign-in screens are up or the keyboard is.
+     *
+     * One place deciding it, called from both [updateChromeFor] and the inset listener, because the
+     * two rules would otherwise overwrite each other: navigating with the keyboard open would put
+     * the tabs back, and the keyboard closing on an auth screen would reveal tabs that belong to an
+     * account nobody has signed in to yet.
+     */
+    private fun updateBottomNavVisibility() {
+        val isAuthScreen = navController.currentDestination?.id == R.id.loginFragment ||
+            navController.currentDestination?.id == R.id.registerFragment
+
+        binding.bottomNav.isVisible = !isAuthScreen && !isKeyboardVisible
     }
 
     /**

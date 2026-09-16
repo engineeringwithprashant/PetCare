@@ -134,6 +134,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PetCare">
+        <!--
+            adjustResize, so an open keyboard shrinks the layout rather than being allowed to draw
+            over it — which is what lets a form's ScrollView re-measure and scroll the focused field
+            into view. The alternative, adjustPan, slides the whole window up instead and would take
+            the app bar off the top of the screen.
+
+            **This declaration is necessary but not sufficient here**, and the difference is worth
+            knowing: the Activity calls enableEdgeToEdge, and from Android 11 a window that does not
+            fit system windows is no longer resized for the keyboard at all — the keyboard arrives as
+            an inset the app has to make room for itself. MainActivity.applyWindowInsets does that.
+            Removing this line would still break older devices and any future non-edge-to-edge path,
+            so both halves are kept.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
