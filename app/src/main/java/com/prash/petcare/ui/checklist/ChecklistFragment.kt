@@ -258,10 +258,10 @@ class ChecklistFragment : Fragment() {
         binding.petChipScroll.isVisible = isTab
 
         if (isTab) {
-            // The badge opens the profile screen, for the same reason as on Home and Pets: this tab
-            // hides the toolbar whose overflow menu held the account actions.
+            // The badge opens the notifications screen, as on every other screen that draws this
+            // header.
             binding.header.setUp(title = R.string.nav_tasks) {
-                findNavController().navigate(R.id.profileFragment)
+                findNavController().navigate(R.id.notificationsFragment)
             }
         }
 

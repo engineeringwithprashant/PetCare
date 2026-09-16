@@ -502,6 +502,29 @@
     <!-- The three quick-action cards: a "+" circle over a label, left-aligned. -->
     <dimen name="home_quick_action_height">92dp</dimen>
 
+    <!-- ============================== Notifications ==============================
+         The screen the header's pet-count badge opens: a headline, two group headings and one card
+         per alert. -->
+
+    <!-- "3 new alerts". The largest text on the screen and its subject, so it is set a step above the
+         Money tab's headings and just under the dashboard's greeting. In sp, so it grows with the
+         user's font size. -->
+    <dimen name="notifications_headline_text_size">26sp</dimen>
+
+    <!-- The square code badge on an alert card ("VAX", "MISS"). The Money tab's badge size and
+         corner, so a small square abbreviation is the same object on both screens. -->
+    <dimen name="alert_badge_size">44dp</dimen>
+    <dimen name="alert_badge_corner_radius">12dp</dimen>
+
+    <!-- The red dot in an unread card's top corner. A touch larger than the header's 9dp dot, which
+         has to squeeze onto the corner of a 32dp badge; this one sits in the open space of a card and
+         is sized to be found rather than to fit. -->
+    <dimen name="alert_dot_size">8dp</dimen>
+
+    <!-- Gap between alert cards. The Money tab's spacing: these are rows of a list grouped under
+         headings, and a wider gap would break the groups apart visually. -->
+    <dimen name="alert_card_spacing">12dp</dimen>
+
     <!-- ============================== Assistant ==============================
          The chat screen opened from the dashboard. -->
     <!-- How wide a message bubble may grow. Capped well short of the full width so a bubble always

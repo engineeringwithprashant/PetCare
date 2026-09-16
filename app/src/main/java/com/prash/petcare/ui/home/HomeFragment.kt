@@ -206,7 +206,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // The shared header: title, theme toggle and badge, plus this tab's AI pill. See TabHeader.kt.
-        binding.header.setUp(title = R.string.nav_home, onBadgeClick = ::openProfile)
+        binding.header.setUp(title = R.string.nav_home, onBadgeClick = ::openNotifications)
         binding.header.showAssistantPill(::openAssistant)
 
         streakCells = listOf(
@@ -852,11 +852,11 @@ class HomeFragment : Fragment() {
     }
 
     /**
-     * Opens the account screen, from the pet-count badge — this tab hides the shared toolbar that carries
-     * the account actions elsewhere. Signing out lives on the profile screen itself.
+     * Opens the notifications screen, from the pet-count badge — as every screen that draws this
+     * header does.
      */
-    private fun openProfile() {
-        findNavController().navigate(R.id.profileFragment)
+    private fun openNotifications() {
+        findNavController().navigate(R.id.notificationsFragment)
     }
 
     /**

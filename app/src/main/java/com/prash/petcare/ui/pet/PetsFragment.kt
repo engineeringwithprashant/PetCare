@@ -90,10 +90,9 @@ class PetsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // The header shared with the dashboard. The badge opens the profile screen, because this
-        // tab — like the dashboard — hides the shared toolbar whose overflow menu held the account
-        // actions. See ui/common/TabHeader.kt and MainActivity.updateChromeFor.
-        binding.header.setUp(title = R.string.nav_pets, onBadgeClick = ::openProfile)
+        // The header shared with the dashboard. The badge opens the notifications screen, as it does
+        // on every screen that draws this header. See ui/common/TabHeader.kt.
+        binding.header.setUp(title = R.string.nav_pets, onBadgeClick = ::openNotifications)
 
         setUpRecyclerView()
         binding.emptyAddPetButton.setOnClickListener { openNewPetForm() }
@@ -157,13 +156,13 @@ class PetsFragment : Fragment() {
     }
 
     /**
-     * Opens the account screen, from the header's pet-count badge.
+     * Opens the notifications screen, from the header's pet-count badge.
      *
-     * By destination id, the same way the dashboard's badge and the toolbar's overflow menu do, so
-     * all three routes to the profile screen arrive identically.
+     * By destination id, the same way every other screen's badge does, so all seven routes to it
+     * arrive identically.
      */
-    private fun openProfile() {
-        findNavController().navigate(R.id.profileFragment)
+    private fun openNotifications() {
+        findNavController().navigate(R.id.notificationsFragment)
     }
 
     /**

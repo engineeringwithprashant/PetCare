@@ -101,7 +101,7 @@ class PetDetailFragment : Fragment() {
         // as soon as the pet loads (see render). The badge opens the profile screen, as it does on
         // the tabs — this screen hides the shared toolbar too, and with it the overflow menu that
         // was the other way there.
-        binding.header.setUp(title = "", onBadgeClick = ::openProfile)
+        binding.header.setUp(title = "", onBadgeClick = ::openNotifications)
 
         setUpRecyclerView()
         setUpClickListeners()
@@ -176,9 +176,9 @@ class PetDetailFragment : Fragment() {
         findNavController().navigate(R.id.action_pet_detail_to_add_routine, arguments)
     }
 
-    /** Opens the account screen from the header's pet-count badge, as every tab's badge does. */
-    private fun openProfile() {
-        findNavController().navigate(R.id.profileFragment)
+    /** Opens the notifications screen from the header's pet-count badge, as every tab's badge does. */
+    private fun openNotifications() {
+        findNavController().navigate(R.id.notificationsFragment)
     }
 
     /**

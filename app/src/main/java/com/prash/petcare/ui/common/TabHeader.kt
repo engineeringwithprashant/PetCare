@@ -32,9 +32,10 @@ import java.text.NumberFormat
  * exists, and is applied by recreating the Activity. See [ThemePreference].
  *
  * @param title The screen's name, e.g. [R.string.nav_pets].
- * @param onBadgeClick What pressing the pet-count badge does — both tabs open the profile screen.
+ * @param onBadgeClick What pressing the pet-count badge does — every screen opens the notifications
+ *   screen. Null on the notifications screen itself, which unhooks the badge: see below.
  */
-fun ViewTabHeaderBinding.setUp(@StringRes title: Int, onBadgeClick: () -> Unit) {
+fun ViewTabHeaderBinding.setUp(@StringRes title: Int, onBadgeClick: (() -> Unit)?) {
     setUp(title = root.context.getString(title), onBadgeClick = onBadgeClick)
 }
 
@@ -46,7 +47,7 @@ fun ViewTabHeaderBinding.setUp(@StringRes title: Int, onBadgeClick: () -> Unit) 
  * The title can be set again later with [showTitle] once the data it depends on has loaded, without
  * re-attaching the listeners.
  */
-fun ViewTabHeaderBinding.setUp(title: CharSequence, onBadgeClick: () -> Unit) {
+fun ViewTabHeaderBinding.setUp(title: CharSequence, onBadgeClick: (() -> Unit)?) {
     val context = root.context
     showTitle(title)
 
@@ -68,7 +69,19 @@ fun ViewTabHeaderBinding.setUp(title: CharSequence, onBadgeClick: () -> Unit) {
     // rebuilt screen calls this function again and draws the new mode.
     themeToggle.setOnClickListener { ThemePreference.toggle(context) }
 
-    petCountBadge.setOnClickListener { onBadgeClick() }
+    // A null action unhooks the badge entirely rather than attaching a listener that does nothing:
+    // the notifications screen is the only caller that passes one, and a badge that opens the screen
+    // already being looked at is a dead end. Clickable and focusable are both cleared, so the badge
+    // also stops taking a ripple and stops being a stop on the keyboard and TalkBack focus order —
+    // the count stays, as a fact rather than a control. The same reasoning hides the "Profile" item
+    // from the overflow menu while the profile screen is open (MainActivity.onPrepareOptionsMenu).
+    if (onBadgeClick != null) {
+        petCountBadge.setOnClickListener { onBadgeClick() }
+    } else {
+        petCountBadge.setOnClickListener(null)
+        petCountBadge.isClickable = false
+        petCountBadge.isFocusable = false
+    }
 }
 
 /** Replaces the header's title — for a screen whose title arrives with its data. */
@@ -83,13 +96,23 @@ fun ViewTabHeaderBinding.showTitle(title: CharSequence) {
  * content description spells out what is being counted — otherwise a screen reader would announce
  * a lone digit.
  *
+ * **Two descriptions, chosen by whether the badge does anything.** A screen reader announces the
+ * description *instead of* the label, so on every screen but one it also has to carry the action
+ * ("2 pets in care. Open notifications."). On the notifications screen the badge was unhooked by
+ * [setUp], and promising an action it no longer has would be worse than saying nothing — so the plain
+ * count is announced there instead. Read from the badge's own clickable state rather than from a
+ * second parameter, so the two can never be set to disagree.
+ *
  * [NumberFormat] rather than `toString()`: `toString()` always produces Western Arabic digits,
  * where a device set to, say, Bengali or Persian expects the number in its own numerals.
  */
 fun ViewTabHeaderBinding.showPetCount(count: Int) {
     petCountBadge.text = NumberFormat.getInstance().format(count)
-    petCountBadge.contentDescription =
-        root.resources.getQuantityString(R.plurals.cd_pets_badge, count, count)
+    petCountBadge.contentDescription = root.resources.getQuantityString(
+        if (petCountBadge.isClickable) R.plurals.cd_pets_badge else R.plurals.cd_pets_badge_plain,
+        count,
+        count
+    )
 }
 
 /**

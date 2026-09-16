@@ -222,12 +222,60 @@
     <!-- ============================== Account screens ============================== -->
 
     <!-- The signed-in account's details, reached from the top app bar's overflow menu. Read-only:
-         it reports who is signed in and how their data is backed up. -->
+         it reports who is signed in and how their data is backed up.
+
+         **It used to be reached from the header's pet-count badge as well, and no longer is** — that
+         badge now opens the notifications screen below. The destination is untouched and the overflow
+         menu still leads here; only the badge was rewired. -->
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.prash.petcare.ui.profile.ProfileFragment"
         android:label="@string/menu_profile"
         tools:layout="@layout/fragment_profile" />
+
+    <!--
+        Everything the app has noticed about the user's pets: care coming up, care that was missed,
+        recent activity, milestones and tips.
+
+        Reached from the pet-count badge in the header the tabs, the pet detail screen and the
+        assistant all share — from seven screens, by destination id, with no arguments. Like the
+        assistant it is not a tab and has no bottom-bar item of its own, so NavigationUI leaves
+        whichever tab the user came from highlighted while it is open: opening and closing it cannot
+        move them between tabs.
+
+        It draws the shared header rather than the app bar, like the tabs, the pet detail screen and
+        the assistant — see MainActivity.updateChromeFor.
+
+        Nothing here is stored. Every alert is derived from tasks, routines, expenses and pet records
+        on the fly — see ui/notifications/NotificationsViewModel.kt — which is why this destination
+        takes no arguments at all: there is no alert id to pass, because there are no alert rows.
+    -->
+    <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="com.prash.petcare.ui.notifications.NotificationsFragment"
+        android:label="@string/nav_notifications"
+        tools:layout="@layout/fragment_notifications">
+
+        <!-- Tapping an alert about the animal itself — a milestone, recent activity, a tip — opens
+             that pet's detail screen. -->
+        <action
+            android:id="@+id/action_notifications_to_pet_detail"
+            app:destination="@id/petDetailFragment" />
+
+        <!-- Tapping an alert about care — a reminder or a missed task — opens the Tasks tab.
+
+             No petId is passed, so the checklist arrives at its default of -1 and shows the pet chips,
+             exactly as it does from the bottom bar; NavigationUI highlights the Tasks tab because the
+             destination ids match. See the note at the top of this file on that screen's two jobs. -->
+        <action
+            android:id="@+id/action_notifications_to_checklist"
+            app:destination="@id/checklistFragment" />
+
+        <!-- The header's AI pill, which this screen shows as the dashboard does. -->
+        <action
+            android:id="@+id/action_notifications_to_assistant"
+            app:destination="@id/assistantFragment" />
+    </fragment>
 
     <!-- ========================== Detail and form screens ==========================
          Everything below is pushed *on top of* a tab rather than being one, so each shows a back

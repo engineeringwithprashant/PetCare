@@ -5,6 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.prash.petcare.data.assistant.AssistantRepository
 import com.prash.petcare.data.assistant.OpenAiAssistantRepository
 import com.prash.petcare.data.remote.assistant.OpenAiApi
+import com.prash.petcare.data.local.AlertReadStore
 import com.prash.petcare.data.local.PetCareDatabase
 import com.prash.petcare.data.local.WeatherCache
 import com.prash.petcare.data.remote.FirestoreSyncService
@@ -92,6 +93,16 @@ class PetCareApplication : Application() {
     val placeRepository: PlaceRepository by lazy {
         PlaceRepository(database.placeDao(), database.syncDeletionDao())
     }
+
+    /**
+     * Which alerts the user has already read, for the notifications screen.
+     *
+     * Created here for the same reason [weatherRepository] is: it holds its set in a
+     * [kotlinx.coroutines.flow.StateFlow], and a per-ViewModel instance would lose it on rotation and
+     * make already-read alerts turn unread again. See [AlertReadStore] for why read state is kept in
+     * SharedPreferences rather than in the database the alerts are derived from.
+     */
+    val alertReadStore: AlertReadStore by lazy { AlertReadStore(this) }
 
     /**
      * Where the phone is, for capturing a new place's geotag and measuring distances to saved ones.

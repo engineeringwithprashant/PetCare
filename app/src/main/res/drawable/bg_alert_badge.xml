@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The rounded square holding an alert's type code ("VAX", "MISS", "TIP") on the notifications
+    screen.
+
+    The same shape as the Money tab's category badge (bg_expense_badge.xml) and the Places tab's
+    ("Vet", "Grm"), so a small square code means the same kind of thing wherever it appears in the app.
+
+    **No colour is set here.** Unlike those two, this badge is filled per card — the accent for an
+    unread alert, the quiet surface for one already read — so NotificationsAdapter applies a tint over
+    this shape. One drawable with a tint rather than two drawables is what keeps the corner radius
+    defined in a single place.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- White rather than transparent: a tint multiplies against the fill, so a shape with no solid
+         colour would tint to nothing and the badge would vanish. -->
+    <solid android:color="@android:color/white" />
+
+    <corners android:radius="@dimen/alert_badge_corner_radius" />
+
+</shape>

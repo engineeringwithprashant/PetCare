@@ -1693,4 +1693,70 @@
         <item name="iconSize">20dp</item>
     </style>
 
+    <!-- ============================== Notifications ==============================
+         The screen the header's pet-count badge opens.
+
+         It borrows rather than invents: the headline is the dashboard's display face, the group
+         headings are the app's shared section label, and an alert card is the Money tab's expense
+         card — square code badge, bold title, muted meta line — with one addition of its own, the
+         unread treatment.
+
+         **The unread treatment, and why it needs no new colours.** An unread card is filled with
+         ?attr/colorPrimaryContainer and its badge with the accent itself. That role already exists for
+         exactly this purpose: "related to the accent without shouting", a pale wash of the brand
+         yellow in light mode and a deep olive in dark (see colors.xml). So the pale yellow card in the
+         design is the app's existing palette used as intended, and it follows the theme for free —
+         where a fixed cream value would have glared on the near-black page in dark mode. -->
+
+    <!-- "3 new alerts": the screen's subject, in the display face and drawn slightly tight, as large
+         bold type is normally set. -->
+    <style name="PetCare.Notifications.Headline" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textSize">@dimen/notifications_headline_text_size</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:textStyle">bold</item>
+        <!-- -0.9px at 26px. -->
+        <item name="android:letterSpacing">-0.035</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- "MARK READ": the Tasks tab's small outlined pill, unchanged. It sits beside a headline as a
+         secondary action there too, which is the same part it plays here. -->
+    <style name="PetCare.Notifications.MarkReadButton" parent="PetCare.SmallPillButton" />
+
+    <!--
+        The square type code on an alert card: "VAX", "MISS", "TIP".
+
+        The Money tab's badge with one difference: no colours. Those are set per card by
+        NotificationsAdapter — the accent for unread, the quiet surface for read — because they depend
+        on state this layout cannot know. Hidden from TalkBack, since the card's own description names
+        the alert's kind in full.
+    -->
+    <style name="PetCare.Notifications.Badge" parent="">
+        <item name="android:layout_width">@dimen/alert_badge_size</item>
+        <item name="android:layout_height">@dimen/alert_badge_size</item>
+        <item name="android:background">@drawable/bg_alert_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- An alert's sentence. The Money tab's list title, but allowed to wrap to a second line: an
+         expense's title is a noun the user typed and fits, whereas this is a whole sentence built from
+         a pet's name and a task's, and truncating it would cut off the very thing being reported. -->
+    <style name="PetCare.Notifications.Title" parent="PetCare.ListTitle">
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="lineHeight">21sp</item>
+    </style>
+
+    <!-- "Care reminder · 2h ago": the meta line shared with the Places and Money tabs. -->
+    <style name="PetCare.Notifications.Meta" parent="PetCare.Places.Meta" />
+
 </resources>

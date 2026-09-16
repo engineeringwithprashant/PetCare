@@ -110,10 +110,9 @@ class PlacesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // The badge opens the profile screen, as on the other tabs: this one hides the shared
-        // toolbar whose overflow menu held the account actions.
+        // The badge opens the notifications screen, as on every other screen that draws this header.
         binding.header.setUp(title = R.string.nav_places) {
-            findNavController().navigate(R.id.profileFragment)
+            findNavController().navigate(R.id.notificationsFragment)
         }
 
         binding.placesRecyclerView.apply {

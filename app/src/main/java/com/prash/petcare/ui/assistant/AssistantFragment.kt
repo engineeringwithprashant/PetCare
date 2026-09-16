@@ -76,7 +76,7 @@ class AssistantFragment : Fragment() {
         // The shared header, as on every redesigned screen. The AI pill is deliberately *not* shown
         // here: it is the control that opens this screen, and a button that reopens the screen it is
         // already on reads as broken.
-        binding.header.setUp(title = R.string.nav_assistant, onBadgeClick = ::openProfile)
+        binding.header.setUp(title = R.string.nav_assistant, onBadgeClick = ::openNotifications)
 
         setUpList()
         setUpInput()
@@ -278,9 +278,9 @@ class AssistantFragment : Fragment() {
         binding.sendButton.isEnabled = hasQuestion && !isReplying
     }
 
-    /** Opens the account screen, from the pet-count badge — as the tabs' headers do. */
-    private fun openProfile() {
-        findNavController().navigate(R.id.profileFragment)
+    /** Opens the notifications screen, from the pet-count badge — as the tabs' headers do. */
+    private fun openNotifications() {
+        findNavController().navigate(R.id.notificationsFragment)
     }
 
     override fun onDestroyView() {

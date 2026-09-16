@@ -19,8 +19,14 @@
     MaterialToolbar in activity_main.xml, and MainActivity hides that toolbar on these two. Two of
     the controls here depend on state a shared toolbar cannot reach: the toggle reflects the current
     display mode, and the badge counts the user's pets. The trade is that the account actions in the
-    toolbar's overflow menu are not on screen — so the badge doubles as the way into the profile
-    screen, which carries its own sign-out button.
+    toolbar's overflow menu are not on screen; the profile screen they lead to is still reached from
+    that menu wherever the toolbar is shown.
+
+    **The badge opens the notifications screen.** It counts pets and carries the red dot for care
+    that needs attention, so pressing it to see what needs attention is the reading it already
+    invites. It is the only route to that screen, which is why every screen drawing this header
+    attaches it — and why the notifications screen itself passes no action, leaving the count as a
+    fact rather than a control (see TabHeader.kt).
 
     The behaviour (title, toggle state, badge count, taps) is attached by TabHeader.kt, so the two
     fragments share the Kotlin as well as the XML.
@@ -163,12 +169,12 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_sm">
 
-        <!-- How many pets are in care, and the way in to the account screen.
+        <!-- How many pets are in care, and the way in to the notifications screen.
 
-             It carries two jobs because these screens hide the shared toolbar and with it the overflow
-             menu — see the note at the top of this file. A count is a natural thing to press to see
-             more of what it counts, so the double duty is not the stretch it might look. The count is
-             a number, so Bricolage Grotesque. -->
+             It carries two jobs because these screens hide the shared toolbar and with it any other
+             way in — see the note at the top of this file. A count with a dot on its corner is a
+             natural thing to press to find out what the dot is about, so the double duty is not the
+             stretch it might look. The count is a number, so Bricolage Grotesque. -->
         <TextView
             android:id="@+id/petCountBadge"
             android:layout_width="@dimen/header_badge_size"

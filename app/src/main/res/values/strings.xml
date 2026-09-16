@@ -823,9 +823,19 @@
     <string name="cd_switch_to_dark_theme">Switch to dark theme</string>
     <string name="cd_switch_to_light_theme">Switch to light theme</string>
     <!-- The circular count badge, which opens the account screen. %1$d is the number of pets. -->
+    <!-- The badge counts pets but opens the notifications screen, so its description has to say both:
+         a screen reader announces the description *instead of* the label, so a user who heard only
+         the count would have no idea what pressing it does. -->
     <plurals name="cd_pets_badge">
-        <item quantity="one">%1$d pet in care. Open your account.</item>
-        <item quantity="other">%1$d pets in care. Open your account.</item>
+        <item quantity="one">%1$d pet in care. Open notifications.</item>
+        <item quantity="other">%1$d pets in care. Open notifications.</item>
+    </plurals>
+    <!-- The same badge on the notifications screen itself, where it has been unhooked because it
+         would only reopen the screen already being looked at. It reports the count and promises
+         nothing — see ui/common/TabHeader.kt. -->
+    <plurals name="cd_pets_badge_plain">
+        <item quantity="one">%1$d pet in care</item>
+        <item quantity="other">%1$d pets in care</item>
     </plurals>
     <!-- Added to the pet badge's description when the red dot is showing, so TalkBack users hear what
          the dot means. %1$d is how many of today's tasks are past their time. -->
@@ -1181,5 +1191,121 @@
     <string name="assistant_error_rate_limited">Too many requests just now, or the account is out of credit. Wait a moment and try again.</string>
     <string name="assistant_error_bad_response">I got a reply I could not read. Try asking again.</string>
     <string name="assistant_error_unknown">Something went wrong getting that answer. Try asking again.</string>
+
+    <!-- ============================ Notifications ============================
+         The screen the header's pet-count badge opens: everything the app has noticed, newest first.
+
+         **Every sentence here is a template filled from the user's own records**, because every alert
+         is derived rather than stored — see ui/notifications/NotificationsViewModel.kt. Nothing on
+         this screen is generic copy shown to everybody; a tip about weight only appears for a pet
+         whose weight is genuinely blank. -->
+    <string name="nav_notifications">Notifications</string>
+
+    <!-- The headline: "3 new alerts". Counts the unread ones only, which is what makes it a thing to
+         act on rather than a total that never changes. -->
+    <plurals name="notifications_new_alerts">
+        <item quantity="one">%1$d new alert</item>
+        <item quantity="other">%1$d new alerts</item>
+    </plurals>
+    <!-- The headline once everything has been read. Wording it as a state rather than "0 new alerts"
+         means the screen reads as finished instead of broken. -->
+    <string name="notifications_all_caught_up">You\'re all caught up</string>
+
+    <!-- The outlined pill beside the headline. -->
+    <string name="notifications_mark_read">Mark read</string>
+    <string name="cd_mark_all_read">Mark every alert as read</string>
+
+    <!-- The two group headings. Upper-cased by the style, so they are written normally here — a
+         translator should never have to type capitals a layout could apply. -->
+    <string name="notifications_section_today">Today</string>
+    <string name="notifications_section_earlier">Earlier</string>
+
+    <!-- The short code on an alert's square badge. Abbreviations rather than words because the badge
+         is a fixed square with room for about four characters; the full name is always in the line
+         underneath, so nothing depends on decoding them. Care reminders take two: the badge says
+         which *kind* of appointment it is, which is the difference between a jab and a check-up. -->
+    <string name="alert_badge_medication">VAX</string>
+    <string name="alert_badge_vet">VET</string>
+    <string name="alert_badge_missed">MISS</string>
+    <string name="alert_badge_activity">NEW</string>
+    <string name="alert_badge_milestone">MILE</string>
+    <string name="alert_badge_tip">TIP</string>
+
+    <!-- The kind of alert, in the muted line under its title. -->
+    <string name="alert_type_care_reminder">Care reminder</string>
+    <string name="alert_type_missed_task">Missed task</string>
+    <string name="alert_type_activity">Activity</string>
+    <string name="alert_type_milestone">Milestone</string>
+    <string name="alert_type_tip">Tip</string>
+
+    <!-- That line in full: "Care reminder · 2h ago". -->
+    <string name="alert_meta_format">%1$s · %2$s</string>
+
+    <!-- ===== Alert titles =====
+         Each is one sentence built from real values. -->
+
+    <!-- "Ddjw's rabies booster is due tomorrow". %1$s is the pet, %2$s the task as the user wrote it,
+         and %3$s one of the three due phrases below. -->
+    <string name="alert_title_care_reminder">%1$s\'s %2$s is due %3$s</string>
+    <string name="alert_due_today">today</string>
+    <string name="alert_due_tomorrow">tomorrow</string>
+    <!-- Anything further out is named by date: "is due on 22 Sep". -->
+    <string name="alert_due_on">on %1$s</string>
+
+    <!--
+        "Morning meds went unchecked".
+
+        **Worded to dodge number agreement, deliberately.** The task's title is whatever the user
+        typed, and it may be singular ("Evening walk") or plural ("Morning meds"). A template cannot
+        inflect the verb to match, so "%1$s was not checked off" would read as "Morning meds was not
+        checked off" for half of all tasks. "Went unchecked" is correct for either.
+    -->
+    <string name="alert_title_missed_task">%1$s went unchecked</string>
+
+    <!-- "2 expenses added for Ddjw". The plural form is chosen by the count; %2$s is the pet.
+
+         It names no person, and that is not an omission: the app stores no record of who added
+         anything — see AlertContent.Activity. -->
+    <plurals name="alert_title_activity">
+        <item quantity="one">%1$d expense added for %2$s</item>
+        <item quantity="other">%1$d expenses added for %2$s</item>
+    </plurals>
+
+    <!-- "Krishala turns 1 month old this week". %1$s is the pet and %2$s the age phrase below. -->
+    <string name="alert_title_milestone">%1$s turns %2$s old this week</string>
+    <plurals name="alert_milestone_months">
+        <item quantity="one">%1$d month</item>
+        <item quantity="other">%1$d months</item>
+    </plurals>
+    <plurals name="alert_milestone_years">
+        <item quantity="one">%1$d year</item>
+        <item quantity="other">%1$d years</item>
+    </plurals>
+
+    <!-- ===== Tips =====
+         One per gap the screen can actually find in the data. Each says what filling the gap buys
+         rather than instructing the user to fill it, which is the difference between a tip and a
+         nag. The first needs no pet name; the rest read better with one. -->
+    <string name="alert_tip_no_weight">Weight logging keeps growth charts accurate</string>
+    <string name="alert_tip_no_date_of_birth">Add %1$s\'s birthday to track age and milestones</string>
+    <string name="alert_tip_no_routine">A care routine fills %1$s\'s checklist automatically</string>
+    <string name="alert_tip_no_photo">Add a photo so %1$s stands out on every card</string>
+
+    <!-- ===== How long ago =====
+         Today's alerts are aged relatively, which is how a notification is read while it is still
+         current; anything older is given its date instead, because "51h ago" is arithmetic the user
+         should not have to do. -->
+    <string name="alert_age_just_now">Just now</string>
+    <string name="alert_age_minutes">%1$dm ago</string>
+    <string name="alert_age_hours">%1$dh ago</string>
+
+    <!-- The red dot. It is a shape with no text, so its meaning is added to the card's own
+         description instead — see NotificationsAdapter. -->
+    <string name="cd_alert_unread">Unread</string>
+
+    <!-- The empty state. Friendly rather than apologetic: an empty notifications screen is good news,
+         and saying so is more use than "No items". -->
+    <string name="notifications_empty_title">Nothing needs you</string>
+    <string name="notifications_empty_message">Reminders, missed care and milestones for your pets will show up here.</string>
 
 </resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The small red dot in the top corner of an unread alert card.
+
+    The header badge's dot (bg_unread_dot.xml) in the same red, but without its ring. That ring exists
+    because the header's dot overlaps the pet-count badge and the two outlines would otherwise blur
+    together at that size; this one sits in clear space inside a card, so a ring would only draw a
+    pale halo around it.
+
+    The red is a fixed value rather than a theme role, like the header's: "something needs you" is the
+    same red on the cream page and the near-black one, and it is never a background for text.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <solid android:color="@color/header_unread_dot" />
+
+</shape>

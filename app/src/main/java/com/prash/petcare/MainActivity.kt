@@ -178,9 +178,11 @@ class MainActivity : AppCompatActivity() {
      * one pet from its detail page, the same screens hide that header and rely on this toolbar instead,
      * for their title and back arrow — see [restoreUpArrowForPetScopedScreen].
      *
-     * Nothing is lost with it: the account actions in the overflow menu are also reachable from the
-     * header's count badge, which opens the profile screen, and that screen carries its own sign
-     * out button. See [com.prash.petcare.ui.common.setUp].
+     * **The account actions are the one cost of hiding the bar.** The header's count badge used to
+     * double as the way into the profile screen for exactly that reason; it now opens the
+     * notifications screen instead, which is what a count with a red dot on it reads as. The profile
+     * screen is unchanged and still reached from this toolbar's overflow menu on every screen that
+     * shows the toolbar. See [com.prash.petcare.ui.common.setUp].
      */
     private fun updateChromeFor(destinationId: Int, arguments: Bundle?) {
         val isAuthScreen =
@@ -199,6 +201,9 @@ class MainActivity : AppCompatActivity() {
             // The assistant is not a tab, but it draws the same header — its own title, the theme
             // toggle and the pet badge — so the shared bar above it would show the name twice.
             destinationId == R.id.assistantFragment ||
+            // The notifications screen, for the same reason, and reached the same way: from the
+            // header's pet-count badge rather than from the bottom bar.
+            destinationId == R.id.notificationsFragment ||
             isTasksTab ||
             isMoneyTab
 

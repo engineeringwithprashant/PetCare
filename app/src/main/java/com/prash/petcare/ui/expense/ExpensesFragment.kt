@@ -103,10 +103,10 @@ class ExpensesFragment : Fragment() {
         binding.petChipScroll.isVisible = isTab
 
         if (isTab) {
-            // The badge opens the profile screen, as on the other tabs, since this one hides the
-            // shared toolbar whose overflow menu held the account actions.
+            // The badge opens the notifications screen, as on every other screen that draws this
+            // header.
             binding.header.setUp(title = R.string.expenses_header_title) {
-                findNavController().navigate(R.id.profileFragment)
+                findNavController().navigate(R.id.notificationsFragment)
             }
         }
     }

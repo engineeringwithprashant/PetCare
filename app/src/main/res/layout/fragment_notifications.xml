@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The notifications screen: everything the app has noticed about the user's pets, newest first.
+
+    Top to bottom:
+      - **The header** (monogram, "Notifications", theme toggle, AI pill, pet count), shared with the
+        tabs and the pet detail screen as res/layout/view_tab_header.xml.
+      - **The headline row** — "3 new alerts" with an outlined "MARK READ" pill on the right.
+      - **The list**, grouped under "TODAY" and "EARLIER" headings, one card per alert.
+      - **The empty state**, sharing the list's space and shown when there is nothing to report.
+
+    **Why this screen is not a tab.** It is reached from the header's pet-count badge, like the
+    assistant is reached from its AI pill — a thing you go and look at, not a section of the app you
+    live in. Because no bottom-navigation item shares its id, NavigationUI leaves whichever tab the
+    user came from highlighted while it is open, which is the right reading: they have stepped
+    sideways out of that tab, not into a sixth one. MainActivity hides the shared app bar here, since
+    this screen draws the header itself — see MainActivity.updateChromeFor.
+
+    **Why the headline row does not scroll with the list.** The Pets tab puts its headline *inside* the
+    list so it scrolls away, and that is right there: it is a caption over the cards. This row is a
+    summary *and a control* — the count is what the button acts on — and a button that scrolls out of
+    reach halfway down a list is a button the user has to hunt for. Keeping it fixed also keeps the
+    adapter to two row types.
+
+    A vertical LinearLayout: three things stacked, the middle one taking whatever is left
+    (height 0 + weight 1). Nothing is positioned relative to anything but its neighbour, which is what
+    a LinearLayout says in one attribute and a ConstraintLayout would need a chain to express. No
+    CoordinatorLayout, because unlike the Money tab there is no floating action button here and
+    nothing that has to dodge one.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ui.notifications.NotificationsFragment">
+
+    <!-- The shared header, as a nested binding (`binding.header`) — see the note at the top of
+         view_tab_header.xml on why one file draws this row for every screen that has it. -->
+    <include
+        android:id="@+id/header"
+        layout="@layout/view_tab_header" />
+
+    <!--
+        The headline and the "MARK READ" pill.
+
+        A horizontal row where the headline takes the leftover width (width 0 + weight 1), so the
+        button stays pinned to the end however long the headline turns out to be — "You're all caught
+        up" is considerably longer than "3 new alerts", and at a large font scale it wraps to two lines
+        rather than shunting the button off the screen.
+
+        baseline alignment is switched off: with it on, a LinearLayout lines the button's text up with
+        the headline's baseline, which at these very different type sizes pushes the button down the
+        row. Centring both vertically is what the design shows.
+    -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/screen_padding"
+        android:paddingTop="@dimen/spacing_sm"
+        android:paddingEnd="@dimen/screen_padding"
+        android:paddingBottom="@dimen/spacing_sm">
+
+        <!-- "3 new alerts". Worded by the fragment, since the sentence depends on a count and on
+             plural rules that need string resources. accessibilityHeading marks it as the screen's
+             heading below the header's own title. -->
+        <TextView
+            android:id="@+id/alertsHeadlineText"
+            style="@style/PetCare.Notifications.Headline"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:accessibilityHeading="true"
+            tools:targetApi="p"
+            tools:text="3 new alerts" />
+
+        <!-- Marks every alert on screen read. Hidden when nothing is unread — see
+             NotificationsFragment.render for why it is hidden rather than disabled. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/markReadButton"
+            style="@style/PetCare.Notifications.MarkReadButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:contentDescription="@string/cd_mark_all_read"
+            android:text="@string/notifications_mark_read" />
+
+    </LinearLayout>
+
+    <!-- The list and the empty state share this slot; the fragment shows exactly one. A FrameLayout
+         because the two simply sit on top of each other in the same space. -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- clipToPadding="false" with bottom padding lets the last card scroll clear of the bottom
+             navigation bar while still being drawn as it passes through the padding, rather than
+             being cut off at its edge. The bar reserves its own space in activity_main.xml, so only
+             a comfortable margin is needed here and not the bar's whole height. -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/alertsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/screen_padding"
+            android:paddingEnd="@dimen/screen_padding"
+            android:paddingBottom="@dimen/list_padding_bottom"
+            tools:listitem="@layout/item_alert" />
+
+        <!-- Nothing to report: a bell with a tick, a heading and a sentence saying what would appear
+             here. Friendly rather than apologetic — an empty notifications screen is good news. -->
+        <LinearLayout
+            android:id="@+id/emptyAlertsContainer"
+            style="@style/PetCare.EmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                style="@style/PetCare.EmptyStateIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_empty_notifications" />
+
+            <TextView
+                style="@style/PetCare.EmptyStateTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/notifications_empty_title" />
+
+            <TextView
+                style="@style/PetCare.EmptyStateMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/notifications_empty_message" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

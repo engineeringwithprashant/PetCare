@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One alert card on the notifications screen: a square type code ("VAX"), the alert's sentence in
+    bold over "Care reminder · 2h ago", and a red dot in the corner while it is unread.
+
+    A clickable MaterialCardView, so the whole card is one touch target with a ripple that follows its
+    rounded corners. Tapping marks the alert read and opens what it is about — the pet's detail screen
+    or the Tasks tab, depending on the alert (see NotificationsFragment).
+
+    **Two children stacked, not one.** A MaterialCardView *is* a FrameLayout, so the row of content
+    and the unread dot are laid on top of each other as siblings, the dot pinned to the top-right
+    corner with layout_gravity. That is the one arrangement a FrameLayout expresses in a single
+    attribute; making the dot a third child of the row below would tie its position to the text's
+    height, and it would drift down the card whenever a title wrapped to two lines.
+
+    **Colours are set per card, not here.** The card's fill and the badge's fill and text all depend on
+    whether the alert has been read, which this layout cannot know — NotificationsAdapter applies them.
+    What is fixed here is everything that does not vary, so a rebind only touches the few things that
+    do.
+
+    Inside the row, a horizontal LinearLayout with the text column taking the leftover width (width 0
+    plus weight 1), so a long sentence wraps within the column instead of pushing the badge off the
+    card. The same shape as the Money tab's expense card, deliberately: a badge, a title and a meta
+    line is the same kind of row, and it should read as one.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/alertCard"
+    style="@style/PetCare.Card.Clickable"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/alert_card_spacing"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge"
+    tools:cardBackgroundColor="?attr/colorPrimaryContainer">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/card_padding">
+
+        <!-- "VAX", "MISS", "MILE". Its fill and text colour are set by the adapter: the accent while
+             unread, the quiet surface once read. -->
+        <TextView
+            android:id="@+id/alertBadgeText"
+            style="@style/PetCare.Notifications.Badge"
+            tools:backgroundTint="@color/accent_yellow"
+            tools:text="VAX" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- The alert itself, wrapping to a second line when it needs one. -->
+            <TextView
+                android:id="@+id/alertTitleText"
+                style="@style/PetCare.Notifications.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Ddjw's rabies booster is due tomorrow" />
+
+            <!-- What kind of alert it is, and how old. -->
+            <TextView
+                android:id="@+id/alertMetaText"
+                style="@style/PetCare.Notifications.Meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                tools:text="Care reminder · 2h ago" />
+
+        </LinearLayout>
+
+        <!-- Reserves the dot's width at the end of the row so a long unwrapped word can never run
+             underneath it. It is not the dot itself: the dot is stacked over the card below, because
+             it belongs to the card's corner rather than to this row's vertical centre. -->
+        <Space
+            android:layout_width="@dimen/spacing_sm"
+            android:layout_height="1dp" />
+
+    </LinearLayout>
+
+    <!-- The unread mark. Hidden on a read card, and gone rather than invisible so it reserves nothing
+         when it is not there. Purely visual — its meaning is added to the card's own description
+         instead, so TalkBack does not stop on an unlabelled shape. -->
+    <View
+        android:id="@+id/alertUnreadDot"
+        android:layout_width="@dimen/alert_dot_size"
+        android:layout_height="@dimen/alert_dot_size"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="@dimen/card_padding"
+        android:layout_marginEnd="@dimen/card_padding"
+        android:background="@drawable/bg_alert_dot"
+        android:importantForAccessibility="no"
+        tools:visibility="visible" />
+
+</com.google.android.material.card.MaterialCardView>
