@@ -194,6 +194,9 @@ class MainActivity : AppCompatActivity() {
             destinationId == R.id.petsFragment ||
             destinationId == R.id.petDetailFragment ||
             destinationId == R.id.placesFragment ||
+            // The assistant is not a tab, but it draws the same header — its own title, the theme
+            // toggle and the pet badge — so the shared bar above it would show the name twice.
+            destinationId == R.id.assistantFragment ||
             isTasksTab ||
             isMoneyTab
 

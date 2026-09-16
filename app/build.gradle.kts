@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     // KSP runs Room's annotation processor, which generates the DAO and database
@@ -9,6 +11,27 @@ plugins {
     // Firebase call would fail with "Default FirebaseApp is not initialized".
     alias(libs.plugins.google.services)
 }
+
+/**
+ * The OpenAI key the assistant screen authenticates with, read from `local.properties`.
+ *
+ * **Why local.properties and not a constant in source.** That file is listed in .gitignore — it is
+ * where the Android SDK path already lives, so it is per-developer and never committed. A key typed
+ * into a Kotlin file would be in the repository's history the moment it was pushed, and removing it
+ * later would not remove it from history.
+ *
+ * Returns an empty string when the key is absent, rather than failing the build: the app must still
+ * compile and run for anyone who clones it without a key, and the assistant screen says plainly that
+ * the key is missing instead of breaking — see OpenAiAssistantRepository.
+ *
+ * Note what this does and does not protect. It keeps the key out of version control; it does **not**
+ * keep it out of the installed APK, where a determined user can still extract it. For an app that
+ * shipped to real users the call would belong behind a server that holds the key instead.
+ */
+val openAiApiKey: String = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}.getProperty("OPENAI_API_KEY", "")
 
 android {
     namespace = "com.prash.petcare"
@@ -24,6 +47,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Surfaces the key to Kotlin as BuildConfig.OPENAI_API_KEY. The value is quoted here because
+        // buildConfigField writes its third argument into generated Java verbatim — an unquoted
+        // string would be emitted as an identifier and fail to compile.
+        buildConfigField("String", "OPENAI_API_KEY", "\"$openAiApiKey\"")
     }
 
     buildTypes {
@@ -39,6 +67,11 @@ android {
         // ActivityMainBinding). This is the project's only sanctioned way to reach views:
         // findViewById returns a loosely typed View and cannot catch a wrong id at compile time.
         viewBinding = true
+
+        // Generates the BuildConfig class the OPENAI_API_KEY field above is written into. Off by
+        // default from AGP 8, so declaring a buildConfigField without this silently generates
+        // nothing and the Kotlin reference fails to resolve.
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

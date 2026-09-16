@@ -207,7 +207,7 @@ class HomeFragment : Fragment() {
 
         // The shared header: title, theme toggle and badge, plus this tab's AI pill. See TabHeader.kt.
         binding.header.setUp(title = R.string.nav_home, onBadgeClick = ::openProfile)
-        binding.header.showAssistantPill(::showAssistantComingSoon)
+        binding.header.showAssistantPill(::openAssistant)
 
         streakCells = listOf(
             binding.streakDay0, binding.streakDay1, binding.streakDay2, binding.streakDay3,
@@ -273,7 +273,7 @@ class HomeFragment : Fragment() {
         binding.actionAddTask.setOnClickListener { openTab(R.id.checklistFragment) }
         binding.actionLogExpense.setOnClickListener { openTab(R.id.expensesFragment) }
 
-        binding.askAssistantButton.setOnClickListener { showAssistantComingSoon() }
+        binding.askAssistantButton.setOnClickListener { openAssistant() }
     }
 
     /**
@@ -886,11 +886,18 @@ class HomeFragment : Fragment() {
     }
 
     /**
-     * What the AI pill and "Ask the assistant" do for now. The app has no assistant screen yet, and a
-     * button that silently did nothing would read as broken, so it says so.
+     * Opens the assistant, from the header's AI pill and from the "Ask the assistant" button.
+     *
+     * Both controls lead to the same place, which is why they share one method: the pill is the
+     * shortcut for someone who already knows what it is, and the button is the invitation for
+     * someone who does not.
+     *
+     * A normal forward navigation with an action, unlike the tab switches in [openTab]: the
+     * assistant is somewhere the user has gone *from* the dashboard, so the back stack should grow
+     * and the system back button should return here.
      */
-    private fun showAssistantComingSoon() {
-        Snackbar.make(binding.root, R.string.home_assistant_coming_soon, Snackbar.LENGTH_SHORT).show()
+    private fun openAssistant() {
+        findNavController().navigate(R.id.action_home_to_assistant)
     }
 
     /**

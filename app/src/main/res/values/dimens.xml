@@ -502,4 +502,19 @@
     <!-- The three quick-action cards: a "+" circle over a label, left-aligned. -->
     <dimen name="home_quick_action_height">92dp</dimen>
 
+    <!-- ============================== Assistant ==============================
+         The chat screen opened from the dashboard. -->
+    <!-- How wide a message bubble may grow. Capped well short of the full width so a bubble always
+         reads as something someone said rather than as a panel, and so the side a message sits on
+         stays visible at a glance — which is half of how the two speakers are told apart. -->
+    <dimen name="assistant_bubble_max_width">280dp</dimen>
+    <dimen name="assistant_bubble_padding">14dp</dimen>
+    <dimen name="assistant_bubble_corner_radius">20dp</dimen>
+    <!-- The round send button. 48dp is the smallest comfortable touch target, and the button is
+         square so its fully-rounded corner makes it a circle. -->
+    <dimen name="assistant_send_button_size">48dp</dimen>
+    <!-- The loading bar standing in for a reply: about the width of a short sentence, so the bubble
+         it sits in is the size the answer will roughly be. -->
+    <dimen name="assistant_thinking_width">72dp</dimen>
+
 </resources>

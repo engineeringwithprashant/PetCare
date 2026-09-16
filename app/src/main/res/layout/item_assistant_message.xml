@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One message from the assistant: a light card against the cream page, aligned left.
+
+    **Why the root is a FrameLayout with a card inside**, rather than the card being the root. A
+    message bubble must not stretch to the full width of the list — a three-word answer in a card as
+    wide as the screen reads as a panel, not as something someone said. The frame fills the row and
+    the card inside takes wrap_content with a maximum width, which is what gives the bubble its shape
+    and what lets the user's messages sit on the opposite side using the same structure.
+
+    Its mirror image is item_assistant_user_message.xml; the two are kept as separate files rather
+    than one with a swapped gravity because their colours and corner shapes differ as well as their
+    side, and a single layout reconfigured in code would hide that from anyone reading the XML.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:maxWidth="@dimen/assistant_bubble_max_width"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardElevation="0dp"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.AssistantBubble"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="1dp">
+
+        <TextView
+            android:id="@+id/messageText"
+            style="@style/PetCare.Assistant.MessageText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/assistant_bubble_padding"
+            tools:text="Hi Prashant. I can see your pet profiles, today's checklist and this month's spend. What do you want to check?" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

@@ -111,7 +111,28 @@
         <action
             android:id="@+id/action_home_to_routine_detail"
             app:destination="@id/routineDetailFragment" />
+
+        <!-- The "Ask the assistant" button and the header's AI pill both open the assistant. -->
+        <action
+            android:id="@+id/action_home_to_assistant"
+            app:destination="@id/assistantFragment" />
     </fragment>
+
+    <!--
+        The assistant. Reached from the dashboard rather than from the bottom bar, so it has no tab
+        of its own — which is deliberate: it is a thing you go and ask, not a section of the app you
+        live in. Because no bottom-navigation item shares its id, NavigationUI leaves whichever tab
+        was selected (Home) highlighted while it is open, which is the right reading: the user has
+        stepped sideways out of Home, not into a sixth tab.
+
+        It draws the shared header rather than the app bar, like the tabs and the pet detail screen —
+        see MainActivity.updateChromeFor.
+    -->
+    <fragment
+        android:id="@+id/assistantFragment"
+        android:name="com.prash.petcare.ui.assistant.AssistantFragment"
+        android:label="@string/nav_assistant"
+        tools:layout="@layout/fragment_assistant" />
 
     <!-- Tab 2. Every pet the user has, and the way in to adding another. -->
     <fragment

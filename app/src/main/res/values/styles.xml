@@ -1601,4 +1601,96 @@
         <item name="android:importantForAccessibility">no</item>
     </style>
 
+    <!-- ============================== Assistant ==============================
+         The chat screen opened from the dashboard's AI pill and its "Ask the assistant" button. -->
+
+    <!-- A message bubble's corner. Rounder than a card, closer to a pill, which is what makes a
+         short message read as speech rather than as a tile. -->
+    <style name="ShapeAppearance.PetCare.AssistantBubble" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/assistant_bubble_corner_radius</item>
+    </style>
+
+    <!-- The text inside a bubble. Body face at its reading weight and a generous line height: this
+         is the one place in the app where several sentences are read in sequence. The colour is set
+         here for the assistant's bubble; the user's overrides it, because its ground is the accent. -->
+    <style name="PetCare.Assistant.MessageText" parent="">
+        <item name="android:fontFamily">@font/schibsted_grotesk</item>
+        <item name="fontFamily">@font/schibsted_grotesk</item>
+        <item name="android:textSize">13.5sp</item>
+        <item name="lineHeight">19sp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- A suggested-question chip: outlined rather than filled, so the row reads as an offer the
+         user may ignore rather than as the answer they should pick. Built on the app's existing
+         filter chip so the two rows of pills in the app look like the same component. -->
+    <style name="PetCare.Assistant.SuggestionChip" parent="PetCare.FilterChip">
+        <item name="chipMinHeight">36dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="textStartPadding">@dimen/spacing_md</item>
+        <item name="textEndPadding">@dimen/spacing_md</item>
+        <!-- A suggestion is an action, not a filter: tapping it sends a message and the chip
+             disappears with the rest of the row, so it must never hold a checked state. -->
+        <item name="android:checkable">false</item>
+    </style>
+
+    <!-- The question field: a filled, fully-rounded box with no label above it, because the hint
+         inside is the whole instruction and a floating label would push the row taller for nothing.
+         The stroke is removed on both states so the shape reads as one soft capsule. -->
+    <style name="PetCare.Assistant.InputLayout" parent="Widget.Material3.TextInputLayout.FilledBox">
+        <item name="boxBackgroundColor">?attr/colorSurface</item>
+        <item name="boxCornerRadiusTopStart">@dimen/pill_corner_radius</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/pill_corner_radius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/pill_corner_radius</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/pill_corner_radius</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">0dp</item>
+        <item name="hintEnabled">false</item>
+        <item name="android:textColorHint">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- The round yellow send button. Square with a fully-rounded corner, which is what makes it a
+         circle; the accent is named directly, as the app's other yellow buttons do, so it is the
+         brand yellow in both themes rather than the theme's primary role. -->
+    <style name="PetCare.Assistant.SendButton" parent="Widget.Material3.Button.IconButton.Filled">
+        <!--
+            **Why the arrow needs this much said about it.** A MaterialButton lays its icon out
+            relative to its *text*, and this button has none. With the default `iconGravity` of
+            `start` the icon is simply pinned to the start padding edge — and the Material icon-button
+            style it inherits from carries 12dp of horizontal padding — so a 20dp icon in a 48dp
+            button sat at 12..32dp, two device-pixels left of the button's own centre. That is the
+            off-centre arrow: not the drawable, and not the container's gravity.
+
+            `textStart` is the fix. It switches MaterialButton to the branch that *computes* the
+            icon's position — (button width − text width − paddings − icon width) ÷ 2 — which with no
+            text and the paddings below zeroed comes out at exactly (48 − 20) ÷ 2 = 14dp, putting the
+            icon's centre on the button's. The paddings and insets are then zeroed on both sides so
+            nothing asymmetric can creep back into that calculation, and the minimum width and height
+            are released so the square size set in the layout is what the button actually measures.
+
+            The drawable itself is already centred: its stroke runs symmetrically about x=12 in a
+            24dp viewport, so it needed no correction.
+        -->
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">0dp</item>
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:gravity">center</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="backgroundTint">@color/accent_yellow</item>
+        <item name="iconTint">@color/on_accent_yellow</item>
+        <item name="iconSize">20dp</item>
+    </style>
+
 </resources>

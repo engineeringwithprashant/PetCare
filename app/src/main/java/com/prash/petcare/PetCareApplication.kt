@@ -2,6 +2,9 @@ package com.prash.petcare
 
 import android.app.Application
 import com.google.firebase.firestore.FirebaseFirestore
+import com.prash.petcare.data.assistant.AssistantRepository
+import com.prash.petcare.data.assistant.OpenAiAssistantRepository
+import com.prash.petcare.data.remote.assistant.OpenAiApi
 import com.prash.petcare.data.local.PetCareDatabase
 import com.prash.petcare.data.local.WeatherCache
 import com.prash.petcare.data.remote.FirestoreSyncService
@@ -117,6 +120,26 @@ class PetCareApplication : Application() {
             weatherApi = WeatherApi.create(),
             cache = WeatherCache(this),
             locationRepository = locationRepository
+        )
+    }
+
+    /**
+     * Where the assistant screen's answers come from.
+     *
+     * Declared as the [AssistantRepository] interface rather than the concrete class, which is the
+     * point of the interface: this line is the only place in the app that names an implementation,
+     * so the backend was swapped from an on-device stub to OpenAI without a single screen, ViewModel
+     * or layout changing.
+     *
+     * **The key may be blank, and that is handled rather than prevented.** BuildConfig.OPENAI_API_KEY
+     * is empty for anyone who has cloned the project without adding one to local.properties — see
+     * app/build.gradle.kts — so the app still builds and runs, and the assistant says plainly that
+     * the key is missing instead of failing silently or crashing.
+     */
+    val assistantRepository: AssistantRepository by lazy {
+        OpenAiAssistantRepository(
+            api = OpenAiApi.create(),
+            apiKey = BuildConfig.OPENAI_API_KEY
         )
     }
 

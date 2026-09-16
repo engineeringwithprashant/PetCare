@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Assistant screen, opened from the dashboard's "Ask the assistant" button and its AI pill.
+
+    Top to bottom: the shared tab header, a dark card saying what the assistant is and what it can
+    see, the conversation, a row of suggested questions, and the input row.
+
+    **Why the conversation scrolls but the rest does not.** Only the message list grows without
+    bound; the header card states a fixed fact and the input row must stay reachable with a keyboard
+    open. So the list takes `0dp` height with `layout_weight="1"` — it gets whatever the fixed rows
+    leave — rather than the whole screen being one scroller. That is also what lets the list scroll
+    itself to the newest message without dragging the header off screen.
+
+    **Why this screen carries the shared header rather than the app bar.** Same reason as the tabs:
+    the header's theme toggle and pet-count badge depend on state a toolbar shared by twelve
+    destinations cannot supply. MainActivity hides the app bar here — see updateChromeFor.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ui.assistant.AssistantFragment">
+
+    <!-- The monogram, "Assistant", the theme toggle, the AI pill and the pet badge. -->
+    <include
+        android:id="@+id/header"
+        layout="@layout/view_tab_header" />
+
+    <!-- ========================== What this is ==========================
+         The one dark card on the screen, as on the dashboard, so the statement of what the
+         assistant can see is the first thing the eye lands on. Its colours are fixed values rather
+         than theme roles: white text on a near-black ground in both light and dark mode. -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/home_screen_padding"
+        android:layout_marginEnd="@dimen/home_screen_padding"
+        app:cardBackgroundColor="@color/next_up_card_ground"
+        app:cardElevation="0dp"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.NextUp"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/next_up_card_padding">
+
+            <!-- "CARE ASSISTANT" — the same muted uppercase mark the next-up card uses. -->
+            <TextView
+                style="@style/PetCare.Home.NextUpLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/assistant_header_label" />
+
+            <!-- "Ask about Krishala & Ddjw". The names are built from the database by the fragment,
+                 never hard-coded — an account with one pet, or five, reads correctly. -->
+            <TextView
+                android:id="@+id/assistantTitleText"
+                style="@style/PetCare.Home.NextUpTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                tools:text="Ask about Krishala &amp; Ddjw" />
+
+            <!-- What it reads, who can see it, and what it is not. Body face, muted, up to four
+                 lines — this is the one paragraph on the screen meant to be read as prose. -->
+            <TextView
+                style="@style/PetCare.Home.NextUpMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:maxLines="4"
+                android:text="@string/assistant_header_body" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ========================== The conversation ==========================
+         0dp height with weight 1: it takes everything the fixed rows above and below leave.
+         clipToPadding="false" lets a message scroll through the padding rather than being cut at
+         it, so the newest card clears the input row. -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/messagesRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/home_section_gap"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/home_screen_padding"
+        android:paddingEnd="@dimen/home_screen_padding"
+        android:paddingBottom="@dimen/spacing_sm"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_assistant_message" />
+
+    <!-- ===================== Suggested questions =====================
+         A sideways row of outlined pills, bled to the screen edges like the dashboard's card rows so
+         the last chip is not cropped by the gutter. Hidden by the fragment once the conversation has
+         started — see AssistantUiState.showSuggestions. -->
+    <HorizontalScrollView
+        android:id="@+id/suggestionsScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingStart="@dimen/home_screen_padding"
+        android:paddingEnd="@dimen/home_screen_padding"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/suggestionsGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:chipSpacingHorizontal="@dimen/spacing_sm"
+            app:singleLine="true" />
+
+    </HorizontalScrollView>
+
+    <!-- ============================ The input row ============================
+         A wide rounded field with a round send button beside it. gravity="center_vertical" keeps the
+         button centred against the field however tall the field grows. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/home_screen_padding"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:layout_marginEnd="@dimen/home_screen_padding"
+        android:layout_marginBottom="@dimen/spacing_md"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <!-- The field. 0dp with weight 1 so it takes everything the button leaves, whatever the
+             button's size. Its rounded outline is the shared pill background. -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/questionInputLayout"
+            style="@style/PetCare.Assistant.InputLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/assistant_input_hint">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/questionInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionSend"
+                android:inputType="textCapSentences|textMultiLine"
+                android:maxLines="4"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- The round yellow send button with its upward arrow. A MaterialButton in the app's icon
+             style rather than a FloatingActionButton: it sits inline in a row rather than floating
+             over content, and carries no elevation of its own. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sendButton"
+            style="@style/PetCare.Assistant.SendButton"
+            android:layout_width="@dimen/assistant_send_button_size"
+            android:layout_height="@dimen/assistant_send_button_size"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:contentDescription="@string/cd_assistant_send"
+            app:icon="@drawable/ic_assistant_send" />
+
+    </LinearLayout>
+
+</LinearLayout>

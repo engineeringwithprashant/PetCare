@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One suggested question under the assistant's conversation.
+
+    Inflated per chip by AssistantFragment rather than declared three times in the screen's layout,
+    because the row is built from the account's real data: how many chips there are, and what the
+    per-pet one says, are only known once the database has answered.
+
+    The same outlined pill as the app's filter chips, with checkability removed by its style — a
+    suggestion is an action that sends a message, not a filter that stays on.
+-->
+<com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Assistant.SuggestionChip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:text="What's left today?" />

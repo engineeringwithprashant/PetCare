@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One message from the user: aligned right and visually distinct from the assistant's.
+
+    **How it is distinguished.** Two signals rather than one, because side alone is not enough for
+    someone scanning quickly, and colour alone is not enough for someone who cannot distinguish it:
+    the bubble sits on the opposite edge *and* is filled with the app's accent rather than the
+    surface. Its text colour is the accent's paired ink, so the contrast holds in both themes — see
+    the accent note in colors.xml.
+
+    See item_assistant_message.xml for why the card is wrapped in a frame rather than being the root.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/spacing_xs"
+    android:paddingBottom="@dimen/spacing_xs">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:maxWidth="@dimen/assistant_bubble_max_width"
+        app:cardBackgroundColor="@color/accent_yellow"
+        app:cardElevation="0dp"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.AssistantBubble"
+        app:strokeWidth="0dp">
+
+        <TextView
+            android:id="@+id/messageText"
+            style="@style/PetCare.Assistant.MessageText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/assistant_bubble_padding"
+            android:textColor="@color/on_accent_yellow"
+            tools:text="What's left today?" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>
