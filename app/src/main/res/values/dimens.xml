@@ -133,10 +133,31 @@
          The cards reuse pet_card_corner_radius above, so a pet looks like the same object on both
          tabs. -->
 
-    <!-- The photo panel filling the top of a Pets-tab card. Taller than the dashboard's row photo
-         because here every pet gets the large treatment — the tab *is* the pets — but short enough
-         that the name and stats under it stay on screen with the photo on a small phone. -->
-    <dimen name="pets_card_photo_height">200dp</dimen>
+    <!--
+        The shape every pet photo is stored, framed and drawn in, as a ConstraintLayout dimension
+        ratio.
+
+        **Why one shape for the whole app, in one place.** When a pet's photo is chosen the user
+        frames it themselves (see ui/common/PhotoCropView.kt) and the framed result is what gets
+        saved. That promise — what you framed is what the cards show — only holds while every card
+        draws the same shape the cropper offered. A card with a ratio of its own would have to crop
+        the crop, and the user's choice would be overruled after all. So the Pets card, the
+        dashboard's row card, the detail hero and the cropper all derive their frame from this value
+        and there is no second place to forget.
+
+        4:3 landscape is chosen because it was closest to what the two full-width surfaces already
+        were: the Pets card's photo was 200dp and the detail hero 300dp, both within a few dp of
+        their 4:3 heights, so adopting it cost those screens almost no visible change.
+
+        Kept as a string rather than a dimen because ConstraintLayout's dimensionRatio is a ratio,
+        not a length. It is mirrored by PhotoCropView.PET_PHOTO_ASPECT, which needs it as a number.
+
+        The "H," prefix is part of the value rather than written at each use site, because XML cannot
+        join a literal to a resource reference. It tells ConstraintLayout which side to compute: the
+        **height**, from the width. Every one of these frames is as wide as the space it is given and
+        derives its height from that, so one value serves all three.
+    -->
+    <string name="pet_photo_aspect_ratio" translatable="false">H,4:3</string>
     <!-- Gap between one pet card and the next, and before the add row. A step wider than the app's
          usual card_spacing: these cards carry a shadow and a photograph, and packed at 12dp the
          shadows of neighbouring cards run together. -->
@@ -155,10 +176,6 @@
          care routine cards. Corners reuse pet_card_corner_radius, so this pet's photo card is the same
          object it was on the Pets and Home tabs, only larger. -->
 
-    <!-- The photo card. Taller than any list card because this screen is about one animal and the
-         photo is its subject — but short enough that the action row below still shows on a small
-         phone, which is what tells the user there is more to scroll to. -->
-    <dimen name="pet_detail_hero_height">300dp</dimen>
     <!-- The pet's full name across the scrim: a step up from PetCare.Headline's 24sp, because here it
          is the title of the whole page. In sp so it grows with the user's font size. -->
     <dimen name="pet_detail_name_text_size">28sp</dimen>
@@ -314,12 +331,26 @@
     <dimen name="streak_day_corner_radius">8dp</dimen>
     <dimen name="streak_day_today_stroke">1.5dp</dimen>
 
-    <!-- A pet card in the sideways "Your pets" row: a portrait card, narrow enough that the next pet
-         shows at the edge on any phone, which is what tells the user the row scrolls. -->
-    <dimen name="home_pet_card_width">156dp</dimen>
-    <dimen name="home_pet_card_height">180dp</dimen>
+    <!--
+        A pet card in the sideways "Your pets" row.
+
+        **Why it is landscape now, where it used to be portrait (156×180).** The card shows the
+        photo the user framed, and it can only show it faithfully by drawing the same shape they
+        framed — pet_photo_aspect_ratio, 4:3. A portrait card would have had to trim the sides off
+        their crop, which is the very second-guessing the framing step exists to stop.
+
+        200dp is chosen so the card is no shorter than it was: at 4:3 that gives a 150dp height,
+        against the old 180dp, and the row keeps its proportions. It is still narrow enough that the
+        next pet shows at the screen edge on any phone, which is what tells the user the row scrolls.
+
+        Only the width is declared. The height follows from the ratio, so the two can never drift
+        apart — see item_home_pet.xml.
+    -->
+    <dimen name="home_pet_card_width">200dp</dimen>
     <dimen name="home_pet_card_gap">10dp</dimen>
-    <dimen name="home_pet_card_scrim_height">110dp</dimen>
+    <!-- The gradient behind the name, as a fraction of a now-shorter card: 110dp of scrim on a
+         150dp card would tint almost the whole photo. -->
+    <dimen name="home_pet_card_scrim_height">76dp</dimen>
 
     <!-- The insight card's "AI" badge. -->
     <dimen name="insight_badge_size">22dp</dimen>

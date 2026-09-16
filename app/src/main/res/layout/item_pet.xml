@@ -40,17 +40,30 @@
         android:orientation="vertical">
 
         <!-- ============================ The photo ============================
-             A FrameLayout because its two children genuinely *overlap*: the chip is drawn on top of
-             the photo's corner. Stacking is the one arrangement a FrameLayout expresses better than
-             anything else — children are painted in the order declared, so the photo goes first and
-             the chip over it. -->
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/pets_card_photo_height">
+             A ConstraintLayout used as a stack: its two children genuinely *overlap*, with the chip
+             drawn over the photo's corner, and they are painted in the order declared.
 
-            <!-- The photograph. centerCrop because the panel has a fixed shape and a photo almost
-                 never shares it: the picture is scaled to cover and the overflow trimmed, where
-                 fitCenter would letterbox every portrait photo.
+             **Why not the FrameLayout this used to be.** The panel no longer has a fixed height. It
+             derives its shape from pet_photo_aspect_ratio — the single ratio every pet photo is
+             framed and drawn in — and a dimension ratio is something only ConstraintLayout can
+             express. Its height therefore follows the card's width on any screen, and always matches
+             the shape the user cropped their photo to. -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- The photograph.
+
+                 Both dimensions are 0dp — "match constraints" — and the ratio resolves them: the
+                 width fills the card, and the ratio's "H," prefix tells ConstraintLayout to compute
+                 the *height* from it. The parent's wrap_content then takes its height from this
+                 view, so the whole panel is exactly one photo tall.
+
+                 centerCrop still, but it now has almost nothing left to do: the stored image is
+                 already this shape, so it scales to fit and trims nothing. It stays for the two
+                 cases where the image is *not* this shape — a photo saved before the app cropped on
+                 the way in, and the paw-print placeholder — where covering the panel is still the
+                 right behaviour.
 
                  The dark ground (bg_pet_photo_dark) shows behind the paw-print placeholder when the
                  pet has no photo. It is dark in both themes so adding a photo fills the panel in
@@ -60,26 +73,31 @@
                  corners. The bitmap is loaded asynchronously by ui/common/PetPhotoBinder.kt. -->
             <ImageView
                 android:id="@+id/petPhotoImage"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
                 android:background="@drawable/bg_pet_photo_dark"
                 android:contentDescription="@string/cd_pet_photo"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_pet_placeholder" />
+                android:src="@drawable/ic_pet_placeholder"
+                app:layout_constraintDimensionRatio="@string/pet_photo_aspect_ratio"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- The species chip, pinned to the top-left corner by layout_gravity. Upper-cased by its
-                 style rather than in the string, so the label stays correct in a language where
-                 blanket capitals are wrong. -->
+            <!-- The species chip, pinned to the photo's top-left corner. Upper-cased by its style
+                 rather than in the string, so the label stays correct in a language where blanket
+                 capitals are wrong. -->
             <TextView
                 android:id="@+id/speciesChip"
                 style="@style/PetCare.SpeciesChip.Accent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|start"
                 android:layout_margin="@dimen/card_padding"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 tools:text="Cat" />
 
-        </FrameLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- ========================== The light panel ==========================
              Its colour is the card's own surface, so it is white in light mode and charcoal in dark

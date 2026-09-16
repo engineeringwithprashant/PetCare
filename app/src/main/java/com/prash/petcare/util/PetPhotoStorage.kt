@@ -39,15 +39,33 @@ object PetPhotoStorage {
     private const val JPEG_QUALITY = 85
 
     /**
-     * Copies the image at [sourceUri] into internal storage and returns its absolute path, or null
-     * if the image could not be read.
+     * Reads the image at [sourceUri] into memory at a workable size, without storing anything.
      *
-     * Runs on [Dispatchers.IO] because it both reads from the content provider and writes a file;
-     * doing either on the main thread would freeze the UI.
+     * **Why picking and saving are now two steps.** A chosen photo is no longer saved straight to
+     * disk: it is handed to [com.prash.petcare.ui.common.PhotoCropView] first so the user can frame
+     * it, and only the framed result is written by [saveBitmap]. Splitting the old single `save` at
+     * exactly this point is what makes that possible, and it means the picked image never becomes a
+     * file the app would have to clean up if the user cancels the crop.
+     *
+     * Runs on [Dispatchers.IO]: it reads through a content provider, which is disk or even network
+     * access behind an ordinary-looking call.
      */
-    suspend fun save(context: Context, sourceUri: Uri): String? = withContext(Dispatchers.IO) {
-        val bitmap = decodeScaled(context, sourceUri) ?: return@withContext null
+    suspend fun decodeForCrop(context: Context, sourceUri: Uri): Bitmap? = withContext(Dispatchers.IO) {
+        decodeScaled(context, sourceUri)
+    }
 
+    /**
+     * Writes an already-prepared bitmap into internal storage and returns its absolute path, or null
+     * if it could not be written.
+     *
+     * Takes a bitmap rather than a URI because by this point the image is the user's *crop* — it
+     * exists only in memory and has no source of its own to re-read. The bitmap belongs to the
+     * caller and is left intact, since the crop view is still showing it.
+     *
+     * Runs on [Dispatchers.IO] because compressing and writing a JPEG on the main thread would
+     * freeze the UI for as long as it takes.
+     */
+    suspend fun saveBitmap(context: Context, bitmap: Bitmap): String? = withContext(Dispatchers.IO) {
         val directory = File(context.filesDir, PHOTO_DIRECTORY)
         // mkdirs() is safe to call when the folder already exists; it simply returns false.
         directory.mkdirs()
@@ -66,10 +84,9 @@ object PetPhotoStorage {
             // a message instead of the app crashing.
             target.delete()
             null
-        } finally {
-            // Frees the decoded pixels immediately rather than waiting for the garbage collector.
-            bitmap.recycle()
         }
+        // No recycle() here, unlike the version this replaced: the bitmap is the crop view's, it is
+        // still on screen, and recycling a bitmap another view is drawing crashes on the next frame.
     }
 
     /**

@@ -9,16 +9,22 @@
     pairing legible in both. It is the same object as the pet cards on the Pets tab and the pet detail
     screen, just smaller. See the pet-card note in colors.xml.
 
-    **How the layers stack.** A FrameLayout, because the photo, the scrim and the two labels are
-    genuinely piled on top of one another and each is simply pinned to a corner or edge with
-    layout_gravity. The order they are *declared* in is the order they are painted: photo, then scrim
-    over it, then the text on top. Declaring the text before the scrim would bury it.
+    **How the layers stack.** A ConstraintLayout used as a stack, because the photo, the scrim and
+    the two labels are genuinely piled on top of one another, each pinned to a corner or edge. The
+    order they are *declared* in is the order they are painted: photo, then scrim over it, then the
+    text on top. Declaring the text before the scrim would bury it.
+
+    **Why the card no longer states its own height.** The photo the user framed is 4:3
+    (pet_photo_aspect_ratio), and this card shows it at that shape so their framing is not trimmed a
+    second time. Only the width is fixed; the photo derives its height from it, and the card wraps
+    to the photo. That is what keeps this card, the Pets tab card and the detail hero all showing
+    the same picture — see the note on pet_photo_aspect_ratio in dimens.xml.
 -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="@dimen/home_pet_card_width"
-    android:layout_height="@dimen/home_pet_card_height"
+    android:layout_height="wrap_content"
     android:layout_marginEnd="@dimen/home_pet_card_gap"
     android:clickable="true"
     android:focusable="true"
@@ -28,29 +34,41 @@
     app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Large"
     app:strokeWidth="0dp">
 
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
-        <!-- The photograph, filling the card and cropped to it; the card's rounded outline clips it,
-             so the image needs no shape of its own. The adapter loads it asynchronously — see
-             ui/common/PetPhotoBinder.kt for why a recycled card needs more than one assignment. -->
+        <!-- The photograph. Both dimensions are 0dp and the ratio resolves them: the width fills the
+             card, the height follows at 4:3. Everything else on the card anchors to this view, so
+             the photo is what decides the card's height.
+
+             centerCrop is kept for the two images that are *not* already 4:3 — a photo saved before
+             the app cropped on the way in, and the paw-print placeholder. The card's rounded outline
+             clips it, so the image needs no shape of its own. The adapter loads it asynchronously —
+             see ui/common/PetPhotoBinder.kt for why a recycled card needs more than one
+             assignment. -->
         <ImageView
             android:id="@+id/petPhotoImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:background="@drawable/bg_pet_photo_dark"
             android:contentDescription="@null"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_pet_placeholder" />
+            android:src="@drawable/ic_pet_placeholder"
+            app:layout_constraintDimensionRatio="@string/pet_photo_aspect_ratio"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- The gradient that keeps the name legible over a pale photo. Pinned to the bottom with a
-             fixed height, so the top of the picture is left untouched. -->
+        <!-- The gradient that keeps the name legible over a pale photo. Pinned to the photo's bottom
+             with a fixed height, so the top of the picture is left untouched. -->
         <View
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="@dimen/home_pet_card_scrim_height"
-            android:layout_gravity="bottom"
-            android:background="@drawable/bg_pet_card_scrim" />
+            android:background="@drawable/bg_pet_card_scrim"
+            app:layout_constraintBottom_toBottomOf="@id/petPhotoImage"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <!-- "CAT", top-left. Upper-cased by its style rather than in the string. -->
         <TextView
@@ -58,20 +76,23 @@
             style="@style/PetCare.SpeciesChip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|start"
             android:layout_margin="@dimen/home_stat_card_padding"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="Cat" />
 
         <!-- The pet's name, bottom-left, up to two lines for a long one. -->
         <TextView
             android:id="@+id/petNameText"
             style="@style/PetCare.Home.PetCardName"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|start"
             android:layout_margin="@dimen/home_stat_card_padding"
+            app:layout_constraintBottom_toBottomOf="@id/petPhotoImage"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             tools:text="Krishala" />
 
-    </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

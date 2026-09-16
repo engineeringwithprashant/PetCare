@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The framing step shown after a photo is chosen for a pet, as the body of a Material dialog.
+
+    **What this screen is for.** Every pet card in the app draws its photo in one fixed shape, so a
+    photo that is not already that shape has to lose something. This is where the user decides what:
+    they slide and pinch the picture until the part that matters fills the window, and that framing
+    is what gets saved. Before it existed the app cropped to the centre and a full-body photo of a
+    dog showed its ribcage.
+
+    **Why a dialog rather than a step in the pet form.** Framing is a single decision with two
+    outcomes — use this, or go back and pick another — and a dialog is the one container that states
+    that shape by itself, with its two buttons supplied by MaterialAlertDialogBuilder. Putting it
+    inline would mean the form had to grow a mode, and every other control on it would need
+    disabling while that mode was active.
+
+    A vertical LinearLayout because the instruction simply sits above the window; nothing here is
+    positioned relative to anything but the view before it.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/card_padding"
+    android:paddingTop="@dimen/spacing_sm"
+    android:paddingEnd="@dimen/card_padding"
+    android:paddingBottom="@dimen/spacing_xs">
+
+    <!-- Says what to do, because a photograph that responds to dragging is not self-evidently one
+         that should be dragged. Muted and small: it is an aside, not the point of the screen. -->
+    <TextView
+        android:id="@+id/cropHintText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/spacing_sm"
+        android:text="@string/pet_photo_crop_hint"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <!--
+        The framing window itself.
+
+        Height is wrap_content because the view measures its own height from its width to keep the
+        card's aspect ratio — see PhotoCropView.onMeasure. Setting a height here would fight that and
+        could let the preview be a different shape from the cards, which would break the one promise
+        the feature makes.
+
+        The dark ground is the same drawable the cards use behind a photo, so the letterbox visible
+        for a moment before the bitmap is set matches what the card will look like.
+    -->
+    <com.prash.petcare.ui.common.PhotoCropView
+        android:id="@+id/photoCropView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_pet_photo_dark"
+        android:contentDescription="@string/cd_pet_photo_crop" />
+
+</LinearLayout>

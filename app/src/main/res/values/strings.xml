@@ -417,6 +417,18 @@
 
     <string name="pet_photo_choose">Choose photo</string>
     <string name="pet_photo_change">Change photo</string>
+    <!-- The framing dialog shown after a photo is picked. Every pet card draws its photo in one
+         fixed shape, so the user decides which part of the picture fills it rather than the app
+         cropping to the centre and cutting the pet's head off. -->
+    <string name="pet_photo_crop_title">Frame the photo</string>
+    <string name="pet_photo_crop_hint">Drag to move and pinch to zoom. This is how the photo will appear on your pet\'s cards.</string>
+    <string name="pet_photo_crop_confirm">Use photo</string>
+    <!-- Its own string rather than a shared "Cancel", matching how every other dialog in this app
+         declares its buttons — which is what lets one dialog's wording be softened later without
+         changing the rest. -->
+    <string name="pet_photo_crop_cancel">Cancel</string>
+    <!-- Shown when the picked file could not be read at all — not an image, or an unreadable URI. -->
+    <string name="pet_photo_crop_unreadable">That image could not be opened. Try choosing another.</string>
     <string name="pet_dob_picker_title">Select date of birth</string>
     <string name="pet_save">Save</string>
     <string name="pet_delete">Delete pet</string>
@@ -776,6 +788,9 @@
     <!-- =========================== Accessibility labels ===========================
          contentDescription values, read aloud by TalkBack for users who cannot see the icon. -->
     <string name="cd_pet_photo">Pet photo</string>
+    <!-- The framing window in the crop dialog. Names what it is *and* that it responds to touch,
+         since a user who cannot see the picture has no other clue that it can be moved. -->
+    <string name="cd_pet_photo_crop">Photo framing area. Drag to move, pinch to zoom.</string>
     <string name="cd_add_routine">Add a care routine</string>
     <string name="cd_add_task">Add a care task</string>
     <string name="cd_task_done">Mark task as done</string>

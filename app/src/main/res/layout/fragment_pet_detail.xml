@@ -70,7 +70,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/heroCard"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/pet_detail_hero_height"
+                android:layout_height="wrap_content"
                 app:cardBackgroundColor="@color/pet_card_ground"
                 app:cardElevation="0dp"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge"
@@ -84,11 +84,20 @@
                 -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="wrap_content">
 
-                    <!-- The photograph, filling the card. centerCrop scales it to cover the card and
-                         trims the overflow, where fitCenter would letterbox a portrait photo. The dark
-                         ground shows behind the paw-print placeholder when the pet has no photo. The
+                    <!-- The photograph, and the view that now decides how tall this card is.
+
+                         Both dimensions are 0dp and the ratio resolves them: the width fills the
+                         card, the height follows at 4:3 — pet_photo_aspect_ratio, the one shape
+                         every pet photo is framed and drawn in, so the hero shows exactly what the
+                         user cropped rather than trimming it again. It replaces the card's old fixed
+                         300dp, which was within a few dp of the same thing on a normal phone but
+                         could not adapt to a wider screen.
+
+                         centerCrop is kept for images that are not already this shape: a photo saved
+                         before the app cropped on the way in, and the paw-print placeholder. The
+                         dark ground shows behind that placeholder when the pet has no photo. The
                          bitmap is loaded off the main thread by ui/common/PetPhotoBinder.kt. -->
                     <ImageView
                         android:id="@+id/petPhotoImage"
@@ -98,32 +107,38 @@
                         android:contentDescription="@string/cd_pet_photo"
                         android:scaleType="centerCrop"
                         android:src="@drawable/ic_pet_placeholder"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintDimensionRatio="@string/pet_photo_aspect_ratio"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <!-- An invisible line at exactly half the card's height. A percentage guideline
-                         rather than a fixed dp value, so "the lower half" stays the lower half if the
-                         card's height is ever changed. -->
-                    <androidx.constraintlayout.widget.Guideline
-                        android:id="@+id/heroMidline"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        app:layout_constraintGuide_percent="0.5" />
+                    <!--
+                        The dark gradient over the lower half of the photo. It fades in rather than
+                        starting as a hard band — see bg_pet_card_scrim.xml.
 
-                    <!-- The dark gradient over the lower half: top edge on the midline, bottom edge on
-                         the card's bottom. It fades in rather than starting as a hard band — see
-                         bg_pet_card_scrim.xml. -->
+                        **Why this no longer uses a midline guideline.** A guideline placed at 50% is
+                        a percentage *of the parent*, and the parent used to be a card with a height
+                        written into the layout. Now the photo's ratio decides that height, so a
+                        child measured against the parent while the parent is still being measured
+                        from a child is the kind of circularity ConstraintLayout resolves
+                        unpredictably. Anchoring top and bottom to the photo instead states the
+                        dependency the right way round — the scrim follows the photo, and the photo
+                        follows nothing.
+
+                        height_percent="0.5" with a vertical bias of 1 is what "the lower half" now
+                        means: half the height of the span it is constrained across, pushed to the
+                        bottom of it.
+                    -->
                     <View
                         android:layout_width="0dp"
                         android:layout_height="0dp"
                         android:background="@drawable/bg_pet_card_scrim"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintBottom_toBottomOf="@id/petPhotoImage"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHeight_percent="0.5"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/heroMidline" />
+                        app:layout_constraintTop_toTopOf="@id/petPhotoImage"
+                        app:layout_constraintVertical_bias="1.0" />
 
                     <!-- The round back button, top-left over the photo. Returns to wherever the pet
                          was opened from. Its 48dp view carries a 4dp inset, so an 8dp margin puts the
@@ -250,7 +265,7 @@
                         app:flow_horizontalStyle="packed"
                         app:flow_verticalGap="@dimen/pill_spacing"
                         app:flow_wrapMode="chain"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintBottom_toBottomOf="@id/petPhotoImage"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent" />
 

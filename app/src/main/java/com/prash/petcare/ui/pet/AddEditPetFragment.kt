@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.activity.result.PickVisualMediaRequest
+import androidx.appcompat.app.AlertDialog
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
@@ -23,7 +24,9 @@ import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.data.local.entity.PetSpecies
+import com.prash.petcare.databinding.DialogCropPhotoBinding
 import com.prash.petcare.databinding.FragmentAddEditPetBinding
+import com.prash.petcare.ui.common.PhotoCropView
 import com.prash.petcare.ui.common.formatStoredDate
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.setToolbarTitle
@@ -80,9 +83,17 @@ class AddEditPetFragment : Fragment() {
     ) { uri: Uri? ->
         // Null when the user backed out without choosing anything.
         if (uri != null) {
-            copyPickedPhotoToInternalStorage(uri)
+            showCropDialog(uri)
         }
     }
+
+    /**
+     * The framing dialog, held so it can be dismissed with the view.
+     *
+     * A dialog that outlives the fragment's view leaks the whole hierarchy behind it, and one still
+     * on screen when the user rotates would be left orphaned by the recreation.
+     */
+    private var cropDialog: AlertDialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -171,7 +182,13 @@ class AddEditPetFragment : Fragment() {
     }
 
     /**
-     * Copies the chosen image into the app's own storage.
+     * Opens the framing dialog on the chosen image.
+     *
+     * **Why a picked photo is no longer saved straight away.** Every pet card draws its photo in one
+     * fixed shape, and the app used to fill that shape by cropping to the centre — which on a
+     * full-body photo is the animal's middle rather than its face. So the picked image is decoded to
+     * memory, the user frames it, and only what they framed is written to disk. Nothing is stored if
+     * they cancel.
      *
      * Done here rather than in the ViewModel because reading the picked URI needs a ContentResolver
      * — and therefore a Context, which the ViewModel deliberately does not hold. Only the resulting
@@ -181,10 +198,59 @@ class AddEditPetFragment : Fragment() {
      * arrive before the view has been recreated, and the view lifecycle owner does not exist yet at
      * that point.
      */
-    private fun copyPickedPhotoToInternalStorage(uri: Uri) {
+    private fun showCropDialog(uri: Uri) {
         val appContext = requireContext().applicationContext
+
         lifecycleScope.launch {
-            val savedPath = PetPhotoStorage.save(appContext, uri)
+            // Decoded before the dialog is built, so a file that turns out not to be an image is
+            // reported plainly instead of opening an empty framing window over nothing.
+            val source = PetPhotoStorage.decodeForCrop(appContext, uri)
+            if (source == null) {
+                viewModel.onPhotoFailed()
+                Snackbar.make(binding.root, R.string.pet_photo_crop_unreadable, Snackbar.LENGTH_LONG).show()
+                return@launch
+            }
+
+            val cropBinding = DialogCropPhotoBinding.inflate(layoutInflater)
+            cropBinding.photoCropView.setBitmap(source)
+
+            cropDialog = MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.pet_photo_crop_title)
+                .setView(cropBinding.root)
+                .setNegativeButton(R.string.pet_photo_crop_cancel, null)
+                .setPositiveButton(R.string.pet_photo_crop_confirm) { _, _ ->
+                    saveCrop(cropBinding.photoCropView)
+                }
+                // Cancelling stores nothing at all, which is the point of decoding to memory first:
+                // there is no half-finished file on disk to tidy up if the user changes their mind.
+                .show()
+        }
+    }
+
+    /**
+     * Writes the framed photo and hands its path to the ViewModel.
+     *
+     * The bitmap is produced on the main thread — it is one `drawBitmap` into an image no larger
+     * than the screen, so it is quick — and only the compress-and-write half is moved to a
+     * background thread inside [PetPhotoStorage.saveBitmap]. Doing it in this order is what lets the
+     * crop be read from the view before the dialog tears it down.
+     *
+     * The width asked for is the view's own, so a phone with a wider screen stores a
+     * correspondingly sharper image, capped inside the crop view at a sensible maximum.
+     */
+    private fun saveCrop(cropView: PhotoCropView) {
+        val appContext = requireContext().applicationContext
+        val cropped = cropView.croppedBitmap(cropView.width)
+
+        if (cropped == null) {
+            viewModel.onPhotoFailed()
+            return
+        }
+
+        // The fragment's own scope, not the view's: see the note on the picker result above — the
+        // same reasoning applies to the write that follows it.
+        lifecycleScope.launch {
+            val savedPath = PetPhotoStorage.saveBitmap(appContext, cropped)
             if (savedPath != null) {
                 viewModel.onPhotoSelected(savedPath)
             } else {
@@ -369,6 +435,10 @@ class AddEditPetFragment : Fragment() {
         super.onDestroyView()
         // Forces the photo to be drawn again against the new view hierarchy.
         renderedPhotoPath = null
+        // The framing dialog holds a decoded bitmap and a view hierarchy of its own; left showing,
+        // it would keep the destroyed view alive behind it.
+        cropDialog?.dismiss()
+        cropDialog = null
         _binding = null
     }
 
