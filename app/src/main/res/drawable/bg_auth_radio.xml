@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The radio circle at the right of a reset option card.
+
+    Not a RadioButton: the whole card is the control (a checkable MaterialCardView), and a real radio
+    inside it would be a second, separately focusable target that TalkBack would announce twice. This
+    is a plain View with android:duplicateParentState, so it simply mirrors the card's `state_checked`:
+
+     - checked: a solid accent disc with a darker gold rim, as in the mockup;
+     - otherwise: an empty ring in the theme's outline colour.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_checked="true">
+        <shape android:shape="oval">
+            <solid android:color="@color/accent_yellow" />
+            <stroke
+                android:width="1.5dp"
+                android:color="@color/auth_radio_rim" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="1.5dp"
+                android:color="?attr/colorOutline" />
+        </shape>
+    </item>
+
+</selector>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Password reset, step 1 of 3 (ResetChooseFragment): choose where the reset code is sent.
+
+    Two option cards — email and SMS — behave as a radio group: exactly one is chosen, and the chosen
+    one has a pale-yellow fill, a yellow outline, a yellow badge and a filled radio. All of that is
+    drawn from each card's single `checked` state (see PetCare.Auth.OptionCard in styles.xml), so the
+    fragment only decides *which* card is checked.
+
+    The cards are MaterialCardViews (Material 3) holding one horizontal row: badge, then the two lines
+    of text taking the remaining width, then the radio. **duplicateParentState** on the row and on the
+    badge and radio is what carries the card's checked state down to them; without it the children
+    would never see it.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Auth.Page"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.auth.reset.ResetChooseFragment">
+
+    <LinearLayout
+        style="@style/PetCare.Auth.Column"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <include
+            android:id="@+id/header"
+            layout="@layout/view_auth_header" />
+
+        <include
+            android:id="@+id/stepProgress"
+            layout="@layout/view_auth_step_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/auth_header_gap" />
+
+        <!-- =========================== Email option =========================== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/emailOption"
+            style="@style/PetCare.Auth.OptionCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:duplicateParentState="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/auth_option_card_padding">
+
+                <TextView
+                    style="@style/PetCare.Auth.OptionBadge"
+                    android:text="@string/reset_option_email_badge" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_md"
+                    android:layout_marginEnd="@dimen/spacing_md"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/PetCare.Auth.OptionTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/reset_option_email_title" />
+
+                    <!-- Filled in by the fragment: the address typed on the log-in screen, or a
+                         generic line when none was given. -->
+                    <TextView
+                        android:id="@+id/emailDestination"
+                        style="@style/PetCare.Auth.OptionDestination"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="prashant@petcare.app" />
+                </LinearLayout>
+
+                <View style="@style/PetCare.Auth.OptionRadio" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ============================ SMS option ============================ -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/smsOption"
+            style="@style/PetCare.Auth.OptionCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            tools:checked="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:duplicateParentState="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/auth_option_card_padding">
+
+                <TextView
+                    style="@style/PetCare.Auth.OptionBadge"
+                    android:text="@string/reset_option_sms_badge" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_md"
+                    android:layout_marginEnd="@dimen/spacing_md"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/PetCare.Auth.OptionTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/reset_option_sms_title" />
+
+                    <!-- The phone number, masked so only its opening and last two digits show. -->
+                    <TextView
+                        android:id="@+id/smsDestination"
+                        style="@style/PetCare.Auth.OptionDestination"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="+977 98•• ••12" />
+                </LinearLayout>
+
+                <View style="@style/PetCare.Auth.OptionRadio" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sendCodeButton"
+            style="@style/PetCare.Auth.PrimaryButton"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:text="@string/reset_send_code" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backToLoginButton"
+            style="@style/PetCare.Auth.BackLink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/auth_back_to_login" />
+
+    </LinearLayout>
+</ScrollView>

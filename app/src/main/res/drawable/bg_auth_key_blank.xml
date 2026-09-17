@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The empty bottom-left cell of the on-screen keypad.
+
+    A phone keypad leaves that position blank so 0 sits centred under 8, and the mockup keeps the cell
+    visible as a faint, unfilled outline rather than a gap — the grid stays a complete 4×3 block. It is
+    drawn on the page colour with no fill of its own, which is what makes it read as "not a key" next to
+    the white keys around it.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@android:color/transparent" />
+
+    <stroke
+        android:width="1dp"
+        android:color="?attr/colorOutlineVariant" />
+
+    <corners android:radius="@dimen/auth_key_corner_radius" />
+
+</shape>

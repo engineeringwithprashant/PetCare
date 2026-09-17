@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One of the six digit boxes on the two-factor and reset-code screens.
+
+    A state-list drawable, so CodeKeypadView only flips two booleans per box and never builds a shape
+    in code. Two standard view states are borrowed for the two special looks:
+
+     - `state_selected` = the code was rejected. Every box takes the error outline at once, so the
+       whole code reads as wrong rather than one digit of it. Listed first because a selector returns
+       the first match, and an error must win over "next box to fill".
+     - `state_activated` = the box the next keypad digit will land in. It takes the accent outline,
+       which is the "focused" box of the mockup. It is not real input focus — there is no text field
+       here at all, which is what keeps the system keyboard from ever opening on these screens.
+
+    All three share the white card surface and the same corner, so only the edge changes between them.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurface" />
+            <stroke
+                android:width="@dimen/auth_code_box_stroke_active"
+                android:color="?attr/colorError" />
+            <corners android:radius="@dimen/auth_code_box_corner_radius" />
+        </shape>
+    </item>
+
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurface" />
+            <stroke
+                android:width="@dimen/auth_code_box_stroke_active"
+                android:color="@color/accent_yellow" />
+            <corners android:radius="@dimen/auth_code_box_corner_radius" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurface" />
+            <stroke
+                android:width="1dp"
+                android:color="?attr/colorOutlineVariant" />
+            <corners android:radius="@dimen/auth_code_box_corner_radius" />
+        </shape>
+    </item>
+
+</selector>

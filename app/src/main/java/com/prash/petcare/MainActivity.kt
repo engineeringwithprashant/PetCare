@@ -60,17 +60,17 @@ class MainActivity : AppCompatActivity() {
      * Anything listed here shows no back arrow, because there is nowhere above it to go; every
      * other destination gets one automatically.
      *
-     * The set is the five bottom-bar destinations plus the sign-in screen. The five are peers
-     * rather than a hierarchy — moving from Pets to Expenses is a switch, not a step forward, so
+     * The set is the five bottom-bar destinations plus the log in / register screen. The five are
+     * peers rather than a hierarchy — moving from Pets to Expenses is a switch, not a step forward, so
      * offering "back" from any of them would be offering to undo something the user did not do.
-     * Sign-in is the app's entry point and has nothing above it either.
+     * Log in is the app's entry point and has nothing above it either.
      *
-     * Sign-up is deliberately *not* here: it is reached from the sign-in screen and back should
-     * return there.
+     * The two-factor and password-reset screens are deliberately *not* here: they are reached from
+     * the log in screen and back should return there.
      */
     private val appBarConfiguration = AppBarConfiguration(
         setOf(
-            R.id.loginFragment,
+            R.id.authFragment,
             R.id.homeFragment,
             R.id.petsFragment,
             R.id.checklistFragment,
@@ -164,9 +164,9 @@ class MainActivity : AppCompatActivity() {
      *
      * Two destinations go without the shared top app bar, for different reasons.
      *
-     * The sign-in and sign-up screens carry their own large headings, have nowhere to navigate back
-     * to and belong to nobody, so all of it goes — the tabs as well: a row of tabs leading into an
-     * account the user has not signed in to yet would be worse than no chrome at all.
+     * The sign-in screens (see [AUTH_DESTINATIONS]) carry their own large headings and their own "back
+     * to log in" links, and belong to nobody, so all of it goes — the tabs as well: a row of tabs
+     * leading into an account the user has not signed in to yet would be worse than no chrome at all.
      *
      * The **dashboard** and the **Pets**, **Tasks**, **Places** and **Money** tabs hide only the app
      * bar, and keep their tabs. They draw their own header — the monogram, the title, the theme toggle and the pet count,
@@ -187,8 +187,7 @@ class MainActivity : AppCompatActivity() {
      * See [com.prash.petcare.ui.common.setUp] and [com.prash.petcare.ui.common.openProfile].
      */
     private fun updateChromeFor(destinationId: Int, arguments: Bundle?) {
-        val isAuthScreen =
-            destinationId == R.id.loginFragment || destinationId == R.id.registerFragment
+        val isAuthScreen = destinationId in AUTH_DESTINATIONS
 
         val hasNoPetArgument = (arguments?.getLong(ARG_PET_ID, NO_PET_ID) ?: NO_PET_ID) == NO_PET_ID
         val isTasksTab = destinationId == R.id.checklistFragment && hasNoPetArgument
@@ -245,8 +244,7 @@ class MainActivity : AppCompatActivity() {
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         val destinationId = navController.currentDestination?.id
 
-        val isAuthScreen =
-            destinationId == R.id.loginFragment || destinationId == R.id.registerFragment
+        val isAuthScreen = destinationId in AUTH_DESTINATIONS
 
         menu.findItem(R.id.profileFragment)?.isVisible =
             !isAuthScreen && destinationId != R.id.profileFragment
@@ -290,7 +288,7 @@ class MainActivity : AppCompatActivity() {
         sessionViewModel.signOut()
 
         navController.navigate(
-            R.id.loginFragment,
+            R.id.authFragment,
             null,
             navOptions { popUpTo(R.id.nav_graph) { inclusive = true } }
         )
@@ -364,8 +362,7 @@ class MainActivity : AppCompatActivity() {
      * account nobody has signed in to yet.
      */
     private fun updateBottomNavVisibility() {
-        val isAuthScreen = navController.currentDestination?.id == R.id.loginFragment ||
-            navController.currentDestination?.id == R.id.registerFragment
+        val isAuthScreen = navController.currentDestination?.id in AUTH_DESTINATIONS
 
         binding.bottomNav.isVisible = !isAuthScreen && !isKeyboardVisible
     }
@@ -391,5 +388,18 @@ class MainActivity : AppCompatActivity() {
          */
         const val ARG_PET_ID = "petId"
         const val NO_PET_ID = -1L
+
+        /**
+         * Every screen shown before anyone is signed in: log in / register, the two-factor check and
+         * the three password-reset steps. All of them hide the app bar, the tabs and the account menu.
+         * One set, used by every check in this class, so adding a sign-in screen later is one line.
+         */
+        val AUTH_DESTINATIONS = setOf(
+            R.id.authFragment,
+            R.id.twoFactorFragment,
+            R.id.resetChooseFragment,
+            R.id.resetCodeFragment,
+            R.id.resetNewPasswordFragment
+        )
     }
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The surface of a "where should the reset code go?" option card.
+
+    The card is a checkable MaterialCardView, so `state_checked` is set on it whenever the fragment
+    marks it chosen. The chosen card takes the pale-yellow container colour from the mockup; the other
+    stays on the plain card surface. colorPrimaryContainer is a theme role, so in dark mode the chosen
+    card becomes a deep olive rather than a pale yellow that would glare against the dark page.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:color="?attr/colorPrimaryContainer" android:state_checked="true" />
+
+    <item android:color="?attr/colorSurface" />
+
+</selector>

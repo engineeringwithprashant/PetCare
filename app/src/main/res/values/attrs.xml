@@ -51,6 +51,19 @@
     <attr name="colorOnSelectedContainer" format="color" />
     <attr name="colorOnSelectedContainerNeutral" format="color" />
 
+    <!--
+        The *unavailable* version of that same strong fill, used by the sign-in screens' main button
+        while it cannot be pressed yet ("VERIFY CODE" before all six digits are in).
+
+        Declared because Material's own disabled treatment — the enabled colour at low opacity — turns
+        a near-black button into a washed-out grey smear on the cream page, which reads as broken
+        rather than as "not yet". The design instead shows a solid charcoal with pale text: clearly the
+        same button, clearly resting. In dark mode the enabled fill is yellow, so the resting fill is a
+        muted charcoal a step above the page rather than a dim yellow.
+    -->
+    <attr name="colorDisabledContainer" format="color" />
+    <attr name="colorOnDisabledContainer" format="color" />
+
     <!-- Mint — the app uses this one for a pet's age. -->
     <attr name="colorPillMint" format="color" />
     <attr name="colorOnPillMint" format="color" />

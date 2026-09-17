@@ -1,0 +1,52 @@
+package com.prash.petcare.ui.auth
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * Unit tests for [CodeEntry], the keypad rules shared by the two-factor and reset-code screens:
+ * digits fill left to right, backspace clears the last, and the code is complete at exactly six.
+ */
+class CodeEntryTest {
+
+    /** Types [digits] one key press at a time, as the keypad would. */
+    private fun type(vararg digits: Int): String =
+        digits.fold("") { code, digit -> CodeEntry.append(code, digit) }
+
+    @Test
+    fun `digits fill from the left in the order pressed`() {
+        assertEquals("482", type(4, 8, 2))
+    }
+
+    @Test
+    fun `a seventh digit is ignored`() {
+        assertEquals("123456", type(1, 2, 3, 4, 5, 6, 7))
+    }
+
+    @Test
+    fun `a value that is not a single digit is ignored`() {
+        assertEquals("1", CodeEntry.append("1", 10))
+        assertEquals("1", CodeEntry.append("1", -1))
+    }
+
+    @Test
+    fun `backspace removes only the last digit`() {
+        assertEquals("48", CodeEntry.backspace("482"))
+    }
+
+    @Test
+    fun `backspace on an empty code does nothing`() {
+        assertEquals("", CodeEntry.backspace(""))
+    }
+
+    @Test
+    fun `the code is complete only at six digits`() {
+        assertFalse(CodeEntry.isComplete(type(1, 2, 3, 4, 5)))
+        assertTrue(CodeEntry.isComplete(type(1, 2, 3, 4, 5, 6)))
+        // Completing and then deleting one digit makes it incomplete again, which is what disables
+        // the verify button a second time.
+        assertFalse(CodeEntry.isComplete(CodeEntry.backspace(type(1, 2, 3, 4, 5, 6))))
+    }
+}

@@ -780,7 +780,7 @@ class ProfileFragment : Fragment() {
         sessionViewModel.signOut()
 
         findNavController().navigate(
-            R.id.loginFragment,
+            R.id.authFragment,
             null,
             navOptions { popUpTo(R.id.nav_graph) { inclusive = true } }
         )

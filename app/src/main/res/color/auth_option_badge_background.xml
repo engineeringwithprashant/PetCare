@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The fill of the small square "MAIL" / "SMS" badge on a reset option card.
+
+    The badge sets android:duplicateParentState, so it sees the card's `state_checked` as its own: the
+    chosen card's badge turns solid accent, the other stays a quiet neutral square. Used as a
+    backgroundTint over bg_auth_option_badge.xml, so the rounded shape is drawn once and only its colour
+    changes.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:color="@color/accent_yellow" android:state_checked="true" />
+
+    <item android:color="?attr/colorSurfaceVariant" />
+
+</selector>

@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The log in / register screen (AuthFragment).
+
+    **One screen, two forms.** Both modes share the header, the toggle, the "OR" divider and the Google
+    button, and differ only in the block of fields between. So both blocks are laid out here, one above
+    the other, and AuthFragment shows one and hides the other (visibility GONE) according to the mode
+    in AuthViewModel. Hiding rather than removing is what makes "switching preserves anything already
+    typed" work for free: a GONE EditText keeps its text, and since every field has its own id, Android
+    also saves and restores that text across rotation without any code.
+
+    **Why a ScrollView.** The register form is taller than most phones — the mockup itself is drawn in
+    two halves — and the keyboard takes up to half the screen on top of that. MainActivity pads the
+    window by the keyboard's height, and the ScrollView is what lets the column then scroll the focused
+    field into view.
+
+    **Why LinearLayout inside.** The page is a single column where each element simply sits below the
+    last; the only side-by-side arrangements (the toggle, the helper/link row, the divider, the consent
+    row) are small horizontal LinearLayouts. A ConstraintLayout would express the same thing with a
+    chain of constraints per view and gain nothing.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Auth.Page"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.auth.AuthFragment">
+
+    <LinearLayout
+        style="@style/PetCare.Auth.Column"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Logo, name, tagline, and this mode's heading and subtitle. -->
+        <include
+            android:id="@+id/header"
+            layout="@layout/view_auth_header" />
+
+        <!--
+            The log in / register toggle.
+
+            A groove (the track) holding two equal halves. Each half is a TextView whose look is
+            entirely driven by `isSelected` — see PetCare.Profile.Segment in styles.xml — so the fragment
+            marks one half selected and the filled dark pill with yellow text follows. Equal widths come
+            from width 0dp + weight 1, so the pill is always exactly half the track.
+
+            The halves are exposed to TalkBack as tabs by AuthFragment, so "selected" is announced.
+        -->
+        <LinearLayout
+            android:id="@+id/modeToggle"
+            style="@style/PetCare.Auth.SegmentTrack"
+            android:layout_width="match_parent"
+            android:layout_marginTop="@dimen/auth_header_gap">
+
+            <TextView
+                android:id="@+id/loginModeButton"
+                style="@style/PetCare.Auth.Segment"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="@string/auth_mode_login"
+                tools:selected="true" />
+
+            <TextView
+                android:id="@+id/registerModeButton"
+                style="@style/PetCare.Auth.Segment"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="@string/auth_mode_register" />
+        </LinearLayout>
+
+        <!-- ============================ Log in fields ============================ -->
+
+        <LinearLayout
+            android:id="@+id/loginForm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- labelFor ties the label to its field, so TalkBack reads "Email or phone" when the field
+                 is focused, even though the field itself shows no floating label. -->
+            <TextView
+                style="@style/PetCare.Auth.FieldLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/identifierInput"
+                android:text="@string/login_identifier_label" />
+
+            <!-- Accepts either an email or a phone number, so the input type is plain text with
+                 autofill hints for both — the keyboard must allow letters and "@". -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/identifierLayout"
+                style="@style/PetCare.Auth.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/identifierInput"
+                    style="@style/PetCare.Auth.FieldInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="emailAddress,phone"
+                    android:hint="@string/login_identifier_hint"
+                    android:imeOptions="actionNext"
+                    android:inputType="textEmailAddress" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/PetCare.Auth.FieldLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/loginPasswordInput"
+                android:text="@string/login_password_label" />
+
+            <!-- No visibility toggle icon: the design shows a plain field. actionDone on the keyboard
+                 submits the form, wired in AuthFragment. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/loginPasswordLayout"
+                style="@style/PetCare.Auth.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/loginPasswordInput"
+                    style="@style/PetCare.Auth.FieldInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="password"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/PetCare.Auth.Helper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/auth_label_gap"
+                android:text="@string/login_password_helper" />
+
+            <!-- layout_gravity="end" right-aligns the link within the column (and flips to the left
+                 in right-to-left languages, which is why "end" rather than "right"). The negative end
+                 margin cancels the button's own inner padding so its text lines up with the fields'
+                 right edge. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/forgotPasswordButton"
+                style="@style/PetCare.Auth.TextLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:layout_marginEnd="-8dp"
+                android:text="@string/login_forgot_password" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/loginButton"
+                style="@style/PetCare.Auth.PrimaryButton"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/login_submit" />
+        </LinearLayout>
+
+        <!-- ============================ Register fields ============================
+             Starts GONE; AuthFragment reveals it when the toggle is on "Register". -->
+
+        <LinearLayout
+            android:id="@+id/registerForm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                style="@style/PetCare.Auth.FieldLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/fullNameInput"
+                android:text="@string/register_full_name_label" />
+
+            <!-- textPersonName|textCapWords capitalises each word as the name is typed. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fullNameLayout"
+                style="@style/PetCare.Auth.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/fullNameInput"
+                    style="@style/PetCare.Auth.FieldInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="name"
+                    android:hint="@string/register_full_name_hint"
+                    android:imeOptions="actionNext"
+                    android:inputType="textPersonName|textCapWords" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/PetCare.Auth.FieldLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/emailInput"
+                android:text="@string/register_email_label" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/emailLayout"
+                style="@style/PetCare.Auth.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/emailInput"
+                    style="@style/PetCare.Auth.FieldInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="emailAddress"
+                    android:hint="@string/register_email_hint"
+                    android:imeOptions="actionNext"
+                    android:inputType="textEmailAddress" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/PetCare.Auth.FieldLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/phoneInput"
+                android:text="@string/register_phone_label" />
+
+            <!-- inputType="phone" brings up the dial-pad keyboard, which still offers "+" and spaces
+                 for an international number. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/phoneLayout"
+                style="@style/PetCare.Auth.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/phoneInput"
+                    style="@style/PetCare.Auth.FieldInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="phone"
+                    android:hint="@string/register_phone_hint"
+                    android:imeOptions="actionNext"
+                    android:inputType="phone" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- A standalone helper line rather than TextInputLayout's helperText, because the mockup
+                 sets it in the mono helper face, and an error on the field should appear *above*
+                 this note (as TextInputLayout's own error line does) rather than replace it. -->
+            <TextView
+                style="@style/PetCare.Auth.Helper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/auth_label_gap"
+                android:text="@string/register_phone_helper" />
+
+            <TextView
+                style="@style/PetCare.Auth.FieldLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/registerPasswordInput"
+                android:text="@string/register_password_label" />
+
+            <!-- The "At least 8 characters" placeholder is set by AuthFragment from the same constant
+                 the validation uses. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/registerPasswordLayout"
+                style="@style/PetCare.Auth.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/registerPasswordInput"
+                    style="@style/PetCare.Auth.FieldInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="newPassword"
+                    android:imeOptions="actionNext"
+                    android:inputType="textPassword"
+                    tools:hint="At least 8 characters" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/PetCare.Auth.FieldLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/confirmPasswordInput"
+                android:text="@string/register_confirm_password_label" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/confirmPasswordLayout"
+                style="@style/PetCare.Auth.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/confirmPasswordInput"
+                    style="@style/PetCare.Auth.FieldInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="newPassword"
+                    android:hint="@string/register_confirm_password_hint"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!--
+                The consent row: a checkbox and the sentence beside it.
+
+                The sentence is a separate TextView rather than the checkbox's own text because it
+                contains a link ("terms"). AuthFragment makes tapping the rest of the sentence toggle the
+                box, and tapping the link open the terms instead — see bindConsentText().
+
+                gravity="top" on the row keeps the box aligned with the first line when the sentence
+                wraps to two, as it does in the mockup. The checkbox's minimum size is removed so it sits
+                tight against the text; Material's checked colour is the theme's yellow already.
+            -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:gravity="top"
+                android:orientation="horizontal">
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/consentCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="-6dp"
+                    android:contentDescription="@string/register_consent"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp" />
+
+                <TextView
+                    android:id="@+id/consentText"
+                    style="@style/PetCare.Auth.Consent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_weight="1"
+                    tools:text="@string/register_consent" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/consentError"
+                style="@style/PetCare.Auth.ErrorText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:visibility="gone"
+                tools:text="@string/error_consent_required"
+                tools:visibility="visible" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/registerButton"
+                style="@style/PetCare.Auth.PrimaryButton"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:text="@string/register_submit" />
+        </LinearLayout>
+
+        <!-- Shown only while a sign-in or sign-up is being checked. GONE takes no space, so the
+             layout does not jump when it appears. -->
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:trackCornerRadius="2dp" />
+
+        <!-- ============================ Shared footer ============================ -->
+
+        <!-- "—— OR ——": two weighted hairlines with the label between them, so the lines stretch to
+             fill whatever width the label leaves. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <View style="@style/PetCare.Auth.DividerLine" />
+
+            <TextView
+                style="@style/PetCare.Auth.DividerLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/auth_or" />
+
+            <View style="@style/PetCare.Auth.DividerLine" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/googleButton"
+            style="@style/PetCare.Auth.GoogleButton"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/auth_continue_with_google" />
+
+    </LinearLayout>
+</ScrollView>

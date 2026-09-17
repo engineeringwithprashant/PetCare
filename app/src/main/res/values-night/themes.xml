@@ -72,6 +72,9 @@
         <item name="colorSelectedContainer">@color/selected_container_dark</item>
         <item name="colorOnSelectedContainer">@color/on_selected_container_dark</item>
         <item name="colorOnSelectedContainerNeutral">@color/on_selected_container_neutral_dark</item>
+        <!-- A muted charcoal rather than a dimmed yellow for the resting button. See attrs.xml. -->
+        <item name="colorDisabledContainer">@color/disabled_container_dark</item>
+        <item name="colorOnDisabledContainer">@color/on_disabled_container_dark</item>
 
         <!-- The dark half of the app's own pill roles — see attrs.xml. -->
         <item name="colorPillMint">@color/pill_dark_mint</item>

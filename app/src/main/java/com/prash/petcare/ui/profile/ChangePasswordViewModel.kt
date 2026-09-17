@@ -8,7 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
 import com.prash.petcare.data.repository.PasswordChangeResult
 import com.prash.petcare.data.repository.UserRepository
-import com.prash.petcare.ui.auth.AuthViewModel
+import com.prash.petcare.ui.auth.AuthValidation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -133,13 +133,14 @@ class ChangePasswordViewModel(
         /**
          * The shortest password the form accepts.
          *
-         * **Referenced from the sign-up screen rather than repeated**, so the two can never disagree.
+         * **Referenced from the sign-in screens' shared rules (AuthValidation) rather than repeated**,
+         * so sign-up, password reset and this form can never disagree.
          * That matters in a specific way: a stricter rule here would tell people their existing
          * password is not good enough while leaving it in place and still accepting it at sign-in,
          * and a looser one would let them set a password sign-up would have refused. One constant,
          * raised or lowered in one file, keeps both screens honest.
          */
-        const val MINIMUM_LENGTH = AuthViewModel.MIN_PASSWORD_LENGTH
+        const val MINIMUM_LENGTH = AuthValidation.MIN_PASSWORD_LENGTH
 
         fun factory(userId: Long): ViewModelProvider.Factory = viewModelFactory {
             initializer {

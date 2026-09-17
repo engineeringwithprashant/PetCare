@@ -86,6 +86,9 @@
         <item name="colorSelectedContainer">@color/selected_container_light</item>
         <item name="colorOnSelectedContainer">@color/on_selected_container_light</item>
         <item name="colorOnSelectedContainerNeutral">@color/on_selected_container_neutral_light</item>
+        <!-- The same fill at rest, for a main button that cannot be pressed yet. See attrs.xml. -->
+        <item name="colorDisabledContainer">@color/disabled_container_light</item>
+        <item name="colorOnDisabledContainer">@color/on_disabled_container_light</item>
 
         <!-- ======================== Pastel stat pill roles ========================
              The app's own colour roles, declared in attrs.xml. See the note there for why a stat

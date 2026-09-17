@@ -644,4 +644,66 @@
          object as the full-width buttons elsewhere. -->
     <dimen name="profile_logout_button_height">52dp</dimen>
 
+    <!-- ============================ Sign-in screens ============================
+         Log in / register, two-factor, and the three password-reset steps. Sizes are taken from the
+         auth mockups (drawn at roughly 0.9px per dp) and rounded to the app's spacing scale. -->
+
+    <!-- The page gutter. A little wider than the app-wide 16dp: these screens are a single centred
+         column with nothing beside it, and the extra air is what the mockups show. -->
+    <dimen name="auth_screen_padding">20dp</dimen>
+    <!-- Space above the logo, below the status bar, and below the last element on the page. -->
+    <dimen name="auth_screen_padding_top">28dp</dimen>
+    <dimen name="auth_screen_padding_bottom">32dp</dimen>
+
+    <!-- The logo placeholder square. See res/drawable/bg_auth_brand_mark.xml. -->
+    <dimen name="auth_brand_mark_size">64dp</dimen>
+    <dimen name="auth_brand_mark_corner_radius">16dp</dimen>
+    <!-- "PetCare" under the logo: larger than a list title, smaller than the screen heading, so the
+         three lines of the header step down in size as they go. -->
+    <dimen name="auth_brand_name_text_size">19sp</dimen>
+
+    <!-- The gap between the header block and the first control (toggle or step bar). -->
+    <dimen name="auth_header_gap">20dp</dimen>
+
+    <!-- The log in / register toggle: taller than the profile screen's preference toggle because it is
+         the main navigation on this screen rather than a setting. -->
+    <dimen name="auth_segment_height">42dp</dimen>
+
+    <!-- Text fields. The height comes from vertical padding inside the field rather than a fixed
+         height, so a larger font setting grows the field instead of clipping the text. -->
+    <dimen name="auth_field_corner_radius">16dp</dimen>
+    <dimen name="auth_field_padding_vertical">14dp</dimen>
+    <dimen name="auth_field_padding_horizontal">16dp</dimen>
+    <!-- Label-to-field and field-to-next-label spacing. -->
+    <dimen name="auth_label_gap">6dp</dimen>
+    <dimen name="auth_field_gap">14dp</dimen>
+    <!-- The small mono helper lines ("Forgot it? Reset by SMS."). -->
+    <dimen name="auth_helper_text_size">11sp</dimen>
+
+    <!-- The main filled button and the Google button. -->
+    <dimen name="auth_button_height">52dp</dimen>
+    <dimen name="auth_google_icon_size">18dp</dimen>
+
+    <!-- The step bar: a thin track, as in the mockup, rather than the Tasks tab's 8dp progress bar. -->
+    <dimen name="auth_step_bar_height">4dp</dimen>
+
+    <!-- The six code boxes. -->
+    <dimen name="auth_code_box_corner_radius">12dp</dimen>
+    <dimen name="auth_code_box_gap">8dp</dimen>
+    <dimen name="auth_code_box_stroke_active">1.5dp</dimen>
+
+    <!-- The on-screen keypad. 48dp is the minimum touch target Android's accessibility guidance asks
+         for, and matches the mockup's key height closely. -->
+    <dimen name="auth_key_height">48dp</dimen>
+    <dimen name="auth_key_gap">8dp</dimen>
+    <dimen name="auth_key_corner_radius">14dp</dimen>
+    <dimen name="auth_key_text_size">18sp</dimen>
+
+    <!-- The reset option cards. -->
+    <dimen name="auth_option_card_padding">14dp</dimen>
+    <dimen name="auth_option_badge_size">36dp</dimen>
+    <dimen name="auth_option_badge_corner_radius">9dp</dimen>
+    <dimen name="auth_option_badge_text_size">9sp</dimen>
+    <dimen name="auth_radio_size">22dp</dimen>
+
 </resources>

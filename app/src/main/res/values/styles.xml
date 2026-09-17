@@ -2087,4 +2087,353 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <!-- ================================ Sign-in screens ================================
+         Log in / register, two-factor, and the three password-reset steps. Every one of these screens
+         shares the same header (view_auth_header.xml), the same fields and the same buttons, so each
+         look is described once here and the five layouts only name styles. -->
+
+    <!-- The page itself: a scrolling column on the cream page colour. Set on each screen's root
+         ScrollView. -->
+    <style name="PetCare.Auth.Page" parent="">
+        <item name="android:background">?android:attr/colorBackground</item>
+        <item name="android:fillViewport">true</item>
+        <item name="android:clipToPadding">false</item>
+    </style>
+
+    <!-- The column inside that page. -->
+    <style name="PetCare.Auth.Column" parent="">
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingStart">@dimen/auth_screen_padding</item>
+        <item name="android:paddingEnd">@dimen/auth_screen_padding</item>
+        <item name="android:paddingTop">@dimen/auth_screen_padding_top</item>
+        <item name="android:paddingBottom">@dimen/auth_screen_padding_bottom</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The shared header ~~~~~~~~~~ -->
+
+    <!-- "PetCare" under the logo. Schibsted in bold rather than the Bricolage headline face: the
+         mockup sets the name as a sturdy wordmark, and the heavy Bricolage is kept for the heading
+         two lines below so the two do not compete. -->
+    <style name="PetCare.Auth.BrandName" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textSize">@dimen/auth_brand_name_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- "DAILY PET TRACKING": the app's micro-label, centred and spaced a little wider still, since
+         here it is a tagline rather than a heading. -->
+    <style name="PetCare.Auth.Tagline" parent="PetCare.SectionLabel">
+        <item name="android:letterSpacing">0.2</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- The screen heading — "Welcome back", "Enter reset code". The largest text on these screens. -->
+    <style name="PetCare.Auth.Title" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceHeadlineMedium</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- The muted paragraph under the heading. -->
+    <style name="PetCare.Auth.Subtitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:gravity">center</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The log in / register toggle ~~~~~~~~~~
+         The profile screen's two-option toggle, which already has exactly the design's behaviour: a
+         groove with a strong-filled pill in the chosen half. Only the height and the lettering change,
+         so these inherit rather than re-describe it. -->
+
+    <style name="PetCare.Auth.SegmentTrack" parent="PetCare.Profile.SegmentTrack">
+        <item name="android:layout_height">@dimen/auth_segment_height</item>
+    </style>
+
+    <style name="PetCare.Auth.Segment" parent="PetCare.Profile.Segment">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ Fields ~~~~~~~~~~ -->
+
+    <!-- "EMAIL OR PHONE", "PASSWORD": the micro-label above each field. The design puts the label
+         *above* the box rather than floating inside it, which is why the fields below switch Material's
+         floating hint off. -->
+    <style name="PetCare.Auth.FieldLabel" parent="PetCare.SectionLabel">
+        <item name="android:layout_marginTop">@dimen/auth_field_gap</item>
+        <item name="android:layout_marginBottom">@dimen/auth_label_gap</item>
+    </style>
+
+    <!--
+        The field box: a white, softly rounded Material 3 outlined field.
+
+        hintEnabled=false turns off the floating label (the label is the TextView above), and makes
+        android:hint on the inner EditText behave as a plain placeholder — "At least 8 characters".
+        The error message still appears under the box; TextInputLayout draws it whatever the hint
+        setting.
+    -->
+    <style name="PetCare.Auth.Field" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="hintEnabled">false</item>
+        <item name="boxBackgroundColor">?attr/colorSurface</item>
+        <item name="boxStrokeColor">@color/auth_field_stroke</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">1.5dp</item>
+        <item name="boxCornerRadiusTopStart">@dimen/auth_field_corner_radius</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/auth_field_corner_radius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/auth_field_corner_radius</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/auth_field_corner_radius</item>
+        <item name="errorTextAppearance">?attr/textAppearanceBodySmall</item>
+    </style>
+
+    <!-- The text inside a field. The vertical padding sets the field's height (see dimens.xml). -->
+    <style name="PetCare.Auth.FieldInput" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textColorHint">?attr/colorOnSurfaceVariant</item>
+        <item name="android:paddingTop">@dimen/auth_field_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/auth_field_padding_vertical</item>
+        <item name="android:paddingStart">@dimen/auth_field_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/auth_field_padding_horizontal</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "Forgot it? Reset by SMS.", "Used for delegation SMS and OTP login", "Code refreshes every 30
+         seconds…": small muted monospace notes. Monospace to match the labels, which marks them as
+         annotations on the form rather than as part of what the user reads through. -->
+    <style name="PetCare.Auth.Helper" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/auth_helper_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <!-- A validation message that is not attached to a TextInputLayout — under the consent checkbox,
+         and under the code boxes. The same size and colour TextInputLayout uses for its own errors, so
+         the two kinds look identical. -->
+    <style name="PetCare.Auth.ErrorText" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:textColor">?attr/colorError</item>
+        <item name="android:accessibilityLiveRegion">polite</item>
+    </style>
+
+    <!-- The consent sentence beside the checkbox. -->
+    <style name="PetCare.Auth.Consent" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textColorLink">?attr/colorOnSurface</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ Links and buttons ~~~~~~~~~~ -->
+
+    <!-- "FORGOT PASSWORD?", "LOST ACCESS?", "RESEND": bold monospace capitals, the same link the Places
+         tab uses for "OPEN IN MAPS". Inherited so a text link is one object across the app. -->
+    <style name="PetCare.Auth.TextLink" parent="PetCare.Places.TextLink">
+        <item name="android:letterSpacing">0.08</item>
+    </style>
+
+    <!-- "← BACK TO LOG IN", "← USE A DIFFERENT ACCOUNT": the quietest link on the page. Muted, lighter
+         and spaced wider, because it is the way *out* of the flow rather than the way forward. -->
+    <style name="PetCare.Auth.BackLink" parent="PetCare.Auth.TextLink">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.18</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+    </style>
+
+    <!--
+        The main action — "LOG IN", "CREATE ACCOUNT", "SEND RESET CODE", "VERIFY CODE".
+
+        A full-width pill in the app's strong fill. Its colours are state lists
+        (auth_primary_button_background / _text) so that disabling it — the verify buttons stay
+        disabled until all six digits are in — switches to the solid charcoal resting look rather than
+        Material's translucent default.
+    -->
+    <style name="PetCare.Auth.PrimaryButton" parent="Widget.Material3.Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:minHeight">@dimen/auth_button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="backgroundTint">@color/auth_primary_button_background</item>
+        <item name="android:textColor">@color/auth_primary_button_text</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- "Continue with Google": a white outlined pill with Google's mark before the label. iconTint is
+         cleared so Material does not repaint the four-colour mark in a single theme colour. Sentence
+         case, unlike the app's own buttons, as Google's sign-in branding asks. -->
+    <style name="PetCare.Auth.GoogleButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:minHeight">@dimen/auth_button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="icon">@drawable/ic_google_mark</item>
+        <item name="iconTint">@null</item>
+        <item name="iconSize">@dimen/auth_google_icon_size</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">@dimen/spacing_sm</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- The hairlines either side of "OR". -->
+    <style name="PetCare.Auth.DividerLine" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">?attr/colorOutlineVariant</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- "OR" itself. -->
+    <style name="PetCare.Auth.DividerLabel" parent="PetCare.SectionLabel">
+        <item name="android:paddingStart">@dimen/spacing_md</item>
+        <item name="android:paddingEnd">@dimen/spacing_md</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ Step bar ~~~~~~~~~~ -->
+
+    <!-- "STEP 2 OF 3" at the right-hand end of the step bar. -->
+    <style name="PetCare.Auth.StepLabel" parent="PetCare.SectionLabel">
+        <item name="android:layout_marginStart">@dimen/spacing_md</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ Code boxes and keypad (CodeKeypadView) ~~~~~~~~~~ -->
+
+    <!-- One digit box. Its outline comes from bg_auth_code_box.xml, driven by two view states. Hidden
+         from TalkBack individually: the row as a whole announces "3 of 6 digits entered", which is far
+         more useful than six separate one-character boxes. -->
+    <style name="PetCare.Auth.CodeBox" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:background">@drawable/bg_auth_code_box</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">?attr/textAppearanceHeadlineSmall</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- One keypad key: a light rounded button. A MaterialButton rather than a TextView, for the
+         ripple, the button role TalkBack announces, and the minimum touch target. -->
+    <style name="PetCare.Auth.Key" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">@dimen/auth_key_height</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:padding">0dp</item>
+        <item name="cornerRadius">@dimen/auth_key_corner_radius</item>
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textSize">@dimen/auth_key_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- The empty cell left of 0. A plain View, not a button: it does nothing and is not announced. -->
+    <style name="PetCare.Auth.KeyBlank" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">@dimen/auth_key_height</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/bg_auth_key_blank</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- A row of three keys. -->
+    <style name="PetCare.Auth.KeyRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/auth_key_gap</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ Reset option cards ~~~~~~~~~~ -->
+
+    <!--
+        "Send to email" / "Send by SMS".
+
+        A checkable MaterialCardView: the fragment sets isChecked on the chosen card, and the fill,
+        outline, badge and radio all answer that single state through their colour state lists. The
+        default checked-corner tick and the checked foreground wash are switched off, since the design
+        shows selection through the fill and the radio instead. Flat with an outline rather than the
+        app's default shadowed card, as in the mockup: these are choices within a form, not panels.
+    -->
+    <style name="PetCare.Auth.OptionCard" parent="PetCare.Card">
+        <item name="android:checkable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardBackgroundColor">@color/auth_option_card_background</item>
+        <item name="strokeColor">@color/auth_option_card_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="checkedIcon">@null</item>
+        <item name="cardForegroundColor">@android:color/transparent</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- The "MAIL" / "SMS" square. duplicateParentState lets it see the card's checked state; the
+         row between it and the card sets the same attribute so the state passes all the way down. -->
+    <style name="PetCare.Auth.OptionBadge" parent="">
+        <item name="android:layout_width">@dimen/auth_option_badge_size</item>
+        <item name="android:layout_height">@dimen/auth_option_badge_size</item>
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:background">@drawable/bg_auth_option_badge</item>
+        <item name="android:backgroundTint">@color/auth_option_badge_background</item>
+        <item name="android:textColor">@color/auth_option_badge_text</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/auth_option_badge_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- "Send by SMS". -->
+    <style name="PetCare.Auth.OptionTitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- "+977 98•• ••12": the masked destination, in monospace so the dots line up with the digits. -->
+    <style name="PetCare.Auth.OptionDestination" parent="PetCare.Auth.Helper">
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- The radio circle. See bg_auth_radio.xml for why it is a View and not a RadioButton. -->
+    <style name="PetCare.Auth.OptionRadio" parent="">
+        <item name="android:layout_width">@dimen/auth_radio_size</item>
+        <item name="android:layout_height">@dimen/auth_radio_size</item>
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:background">@drawable/bg_auth_radio</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
 </resources>

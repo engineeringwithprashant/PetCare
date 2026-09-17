@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The outline of a reset option card: the accent round the chosen card, the faint hairline round the
+    other. Together with auth_option_card_background.xml this is the whole "selected" treatment, so
+    the chosen card is findable by its edge as well as its fill — which matters for anyone who cannot
+    easily tell pale yellow from white.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:color="@color/accent_yellow" android:state_checked="true" />
+
+    <item android:color="?attr/colorOutlineVariant" />
+
+</selector>

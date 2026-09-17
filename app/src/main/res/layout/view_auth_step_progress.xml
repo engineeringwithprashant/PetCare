@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The step bar on the two-factor and password-reset screens: three short segments, the completed
+    ones in yellow, with "STEP 2 OF 3" at the right-hand end.
+
+    Included with an id, so each screen reaches it as `binding.stepProgress` and calls
+    `showStep(step, total)` (ui/auth/AuthScreens.kt) rather than setting the segments and the label
+    separately — the two can then never disagree.
+
+    The bar is the app's existing SegmentedProgressView from the Tasks tab, reused as-is: it already
+    draws "n segments, the first k filled" with rounded ends in the accent colour. Only its height
+    differs here, and that view honours an exact layout_height.
+
+    Horizontal LinearLayout: the bar takes every pixel the label does not (width 0dp + weight 1), which
+    keeps the label pinned to the right edge whatever its translated length.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <!-- Hidden from TalkBack: the label beside it already says which step this is, in words. -->
+    <com.prash.petcare.ui.common.SegmentedProgressView
+        android:id="@+id/stepBar"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/auth_step_bar_height"
+        android:layout_weight="1"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/stepLabel"
+        style="@style/PetCare.Auth.StepLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="Step 1 of 3" />
+
+</LinearLayout>

@@ -37,31 +37,122 @@
     <string name="menu_profile">Profile</string>
     <string name="menu_sign_out">Sign out</string>
 
-    <!-- ============================ Registration screen ============================ -->
-    <string name="register_title">Create your account</string>
-    <string name="register_subtitle">Set up a profile to start tracking your pets\' care.</string>
+    <!-- ================================ Sign-in screens ================================
+         Log in / register (one screen with a toggle), two-factor, and the three password-reset steps.
+
+         Labels, links and button text are written in normal case and upper-cased by their styles
+         (textAllCaps), so TalkBack reads "Forgot password?" as words rather than spelling out
+         capitals, and a translation that should not be capitalised can opt out in its own style. -->
+
+    <!-- The shared header. "PetCare" is the product name and is not translated. -->
+    <string name="auth_brand_name" translatable="false">PetCare</string>
+    <string name="auth_brand_tagline">Daily pet tracking</string>
+    <!-- Spoken for the logo placeholder. -->
+    <string name="auth_brand_mark_description">PetCare</string>
+
+    <!-- Log in / register toggle. -->
+    <string name="auth_mode_login">Log in</string>
+    <string name="auth_mode_register">Register</string>
+    <!-- What TalkBack calls each half of the toggle ("Log in, tab, selected"). -->
+    <string name="auth_tab_role">Tab</string>
+
+    <!-- Log in. -->
+    <string name="login_title">Welcome back</string>
+    <string name="login_subtitle">Your pets\' records stay on this device and sync only to your own account.</string>
+    <string name="login_identifier_label">Email or phone</string>
+    <string name="login_identifier_hint">Email or phone number</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_password_helper">Forgot it? Reset by SMS.</string>
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="login_submit">Log in</string>
+
+    <!-- Register. -->
+    <string name="register_title">Make your account</string>
+    <string name="register_subtitle">Email and phone both work for sign-in — the phone number also receives delegation SMS replies.</string>
     <string name="register_full_name_label">Full name</string>
-    <string name="register_email_label">Email address</string>
+    <string name="register_full_name_hint">Prashant Pant</string>
+    <string name="register_email_label">Email</string>
+    <string name="register_email_hint">you@example.com</string>
+    <string name="register_phone_label">Phone</string>
+    <string name="register_phone_hint">+977 98XXXXXXXX</string>
+    <string name="register_phone_helper">Used for delegation SMS and OTP login</string>
     <string name="register_password_label">Password</string>
-    <string name="register_confirm_password_label">Confirm password</string>
-    <!-- %1$d is replaced at runtime with AuthViewModel.MIN_PASSWORD_LENGTH, so the rule stated
-         to the user can never drift out of step with the rule the code enforces. A plural because
-         a minimum of one character would otherwise read "At least 1 characters", and which plural
-         forms exist differs by language. -->
-    <plurals name="register_password_helper">
+    <!-- %1$d is AuthValidation.MIN_PASSWORD_LENGTH, filled in at runtime so the placeholder can never
+         disagree with the rule actually enforced. A plural because "At least 1 characters" would be
+         wrong, and which plural forms exist differs by language. -->
+    <plurals name="register_password_hint">
         <item quantity="one">At least %1$d character</item>
         <item quantity="other">At least %1$d characters</item>
     </plurals>
+    <string name="register_confirm_password_label">Confirm password</string>
+    <string name="register_confirm_password_hint">Repeat password</string>
+    <!-- The <annotation> marks which words become the tappable "terms" link. The fragment finds the
+         annotation and attaches the link to exactly that range, so a translation can put the link
+         wherever its grammar needs it without any code changing. -->
+    <string name="register_consent">I agree to keep my pets\' records on this device and accept the <annotation link="terms">terms</annotation>.</string>
     <string name="register_submit">Create account</string>
-    <string name="register_have_account">Already have an account? Sign in</string>
 
-    <!-- =============================== Login screen =============================== -->
-    <string name="login_title">Welcome back</string>
-    <string name="login_subtitle">Sign in to continue caring for your pets.</string>
-    <string name="login_email_label">Email address</string>
-    <string name="login_password_label">Password</string>
-    <string name="login_submit">Sign in</string>
-    <string name="login_no_account">New here? Create an account</string>
+    <!-- The divider and the Google button, shared by both modes. -->
+    <string name="auth_or">Or</string>
+    <string name="auth_continue_with_google">Continue with Google</string>
+
+    <!-- Messages for pieces that are built but not yet connected to a backend. -->
+    <string name="auth_google_unavailable">Google sign-in isn\'t available yet.</string>
+    <string name="auth_terms_unavailable">The terms page isn\'t available yet.</string>
+
+    <!-- The step bar, shared by two-factor and the reset steps. %1$d is this step, %2$d the total. -->
+    <string name="auth_step_of">Step %1$d of %2$d</string>
+    <!-- The row of code boxes, as TalkBack reads it. -->
+    <string name="auth_code_progress">Code entered: %1$d of %2$d</string>
+    <string name="auth_key_backspace">⌫</string>
+    <string name="auth_key_backspace_description">Delete last digit</string>
+
+    <!-- Two-factor check. -->
+    <string name="two_factor_title">Two-factor check</string>
+    <string name="two_factor_subtitle">Open Google Authenticator and enter the 6-digit code for PetCare.</string>
+    <string name="two_factor_refresh_note">Code refreshes every 30 seconds in your authenticator app.</string>
+    <string name="two_factor_lost_access">Lost access?</string>
+    <string name="two_factor_submit">Verify &amp; log in</string>
+    <string name="two_factor_different_account">← Use a different account</string>
+    <string name="two_factor_unavailable">Authenticator codes can\'t be checked yet.</string>
+    <string name="two_factor_lost_access_unavailable">Account recovery isn\'t available yet.</string>
+
+    <!-- Reset, step 1: choose where the code goes. -->
+    <string name="reset_choose_title">Reset your password</string>
+    <string name="reset_choose_subtitle">Where should the 6-digit reset code go?</string>
+    <string name="reset_option_email_badge">Mail</string>
+    <string name="reset_option_email_title">Send to email</string>
+    <string name="reset_option_sms_badge">SMS</string>
+    <string name="reset_option_sms_title">Send by SMS</string>
+    <!-- Shown under an option when the sign-in screen gave no address or number to show. -->
+    <string name="reset_option_email_unknown">The email on your account</string>
+    <string name="reset_option_sms_unknown">The phone number on your account</string>
+    <string name="reset_send_code">Send reset code</string>
+    <string name="auth_back_to_login">← Back to log in</string>
+
+    <!-- Reset, step 2: enter the code. %1$s is the destination (masked for a phone number), %2$d the
+         minutes until the code expires. -->
+    <string name="reset_code_title">Enter reset code</string>
+    <!-- A plural, chosen by the number of minutes, so a one-minute expiry reads correctly. -->
+    <plurals name="reset_code_subtitle">
+        <item quantity="one">We sent a 6-digit code to %1$s. It expires in %2$d minute.</item>
+        <item quantity="other">We sent a 6-digit code to %1$s. It expires in %2$d minutes.</item>
+    </plurals>
+    <string name="reset_code_sent_note">Sent to %1$s · expires in %2$d min</string>
+    <!-- Used in place of %1$s above when no destination is known. -->
+    <string name="reset_code_destination_email">your email</string>
+    <string name="reset_code_destination_sms">your phone</string>
+    <string name="reset_code_resend">Resend</string>
+    <string name="reset_code_submit">Verify code</string>
+    <string name="reset_code_resend_unavailable">Reset codes can\'t be sent yet.</string>
+
+    <!-- Reset, step 3: choose the new password. -->
+    <string name="reset_password_title">Set a new password</string>
+    <string name="reset_password_subtitle">Pick something you haven\'t used before. You\'ll log in with it from now on.</string>
+    <string name="reset_password_label">New password</string>
+    <string name="reset_password_confirm_label">Confirm new password</string>
+    <string name="reset_password_submit">Save new password</string>
+    <string name="reset_password_unavailable">Password reset isn\'t connected yet — your password was not changed.</string>
 
     <!-- ============================== Home dashboard ==============================
          The screen the app opens on once signed in, top to bottom: the greeting and clock, three stat
@@ -467,6 +558,16 @@
          "no account with that email" would let someone test addresses one at a time to discover
          who has an account. -->
     <string name="error_invalid_credentials">Incorrect email or password</string>
+    <string name="error_identifier_required">Please enter your email or phone number</string>
+    <string name="error_identifier_invalid">Enter a valid email address or phone number</string>
+    <!-- Phone numbers are accepted on the log-in form, but accounts can only be looked up by email
+         until phone sign-in is connected. -->
+    <string name="error_phone_login_unavailable">Phone sign-in isn\'t available yet — use your email</string>
+    <string name="error_phone_required">Please enter your phone number</string>
+    <string name="error_phone_invalid">Enter a valid phone number, e.g. +977 9812345678</string>
+    <string name="error_consent_required">Please accept the terms to create an account</string>
+    <!-- Ready for the code screens once verification is connected; see CodeEntryViewModel. -->
+    <string name="error_code_incorrect">That code is not right. Check it and try again.</string>
 
     <!-- Add / edit pet errors. -->
     <string name="error_pet_name_required">Please enter a name</string>

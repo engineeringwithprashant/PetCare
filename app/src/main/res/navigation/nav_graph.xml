@@ -10,9 +10,10 @@
 
     **The shape of the graph.** It is in two halves.
 
-    *Authentication* — loginFragment and registerFragment. The graph starts here, and both routes
-    out of it clear the whole graph behind them so that "back" from the app cannot return to a form
-    the user has already completed.
+    *Authentication* — authFragment (log in and register, one screen with a toggle), the two-factor
+    check, and the three password-reset steps. The graph starts at authFragment, and every route from
+    here into the app clears the whole graph behind it so that "back" from the app cannot return to a
+    form the user has already completed.
 
     *The signed-in app* — five **top-level** destinations (homeFragment, petsFragment,
     checklistFragment, placesFragment, expensesFragment), each matching an item in
@@ -37,7 +38,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/loginFragment">
+    app:startDestination="@id/authFragment">
 
     <!--
         ======================== Global actions ========================
@@ -57,47 +58,112 @@
 
     <!-- ============================== Authentication ============================== -->
 
-    <!-- Sign-in screen. Entry point of the app. -->
+    <!-- Log in / register. Entry point of the app. The two forms are one destination with a toggle,
+         so switching between them is not navigation at all and adds nothing to the back stack. -->
     <fragment
-        android:id="@+id/loginFragment"
-        android:name="com.prash.petcare.ui.auth.LoginFragment"
+        android:id="@+id/authFragment"
+        android:name="com.prash.petcare.ui.auth.AuthFragment"
         android:label="@string/login_title"
-        tools:layout="@layout/fragment_login">
+        tools:layout="@layout/fragment_auth">
 
-        <!-- "New here? Create an account" — an ordinary forward navigation, so pressing back
-             returns to the login screen. -->
-        <action
-            android:id="@+id/action_login_to_register"
-            app:destination="@id/registerFragment" />
-
-        <!-- Successful sign-in.
+        <!-- Successful log in or sign-up.
 
              popUpTo the graph itself with popUpToInclusive removes every auth screen from the
              back stack. Without it, pressing back from the home screen would return the user to
-             the login form they have just completed, which looks like being signed out. -->
+             the form they have just completed, which looks like being signed out. -->
         <action
-            android:id="@+id/action_login_to_home"
+            android:id="@+id/action_auth_to_home"
             app:destination="@id/homeFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
+
+        <!-- The password was right but the account needs its second factor. An ordinary forward step:
+             back (or "use a different account") returns here with the form as it was. -->
+        <action
+            android:id="@+id/action_auth_to_two_factor"
+            app:destination="@id/twoFactorFragment" />
+
+        <!-- "FORGOT PASSWORD?" starts the three reset steps. -->
+        <action
+            android:id="@+id/action_auth_to_reset_choose"
+            app:destination="@id/resetChooseFragment" />
     </fragment>
 
-    <!-- Account creation screen. Always reached from the login screen, so its "already have an
-         account" link simply navigates back up rather than needing an action of its own. -->
+    <!-- Two-factor check: step 2 of logging in. The account is not signed in until this screen says
+         so, which is why its id travels as an argument rather than through SessionViewModel. -->
     <fragment
-        android:id="@+id/registerFragment"
-        android:name="com.prash.petcare.ui.auth.RegisterFragment"
-        android:label="@string/register_title"
-        tools:layout="@layout/fragment_register">
+        android:id="@+id/twoFactorFragment"
+        android:name="com.prash.petcare.ui.auth.twofactor.TwoFactorFragment"
+        android:label="@string/two_factor_title"
+        tools:layout="@layout/fragment_two_factor">
 
-        <!-- Successful sign-up signs the new user straight in, clearing the auth stack for the
-             same reason as the login action above. -->
+        <argument
+            android:name="userId"
+            app:argType="long" />
+
+        <!-- Code accepted: into the app, clearing the auth screens as on log in. -->
         <action
-            android:id="@+id/action_register_to_home"
+            android:id="@+id/action_two_factor_to_home"
             app:destination="@id/homeFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
     </fragment>
+
+    <!-- Reset step 1: choose where the code goes. "BACK TO LOG IN" on each reset step pops back to
+         authFragment rather than navigating to it, so no second log in screen is stacked. -->
+    <fragment
+        android:id="@+id/resetChooseFragment"
+        android:name="com.prash.petcare.ui.auth.reset.ResetChooseFragment"
+        android:label="@string/reset_choose_title"
+        tools:layout="@layout/fragment_reset_choose">
+
+        <!-- Whatever was in the log in screen's email-or-phone field; empty if nothing. -->
+        <argument
+            android:name="identifier"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_reset_choose_to_reset_code"
+            app:destination="@id/resetCodeFragment" />
+    </fragment>
+
+    <!-- Reset step 2: enter the code. -->
+    <fragment
+        android:id="@+id/resetCodeFragment"
+        android:name="com.prash.petcare.ui.auth.reset.ResetCodeFragment"
+        android:label="@string/reset_code_title"
+        tools:layout="@layout/fragment_reset_code">
+
+        <!-- The ResetChannel name: EMAIL or SMS. -->
+        <argument
+            android:name="channel"
+            app:argType="string" />
+
+        <!-- The address or masked number to name on screen; null when step 1 did not know it. -->
+        <argument
+            android:name="destination"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+
+        <!-- Code accepted: on to step 3. This screen is popped on the way, because a code can only be
+             used once — back from step 3 should offer to send a new code (step 1), not to retype a
+             spent one. -->
+        <action
+            android:id="@+id/action_reset_code_to_new_password"
+            app:destination="@id/resetNewPasswordFragment"
+            app:popUpTo="@id/resetCodeFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Reset step 3: choose the new password.
+         TODO(reset-backend): add a required `resetToken` argument once step 2 receives one. -->
+    <fragment
+        android:id="@+id/resetNewPasswordFragment"
+        android:name="com.prash.petcare.ui.auth.reset.ResetNewPasswordFragment"
+        android:label="@string/reset_password_title"
+        tools:layout="@layout/fragment_reset_new_password" />
 
     <!-- ========================= Top-level: the bottom bar =========================
          These five are the bottom navigation bar's destinations. They are listed here in the same

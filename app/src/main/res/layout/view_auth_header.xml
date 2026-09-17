@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The header every sign-in screen opens with: the logo, "PetCare", "DAILY PET TRACKING", then that
+    screen's own heading and subtitle.
+
+    Pulled into each screen with <include android:id="@+id/header">. Because the include has an id,
+    ViewBinding gives the screen a nested `binding.header` of type ViewAuthHeaderBinding, and the
+    fragment fills in the two lines that differ (title, subtitle) through it — see
+    ui/auth/AuthScreens.kt. The three lines above them are identical everywhere, so they are written
+    once here and five screens cannot drift apart.
+
+    A vertical LinearLayout with every child centred: the header is a simple stack with nothing beside
+    anything, which is exactly what LinearLayout is for and cheaper to measure than a ConstraintLayout.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    tools:background="?android:attr/colorBackground">
+
+    <!--
+        TODO(logo): placeholder for the PetCare logo. When the artwork arrives, add
+        android:src="@drawable/<logo>" here and remove the android:background line (and delete
+        res/drawable/bg_auth_brand_mark.xml). The size and spacing already match the mockup.
+
+        An ImageView rather than a plain View precisely so the logo can be dropped in as its source.
+        scaleType fitCenter keeps a logo of any aspect ratio whole inside the square.
+    -->
+    <ImageView
+        android:id="@+id/brandMark"
+        android:layout_width="@dimen/auth_brand_mark_size"
+        android:layout_height="@dimen/auth_brand_mark_size"
+        android:background="@drawable/bg_auth_brand_mark"
+        android:contentDescription="@string/auth_brand_mark_description"
+        android:scaleType="fitCenter" />
+
+    <!-- The wordmark. Hidden from TalkBack because the logo above already announces "PetCare";
+         hearing it twice in a row adds nothing. -->
+    <TextView
+        android:id="@+id/brandName"
+        style="@style/PetCare.Auth.BrandName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:importantForAccessibility="no"
+        android:text="@string/auth_brand_name" />
+
+    <TextView
+        android:id="@+id/brandTagline"
+        style="@style/PetCare.Auth.Tagline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="@string/auth_brand_tagline" />
+
+    <!-- The screen's heading. Marked as a heading for accessibility (API 28+), so TalkBack users can
+         jump straight to it; older versions simply ignore the attribute. Text is set by the fragment. -->
+    <TextView
+        android:id="@+id/title"
+        style="@style/PetCare.Auth.Title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:accessibilityHeading="true"
+        tools:targetApi="p"
+        tools:text="@string/login_title" />
+
+    <TextView
+        android:id="@+id/subtitle"
+        style="@style/PetCare.Auth.Subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:paddingStart="@dimen/spacing_md"
+        android:paddingEnd="@dimen/spacing_md"
+        tools:text="@string/login_subtitle" />
+
+</LinearLayout>

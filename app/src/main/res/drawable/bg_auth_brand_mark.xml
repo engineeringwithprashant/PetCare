@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    PLACEHOLDER for the app's logo at the top of every sign-in screen: a plain yellow rounded square.
+
+    TODO(logo): the real PetCare logo has not been supplied yet. When it is, set it as android:src on the
+    ImageView `brandMark` in res/layout/view_auth_header.xml and remove that view's
+    android:background reference to this file (then delete this file). The ImageView is already sized
+    and spaced to the mockup, so the logo should drop in without any layout change.
+
+    Deliberately no artwork of any kind — only the square the logo will occupy.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@color/accent_yellow" />
+
+    <corners android:radius="@dimen/auth_brand_mark_corner_radius" />
+
+</shape>
