@@ -1,23 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The body of the second delete-account dialog: a single field the user types DELETE into.
+    The body of the second delete-account dialog: a field the user types DELETE into, and a field for
+    their password.
 
     **Why a second dialog at all.** The first explains what is destroyed and offers a way out, which is
-    the normal confirmation. This one exists because the action has no undo whatsoever — every pet,
-    routine, task, expense and saved place on the device goes with the account — and a plain
-    confirm button is one mis-tap away from all of it. Typing the word cannot be done by accident, and
-    the few seconds it takes are a moment in which the user re-reads what they are about to do. It is
-    the pattern GitHub, Stripe and every other tool with an irreversible destroy action settles on, for
+    the normal confirmation. This one exists because the action has no undo whatsoever — the account and
+    every pet, routine, task, expense and saved place on the device go with it — and a plain confirm
+    button is one mis-tap away from all of it. Typing the word cannot be done by accident, and the few
+    seconds it takes are a moment in which the user re-reads what they are about to do. It is the
+    pattern GitHub, Stripe and every other tool with an irreversible destroy action settles on, for
     exactly this reason.
 
-    The dialog's title, its explanation and its two buttons come from MaterialAlertDialogBuilder, so
-    this file is only the field between them.
+    **Why the password as well.** Firebase Authentication only deletes an account right after its
+    password has been checked (see FirebaseAuthService.deleteAccount). Asking for it here is also what
+    stops someone holding an unlocked phone from deleting the owner's account.
+
+    The dialog's title and its two buttons come from MaterialAlertDialogBuilder, so this file is only
+    the fields between them. A vertical LinearLayout, because the two fields simply stack.
 
     `textCapCharacters` puts the keyboard straight into capitals, since the word to type is written in
     capitals — the comparison itself ignores case (see ProfileFragment.askForDeleteWord), so this is a
     convenience rather than a requirement.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -36,6 +42,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textCapCharacters"
+            android:maxLines="1" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- The account's password. endIconMode="password_toggle" adds the eye icon that shows or hides
+         what was typed, as on the change-password screen. The autofill hint lets a password manager
+         fill it in. -->
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:hint="@string/profile_delete_password_hint"
+        app:endIconMode="password_toggle">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/passwordInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="password"
+            android:inputType="textPassword"
             android:maxLines="1" />
 
     </com.google.android.material.textfield.TextInputLayout>

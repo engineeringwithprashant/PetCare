@@ -1,11 +1,13 @@
 package com.prash.petcare.ui.profile
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
+import com.prash.petcare.R
 import com.prash.petcare.data.repository.PasswordChangeResult
 import com.prash.petcare.data.repository.UserRepository
 import com.prash.petcare.ui.auth.AuthValidation
@@ -45,21 +47,28 @@ sealed interface ChangePasswordEvent {
 
     /** The account was deleted while the form was open. */
     data object AccountMissing : ChangePasswordEvent
+
+    /** Firebase rejected the new password under the project's password policy. */
+    data object WeakPassword : ChangePasswordEvent
+
+    /**
+     * The change could not be made for a reason that is not about one field (no network, too many
+     * attempts, signed out of Firebase). [messageRes] says which, and nothing was changed.
+     */
+    data class Message(@param:StringRes val messageRes: Int) : ChangePasswordEvent
 }
 
 /**
  * Backs the form behind the profile screen's "UPDATE" pill.
  *
  * Sits in the middle of the MVVM chain, and is unusually thin on purpose: the part that matters —
- * verifying the current password against the stored hash and replacing it — happens in
- * [UserRepository.changePassword], not here. That is deliberate. Verifying means comparing against a
- * credential, and a credential should not travel up to a ViewModel for a screen's benefit; everything
- * that touches one stays in the data layer and in
- * [com.prash.petcare.util.PasswordHasher].
+ * having Firebase Authentication check the current password and replace it — happens in
+ * [UserRepository.changePassword], not here. Everything that touches the credential stays in the data
+ * layer.
  *
  * What this class does own is the *form's* rules: that a current password was typed at all, that the
- * new one is long enough, and that it was typed the same way twice. None of those needs the stored
- * hash, and all of them can be checked before doing the slow work.
+ * new one is long enough, and that it was typed the same way twice. None of those needs Firebase, and
+ * all of them can be checked before making the network call.
  *
  * @param userId Which account's password to change, read from the session.
  */
@@ -73,9 +82,9 @@ class ChangePasswordViewModel(
     /**
      * True while the change is in flight, so the screen can disable its button.
      *
-     * It matters here more than on most forms: hashing is PBKDF2 at 100,000 iterations and is *meant*
-     * to take a noticeable moment, so without this a user could tap "Change password" three times and
-     * queue three changes.
+     * It matters here more than on most forms: the change is a round trip to Firebase that takes a
+     * noticeable moment, so without this a user could tap "Change password" three times and queue three
+     * changes.
      */
     val isWorking: StateFlow<Boolean> = _isWorking.asStateFlow()
 
@@ -86,8 +95,8 @@ class ChangePasswordViewModel(
      * Checks the form, then asks the repository to make the change.
      *
      * The three form rules are applied first and in order, so the user is told about the nearest
-     * problem rather than the last one — and so the expensive hashing is never started for a form that
-     * could not have succeeded anyway.
+     * problem rather than the last one — and so Firebase is never contacted for a form that could not
+     * have succeeded anyway.
      *
      * Passwords are deliberately **not** trimmed. A leading or trailing space is a legitimate part of
      * a password, and silently removing it here would let someone set a password they could then never
@@ -100,7 +109,7 @@ class ChangePasswordViewModel(
             newPassword != confirmPassword -> return send(ChangePasswordEvent.Mismatch)
         }
 
-        // Guards against a second submission slipping through while the first is still hashing.
+        // Guards against a second submission slipping through while the first is still in flight.
         if (_isWorking.value) return
         _isWorking.value = true
 
@@ -119,6 +128,15 @@ class ChangePasswordViewModel(
                     PasswordChangeResult.WrongCurrentPassword -> ChangePasswordEvent.CurrentWrong
                     PasswordChangeResult.SameAsCurrent -> ChangePasswordEvent.SameAsCurrent
                     PasswordChangeResult.AccountMissing -> ChangePasswordEvent.AccountMissing
+                    PasswordChangeResult.WeakPassword -> ChangePasswordEvent.WeakPassword
+                    PasswordChangeResult.NoNetwork ->
+                        ChangePasswordEvent.Message(R.string.auth_error_network)
+                    PasswordChangeResult.RateLimited ->
+                        ChangePasswordEvent.Message(R.string.auth_error_rate_limited)
+                    PasswordChangeResult.SignInAgain ->
+                        ChangePasswordEvent.Message(R.string.auth_error_sign_in_again)
+                    PasswordChangeResult.Failed ->
+                        ChangePasswordEvent.Message(R.string.auth_error_unknown)
                 }
             )
         }

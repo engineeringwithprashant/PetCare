@@ -18,11 +18,14 @@ import androidx.room.PrimaryKey
  * @property id Primary key. `autoGenerate = true` means SQLite assigns the value, so new
  *   objects are built with the default 0 and receive their real id on insert.
  * @property fullName Display name shown in the app's profile area.
- * @property email Login identifier. The unique index declared below makes the database itself
- *   reject a duplicate address, so two accounts can never share one email even if a bug in the
- *   sign-up screen submits the same form twice.
- * @property passwordHash The *hashed* password, never the plain text the user typed. Storing a
- *   raw password would expose the account to anyone who could read the device's database file.
+ * **No password here.** Firebase Authentication stores and checks the password (see
+ * [com.prash.petcare.data.remote.FirebaseAuthService]). This row is the account's *profile* on this
+ * device, and the owner that every other record points to. Not keeping a credential on the device
+ * means there is nothing to steal from the database file.
+ *
+ * @property email The login identifier, and the link between this row and its Firebase account.
+ *   The unique index declared below makes the database itself reject a duplicate address, so two
+ *   profiles can never share one email, even if two logins race.
  * @property phone Optional contact number, shown on the profile screen. Nullable because every
  *   account created before this column existed has none, and because the app never requires one —
  *   nothing breaks without it. It is the user's *own* number, kept so the profile can display it;
@@ -41,8 +44,8 @@ import androidx.room.PrimaryKey
  */
 @Entity(
     tableName = "users",
-    // Unique index: enforces one account per email, and doubles as a fast lookup for the
-    // login query, which searches by email.
+    // Unique index: enforces one profile per email, and doubles as a fast lookup for the query
+    // that matches a Firebase login to its profile by email.
     indices = [Index(value = ["email"], unique = true)]
 )
 data class User(
@@ -50,7 +53,6 @@ data class User(
     val id: Long = 0L,
     val fullName: String,
     val email: String,
-    val passwordHash: String,
     val phone: String? = null,
     val role: UserRole = UserRole.OWNER,
     val passwordChangedAt: Long? = null,

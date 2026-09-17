@@ -26,15 +26,15 @@ import kotlinx.coroutines.launch
  * rule that can only be tested by driving the UI.
  *
  * The three fields are never logged, never put into state that outlives the screen, and never leave
- * this class except as arguments to one function call. The password itself reaches
- * [com.prash.petcare.util.PasswordHasher] and nothing else.
+ * this class except as arguments to one function call. From there the data layer sends them to
+ * Firebase Authentication and keeps nothing.
  */
 class ChangePasswordFragment : Fragment() {
 
     private var _binding: FragmentChangePasswordBinding? = null
     private val binding get() = _binding!!
 
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: ChangePasswordViewModel by viewModels {
         ChangePasswordViewModel.factory(sessionViewModel.userId.value)
@@ -69,8 +69,8 @@ class ChangePasswordFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.events.collect(::handleEvent) }
                 launch {
-                    // Hashing is deliberately slow, so the button is disabled while it runs rather
-                    // than letting three taps queue three changes.
+                    // The change is a round trip to Firebase, so the button is disabled while it
+                    // runs rather than letting three taps queue three changes.
                     viewModel.isWorking.collect { isWorking ->
                         binding.saveButton.isEnabled = !isWorking
                     }
@@ -127,6 +127,12 @@ class ChangePasswordFragment : Fragment() {
 
             is ChangePasswordEvent.SameAsCurrent ->
                 binding.newPasswordInputLayout.error = getString(R.string.change_password_same)
+
+            is ChangePasswordEvent.WeakPassword ->
+                binding.newPasswordInputLayout.error = getString(R.string.error_password_weak)
+
+            // Not about any one field, so a Snackbar rather than a field error.
+            is ChangePasswordEvent.Message -> showMessage(getString(event.messageRes))
 
             is ChangePasswordEvent.AccountMissing -> {
                 showMessage(getString(R.string.account_details_gone))

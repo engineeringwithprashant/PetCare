@@ -13,6 +13,7 @@ import com.prash.petcare.data.local.DelegationContactStore
 import com.prash.petcare.data.local.PetCareDatabase
 import com.prash.petcare.data.local.SettingsStore
 import com.prash.petcare.data.local.WeatherCache
+import com.prash.petcare.data.remote.FirebaseAuthService
 import com.prash.petcare.data.remote.FirestoreSyncService
 import com.prash.petcare.data.remote.weather.WeatherApi
 import com.prash.petcare.data.repository.CareRoutineRepository
@@ -61,7 +62,23 @@ class PetCareApplication : Application() {
     /** The single Room database instance for the whole process. */
     private val database: PetCareDatabase by lazy { PetCareDatabase.getInstance(this) }
 
-    val userRepository: UserRepository by lazy { UserRepository(database.userDao()) }
+    /**
+     * The app's single route to Firebase Authentication, shared by the account repository and the
+     * password-reset repository so there is one Firebase connection and one place that handles its
+     * errors.
+     *
+     * `FirebaseAuth.getInstance()` needs no setup call, for the same reason given for Firestore on
+     * [syncManager]. Firebase Authentication and Firestore share one FirebaseApp, so once a user
+     * logs in, every Firestore request is made as that user automatically.
+     */
+    private val firebaseAuthService: FirebaseAuthService by lazy {
+        FirebaseAuthService(FirebaseAuth.getInstance())
+    }
+
+    /** Accounts: Firebase Authentication for the password, Room for the profile. */
+    val userRepository: UserRepository by lazy {
+        UserRepository(database.userDao(), firebaseAuthService)
+    }
 
     /**
      * The queue of deleted rows waiting to be removed from Firestore.
@@ -184,11 +201,10 @@ class PetCareApplication : Application() {
      * Sends password-reset emails through Firebase Authentication.
      *
      * Typed as the [PasswordResetRepository] interface, like [assistantRepository], so this is the
-     * only line in the app that names the Firebase version. `FirebaseAuth.getInstance()` needs no
-     * setup call, for the same reason given for Firestore on [syncManager] below.
+     * only line in the app that names the Firebase version.
      */
     val passwordResetRepository: PasswordResetRepository by lazy {
-        FirebasePasswordResetRepository(FirebaseAuth.getInstance())
+        FirebasePasswordResetRepository(firebaseAuthService)
     }
 
     /**

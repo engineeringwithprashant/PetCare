@@ -46,7 +46,7 @@ import com.prash.petcare.data.local.entity.User
         Place::class,
         CareCompletion::class
     ],
-    version = 9,
+    version = 10,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -368,6 +368,63 @@ abstract class PetCareDatabase : RoomDatabase() {
         }
 
         /**
+         * Version 9 to 10: removes the `passwordHash` column from the `users` table, because
+         * Firebase Authentication now stores and checks passwords (see
+         * [com.prash.petcare.data.remote.FirebaseAuthService]).
+         *
+         * **Why the table is rebuilt.** SQLite only gained `ALTER TABLE … DROP COLUMN` in version
+         * 3.35, and Android 7 (this app's minSdk) ships a much older SQLite. So this follows
+         * SQLite's own procedure for changing a table's shape: create the new table under a
+         * temporary name, copy the rows across, drop the old table, and rename the new one into
+         * place. Every row keeps its `id`, so pets, places and every other table that points to a
+         * user by id still point to the same person.
+         *
+         * **Why the drop does not delete everyone's pets.** Those tables declare
+         * `ON DELETE CASCADE` against `users`, so dropping `users` could look as if it would take
+         * their rows with it. It does not, because foreign keys are not enforced while a
+         * migration runs. Room turns enforcement on only after the database has opened and every
+         * migration has finished. Room's own generated migrations rely on the same behaviour.
+         *
+         * **The SQL matches Room's exactly.** The `CREATE TABLE` repeats what Room generates from
+         * [User] (column order, types and `NOT NULL`s), and the index is recreated under the name
+         * Room gives it. Room checks the file against the entity every time it opens the database,
+         * so any difference would stop the app from starting.
+         *
+         * The old password hashes are simply not copied. Existing local accounts cannot log in after
+         * this anyway, because Firebase has never heard of them. They have to be registered again.
+         */
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `users_new` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `fullName` TEXT NOT NULL,
+                        `email` TEXT NOT NULL,
+                        `phone` TEXT,
+                        `role` TEXT NOT NULL,
+                        `passwordChangedAt` INTEGER,
+                        `photoUri` TEXT,
+                        `createdAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO `users_new`
+                        (`id`, `fullName`, `email`, `phone`, `role`, `passwordChangedAt`, `photoUri`, `createdAt`)
+                    SELECT `id`, `fullName`, `email`, `phone`, `role`, `passwordChangedAt`, `photoUri`, `createdAt`
+                    FROM `users`
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE `users`")
+                db.execSQL("ALTER TABLE `users_new` RENAME TO `users`")
+                // Dropping the table dropped its index too, so it is recreated on the renamed table.
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_users_email` ON `users` (`email`)")
+            }
+        }
+
+        /**
          * The one shared instance.
          *
          * `@Volatile` means a write here is immediately visible to every thread, which stops one
@@ -405,7 +462,8 @@ abstract class PetCareDatabase : RoomDatabase() {
                         MIGRATION_5_6,
                         MIGRATION_6_7,
                         MIGRATION_7_8,
-                        MIGRATION_8_9
+                        MIGRATION_8_9,
+                        MIGRATION_9_10
                     )
                     .build()
                     .also { INSTANCE = it }

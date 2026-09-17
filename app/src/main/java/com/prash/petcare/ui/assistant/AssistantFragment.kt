@@ -53,7 +53,7 @@ class AssistantFragment : Fragment() {
      * Which account is signed in, read from the Activity-wide session — this screen is reached by
      * destination id from the dashboard and has no navigation argument to carry it.
      */
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: AssistantViewModel by viewModels {
         AssistantViewModel.factory(sessionViewModel.userId.value)

@@ -115,7 +115,7 @@ class ChecklistFragment : Fragment() {
      * Which account is signed in. Read from the Activity-wide session, because a bottom navigation
      * bar moves between tabs by destination id and has nowhere to attach an argument.
      */
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: ChecklistViewModel by viewModels {
         ChecklistViewModel.factory(

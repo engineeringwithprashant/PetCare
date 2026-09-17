@@ -1,11 +1,13 @@
 package com.prash.petcare.ui.profile
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
+import com.prash.petcare.R
 import com.prash.petcare.data.local.CurrencyPreference
 import com.prash.petcare.data.local.DelegationContact
 import com.prash.petcare.data.local.DelegationContactStore
@@ -14,6 +16,8 @@ import com.prash.petcare.data.local.SettingsStore
 import com.prash.petcare.data.local.WeekStart
 import com.prash.petcare.data.local.WeightUnit
 import com.prash.petcare.data.local.entity.User
+import com.prash.petcare.data.remote.AuthFailure
+import com.prash.petcare.data.repository.AccountDeletionResult
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
@@ -105,6 +109,9 @@ sealed interface ProfileEvent {
 
     /** The account and everything under it is gone; the fragment returns to the sign-in screen. */
     data object AccountDeleted : ProfileEvent
+
+    /** Deleting failed (wrong password, no network…), so nothing was deleted. */
+    data class AccountDeletionFailed(@param:StringRes val messageRes: Int) : ProfileEvent
 }
 
 /**
@@ -362,22 +369,46 @@ class ProfileViewModel(
         syncManager.onUserSignedIn(userId)
     }
 
+    /** True while a deletion is in flight, so a second tap cannot start another one. */
+    private var isDeleting = false
+
     /**
-     * Deletes the account and everything belonging to it.
+     * Deletes the account and everything belonging to it, once Firebase has accepted [password].
      *
      * Called only after the screen has taken two confirmations, the second of which asks the user to
-     * type the word — see ProfileFragment. Nothing is checked again here: this class's job is to carry
-     * out a decision the user has made twice, and a third gate would be the ViewModel second-guessing
-     * the screen.
+     * type the word and their password — see ProfileFragment. The word is not checked again here;
+     * the password is checked by Firebase, inside [UserRepository.deleteAccount], which also explains
+     * the order the account's two halves are deleted in.
      *
-     * The cascade is the database's own, not a sweep written here — see
-     * [UserRepository.deleteAccount].
+     * A failure leaves everything in place and is reported, so the user can fix it (a mistyped
+     * password, no connection) and try again.
      */
-    fun onDeleteAccountConfirmed() {
+    fun onDeleteAccountConfirmed(password: String) {
+        if (isDeleting) return
+        isDeleting = true
+
         viewModelScope.launch {
-            userRepository.deleteAccount(userId)
-            _events.send(ProfileEvent.AccountDeleted)
+            val event = when (val result = userRepository.deleteAccount(userId, password)) {
+                // Already gone counts as done: either way there is no account to stay signed in to.
+                AccountDeletionResult.Deleted, AccountDeletionResult.AccountMissing ->
+                    ProfileEvent.AccountDeleted
+
+                is AccountDeletionResult.Failed ->
+                    ProfileEvent.AccountDeletionFailed(deletionFailureMessage(result.reason))
+            }
+            isDeleting = false
+            _events.send(event)
         }
+    }
+
+    /** What to tell the user when Firebase would not delete the account. */
+    @StringRes
+    private fun deletionFailureMessage(reason: AuthFailure): Int = when (reason) {
+        AuthFailure.INVALID_CREDENTIALS -> R.string.profile_delete_wrong_password
+        AuthFailure.NO_NETWORK -> R.string.auth_error_network
+        AuthFailure.RATE_LIMITED -> R.string.auth_error_rate_limited
+        AuthFailure.NOT_SIGNED_IN, AuthFailure.ACCOUNT_UNAVAILABLE -> R.string.auth_error_sign_in_again
+        else -> R.string.auth_error_unknown
     }
 
     /**

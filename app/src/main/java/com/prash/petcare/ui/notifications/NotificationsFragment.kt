@@ -58,7 +58,7 @@ class NotificationsFragment : Fragment() {
      * opened by destination id from seven different places, none of which could attach one. See
      * [SessionViewModel].
      */
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: NotificationsViewModel by viewModels {
         NotificationsViewModel.factory(sessionViewModel.userId.value)

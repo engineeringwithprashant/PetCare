@@ -56,7 +56,7 @@ class PetsFragment : Fragment() {
      * navigation bar moves between tabs by destination id and has nowhere to attach one. See
      * [SessionViewModel].
      */
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: PetsViewModel by viewModels {
         PetsViewModel.factory(sessionViewModel.userId.value)

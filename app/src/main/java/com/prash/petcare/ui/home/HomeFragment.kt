@@ -83,7 +83,7 @@ class HomeFragment : Fragment() {
      * Which account is signed in, read from the Activity-wide session rather than a navigation argument:
      * a bottom navigation bar moves between tabs by destination id and has nowhere to attach one.
      */
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: HomeViewModel by viewModels {
         HomeViewModel.factory(sessionViewModel.userId.value)

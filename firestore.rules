@@ -1,0 +1,30 @@
+// Firestore security rules for PetCare.
+//
+// NOT deployed automatically. Paste this into Firebase console → Firestore Database → Rules and
+// press Publish (or deploy it with the Firebase CLI). Until then, whatever rules the project was
+// created with stay in force.
+//
+// Why these rules are possible now: the app signs in with Firebase Authentication, and Firestore
+// requests from the same app carry that login automatically. Before that, requests had no login, so
+// the database could not tell one user from another.
+//
+// The data layout (see FirestoreSyncService.kt):
+//   users/{userKey}                 the account document
+//   users/{userKey}/pets/{id}       and routines, tasks, expenses, places the same way
+// where userKey is the account's email address in lower case (SyncManager.remoteKeyFor).
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // A signed-in user may read and write their own account document and everything beneath it
+    // ({document=**} matches any depth), and nothing else. The email in the login token is
+    // lower-cased to match how the app builds userKey.
+    match /users/{userKey}/{document=**} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == userKey;
+    }
+
+    // Everything not matched above is denied by default.
+  }
+}

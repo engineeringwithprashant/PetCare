@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
      * viewModels()` on the Activity and `by activityViewModels()` in a fragment resolve to the same
      * instance — see [SessionViewModel] for why the account lives at this level at all.
      */
-    private val sessionViewModel: SessionViewModel by viewModels()
+    private val sessionViewModel: SessionViewModel by viewModels { SessionViewModel.Factory }
 
     /**
      * Tells NavigationUI which destinations are the top of a journey.
@@ -281,8 +281,8 @@ class MainActivity : AppCompatActivity() {
      * what makes signing out final: without it the system back button from the sign-in screen would
      * walk straight back into the account that has just been left.
      *
-     * Nothing is deleted. The app keeps no persisted login, so there is no stored credential to
-     * clear — signing out is forgetting the id and going back to the front door.
+     * Nothing is deleted. [SessionViewModel.signOut] forgets the id and signs the account out of
+     * Firebase Authentication; the pets and records stay on the device for the next login.
      */
     private fun signOut() {
         sessionViewModel.signOut()

@@ -53,17 +53,14 @@ interface UserDao {
     suspend fun getById(userId: Long): User?
 
     /**
-     * Finds an account by email for sign-in.
+     * Finds the local profile for an email address. Called after Firebase has accepted a login or
+     * registration, to match the Firebase account to its profile on this device.
      *
      * `COLLATE NOCASE` makes the comparison case-insensitive, so someone who registered as
      * `Sam@example.com` can still log in typing `sam@example.com`.
      */
     @Query("SELECT * FROM users WHERE email = :email COLLATE NOCASE LIMIT 1")
     suspend fun getByEmail(email: String): User?
-
-    /** Used by the sign-up screen to warn about a taken address before attempting the insert. */
-    @Query("SELECT EXISTS(SELECT 1 FROM users WHERE email = :email COLLATE NOCASE)")
-    suspend fun isEmailTaken(email: String): Boolean
 
     /**
      * Observes an account together with all of its pets.

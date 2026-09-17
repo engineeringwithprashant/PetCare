@@ -40,11 +40,11 @@ sealed interface AccountDetailsEvent {
  * Sits in the middle of the MVVM chain — it reads from [UserRepository] and writes back through it,
  * and holds no Android view types.
  *
- * **What is deliberately not here.** The email, and the password hash. The address is the account's
- * sign-in identifier *and* the key the Firestore sync files this account's data under, so changing it
- * would strand everything already uploaded under the old one — the form shows it and says why it
- * cannot be edited. The hash never reaches this class at all: [UserRepository.updateDetails] reads the
- * row and copies it inside the data layer, so a screen that edits a name never holds a credential.
+ * **What is deliberately not here: the email.** The address is the account's sign-in identifier in
+ * Firebase Authentication *and* the key the Firestore sync files this account's data under, so
+ * changing it would strand everything already uploaded under the old one. The form shows it and says
+ * why it cannot be edited. [UserRepository.updateDetails] reads the row and copies it inside the data
+ * layer, so this class only ever handles the fields it edits.
  *
  * @param userId Which account to edit, read from the session.
  */

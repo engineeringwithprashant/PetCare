@@ -2,6 +2,12 @@ package com.prash.petcare.ui.session
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.prash.petcare.PetCareApplication
+import com.prash.petcare.data.repository.UserRepository
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -26,11 +32,18 @@ import kotlinx.coroutines.flow.StateFlow
  * that needs them, so there is no second copy of the account here to drift out of date when the
  * profile is edited or synced.
  *
- * No factory is declared. A ViewModel whose only constructor parameter is a [SavedStateHandle] is
- * built by the default factory every `ComponentActivity` already provides, so `by viewModels()` and
- * `by activityViewModels()` can construct this with nothing extra.
+ * **Why it has a [Factory].** Signing out also has to sign the account out of Firebase
+ * Authentication, which needs [UserRepository], and the default factory cannot supply one. Every
+ * screen therefore asks for this ViewModel with `by activityViewModels { SessionViewModel.Factory }`.
+ * They all get the same Activity-scoped instance; the factory only matters to whichever screen asks
+ * first, but using it everywhere means it does not matter which one that is.
+ *
+ * @param userRepository Used only to sign out of Firebase.
  */
-class SessionViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
+class SessionViewModel(
+    private val savedStateHandle: SavedStateHandle,
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     /**
      * The signed-in account's id, or [NO_USER_ID] when nobody is signed in.
@@ -57,13 +70,15 @@ class SessionViewModel(private val savedStateHandle: SavedStateHandle) : ViewMod
     /**
      * Forgets the signed-in account.
      *
-     * The app keeps no persisted login, so signing out is precisely this plus returning to the
-     * sign-in screen — there is no stored credential to clear. Nothing in the database is touched:
+     * The app keeps no persisted login of its own, so signing out is forgetting the id, signing out
+     * of Firebase Authentication (so Firestore requests are no longer made as this account), and
+     * returning to the sign-in screen. Nothing in the database is touched:
      * the user's pets and care history are still theirs when they sign back in, and on this shared
      * device another account's data is filtered out by owner id exactly as it always was.
      */
     fun signOut() {
         savedStateHandle[KEY_USER_ID] = NO_USER_ID
+        userRepository.signOut()
     }
 
     companion object {
@@ -79,5 +94,19 @@ class SessionViewModel(private val savedStateHandle: SavedStateHandle) : ViewMod
          * to happen.
          */
         private const val KEY_USER_ID = "session_user_id"
+
+        /**
+         * Builds the ViewModel with its SavedStateHandle and repository.
+         *
+         * `createSavedStateHandle()` gives the same handle the default factory would have supplied,
+         * so the signed-in id still survives the process being killed.
+         */
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application =
+                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PetCareApplication
+                SessionViewModel(createSavedStateHandle(), application.userRepository)
+            }
+        }
     }
 }

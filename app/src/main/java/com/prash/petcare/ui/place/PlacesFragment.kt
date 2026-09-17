@@ -68,7 +68,7 @@ class PlacesFragment : Fragment() {
     private val binding get() = _binding!!
 
     /** Which account is signed in — shared by every tab, see [SessionViewModel]. */
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: PlacesViewModel by viewModels {
         PlacesViewModel.factory(ownerId = sessionViewModel.userId.value)

@@ -35,7 +35,7 @@ class AccountDetailsFragment : Fragment() {
     private var _binding: FragmentAccountDetailsBinding? = null
     private val binding get() = _binding!!
 
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: AccountDetailsViewModel by viewModels {
         AccountDetailsViewModel.factory(sessionViewModel.userId.value)

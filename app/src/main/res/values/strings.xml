@@ -96,6 +96,13 @@
     <string name="auth_or">Or</string>
     <string name="auth_continue_with_google">Continue with Google</string>
 
+    <!-- Account failures that are not about any one field. Firebase Authentication checks every
+         password, so these can appear on log in, register, change password and delete account. -->
+    <string name="auth_error_network">No internet connection. Check you\'re online and try again.</string>
+    <string name="auth_error_rate_limited">Too many attempts. Wait a few minutes, then try again.</string>
+    <string name="auth_error_sign_in_again">Your session has expired. Log out, log back in, then try again.</string>
+    <string name="auth_error_unknown">Something went wrong. Try again in a moment.</string>
+
     <!-- Messages for pieces that are built but not yet connected to a backend. -->
     <string name="auth_google_unavailable">Google sign-in isn\'t available yet.</string>
     <string name="auth_terms_unavailable">The terms page isn\'t available yet.</string>
@@ -552,6 +559,9 @@
     <string name="error_password_too_short">Password must be at least 8 characters</string>
     <string name="error_confirm_password_required">Please confirm your password</string>
     <string name="error_password_mismatch">Passwords do not match</string>
+    <!-- Firebase Authentication refused the password under the project's password policy, which can
+         be stricter than the app's own minimum length. -->
+    <string name="error_password_weak">That password is too weak. Try a longer one with a mix of letters, numbers and symbols.</string>
     <!-- Deliberately vague: it does not reveal whether the email exists. A message such as
          "no account with that email" would let someone test addresses one at a time to discover
          who has an account. -->
@@ -1614,13 +1624,19 @@
         The first explains and offers a way out. The second asks the user to type the word, which is
         the standard pattern for an action with no undo — it stops a mis-tap on the first dialog's
         confirm button from destroying every record on the device, and the typing is a moment in which
-        the user re-reads what they are about to do.
+        the user re-reads what they are about to do. It also asks for the password, which Firebase
+        Authentication checks before it deletes the account.
     -->
     <string name="profile_delete_title">Delete your account?</string>
-    <string name="profile_delete_message">Every pet, routine, task, expense and saved place on this device is deleted, along with your account. This cannot be undone.</string>
+    <string name="profile_delete_message">Your account is deleted, along with every pet, routine, task, expense and saved place on this device. This cannot be undone.</string>
     <string name="profile_delete_continue">Continue</string>
-    <string name="profile_delete_confirm_title">Type DELETE to confirm</string>
+    <string name="profile_delete_confirm_title">Type DELETE and your password</string>
     <string name="profile_delete_confirm_hint">DELETE</string>
+    <!-- The password field in the same dialog. Firebase only deletes an account after its password has
+         just been checked, and asking also proves it is the owner, not someone holding an unlocked
+         phone. -->
+    <string name="profile_delete_password_hint">Password</string>
+    <string name="profile_delete_wrong_password">That password is not right, so nothing was deleted.</string>
     <!-- Not translatable: it is the exact text the field is compared against, and translating one half
          of that comparison without the other would lock the user out of their own confirmation. -->
     <string name="profile_delete_confirm_word" translatable="false">DELETE</string>

@@ -653,9 +653,8 @@ class SyncManager(
     /**
      * Refreshes the account's own document.
      *
-     * The password hash is emphatically not included. Only what identifies the account to a person
-     * reading their own data goes up; the credential never leaves the device, where it is at least
-     * protected by the app's private storage.
+     * Only what identifies the account to a person reading their own data goes up. There is no
+     * credential to include: the password lives in Firebase Authentication, never in this row.
      */
     private suspend fun writeAccountDocument(userKey: String, user: User) {
         firestoreSyncService.writeUserProfile(

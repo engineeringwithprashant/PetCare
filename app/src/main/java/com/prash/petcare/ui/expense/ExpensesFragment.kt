@@ -59,7 +59,7 @@ class ExpensesFragment : Fragment() {
     }
 
     /** Which account is signed in — shared by every tab, see [SessionViewModel]. */
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: ExpenseViewModel by viewModels {
         ExpenseViewModel.factory(ownerId = sessionViewModel.userId.value, petId = petId)

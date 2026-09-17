@@ -71,7 +71,7 @@ class ProfileFragment : Fragment() {
      *
      * `by activityViewModels` so this is the Activity's instance, shared with every other screen.
      */
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: ProfileViewModel by viewModels {
         ProfileViewModel.factory(sessionViewModel.userId.value)
@@ -675,6 +675,9 @@ class ProfileFragment : Fragment() {
             is ProfileEvent.ExportEmpty -> showMessage(getString(R.string.profile_export_empty))
 
             is ProfileEvent.AccountDeleted -> leaveForSignIn()
+
+            // Nothing was deleted. Say why and stay on the profile screen.
+            is ProfileEvent.AccountDeletionFailed -> showMessage(getString(event.messageRes))
         }
     }
 
@@ -727,7 +730,12 @@ class ProfileFragment : Fragment() {
             .show()
     }
 
-    /** The second gate: the user types DELETE, or nothing happens. */
+    /**
+     * The second gate: the user types DELETE and their password, or nothing happens.
+     *
+     * The word is checked here, since it is only a typing exercise. The password is passed on
+     * untouched: Firebase checks it, through the ViewModel and the repository.
+     */
     private fun askForDeleteWord() {
         val dialogBinding = com.prash.petcare.databinding.DialogConfirmDeleteBinding
             .inflate(LayoutInflater.from(requireContext()))
@@ -742,10 +750,17 @@ class ProfileFragment : Fragment() {
                 // Compared case-insensitively against a non-translatable constant. The word is fixed
                 // rather than localised because it is one half of a comparison, and translating one
                 // half without the other would lock the user out of their own confirmation.
-                if (typed.equals(getString(R.string.profile_delete_confirm_word), ignoreCase = true)) {
-                    viewModel.onDeleteAccountConfirmed()
-                } else {
-                    showMessage(getString(R.string.profile_delete_mismatch))
+                // The password is not trimmed: a space can be part of a real password.
+                val password = dialogBinding.passwordInput.text?.toString().orEmpty()
+
+                when {
+                    !typed.equals(getString(R.string.profile_delete_confirm_word), ignoreCase = true) ->
+                        showMessage(getString(R.string.profile_delete_mismatch))
+
+                    password.isEmpty() ->
+                        showMessage(getString(R.string.profile_delete_wrong_password))
+
+                    else -> viewModel.onDeleteAccountConfirmed(password)
                 }
             }
             .show()

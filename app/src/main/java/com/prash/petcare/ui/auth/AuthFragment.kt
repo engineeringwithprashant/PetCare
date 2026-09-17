@@ -64,7 +64,7 @@ class AuthFragment : Fragment() {
      * The Activity-wide record of who is signed in. `activityViewModels` gives the very instance every
      * later screen reads the account from; see [SessionViewModel].
      */
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     /**
      * Each text field paired with the error key it clears when edited, and the TextInputLayout that

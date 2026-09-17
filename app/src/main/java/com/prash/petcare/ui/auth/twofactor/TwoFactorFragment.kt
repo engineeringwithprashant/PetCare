@@ -46,7 +46,7 @@ class TwoFactorFragment : Fragment() {
      */
     private val viewModel: TwoFactorViewModel by viewModels()
 
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     override fun onCreateView(
         inflater: LayoutInflater,

@@ -54,7 +54,7 @@ class AddEditPlaceFragment : Fragment() {
     private var _binding: FragmentAddEditPlaceBinding? = null
     private val binding get() = _binding!!
 
-    private val sessionViewModel: SessionViewModel by activityViewModels()
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val placeId: Long by lazy {
         arguments?.getLong(ARG_PLACE_ID, AddEditPlaceViewModel.NO_PLACE_ID)

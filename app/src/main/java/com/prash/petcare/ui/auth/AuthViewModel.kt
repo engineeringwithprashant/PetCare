@@ -9,9 +9,9 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.User
+import com.prash.petcare.data.remote.AuthFailure
+import com.prash.petcare.data.repository.AccountResult
 import com.prash.petcare.data.repository.UserRepository
-import com.prash.petcare.util.PasswordHasher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /** Which of the two forms the log in / register screen is showing. */
 enum class AuthMode { LOGIN, REGISTER }
@@ -79,9 +78,12 @@ sealed interface AuthEvent {
 /**
  * Handles logging in and registering for [AuthFragment].
  *
- * The middle of the MVVM chain: the fragment sends it user input and observes its state, and it reaches
- * the database only through [UserRepository]. It holds no views and no Context, so it survives
- * configuration changes — a rotation mid-sign-in neither restarts the check nor loses the errors.
+ * The middle of the MVVM chain: the fragment sends it user input and observes its state, and it
+ * reaches accounts only through [UserRepository], which checks passwords with Firebase Authentication
+ * and keeps the local profile. This class never sees a Firebase type. It checks the form, hands the
+ * values over, and turns the result into what the screen shows. It holds no views and no Context, so
+ * it survives configuration changes — a rotation mid-sign-in neither restarts the check nor loses the
+ * errors.
  *
  * Log in and register share this one ViewModel because they share one screen: the toggle between them
  * is part of this screen's state, and so is the "busy" flag that must block both forms at once.
@@ -122,7 +124,10 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
      * Signs an existing user in with an email (or, once connected, a phone number) and a password.
      *
      * The failure message is deliberately vague — "Incorrect email or password" — so the form cannot be
-     * used to discover which addresses have accounts.
+     * used to discover which addresses have accounts. Only problems that say nothing about the account,
+     * such as no network, get their own message.
+     *
+     * The first login on a device needs a connection, since Firebase has to check the password.
      */
     fun login(identifier: String, password: String) {
         if (_uiState.value.isSubmitting) return
@@ -142,22 +147,24 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, errors = emptyMap()) }
 
-            val user = userRepository.getUserByEmail(trimmed)
-
-            // PBKDF2 is intentionally slow, so verification runs off the main thread; on the main
-            // thread it would visibly freeze the screen.
-            val isPasswordCorrect = user != null &&
-                withContext(Dispatchers.Default) { PasswordHasher.verify(password, user.passwordHash) }
+            // Firebase checks the password. The repository then finds (or, on a first login on this
+            // device, creates) the local profile for the account.
+            val result = userRepository.signIn(email = trimmed, password = password)
 
             _uiState.update { it.copy(isSubmitting = false) }
 
-            when {
-                user == null || !isPasswordCorrect ->
-                    _events.send(AuthEvent.Message(R.string.error_invalid_credentials))
+            when (result) {
+                is AccountResult.Failed ->
+                    _events.send(AuthEvent.Message(loginFailureMessage(result.reason)))
 
-                requiresTwoFactor(user) -> _events.send(AuthEvent.TwoFactorRequired(user.id))
-
-                else -> _events.send(AuthEvent.Authenticated(user.id))
+                is AccountResult.Success -> {
+                    val user = result.user
+                    if (requiresTwoFactor(user)) {
+                        _events.send(AuthEvent.TwoFactorRequired(user.id))
+                    } else {
+                        _events.send(AuthEvent.Authenticated(user.id))
+                    }
+                }
             }
         }
     }
@@ -198,35 +205,23 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, errors = emptyMap()) }
 
-            // The unique index on User.email would reject a duplicate anyway, but checking first puts
-            // the message under the email field instead of surfacing as a failed insert.
-            if (userRepository.isEmailTaken(trimmedEmail)) {
-                failRegistration(AuthField.EMAIL, R.string.error_email_taken)
-                return@launch
-            }
-
-            val passwordHash = withContext(Dispatchers.Default) { PasswordHasher.hash(password) }
-
-            // The phone goes into the column User already has for it, so no data-layer change is
-            // needed to keep it. It is stored as typed (trimmed); normalising it to one international
-            // format is a job for whichever backend ends up sending the SMS.
-            val newUser = User(
+            // Firebase creates the account (and refuses an address already in use), then the
+            // repository writes the local profile. The password is handed over and not kept here.
+            val result = userRepository.register(
                 fullName = trimmedName,
                 email = trimmedEmail,
-                passwordHash = passwordHash,
-                phone = trimmedPhone
+                phone = trimmedPhone,
+                password = password
             )
 
-            // Guards the race where another insert claims the address between the check above and
-            // this write — the database's unique index is the real enforcement.
-            val userId = runCatching { userRepository.addUser(newUser) }.getOrNull()
-            if (userId == null) {
-                failRegistration(AuthField.EMAIL, R.string.error_email_taken)
-                return@launch
-            }
+            when (result) {
+                is AccountResult.Success -> {
+                    _uiState.update { it.copy(isSubmitting = false) }
+                    _events.send(AuthEvent.Authenticated(result.user.id))
+                }
 
-            _uiState.update { it.copy(isSubmitting = false) }
-            _events.send(AuthEvent.Authenticated(userId))
+                is AccountResult.Failed -> showRegistrationFailure(result.reason)
+            }
         }
     }
 
@@ -234,12 +229,55 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
      * "Continue with Google".
      *
      * TODO(google-sign-in): not connected. Wire this to Google Identity Services (Credential Manager's
-     *  GetGoogleIdOption), exchange the returned ID token with the auth backend, find or create the
-     *  matching local account through UserRepository, then send AuthEvent.Authenticated(userId).
+     *  GetGoogleIdOption), sign in to Firebase with the returned ID token (GoogleAuthProvider), find or
+     *  create the matching local profile through UserRepository, then send
+     *  AuthEvent.Authenticated(userId).
      *  Until then it only says the option is unavailable.
      */
     fun onGoogleSignIn() {
         _events.trySend(AuthEvent.Message(R.string.auth_google_unavailable))
+    }
+
+    /**
+     * Shows why Firebase refused a sign-up, on the field it concerns where there is one:
+     * an address already in use or malformed goes under the email field, and a password the project's
+     * policy rejects goes under the password field. Everything else is a general message.
+     */
+    private suspend fun showRegistrationFailure(reason: AuthFailure) {
+        when (reason) {
+            AuthFailure.EMAIL_IN_USE -> failRegistration(AuthField.EMAIL, R.string.error_email_taken)
+            AuthFailure.INVALID_EMAIL -> failRegistration(AuthField.EMAIL, R.string.error_email_invalid)
+            AuthFailure.WEAK_PASSWORD ->
+                failRegistration(AuthField.REGISTER_PASSWORD, R.string.error_password_weak)
+
+            else -> {
+                _uiState.update { it.copy(isSubmitting = false) }
+                _events.send(AuthEvent.Message(connectionFailureMessage(reason)))
+            }
+        }
+    }
+
+    /**
+     * The message for a failed login.
+     *
+     * Wrong password, unknown address, disabled account and a malformed address all get the same
+     * vague "Incorrect email or password", so the form reveals nothing about which accounts exist.
+     */
+    @StringRes
+    private fun loginFailureMessage(reason: AuthFailure): Int = when (reason) {
+        AuthFailure.INVALID_CREDENTIALS,
+        AuthFailure.ACCOUNT_UNAVAILABLE,
+        AuthFailure.INVALID_EMAIL -> R.string.error_invalid_credentials
+
+        else -> connectionFailureMessage(reason)
+    }
+
+    /** Messages for failures that are about reaching Firebase rather than about the account. */
+    @StringRes
+    private fun connectionFailureMessage(reason: AuthFailure): Int = when (reason) {
+        AuthFailure.NO_NETWORK -> R.string.auth_error_network
+        AuthFailure.RATE_LIMITED -> R.string.auth_error_rate_limited
+        else -> R.string.auth_error_unknown
     }
 
     /** Stops the spinner and shows [messageRes] under [field] after a failed sign-up. */
@@ -258,10 +296,10 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
     private fun identifierError(identifier: String): Int? = when {
         identifier.isEmpty() -> R.string.error_identifier_required
         identifier.contains('@') -> AuthValidation.validateEmail(identifier)
-        // TODO(phone-login): a well-formed phone number is recognised but cannot sign in yet —
-        //  UserRepository can only look an account up by email, and this task leaves the data layer
-        //  unchanged. Once the backend (or a phone lookup on UserRepository) exists, return null here
-        //  and look the account up by phone in login() instead of getUserByEmail.
+        // TODO(phone-login): a well-formed phone number is recognised but cannot sign in yet.
+        //  Firebase Authentication signs in by email and password, and signing in by phone number is a
+        //  separate Firebase flow (a one-time SMS code). Once that is built, return null here and send
+        //  phone numbers to it from login().
         AuthValidation.isPhone(identifier) -> R.string.error_phone_login_unavailable
         else -> R.string.error_identifier_invalid
     }
