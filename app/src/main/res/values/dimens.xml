@@ -655,7 +655,7 @@
     <dimen name="auth_screen_padding_top">28dp</dimen>
     <dimen name="auth_screen_padding_bottom">32dp</dimen>
 
-    <!-- The logo placeholder square. See res/drawable/bg_auth_brand_mark.xml. -->
+    <!-- The logo tile in the sign-in header, and the radius its corners are clipped to. -->
     <dimen name="auth_brand_mark_size">64dp</dimen>
     <dimen name="auth_brand_mark_corner_radius">16dp</dimen>
     <!-- "PetCare" under the logo: larger than a list title, smaller than the screen heading, so the

@@ -59,6 +59,13 @@
         <item name="cornerSize">@dimen/pet_card_corner_radius</item>
     </style>
 
+    <!-- The logo tile at the top of every sign-in screen: the square logo artwork clipped to the
+         rounded corner the auth mockups draw. See view_auth_header.xml. -->
+    <style name="ShapeAppearance.PetCare.AuthBrandMark" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/auth_brand_mark_corner_radius</item>
+    </style>
+
     <!-- The dashboard's sideways pet cards: 22dp, between the summary cards' 18dp and the two large
          cards' 28dp, which is the ranking the spec sets for the three kinds of card on this screen. -->
     <style name="ShapeAppearance.PetCare.HomePetCard" parent="ShapeAppearance.Material3.Corner.Large">

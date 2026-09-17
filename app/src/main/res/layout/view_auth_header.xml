@@ -13,6 +13,7 @@
     anything, which is exactly what LinearLayout is for and cheaper to measure than a ConstraintLayout.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -21,20 +22,21 @@
     tools:background="?android:attr/colorBackground">
 
     <!--
-        TODO(logo): placeholder for the PetCare logo. When the artwork arrives, add
-        android:src="@drawable/<logo>" here and remove the android:background line (and delete
-        res/drawable/bg_auth_brand_mark.xml). The size and spacing already match the mockup.
+        The PetCare logo (res/drawable-nodpi/logo_petcare.png).
 
-        An ImageView rather than a plain View precisely so the logo can be dropped in as its source.
-        scaleType fitCenter keeps a logo of any aspect ratio whole inside the square.
+        The artwork is a full-bleed square with sharp corners, but the design shows it as a rounded
+        tile. A Material ShapeableImageView clips the image to the rounded shape named in
+        shapeAppearanceOverlay, so the rounding lives in one style rather than being baked into the
+        PNG. centerCrop fills the whole tile, which is what makes the clipped corners visible.
     -->
-    <ImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/brandMark"
         android:layout_width="@dimen/auth_brand_mark_size"
         android:layout_height="@dimen/auth_brand_mark_size"
-        android:background="@drawable/bg_auth_brand_mark"
         android:contentDescription="@string/auth_brand_mark_description"
-        android:scaleType="fitCenter" />
+        android:scaleType="centerCrop"
+        android:src="@drawable/logo_petcare"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.AuthBrandMark" />
 
     <!-- The wordmark. Hidden from TalkBack because the logo above already announces "PetCare";
          hearing it twice in a row adds nothing. -->

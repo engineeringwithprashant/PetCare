@@ -47,7 +47,7 @@
     <!-- The shared header. "PetCare" is the product name and is not translated. -->
     <string name="auth_brand_name" translatable="false">PetCare</string>
     <string name="auth_brand_tagline">Daily pet tracking</string>
-    <!-- Spoken for the logo placeholder. -->
+    <!-- What TalkBack says for the logo. -->
     <string name="auth_brand_mark_description">PetCare</string>
 
     <!-- Log in / register toggle. -->
