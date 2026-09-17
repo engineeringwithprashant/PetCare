@@ -103,8 +103,16 @@
     <string name="auth_error_sign_in_again">Your session has expired. Log out, log back in, then try again.</string>
     <string name="auth_error_unknown">Something went wrong. Try again in a moment.</string>
 
+    <!-- "Continue with Google" outcomes. No network uses auth_error_network above. -->
+    <string name="auth_google_cancelled">Google sign-in was cancelled.</string>
+    <string name="auth_google_no_account">There\'s no Google account on this device. Add one in Settings, then try again.</string>
+    <string name="auth_google_unavailable">Google sign-in isn\'t available on this device. Check that Google Play services is installed and up to date.</string>
+    <string name="auth_google_failed">Google sign-in didn\'t work. Try again in a moment.</string>
+    <!-- Firebase would not attach Google to an existing password account with the same address. -->
+    <string name="auth_google_account_exists">An account already uses this Google address. Log in with your email and password instead.</string>
+    <string name="auth_google_account_disabled">This account has been disabled.</string>
+
     <!-- Messages for pieces that are built but not yet connected to a backend. -->
-    <string name="auth_google_unavailable">Google sign-in isn\'t available yet.</string>
     <string name="auth_terms_unavailable">The terms page isn\'t available yet.</string>
 
     <!-- The step bar on the two-factor screen. %1$d is this step, %2$d the total. -->

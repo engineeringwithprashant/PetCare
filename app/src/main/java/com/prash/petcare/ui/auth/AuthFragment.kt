@@ -31,6 +31,7 @@ import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentAuthBinding
 import com.prash.petcare.ui.auth.twofactor.TwoFactorFragment
 import com.prash.petcare.ui.session.SessionViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -72,6 +73,9 @@ class AuthFragment : Fragment() {
      * of naming every field twice.
      */
     private lateinit var fields: List<Triple<AuthField, TextInputLayout, EditText>>
+
+    /** The Google account picker currently open, if any. See [startGoogleSignIn]. */
+    private var googleRequest: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -207,7 +211,7 @@ class AuthFragment : Fragment() {
     private fun bindButtons() {
         binding.loginButton.setOnClickListener { submitLogin() }
         binding.registerButton.setOnClickListener { submitRegistration() }
-        binding.googleButton.setOnClickListener { viewModel.onGoogleSignIn() }
+        binding.googleButton.setOnClickListener { startGoogleSignIn() }
 
         // "Done" on the log-in password submits, so a keyboard user never has to reach for the button.
         // The register form's last field is left to the default "done" (close the keyboard), because
@@ -220,6 +224,29 @@ class AuthFragment : Fragment() {
             // No arguments: the reset screen asks for the account's email itself, starting empty.
             // Navigating by action id keeps the route itself declared in nav_graph.xml.
             findNavController().navigate(R.id.action_auth_to_reset_request)
+        }
+    }
+
+    /**
+     * "Continue with Google", on either form.
+     *
+     * The ViewModel first decides whether to start (the register form needs the terms ticked). Then
+     * this fragment shows Google's account picker, because only the View layer holds the Activity
+     * the picker draws over (see [GoogleSignInLauncher]). Whatever comes back is passed to the
+     * ViewModel, which signs in to Firebase and decides what to show.
+     *
+     * The picker runs in the *view's* lifecycle scope, so leaving the screen cancels it.
+     * [googleRequest] stops a quick second tap from opening a second picker while the first is on
+     * its way.
+     */
+    private fun startGoogleSignIn() {
+        if (googleRequest?.isActive == true) return
+        val hasAcceptedTerms = binding.consentCheckBox.isChecked
+        if (!viewModel.onGoogleSignInClicked(hasAcceptedTerms)) return
+
+        val launcher = GoogleSignInLauncher(requireActivity())
+        googleRequest = viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.onGoogleCredentialResult(launcher.requestIdToken())
         }
     }
 

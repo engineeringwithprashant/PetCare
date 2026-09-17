@@ -393,6 +393,10 @@
             <View style="@style/PetCare.Auth.DividerLine" />
         </LinearLayout>
 
+        <!-- "Continue with Google", shared by both forms. It opens Google's account picker through
+             Credential Manager (ui/auth/GoogleSignInLauncher.kt), and the account chosen there signs
+             in to Firebase. On the register form it needs the terms ticked, like "Create account".
+             It is disabled with the other buttons while a sign-in is running. -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/googleButton"
             style="@style/PetCare.Auth.GoogleButton"

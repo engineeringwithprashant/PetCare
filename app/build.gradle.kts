@@ -108,6 +108,13 @@ dependencies {
     // Firebase Authentication: sends the password-reset email and hosts the page where the new
     // password is chosen. Reached only through data.auth.FirebasePasswordResetRepository.
     implementation(libs.firebase.auth)
+    // "Continue with Google". Credential Manager shows the system account picker and returns a
+    // Google ID token (ui.auth.GoogleSignInLauncher); Firebase Authentication then signs in with
+    // that token. credentials-play-services-auth is needed as well as credentials itself, since
+    // it is the part that reaches Google Play services on Android 13 and older.
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
     // Firestore's API returns Play services `Task` objects. This adds the `await()` extension that
     // suspends until one completes, letting the sync code read as ordinary sequential coroutine
     // code rather than as nested success/failure listeners.

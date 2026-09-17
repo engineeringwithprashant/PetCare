@@ -16,14 +16,17 @@ import kotlinx.coroutines.flow.Flow
  * an account in step.
  *
  * **Where an account is stored.**
- *  - **Firebase Authentication** stores the email and password, and checks them at login. No
- *    password or password hash is kept on the device.
+ *  - **Firebase Authentication** stores the email and password (or the linked Google account) and
+ *    checks them at login. No password or password hash is kept on the device.
  *  - **The Room `users` table** stores the profile (name, phone, role, photo). Its id is what pets,
  *    places and every other record point to as their owner.
  *
  * The two are matched by email address, which is also the key the Firestore sync files the
- * account's data under. Each method below that touches both does so in an order that leaves no half-made
- * account behind. See [register], [signIn] and [deleteAccount].
+ * account's data under. Each method below that touches both does so in an order that leaves no
+ * half-made account behind. See [register], [signIn], [signInWithGoogle] and [deleteAccount].
+ *
+ * An account may have a password, a Google sign-in, or both (Firebase links them by email). Either
+ * way it has exactly one local profile, found by email.
  *
  * A repository is the boundary between "how data is stored" and "what the app needs". ViewModels
  * talk only to this class, so they never see a DAO or a Firebase class, and a fake repository can
@@ -101,6 +104,33 @@ class UserRepository(
 
         val fallbackName = displayName?.takeIf { it.isNotBlank() } ?: email.substringBefore('@')
         return AccountResult.Success(findOrCreateProfile(email, fallbackName, phone = null))
+    }
+
+    /**
+     * Signs in with a Google ID token, then returns this device's profile for the account.
+     *
+     * One method for both "log in" and "register": Firebase creates the account on the first Google
+     * sign-in, and [findOrCreateProfile] does the same for the local profile.
+     *
+     * **No duplicate profiles.** The profile is found by email, case-insensitively, exactly as for
+     * an email login or registration. A Google account whose address already has a profile on this
+     * device (from registering with a password, say) signs in to that profile, with its pets. Its
+     * name is left as it is, since the user may have edited it on the profile screen. Only a new
+     * profile takes the name from Google. Without a Google name, the part of the address before
+     * the "@" is used.
+     *
+     * @param idToken The Google ID token Credential Manager returned.
+     */
+    suspend fun signInWithGoogle(idToken: String): AccountResult {
+        val account = try {
+            authService.signInWithGoogle(idToken)
+        } catch (e: AuthException) {
+            return AccountResult.Failed(e.failure)
+        }
+
+        val name = account.displayName?.takeIf { it.isNotBlank() }
+            ?: account.email.substringBefore('@')
+        return AccountResult.Success(findOrCreateProfile(account.email, name, phone = null))
     }
 
     /**

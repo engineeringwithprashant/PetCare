@@ -10,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
@@ -28,7 +29,10 @@ enum class AuthFailure {
     /** Firebase found no account for the address, or the account is disabled. */
     ACCOUNT_UNAVAILABLE,
 
-    /** Registration: another account already uses this address. */
+    /**
+     * Another account already uses this address: at registration, or at a Google sign-in Firebase
+     * would not attach to the existing account.
+     */
     EMAIL_IN_USE,
 
     /** Registration or password change: the password fails the project's password policy. */
@@ -49,6 +53,14 @@ enum class AuthFailure {
     /** Anything else, such as the Email/Password provider being switched off in the console. */
     UNKNOWN
 }
+
+/**
+ * Who a Google sign-in turned out to be.
+ *
+ * @property email The account's address, as Google reports it.
+ * @property displayName The name on the Google account, or null if it has none.
+ */
+data class SignedInAccount(val email: String, val displayName: String?)
 
 /** Thrown by [FirebaseAuthService] for any failed call. [failure] says what went wrong. */
 class AuthException(val failure: AuthFailure, cause: Throwable? = null) : Exception(cause)
@@ -106,6 +118,36 @@ class FirebaseAuthService(private val auth: FirebaseAuth) {
         val user = call { auth.signInWithEmailAndPassword(email, password).await().user }
             ?: throw AuthException(AuthFailure.UNKNOWN)
         return user.displayName
+    }
+
+    /**
+     * Signs in to Firebase with a Google ID token.
+     *
+     * [idToken] comes from Credential Manager on the device (ui.auth.GoogleSignInLauncher). It proves
+     * which Google account the user picked. `GoogleAuthProvider.getCredential` wraps it as a Firebase
+     * credential, and `signInWithCredential` checks it with Google and signs in. The first Google
+     * sign-in for an address also creates the Firebase account, so the same call serves "register"
+     * and "log in".
+     *
+     * **An address that already has a password account.** Firebase allows one account per email
+     * by default. Google is a trusted provider for Gmail addresses, so Firebase attaches the Google
+     * sign-in to the existing account rather than refusing. For an address whose password account
+     * was never email-verified, Firebase *removes* the password so that only the owner of the Google
+     * account can get in. Where Firebase refuses instead, this throws
+     * [AuthFailure.EMAIL_IN_USE].
+     *
+     * @return The account's email and display name, which the repository uses to find or create
+     *   the local profile.
+     */
+    suspend fun signInWithGoogle(idToken: String): SignedInAccount {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val user = call { auth.signInWithCredential(credential).await().user }
+            ?: throw AuthException(AuthFailure.UNKNOWN)
+
+        // Google accounts always have an email, and the app matches profiles by it. Without one,
+        // there is no way to tell which profile this account is.
+        val email = user.email ?: throw AuthException(AuthFailure.UNKNOWN)
+        return SignedInAccount(email = email, displayName = user.displayName)
     }
 
     /**

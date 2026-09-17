@@ -71,7 +71,7 @@ sealed interface AuthEvent {
     /** The password was right, but the account also needs its second factor checked. */
     data class TwoFactorRequired(val userId: Long) : AuthEvent
 
-    /** A message that is not tied to one field — a wrong password, or a feature not connected yet. */
+    /** A message that is not tied to one field — a wrong password, or a cancelled Google sign-in. */
     data class Message(@param:StringRes val messageRes: Int) : AuthEvent
 }
 
@@ -157,14 +157,7 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
                 is AccountResult.Failed ->
                     _events.send(AuthEvent.Message(loginFailureMessage(result.reason)))
 
-                is AccountResult.Success -> {
-                    val user = result.user
-                    if (requiresTwoFactor(user)) {
-                        _events.send(AuthEvent.TwoFactorRequired(user.id))
-                    } else {
-                        _events.send(AuthEvent.Authenticated(user.id))
-                    }
-                }
+                is AccountResult.Success -> continueSignedIn(result.user)
             }
         }
     }
@@ -226,16 +219,96 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
     }
 
     /**
-     * "Continue with Google".
+     * "Continue with Google" was tapped. Returns whether the fragment should open Google's account
+     * picker.
      *
-     * TODO(google-sign-in): not connected. Wire this to Google Identity Services (Credential Manager's
-     *  GetGoogleIdOption), sign in to Firebase with the returned ID token (GoogleAuthProvider), find or
-     *  create the matching local profile through UserRepository, then send
-     *  AuthEvent.Authenticated(userId).
-     *  Until then it only says the option is unavailable.
+     * **Two steps.** The picker needs an Activity, so the fragment shows it (through
+     * [GoogleSignInLauncher]) and then calls [onGoogleCredentialResult] with what came back. This
+     * first step only decides whether to start.
+     *
+     * **The terms still apply on the register form.** A Google sign-in there creates an account just
+     * as the "Create account" button does, so it needs the same consent tick. Without the tick, the
+     * picker stays closed and the usual consent error shows. On the log in form there is nothing to
+     * agree to, as for a password login.
+     *
+     * Nothing is marked busy yet. The picker covers the screen while it is open, and marking the form
+     * busy here would leave it stuck if the picker was closed by the screen rotating.
      */
-    fun onGoogleSignIn() {
-        _events.trySend(AuthEvent.Message(R.string.auth_google_unavailable))
+    fun onGoogleSignInClicked(hasAcceptedTerms: Boolean): Boolean {
+        val state = _uiState.value
+        if (state.isSubmitting) return false
+
+        if (state.mode == AuthMode.REGISTER && !hasAcceptedTerms) {
+            _uiState.update {
+                it.copy(errors = mapOf(AuthField.CONSENT to R.string.error_consent_required))
+            }
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Google's account picker has closed. With a token, sign in to Firebase and continue into the app.
+     * Otherwise say why nothing happened.
+     *
+     * A first Google sign-in creates both the Firebase account and the local profile, the profile
+     * named after the Google account. An address that already has a profile on this device signs
+     * in to it rather than creating a second one (see [UserRepository.signInWithGoogle]).
+     */
+    fun onGoogleCredentialResult(result: GoogleCredentialResult) {
+        if (result !is GoogleCredentialResult.Token) {
+            _events.trySend(AuthEvent.Message(pickerProblemMessage(result)))
+            return
+        }
+        if (_uiState.value.isSubmitting) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSubmitting = true, errors = emptyMap()) }
+            val signIn = userRepository.signInWithGoogle(result.idToken)
+            _uiState.update { it.copy(isSubmitting = false) }
+
+            when (signIn) {
+                is AccountResult.Success -> continueSignedIn(signIn.user)
+                is AccountResult.Failed ->
+                    _events.send(AuthEvent.Message(googleFailureMessage(signIn.reason)))
+            }
+        }
+    }
+
+    /**
+     * The last step of every successful login, by password or by Google: into the app, or first to
+     * the two-factor check if the account needs one.
+     */
+    private suspend fun continueSignedIn(user: User) {
+        if (requiresTwoFactor(user)) {
+            _events.send(AuthEvent.TwoFactorRequired(user.id))
+        } else {
+            _events.send(AuthEvent.Authenticated(user.id))
+        }
+    }
+
+    /** Why Google's account picker produced no token, as the message to show. */
+    @StringRes
+    private fun pickerProblemMessage(result: GoogleCredentialResult): Int = when (result) {
+        GoogleCredentialResult.Cancelled -> R.string.auth_google_cancelled
+        GoogleCredentialResult.NoGoogleAccount -> R.string.auth_google_no_account
+        GoogleCredentialResult.NoNetwork -> R.string.auth_error_network
+        GoogleCredentialResult.Unavailable -> R.string.auth_google_unavailable
+        GoogleCredentialResult.Failed, is GoogleCredentialResult.Token -> R.string.auth_google_failed
+    }
+
+    /**
+     * The message for a Google sign-in that Firebase refused.
+     *
+     * [AuthFailure.EMAIL_IN_USE] means an account with a password already uses this address and
+     * Firebase would not attach Google to it, so the message points the user to their password.
+     */
+    @StringRes
+    private fun googleFailureMessage(reason: AuthFailure): Int = when (reason) {
+        AuthFailure.EMAIL_IN_USE -> R.string.auth_google_account_exists
+        AuthFailure.ACCOUNT_UNAVAILABLE -> R.string.auth_google_account_disabled
+        AuthFailure.NO_NETWORK, AuthFailure.RATE_LIMITED -> connectionFailureMessage(reason)
+        else -> R.string.auth_google_failed
     }
 
     /**

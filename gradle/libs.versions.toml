@@ -36,6 +36,13 @@ playServicesLocation = "21.4.0"
 # the JSON reply into the response classes. One version for both: the converter is published from the
 # same build as Retrofit itself and is not guaranteed to work against a different release.
 retrofit = "2.11.0"
+# Credential Manager: the Android API that shows the system "choose a Google account" sheet behind
+# "Continue with Google". The play-services-auth artifact is the part that talks to Google Play
+# services on Android 13 and older, so the two are released together and share one version.
+credentials = "1.5.0"
+# Google ID: the Google-specific request and result types (GetGoogleIdOption,
+# GoogleIdTokenCredential) that Credential Manager returns a Google ID token through.
+googleId = "1.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -72,6 +79,10 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 # Firebase Authentication, used only for the password-reset email. Versionless for the same reason
 # as firestore: the BoM picks a version known to work alongside it.
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+# "Continue with Google": Credential Manager plus Google's ID-token types for it.
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
 # Retrofit: the HTTP client behind the home screen's live temperature. `converter-gson` is the piece
