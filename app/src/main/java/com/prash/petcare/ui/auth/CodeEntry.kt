@@ -25,6 +25,12 @@ object CodeEntry {
     /** Returns [code] without its last digit; an empty code stays empty. */
     fun backspace(code: String): String = code.dropLast(1)
 
+    /**
+     * Returns an empty code, for the CLEAR key. A function rather than a bare "" at the call site so
+     * every way of changing the code is named in this one object.
+     */
+    fun clear(): String = ""
+
     /** True once every box is filled — the point at which the verify button becomes pressable. */
     fun isComplete(code: String): Boolean = code.length == LENGTH
 }

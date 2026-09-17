@@ -189,11 +189,19 @@
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
-    <!-- Bottom row: the blank cell, 0, and backspace. The backspace glyph is a symbol, so it is given a
-         spoken description of its own; the digits need none. -->
+    <!-- Bottom row: CLEAR, 0, and backspace.
+
+         CLEAR empties every box at once; backspace removes one digit. CLEAR is the same rounded key as
+         the digits but with a small, muted, letter-spaced label (PetCare.Auth.Key.Clear), so it reads
+         as a secondary action beside them. Both non-digit keys carry a spoken description, since
+         "clear" alone and a backspace glyph say little about what they clear. -->
     <LinearLayout style="@style/PetCare.Auth.KeyRow">
 
-        <View style="@style/PetCare.Auth.KeyBlank" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keyClear"
+            style="@style/PetCare.Auth.Key.Clear"
+            android:contentDescription="@string/auth_key_clear_description"
+            android:text="@string/auth_key_clear" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/key0"

@@ -1,11 +1,13 @@
 package com.prash.petcare.ui.auth.reset
 
+import com.prash.petcare.R
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * Unit tests for [DestinationMasking.maskPhone] and [ResetChannel.fromName], the two small pieces of
- * logic behind what the reset screens say about where a code went.
+ * Unit tests for [DestinationMasking.maskPhone] and [ResetChannel]: the logic behind which format reset
+ * step 1's account field requires, and what the reset screens say about where a code went.
  *
  * The masking is worth pinning down because a mistake in it is a privacy leak that looks fine at a
  * glance — showing one digit too many is easy to miss by eye.
@@ -40,6 +42,26 @@ class DestinationMaskingTest {
     @Test
     fun `surrounding spaces are ignored`() {
         assertEquals("98•• ••78", DestinationMasking.maskPhone("  9812345678 "))
+    }
+
+    @Test
+    fun `the email channel accepts only an email address`() {
+        assertNull(ResetChannel.EMAIL.validate("prashant@petcare.app"))
+        assertEquals(R.string.error_email_invalid, ResetChannel.EMAIL.validate("+977 9812345678"))
+        assertEquals(R.string.error_email_required, ResetChannel.EMAIL.validate(""))
+    }
+
+    @Test
+    fun `the SMS channel accepts only a phone number`() {
+        assertNull(ResetChannel.SMS.validate("+977 9812345678"))
+        assertEquals(R.string.error_phone_invalid, ResetChannel.SMS.validate("prashant@petcare.app"))
+        assertEquals(R.string.error_phone_required, ResetChannel.SMS.validate(""))
+    }
+
+    @Test
+    fun `step 2 shows an email as typed and a phone number masked`() {
+        assertEquals("prashant@petcare.app", ResetChannel.EMAIL.display("  prashant@petcare.app "))
+        assertEquals("+977 98•• ••12", ResetChannel.SMS.display("+977 9812345612"))
     }
 
     @Test

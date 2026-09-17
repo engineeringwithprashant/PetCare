@@ -38,7 +38,7 @@ class ResetCodeViewModel(savedStateHandle: SavedStateHandle) : CodeEntryViewMode
     val channel: ResetChannel =
         ResetChannel.fromName(savedStateHandle[ResetCodeFragment.ARG_CHANNEL])
 
-    /** The address or masked number it was sent to, or null if not known. */
+    /** The address or masked number it was sent to, as typed on step 1; null only if missing. */
     val destination: String? = savedStateHandle[ResetCodeFragment.ARG_DESTINATION]
 
     /**

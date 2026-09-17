@@ -106,6 +106,9 @@
     <string name="auth_code_progress">Code entered: %1$d of %2$d</string>
     <string name="auth_key_backspace">⌫</string>
     <string name="auth_key_backspace_description">Delete last digit</string>
+    <!-- The keypad's bottom-left key: empties every box at once. Upper-cased by its style. -->
+    <string name="auth_key_clear">Clear</string>
+    <string name="auth_key_clear_description">Clear the whole code</string>
 
     <!-- Two-factor check. -->
     <string name="two_factor_title">Two-factor check</string>
@@ -119,14 +122,19 @@
 
     <!-- Reset, step 1: choose where the code goes. -->
     <string name="reset_choose_title">Reset your password</string>
-    <string name="reset_choose_subtitle">Where should the 6-digit reset code go?</string>
+    <string name="reset_choose_subtitle">Pick where the 6-digit code should go, then enter the address on your account.</string>
     <string name="reset_option_email_badge">Mail</string>
     <string name="reset_option_email_title">Send to email</string>
+    <string name="reset_option_email_description">A 6-digit code by email</string>
     <string name="reset_option_sms_badge">SMS</string>
     <string name="reset_option_sms_title">Send by SMS</string>
-    <!-- Shown under an option when the sign-in screen gave no address or number to show. -->
-    <string name="reset_option_email_unknown">The email on your account</string>
-    <string name="reset_option_sms_unknown">The phone number on your account</string>
+    <string name="reset_option_sms_description">A 6-digit code by text</string>
+    <!-- The field under the option cards. Only one pair shows at a time, matching the chosen card.
+         The placeholders are the register form's, so both forms show the same example. -->
+    <string name="reset_account_email_label">Account email</string>
+    <string name="reset_account_email_helper">Must match the email on the account — we only send codes to a registered contact.</string>
+    <string name="reset_account_phone_label">Account phone number</string>
+    <string name="reset_account_phone_helper">Must match the number on the account — we only send codes to a registered contact.</string>
     <string name="reset_send_code">Send reset code</string>
     <string name="auth_back_to_login">← Back to log in</string>
 

@@ -109,19 +109,14 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- Reset step 1: choose where the code goes. "BACK TO LOG IN" on each reset step pops back to
+    <!-- Reset step 1: choose where the code goes and type the account's email or phone number. Takes
+         no arguments — the field starts empty. "BACK TO LOG IN" on each reset step pops back to
          authFragment rather than navigating to it, so no second log in screen is stacked. -->
     <fragment
         android:id="@+id/resetChooseFragment"
         android:name="com.prash.petcare.ui.auth.reset.ResetChooseFragment"
         android:label="@string/reset_choose_title"
         tools:layout="@layout/fragment_reset_choose">
-
-        <!-- Whatever was in the log in screen's email-or-phone field; empty if nothing. -->
-        <argument
-            android:name="identifier"
-            android:defaultValue=""
-            app:argType="string" />
 
         <action
             android:id="@+id/action_reset_choose_to_reset_code"
@@ -140,7 +135,8 @@
             android:name="channel"
             app:argType="string" />
 
-        <!-- The address or masked number to name on screen; null when step 1 did not know it. -->
+        <!-- The address (as typed) or masked number to name on screen. Nullable only as a safety net:
+             step 1 always supplies it, and step 2 falls back to "your email" / "your phone". -->
         <argument
             android:name="destination"
             android:defaultValue="@null"

@@ -61,8 +61,8 @@ fun Fragment.keepSystemKeyboardClosed() {
 /**
  * Connects a [CodeKeypadView] and its screen's verify button to a [CodeEntryViewModel], in both
  * directions:
- *  - **out**: keypad presses go to [CodeEntryViewModel.onDigit] / [CodeEntryViewModel.onBackspace],
- *    and the verify button to [CodeEntryViewModel.onVerify];
+ *  - **out**: keypad presses go to [CodeEntryViewModel.onDigit], [CodeEntryViewModel.onBackspace] and
+ *    [CodeEntryViewModel.onClear], and the verify button to [CodeEntryViewModel.onVerify];
  *  - **in**: the typed code and any error are drawn into the keypad, and the button is enabled only
  *    while [CodeEntryViewModel.canVerify] is true.
  *
@@ -74,6 +74,7 @@ fun Fragment.bindCodeEntry(keypad: CodeKeypadView, verifyButton: View, viewModel
     keypad.listener = object : CodeKeypadView.Listener {
         override fun onDigit(digit: Int) = viewModel.onDigit(digit)
         override fun onBackspace() = viewModel.onBackspace()
+        override fun onClear() = viewModel.onClear()
     }
     verifyButton.setOnClickListener { viewModel.onVerify() }
 

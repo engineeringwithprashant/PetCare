@@ -1,12 +1,38 @@
 package com.prash.petcare.ui.auth.reset
 
+import androidx.annotation.StringRes
+import com.prash.petcare.ui.auth.AuthValidation
+
 /**
  * Where a password-reset code is sent. Chosen on reset step 1 and carried to step 2 as a navigation
  * argument (by [name], which is what [fromName] reads back).
+ *
+ * Each channel also knows which format its account field must be in, so step 1 asks the chosen
+ * channel rather than branching on it — see [validate].
  */
 enum class ResetChannel {
-    EMAIL,
-    SMS;
+    EMAIL {
+        override fun validate(destination: String): Int? = AuthValidation.validateEmail(destination)
+        override fun display(destination: String): String = destination.trim()
+    },
+    SMS {
+        override fun validate(destination: String): Int? = AuthValidation.validatePhone(destination)
+        override fun display(destination: String): String = DestinationMasking.maskPhone(destination)
+    };
+
+    /**
+     * Returns the error for [destination] typed into this channel's account field — an email format
+     * for [EMAIL], a phone format for [SMS] — or null when it is acceptable. An empty field is an
+     * error too, so "valid" always means "ready to send".
+     */
+    @StringRes
+    abstract fun validate(destination: String): Int?
+
+    /**
+     * How step 2 names [destination] on screen: an email as typed, a phone number masked so only its
+     * opening and last two digits show.
+     */
+    abstract fun display(destination: String): String
 
     companion object {
         /** Reads a channel back from a navigation argument, falling back to SMS for anything unknown. */

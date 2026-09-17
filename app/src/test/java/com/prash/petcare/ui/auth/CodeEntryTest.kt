@@ -42,6 +42,15 @@ class CodeEntryTest {
     }
 
     @Test
+    fun `clear empties a full code, and typing starts again from the first box`() {
+        val cleared = CodeEntry.clear()
+        assertEquals("", cleared)
+        // An empty code is what puts the "next box" outline back on box one (index 0).
+        assertEquals(0, cleared.length)
+        assertEquals("7", CodeEntry.append(cleared, 7))
+    }
+
+    @Test
     fun `the code is complete only at six digits`() {
         assertFalse(CodeEntry.isComplete(type(1, 2, 3, 4, 5)))
         assertTrue(CodeEntry.isComplete(type(1, 2, 3, 4, 5, 6)))

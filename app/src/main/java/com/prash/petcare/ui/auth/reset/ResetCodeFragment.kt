@@ -54,7 +54,8 @@ class ResetCodeFragment : Fragment() {
         // The code is typed on the keypad, never on the system keyboard.
         keepSystemKeyboardClosed()
 
-        // "+977 98•• ••12", or "your phone" / "your email" when step 1 had nothing to show.
+        // What step 1's user typed — "+977 98•• ••12" or their email — with "your phone" / "your
+        // email" only as a fallback should the argument ever be missing.
         val destination = viewModel.destination ?: getString(
             when (viewModel.channel) {
                 ResetChannel.EMAIL -> R.string.reset_code_destination_email
@@ -110,7 +111,7 @@ class ResetCodeFragment : Fragment() {
         /** Navigation argument: the [ResetChannel] name the code was sent through. */
         const val ARG_CHANNEL = "channel"
 
-        /** Navigation argument: the address or masked number to name, or null if unknown. */
+        /** Navigation argument: the address (as typed) or masked number to name on screen. */
         const val ARG_DESTINATION = "destination"
     }
 }

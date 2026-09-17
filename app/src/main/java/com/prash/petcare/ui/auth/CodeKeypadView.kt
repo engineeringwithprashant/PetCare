@@ -33,10 +33,18 @@ class CodeKeypadView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : LinearLayout(context, attrs, defStyleAttr) {
 
-    /** Receives key presses. Two callbacks rather than one "key" event so digits arrive typed as Int. */
+    /**
+     * Receives key presses. One callback per kind of key rather than a single "key" event, so digits
+     * arrive typed as Int and the two editing keys cannot be confused.
+     */
     interface Listener {
         fun onDigit(digit: Int)
+
+        /** Backspace: remove the last digit. */
         fun onBackspace()
+
+        /** CLEAR: remove every digit. */
+        fun onClear()
     }
 
     /** Where key presses are sent. Set by the fragment; null presses are simply ignored. */
@@ -61,6 +69,9 @@ class CodeKeypadView @JvmOverloads constructor(
             key.setOnClickListener { listener?.onDigit(digit) }
         }
         binding.keyBackspace.setOnClickListener { listener?.onBackspace() }
+        // CLEAR only reports the press. The boxes empty — and the yellow "next box" outline returns to
+        // the first one — when the ViewModel's now-empty code comes back through render().
+        binding.keyClear.setOnClickListener { listener?.onClear() }
 
         // Draw the empty state straight away, so the preview and the first frame show the first box
         // outlined before any ViewModel state has arrived.

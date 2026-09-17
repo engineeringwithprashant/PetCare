@@ -62,6 +62,16 @@ abstract class CodeEntryViewModel(
         setCode(CodeEntry.backspace(code.value))
     }
 
+    /**
+     * The keypad's CLEAR was pressed: empty every box so the code can be retyped from the start.
+     *
+     * An empty code is all it takes to "return focus to the first box": CodeKeypadView outlines the box
+     * at index `code.length`, which is now 0. Any "wrong code" message goes too, as with any edit.
+     */
+    fun onClear() {
+        setCode(CodeEntry.clear())
+    }
+
     /** What the screen's verify button does. Each screen decides. */
     abstract fun onVerify()
 

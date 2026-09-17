@@ -29,7 +29,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentAuthBinding
-import com.prash.petcare.ui.auth.reset.ResetChooseFragment
 import com.prash.petcare.ui.auth.twofactor.TwoFactorFragment
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
@@ -218,13 +217,9 @@ class AuthFragment : Fragment() {
         }
 
         binding.forgotPasswordButton.setOnClickListener {
-            // Whatever is in the email-or-phone field travels with the user, so the reset screen can
-            // show where the code would go. Navigating by action id keeps the route itself declared in
-            // nav_graph.xml.
-            findNavController().navigate(
-                R.id.action_auth_to_reset_choose,
-                bundleOf(ResetChooseFragment.ARG_IDENTIFIER to binding.identifierInput.textString())
-            )
+            // No arguments: the reset screen asks for the account's address itself, starting empty.
+            // Navigating by action id keeps the route itself declared in nav_graph.xml.
+            findNavController().navigate(R.id.action_auth_to_reset_choose)
         }
     }
 

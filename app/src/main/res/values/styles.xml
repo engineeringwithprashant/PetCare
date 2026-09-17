@@ -2361,13 +2361,20 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- The empty cell left of 0. A plain View, not a button: it does nothing and is not announced. -->
-    <style name="PetCare.Auth.KeyBlank" parent="">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">@dimen/auth_key_height</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:background">@drawable/bg_auth_key_blank</item>
-        <item name="android:importantForAccessibility">no</item>
+    <!-- "CLEAR", the key left of 0. The same rounded key as the digits — inherited, so shape, size,
+         outline and ripple stay identical — but labelled in the app's micro-label treatment
+         (PetCare.SectionLabel: small IBM Plex Mono capitals, widely letter-spaced) and in the muted text
+         colour, so it reads as a secondary action next to the bold digits. -->
+    <style name="PetCare.Auth.Key.Clear" parent="PetCare.Auth.Key">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textSize">@dimen/auth_key_label_text_size</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.14</item>
+        <item name="android:maxLines">1</item>
     </style>
 
     <!-- A row of three keys. -->

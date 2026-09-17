@@ -698,6 +698,8 @@
     <dimen name="auth_key_gap">8dp</dimen>
     <dimen name="auth_key_corner_radius">14dp</dimen>
     <dimen name="auth_key_text_size">18sp</dimen>
+    <!-- The "CLEAR" key's label: the app's 11sp micro-label size, well below the digits. -->
+    <dimen name="auth_key_label_text_size">11sp</dimen>
 
     <!-- The reset option cards. -->
     <dimen name="auth_option_card_padding">14dp</dimen>
