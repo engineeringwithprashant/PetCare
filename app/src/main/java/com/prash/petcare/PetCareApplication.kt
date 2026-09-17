@@ -1,9 +1,12 @@
 package com.prash.petcare
 
 import android.app.Application
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.prash.petcare.data.assistant.AssistantRepository
 import com.prash.petcare.data.assistant.OpenAiAssistantRepository
+import com.prash.petcare.data.auth.FirebasePasswordResetRepository
+import com.prash.petcare.data.auth.PasswordResetRepository
 import com.prash.petcare.data.remote.assistant.OpenAiApi
 import com.prash.petcare.data.local.AlertReadStore
 import com.prash.petcare.data.local.DelegationContactStore
@@ -175,6 +178,17 @@ class PetCareApplication : Application() {
             api = OpenAiApi.create(),
             apiKey = BuildConfig.OPENAI_API_KEY
         )
+    }
+
+    /**
+     * Sends password-reset emails through Firebase Authentication.
+     *
+     * Typed as the [PasswordResetRepository] interface, like [assistantRepository], so this is the
+     * only line in the app that names the Firebase version. `FirebaseAuth.getInstance()` needs no
+     * setup call, for the same reason given for Firestore on [syncManager] below.
+     */
+    val passwordResetRepository: PasswordResetRepository by lazy {
+        FirebasePasswordResetRepository(FirebaseAuth.getInstance())
     }
 
     /**

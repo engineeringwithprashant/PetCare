@@ -21,7 +21,7 @@ sealed interface TwoFactorEvent {
  * The ViewModel behind the two-factor check (TwoFactorFragment).
  *
  * Everything about *typing* the code — the digits, the "wrong code" state, when the verify button is
- * enabled — is inherited from [CodeEntryViewModel], shared with the reset-code screen. This class adds
+ * enabled — is inherited from [CodeEntryViewModel], the reusable code-entry base class. This class adds
  * only what is particular to two-factor: which account is being checked, and what verify and "lost
  * access" do.
  *

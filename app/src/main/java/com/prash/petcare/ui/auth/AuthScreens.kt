@@ -15,7 +15,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
- * Small View-layer helpers shared by the five sign-in screens.
+ * Small View-layer helpers shared by the sign-in screens (log in / register, two-factor, and the
+ * two password-reset screens).
  *
  * Each is an extension function on the ViewBinding of a shared layout (view_auth_header.xml,
  * view_auth_step_progress.xml), so a fragment writes `binding.header.show(...)` and every screen fills
@@ -43,11 +44,11 @@ fun ViewAuthStepProgressBinding.showStep(step: Int, total: Int, segments: Int = 
 }
 
 /**
- * Closes the system keyboard if it is open, for the two screens that enter codes with their own
- * keypad.
+ * Closes the system keyboard if it is open, for screens with no text field of their own: the
+ * two-factor screen (which enters its code on its own keypad) and the reset confirmation.
  *
- * Those screens have no text field, so nothing on them can *open* the keyboard — but it can still be
- * showing when they arrive, left over from typing a password on the previous screen. The insets
+ * Those screens have nothing that can *open* the keyboard — but it can still be showing when they
+ * arrive, left over from typing on the previous screen. The insets
  * controller is the current API for this: it asks the window to hide the IME, and works the same from
  * Android 7 to the latest release. Clearing the old focus stops the keyboard coming back for a field
  * that is no longer on screen.
@@ -66,7 +67,7 @@ fun Fragment.keepSystemKeyboardClosed() {
  *  - **in**: the typed code and any error are drawn into the keypad, and the button is enabled only
  *    while [CodeEntryViewModel.canVerify] is true.
  *
- * Both code screens call this one function, so their behaviour cannot drift apart. It must be called
+ * Every code-entry screen calls this one function, so their behaviour cannot drift apart. It must be called
  * from `onViewCreated`: the collection is tied to the *view's* lifecycle, and `repeatOnLifecycle`
  * pauses it whenever the screen is not visible.
  */

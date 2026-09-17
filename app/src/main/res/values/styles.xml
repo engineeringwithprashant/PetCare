@@ -2095,9 +2095,9 @@
     </style>
 
     <!-- ================================ Sign-in screens ================================
-         Log in / register, two-factor, and the three password-reset steps. Every one of these screens
+         Log in / register, two-factor, and the two password-reset screens. Every one of these screens
          shares the same header (view_auth_header.xml), the same fields and the same buttons, so each
-         look is described once here and the five layouts only name styles. -->
+         look is described once here and the four layouts only name styles. -->
 
     <!-- The page itself: a scrolling column on the cream page colour. Set on each screen's root
          ScrollView. -->
@@ -2136,7 +2136,7 @@
         <item name="android:gravity">center</item>
     </style>
 
-    <!-- The screen heading — "Welcome back", "Enter reset code". The largest text on these screens. -->
+    <!-- The screen heading — "Welcome back", "Check your email". The largest text on these screens. -->
     <style name="PetCare.Auth.Title" parent="">
         <item name="android:textAppearance">?attr/textAppearanceHeadlineMedium</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
@@ -2210,7 +2210,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "Forgot it? Reset by SMS.", "Used for delegation SMS and OTP login", "Code refreshes every 30
+    <!-- "Forgot it? Reset by email.", "Used for delegation SMS and OTP login", "Code refreshes every 30
          seconds…": small muted monospace notes. Monospace to match the labels, which marks them as
          annotations on the form rather than as part of what the user reads through. -->
     <style name="PetCare.Auth.Helper" parent="">
@@ -2246,6 +2246,14 @@
         <item name="android:letterSpacing">0.08</item>
     </style>
 
+    <!-- "RESEND" on the reset confirmation screen. It is disabled during the resend cooldown, so its
+         text colour is a state list that turns muted while disabled. See auth_resend_link_text.xml.
+         The label stays on one line so the countdown never wraps next to "Didn't get it?". -->
+    <style name="PetCare.Auth.TextLink.Resend" parent="PetCare.Auth.TextLink">
+        <item name="android:textColor">@color/auth_resend_link_text</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
     <!-- "← BACK TO LOG IN", "← USE A DIFFERENT ACCOUNT": the quietest link on the page. Muted, lighter
          and spaced wider, because it is the way *out* of the flow rather than the way forward. -->
     <style name="PetCare.Auth.BackLink" parent="PetCare.Auth.TextLink">
@@ -2256,11 +2264,11 @@
     </style>
 
     <!--
-        The main action — "LOG IN", "CREATE ACCOUNT", "SEND RESET CODE", "VERIFY CODE".
+        The main action — "LOG IN", "CREATE ACCOUNT", "SEND RESET LINK", "VERIFY & LOG IN".
 
         A full-width pill in the app's strong fill. Its colours are state lists
-        (auth_primary_button_background / _text) so that disabling it — the verify buttons stay
-        disabled until all six digits are in — switches to the solid charcoal resting look rather than
+        (auth_primary_button_background / _text) so that disabling it — the verify button stays
+        disabled until all six digits are in, the reset button until the email is valid — switches to the solid charcoal resting look rather than
         Material's translucent default.
     -->
     <style name="PetCare.Auth.PrimaryButton" parent="Widget.Material3.Button">
@@ -2319,7 +2327,7 @@
 
     <!-- ~~~~~~~~~~ Step bar ~~~~~~~~~~ -->
 
-    <!-- "STEP 2 OF 3" at the right-hand end of the step bar. -->
+    <!-- "STEP 2 OF 2" at the right-hand end of the two-factor step bar. -->
     <style name="PetCare.Auth.StepLabel" parent="PetCare.SectionLabel">
         <item name="android:layout_marginStart">@dimen/spacing_md</item>
     </style>
@@ -2383,71 +2391,6 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">@dimen/auth_key_gap</item>
         <item name="android:orientation">horizontal</item>
-    </style>
-
-    <!-- ~~~~~~~~~~ Reset option cards ~~~~~~~~~~ -->
-
-    <!--
-        "Send to email" / "Send by SMS".
-
-        A checkable MaterialCardView: the fragment sets isChecked on the chosen card, and the fill,
-        outline, badge and radio all answer that single state through their colour state lists. The
-        default checked-corner tick and the checked foreground wash are switched off, since the design
-        shows selection through the fill and the radio instead. Flat with an outline rather than the
-        app's default shadowed card, as in the mockup: these are choices within a form, not panels.
-    -->
-    <style name="PetCare.Auth.OptionCard" parent="PetCare.Card">
-        <item name="android:checkable">true</item>
-        <item name="android:clickable">true</item>
-        <item name="android:focusable">true</item>
-        <item name="cardElevation">0dp</item>
-        <item name="cardBackgroundColor">@color/auth_option_card_background</item>
-        <item name="strokeColor">@color/auth_option_card_stroke</item>
-        <item name="strokeWidth">1dp</item>
-        <item name="checkedIcon">@null</item>
-        <item name="cardForegroundColor">@android:color/transparent</item>
-        <item name="rippleColor">?attr/colorPrimary</item>
-    </style>
-
-    <!-- The "MAIL" / "SMS" square. duplicateParentState lets it see the card's checked state; the
-         row between it and the card sets the same attribute so the state passes all the way down. -->
-    <style name="PetCare.Auth.OptionBadge" parent="">
-        <item name="android:layout_width">@dimen/auth_option_badge_size</item>
-        <item name="android:layout_height">@dimen/auth_option_badge_size</item>
-        <item name="android:duplicateParentState">true</item>
-        <item name="android:background">@drawable/bg_auth_option_badge</item>
-        <item name="android:backgroundTint">@color/auth_option_badge_background</item>
-        <item name="android:textColor">@color/auth_option_badge_text</item>
-        <item name="android:fontFamily">@font/ibm_plex_mono</item>
-        <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textSize">@dimen/auth_option_badge_text_size</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textAllCaps">true</item>
-        <item name="android:gravity">center</item>
-        <item name="android:importantForAccessibility">no</item>
-    </style>
-
-    <!-- "Send by SMS". -->
-    <style name="PetCare.Auth.OptionTitle" parent="">
-        <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">?attr/colorOnSurface</item>
-    </style>
-
-    <!-- "+977 98•• ••12": the masked destination, in monospace so the dots line up with the digits. -->
-    <style name="PetCare.Auth.OptionDestination" parent="PetCare.Auth.Helper">
-        <item name="android:layout_marginTop">2dp</item>
-        <item name="android:maxLines">1</item>
-        <item name="android:ellipsize">end</item>
-    </style>
-
-    <!-- The radio circle. See bg_auth_radio.xml for why it is a View and not a RadioButton. -->
-    <style name="PetCare.Auth.OptionRadio" parent="">
-        <item name="android:layout_width">@dimen/auth_radio_size</item>
-        <item name="android:layout_height">@dimen/auth_radio_size</item>
-        <item name="android:duplicateParentState">true</item>
-        <item name="android:background">@drawable/bg_auth_radio</item>
-        <item name="android:importantForAccessibility">no</item>
     </style>
 
 </resources>

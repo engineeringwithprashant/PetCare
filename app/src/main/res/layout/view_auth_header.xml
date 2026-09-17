@@ -7,7 +7,7 @@
     ViewBinding gives the screen a nested `binding.header` of type ViewAuthHeaderBinding, and the
     fragment fills in the two lines that differ (title, subtitle) through it — see
     ui/auth/AuthScreens.kt. The three lines above them are identical everywhere, so they are written
-    once here and five screens cannot drift apart.
+    once here and the four sign-in screens cannot drift apart.
 
     A vertical LinearLayout with every child centred: the header is a simple stack with nothing beside
     anything, which is exactly what LinearLayout is for and cheaper to measure than a ConstraintLayout.

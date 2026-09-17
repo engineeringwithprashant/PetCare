@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The step bar on the two-factor and password-reset screens: three short segments, the completed
-    ones in yellow, with "STEP 2 OF 3" at the right-hand end.
+    The step bar on the two-factor screen: three short segments, the completed ones in yellow, with
+    "STEP 2 OF 2" at the right-hand end. (The password reset is a single step and has no bar.)
 
     Included with an id, so each screen reaches it as `binding.stepProgress` and calls
     `showStep(step, total)` (ui/auth/AuthScreens.kt) rather than setting the segments and the label
@@ -34,6 +34,6 @@
         style="@style/PetCare.Auth.StepLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="Step 1 of 3" />
+        tools:text="Step 2 of 2" />
 
 </LinearLayout>

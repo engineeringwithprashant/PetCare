@@ -6,7 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit tests for [CodeEntry], the keypad rules shared by the two-factor and reset-code screens:
+ * Unit tests for [CodeEntry], the keypad rules behind the reusable code-entry component (used by two-factor):
  * digits fill left to right, backspace clears the last, and the code is complete at exactly six.
  */
 class CodeEntryTest {

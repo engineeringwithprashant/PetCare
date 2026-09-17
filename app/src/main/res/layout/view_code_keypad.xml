@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     The contents of CodeKeypadView (ui/auth/CodeKeypadView.kt): six code boxes, an error line, and a
-    4×3 numeric keypad. Used by both the two-factor screen and the reset-code screen.
+    4×3 numeric keypad. Used by the two-factor screen; kept as its own component so any other
+    code-entry screen gets exactly the same boxes and keys.
 
     **Why <merge>.** CodeKeypadView *is* a vertical LinearLayout. Inflating an ordinary layout into it
     would put a second LinearLayout inside the first for no reason; <merge> adds these children

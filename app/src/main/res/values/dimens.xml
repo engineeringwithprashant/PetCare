@@ -645,7 +645,7 @@
     <dimen name="profile_logout_button_height">52dp</dimen>
 
     <!-- ============================ Sign-in screens ============================
-         Log in / register, two-factor, and the three password-reset steps. Sizes are taken from the
+         Log in / register, two-factor, and the two password-reset screens. Sizes are taken from the
          auth mockups (drawn at roughly 0.9px per dp) and rounded to the app's spacing scale. -->
 
     <!-- The page gutter. A little wider than the app-wide 16dp: these screens are a single centred
@@ -677,7 +677,7 @@
     <!-- Label-to-field and field-to-next-label spacing. -->
     <dimen name="auth_label_gap">6dp</dimen>
     <dimen name="auth_field_gap">14dp</dimen>
-    <!-- The small mono helper lines ("Forgot it? Reset by SMS."). -->
+    <!-- The small mono helper lines ("Forgot it? Reset by email."). -->
     <dimen name="auth_helper_text_size">11sp</dimen>
 
     <!-- The main filled button and the Google button. -->
@@ -700,12 +700,5 @@
     <dimen name="auth_key_text_size">18sp</dimen>
     <!-- The "CLEAR" key's label: the app's 11sp micro-label size, well below the digits. -->
     <dimen name="auth_key_label_text_size">11sp</dimen>
-
-    <!-- The reset option cards. -->
-    <dimen name="auth_option_card_padding">14dp</dimen>
-    <dimen name="auth_option_badge_size">36dp</dimen>
-    <dimen name="auth_option_badge_corner_radius">9dp</dimen>
-    <dimen name="auth_option_badge_text_size">9sp</dimen>
-    <dimen name="auth_radio_size">22dp</dimen>
 
 </resources>

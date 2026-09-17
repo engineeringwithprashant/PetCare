@@ -7,10 +7,10 @@ import com.prash.petcare.R
  * The input rules for every sign-in screen: email, phone, password, and "do the two passwords match".
  *
  * **Where this sits in MVVM.** These rules are business logic, so they belong to the ViewModel layer,
- * not to a fragment. They are pulled out of any one ViewModel into this object because three of them
- * need the same rules — [AuthViewModel] (log in / register) and
- * [com.prash.petcare.ui.auth.reset.ResetNewPasswordViewModel] (reset step 3) — and a password rule
- * written twice is a password rule that will one day disagree with itself.
+ * not to a fragment. They are pulled out of any one ViewModel into this object because more than one
+ * screen needs the same rules — [AuthViewModel] (log in / register) and
+ * [com.prash.petcare.ui.auth.reset.ResetRequestViewModel] (the reset email address) — and a rule
+ * written twice is a rule that will one day disagree with itself.
  *
  * **Why a plain object with no Android types.** Every function takes strings and returns a string
  * *resource id* (or null for "fine"). Nothing here touches a Context or a View, so the rules run in an

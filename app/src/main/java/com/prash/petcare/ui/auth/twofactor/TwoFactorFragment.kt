@@ -68,7 +68,7 @@ class TwoFactorFragment : Fragment() {
         // filled, and that is matched exactly.
         binding.stepProgress.showStep(step = 2, total = 2, segments = 3)
 
-        // Keypad, boxes and verify button, wired exactly as on the reset-code screen.
+        // Keypad, boxes and verify button, wired by the shared bindCodeEntry helper.
         bindCodeEntry(binding.codeKeypad, binding.verifyButton, viewModel)
         binding.lostAccessButton.setOnClickListener { viewModel.onLostAccess() }
 

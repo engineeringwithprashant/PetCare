@@ -105,6 +105,9 @@ dependencies {
     // with no version at all.
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
+    // Firebase Authentication: sends the password-reset email and hosts the page where the new
+    // password is chosen. Reached only through data.auth.FirebasePasswordResetRepository.
+    implementation(libs.firebase.auth)
     // Firestore's API returns Play services `Task` objects. This adds the `await()` extension that
     // suspends until one completes, letting the sync code read as ordinary sequential coroutine
     // code rather than as nested success/failure listeners.

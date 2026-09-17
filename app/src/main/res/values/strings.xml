@@ -38,7 +38,7 @@
     <string name="menu_sign_out">Sign out</string>
 
     <!-- ================================ Sign-in screens ================================
-         Log in / register (one screen with a toggle), two-factor, and the three password-reset steps.
+         Log in / register (one screen with a toggle), two-factor, and the two email password-reset screens.
 
          Labels, links and button text are written in normal case and upper-cased by their styles
          (textAllCaps), so TalkBack reads "Forgot password?" as words rather than spelling out
@@ -62,7 +62,7 @@
     <string name="login_identifier_label">Email or phone</string>
     <string name="login_identifier_hint">Email or phone number</string>
     <string name="login_password_label">Password</string>
-    <string name="login_password_helper">Forgot it? Reset by SMS.</string>
+    <string name="login_password_helper">Forgot it? Reset by email.</string>
     <string name="login_forgot_password">Forgot password?</string>
     <string name="login_submit">Log in</string>
 
@@ -100,7 +100,7 @@
     <string name="auth_google_unavailable">Google sign-in isn\'t available yet.</string>
     <string name="auth_terms_unavailable">The terms page isn\'t available yet.</string>
 
-    <!-- The step bar, shared by two-factor and the reset steps. %1$d is this step, %2$d the total. -->
+    <!-- The step bar on the two-factor screen. %1$d is this step, %2$d the total. -->
     <string name="auth_step_of">Step %1$d of %2$d</string>
     <!-- The row of code boxes, as TalkBack reads it. -->
     <string name="auth_code_progress">Code entered: %1$d of %2$d</string>
@@ -120,47 +120,37 @@
     <string name="two_factor_unavailable">Authenticator codes can\'t be checked yet.</string>
     <string name="two_factor_lost_access_unavailable">Account recovery isn\'t available yet.</string>
 
-    <!-- Reset, step 1: choose where the code goes. -->
-    <string name="reset_choose_title">Reset your password</string>
-    <string name="reset_choose_subtitle">Pick where the 6-digit code should go, then enter the address on your account.</string>
-    <string name="reset_option_email_badge">Mail</string>
-    <string name="reset_option_email_title">Send to email</string>
-    <string name="reset_option_email_description">A 6-digit code by email</string>
-    <string name="reset_option_sms_badge">SMS</string>
-    <string name="reset_option_sms_title">Send by SMS</string>
-    <string name="reset_option_sms_description">A 6-digit code by text</string>
-    <!-- The field under the option cards. Only one pair shows at a time, matching the chosen card.
-         The placeholders are the register form's, so both forms show the same example. -->
+    <!-- Password reset, by email only. Firebase Authentication sends the email and hosts the page
+         where the new password is chosen, so the app has just two screens: ask for the address, then
+         confirm it was sent. -->
+    <string name="reset_request_title">Reset your password</string>
+    <string name="reset_request_subtitle">Enter the email on your account and we\'ll email you a link to choose a new password.</string>
+    <!-- Upper-cased by its style, so it reads "ACCOUNT EMAIL" on screen. The placeholder is the
+         register form's, so both forms show the same example address. -->
     <string name="reset_account_email_label">Account email</string>
-    <string name="reset_account_email_helper">Must match the email on the account — we only send codes to a registered contact.</string>
-    <string name="reset_account_phone_label">Account phone number</string>
-    <string name="reset_account_phone_helper">Must match the number on the account — we only send codes to a registered contact.</string>
-    <string name="reset_send_code">Send reset code</string>
+    <string name="reset_account_email_helper">Must match the email address on your account.</string>
+    <string name="reset_send_link">Send reset link</string>
     <string name="auth_back_to_login">← Back to log in</string>
 
-    <!-- Reset, step 2: enter the code. %1$s is the destination (masked for a phone number), %2$d the
-         minutes until the code expires. -->
-    <string name="reset_code_title">Enter reset code</string>
-    <!-- A plural, chosen by the number of minutes, so a one-minute expiry reads correctly. -->
-    <plurals name="reset_code_subtitle">
-        <item quantity="one">We sent a 6-digit code to %1$s. It expires in %2$d minute.</item>
-        <item quantity="other">We sent a 6-digit code to %1$s. It expires in %2$d minutes.</item>
-    </plurals>
-    <string name="reset_code_sent_note">Sent to %1$s · expires in %2$d min</string>
-    <!-- Used in place of %1$s above when no destination is known. -->
-    <string name="reset_code_destination_email">your email</string>
-    <string name="reset_code_destination_sms">your phone</string>
-    <string name="reset_code_resend">Resend</string>
-    <string name="reset_code_submit">Verify code</string>
-    <string name="reset_code_resend_unavailable">Reset codes can\'t be sent yet.</string>
+    <!-- Reset confirmation. %1$s is the address as the user typed it.
+         Deliberately the same whether or not that address has an account: saying "no account found"
+         would let anyone check which addresses are registered. -->
+    <string name="reset_sent_title">Check your email</string>
+    <string name="reset_sent_message">A reset link has been sent to %1$s. Check your inbox and your spam folder.</string>
+    <string name="reset_sent_not_received">Didn\'t get it?</string>
+    <string name="reset_sent_resend">Resend</string>
+    <!-- The resend link during the cooldown, as a clock: "Resend in 0:42". %1$d is minutes, %2$02d
+         the seconds padded to two digits. A clock rather than "42s", because the link's style
+         upper-cases its text and "42S" would look wrong. -->
+    <string name="reset_sent_resend_wait">Resend in %1$d:%2$02d</string>
+    <string name="reset_sent_resent">Sent again. It can take a minute or two to arrive.</string>
 
-    <!-- Reset, step 3: choose the new password. -->
-    <string name="reset_password_title">Set a new password</string>
-    <string name="reset_password_subtitle">Pick something you haven\'t used before. You\'ll log in with it from now on.</string>
-    <string name="reset_password_label">New password</string>
-    <string name="reset_password_confirm_label">Confirm new password</string>
-    <string name="reset_password_submit">Save new password</string>
-    <string name="reset_password_unavailable">Password reset isn\'t connected yet — your password was not changed.</string>
+    <!-- Why a reset email could not be sent. Shown on either reset screen. A malformed address uses
+         error_email_invalid instead, under the field itself. -->
+    <string name="reset_error_network">No internet connection. Check you\'re online and try again.</string>
+    <string name="reset_error_rate_limited">Too many reset requests. Wait a few minutes, then try again.</string>
+    <string name="reset_error_invalid_email">That email address isn\'t valid. Go back and check it.</string>
+    <string name="reset_error_unknown">The reset link couldn\'t be sent. Try again in a moment.</string>
 
     <!-- ============================== Home dashboard ==============================
          The screen the app opens on once signed in, top to bottom: the greeting and clock, three stat

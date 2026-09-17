@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The fill of the sign-in screens' main button — "LOG IN", "CREATE ACCOUNT", "SEND RESET CODE",
-    "VERIFY CODE", "VERIFY & LOG IN".
+    The fill of the sign-in screens' main button — "LOG IN", "CREATE ACCOUNT", "SEND RESET LINK",
+    "VERIFY & LOG IN".
 
     A colour state list keyed on `state_enabled`, so the fragment only ever sets `isEnabled` and this
     file decides what that looks like. The order matters: a selector returns the *first* item whose

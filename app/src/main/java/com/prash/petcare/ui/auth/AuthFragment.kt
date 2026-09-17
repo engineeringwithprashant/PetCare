@@ -217,9 +217,9 @@ class AuthFragment : Fragment() {
         }
 
         binding.forgotPasswordButton.setOnClickListener {
-            // No arguments: the reset screen asks for the account's address itself, starting empty.
+            // No arguments: the reset screen asks for the account's email itself, starting empty.
             // Navigating by action id keeps the route itself declared in nav_graph.xml.
-            findNavController().navigate(R.id.action_auth_to_reset_choose)
+            findNavController().navigate(R.id.action_auth_to_reset_request)
         }
     }
 

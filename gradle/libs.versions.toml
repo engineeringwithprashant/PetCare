@@ -69,6 +69,9 @@ androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview"
 # has no version of its own on purpose, so the BoM decides it.
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+# Firebase Authentication, used only for the password-reset email. Versionless for the same reason
+# as firestore: the BoM picks a version known to work alongside it.
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
 # Retrofit: the HTTP client behind the home screen's live temperature. `converter-gson` is the piece

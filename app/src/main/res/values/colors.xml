@@ -191,11 +191,6 @@
     <color name="disabled_container_dark">#34352A</color>
     <color name="on_disabled_container_dark">#9A998A</color>
 
-    <!-- The darker gold rim round a chosen radio circle on the password-reset option cards. A plain
-         yellow disc on a pale-yellow card has almost no edge; the rim is what makes it read as a
-         filled control rather than a stain. Identical in both themes, like the accent it frames. -->
-    <color name="auth_radio_rim">#C9B32A</color>
-
     <!-- ============================== Pastel stat pills ==============================
          The soft tinted chips that carry a single small fact — a pet's age, its weight, how many
          tasks are left today.

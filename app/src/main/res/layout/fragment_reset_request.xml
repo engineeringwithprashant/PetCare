@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Password reset (ResetRequestFragment): type the account's email address and ask for a reset link.
+
+    Reset is by email only, so this is the whole flow on the app's side. Firebase Authentication sends
+    the email and hosts the page where the new password is chosen. There is no step bar: it is a
+    single step.
+
+    **Structure.** The same shell as every sign-in screen: a ScrollView page containing one vertical
+    column. A ScrollView, so the screen still works with the keyboard open or a large font. A
+    LinearLayout column, because every element sits under the one before and nothing is side by side,
+    so a ConstraintLayout would add nothing. The page and column styles set the gutters and background,
+    so the spacing matches the log in and two-factor screens exactly.
+
+    **Top to bottom.** The shared header (logo, "PetCare", "DAILY PET TRACKING", heading, subtitle),
+    then the labelled email field and its helper line, then the button, then a progress bar and a
+    failure line that are hidden until needed, then "← BACK TO LOG IN".
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Auth.Page"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.auth.reset.ResetRequestFragment">
+
+    <LinearLayout
+        style="@style/PetCare.Auth.Column"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- The logo block and this screen's heading and subtitle. The include has an id, so ViewBinding
+             exposes it as `binding.header`, and the fragment sets the two lines of text through it. -->
+        <include
+            android:id="@+id/header"
+            layout="@layout/view_auth_header" />
+
+        <!-- "ACCOUNT EMAIL". Upper-cased by the style. labelFor tells TalkBack this text names the
+             field below, so the field is announced by its label rather than by its placeholder.
+             auth_header_gap is the same gap the other auth screens leave under the header. -->
+        <TextView
+            style="@style/PetCare.Auth.FieldLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/auth_header_gap"
+            android:labelFor="@id/accountEmailInput"
+            android:text="@string/reset_account_email_label" />
+
+        <!-- The address field. Starts empty. TextInputLayout draws the format error directly under
+             the box, above the helper line. textEmailAddress shows a keyboard with "@", and the
+             autofill hint lets a password manager offer the saved address. -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/accountEmailLayout"
+            style="@style/PetCare.Auth.Field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/accountEmailInput"
+                style="@style/PetCare.Auth.FieldInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="emailAddress"
+                android:hint="@string/register_email_hint"
+                android:imeOptions="actionDone"
+                android:inputType="textEmailAddress" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- The muted note under the field. It stays visible when an error appears above it. -->
+        <TextView
+            style="@style/PetCare.Auth.Helper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/auth_label_gap"
+            android:text="@string/reset_account_email_helper" />
+
+        <!-- Starts disabled. The fragment enables it only while the address is well formed and no
+             request is in progress. See ResetRequestViewModel. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sendLinkButton"
+            style="@style/PetCare.Auth.PrimaryButton"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:enabled="false"
+            android:text="@string/reset_send_link" />
+
+        <!-- Shown only while Firebase is handling the request. It uses the same thin bar as the log
+             in screen. GONE takes no space, so the layout does not jump when it appears. -->
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/sendingIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:trackCornerRadius="2dp" />
+
+        <!-- No network, rate limited, or another failure that is not about the address format. It
+             sits under the button that caused it. ErrorText is a polite live region, so TalkBack reads
+             the message when it appears. -->
+        <TextView
+            android:id="@+id/failureText"
+            style="@style/PetCare.Auth.ErrorText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:gravity="center_horizontal"
+            android:visibility="gone"
+            tools:text="@string/reset_error_network"
+            tools:visibility="visible" />
+
+        <!-- Centred by its style. Returns to the log in screen already on the back stack. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backToLoginButton"
+            style="@style/PetCare.Auth.BackLink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/auth_back_to_login" />
+
+    </LinearLayout>
+</ScrollView>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One of the six digit boxes on the two-factor and reset-code screens.
+    One of the six digit boxes on the two-factor screen (drawn by the reusable CodeKeypadView).
 
     A state-list drawable, so CodeKeypadView only flips two booleans per box and never builds a shape
     in code. Two standard view states are borrowed for the two special looks:

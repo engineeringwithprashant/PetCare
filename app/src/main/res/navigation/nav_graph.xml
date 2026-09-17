@@ -11,7 +11,7 @@
     **The shape of the graph.** It is in two halves.
 
     *Authentication* — authFragment (log in and register, one screen with a toggle), the two-factor
-    check, and the three password-reset steps. The graph starts at authFragment, and every route from
+    check, and the two password-reset screens (request, then confirmation). The graph starts at authFragment, and every route from
     here into the app clears the whole graph behind it so that "back" from the app cannot return to a
     form the user has already completed.
 
@@ -83,10 +83,10 @@
             android:id="@+id/action_auth_to_two_factor"
             app:destination="@id/twoFactorFragment" />
 
-        <!-- "FORGOT PASSWORD?" starts the three reset steps. -->
+        <!-- "FORGOT PASSWORD?" opens the email password reset. -->
         <action
-            android:id="@+id/action_auth_to_reset_choose"
-            app:destination="@id/resetChooseFragment" />
+            android:id="@+id/action_auth_to_reset_request"
+            app:destination="@id/resetRequestFragment" />
     </fragment>
 
     <!-- Two-factor check: step 2 of logging in. The account is not signed in until this screen says
@@ -109,57 +109,37 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- Reset step 1: choose where the code goes and type the account's email or phone number. Takes
-         no arguments — the field starts empty. "BACK TO LOG IN" on each reset step pops back to
-         authFragment rather than navigating to it, so no second log in screen is stacked. -->
+    <!-- Password reset: type the account's email and ask Firebase for a reset link. Takes no
+         arguments, and the field starts empty. Reset is by email only, and there is no code or
+         new-password screen: Firebase's own web page, opened from the email, sets the new password.
+         "BACK TO LOG IN" on both reset screens pops back to authFragment rather than navigating to
+         it, so a second log in screen is never stacked. -->
     <fragment
-        android:id="@+id/resetChooseFragment"
-        android:name="com.prash.petcare.ui.auth.reset.ResetChooseFragment"
-        android:label="@string/reset_choose_title"
-        tools:layout="@layout/fragment_reset_choose">
+        android:id="@+id/resetRequestFragment"
+        android:name="com.prash.petcare.ui.auth.reset.ResetRequestFragment"
+        android:label="@string/reset_request_title"
+        tools:layout="@layout/fragment_reset_request">
 
+        <!-- Firebase accepted the request. The request screen stays on the back stack, so system
+             back from the confirmation returns to the address as typed, ready to correct a typo. -->
         <action
-            android:id="@+id/action_reset_choose_to_reset_code"
-            app:destination="@id/resetCodeFragment" />
+            android:id="@+id/action_reset_request_to_reset_sent"
+            app:destination="@id/resetSentFragment" />
     </fragment>
 
-    <!-- Reset step 2: enter the code. -->
+    <!-- Reset confirmation: "a link has been sent", with a rate-limited resend. -->
     <fragment
-        android:id="@+id/resetCodeFragment"
-        android:name="com.prash.petcare.ui.auth.reset.ResetCodeFragment"
-        android:label="@string/reset_code_title"
-        tools:layout="@layout/fragment_reset_code">
+        android:id="@+id/resetSentFragment"
+        android:name="com.prash.petcare.ui.auth.reset.ResetSentFragment"
+        android:label="@string/reset_sent_title"
+        tools:layout="@layout/fragment_reset_sent">
 
-        <!-- The ResetChannel name: EMAIL or SMS. -->
+        <!-- The address the link went to, as typed. Required: the screen names it and resends to
+             it. -->
         <argument
-            android:name="channel"
+            android:name="email"
             app:argType="string" />
-
-        <!-- The address (as typed) or masked number to name on screen. Nullable only as a safety net:
-             step 1 always supplies it, and step 2 falls back to "your email" / "your phone". -->
-        <argument
-            android:name="destination"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-
-        <!-- Code accepted: on to step 3. This screen is popped on the way, because a code can only be
-             used once — back from step 3 should offer to send a new code (step 1), not to retype a
-             spent one. -->
-        <action
-            android:id="@+id/action_reset_code_to_new_password"
-            app:destination="@id/resetNewPasswordFragment"
-            app:popUpTo="@id/resetCodeFragment"
-            app:popUpToInclusive="true" />
     </fragment>
-
-    <!-- Reset step 3: choose the new password.
-         TODO(reset-backend): add a required `resetToken` argument once step 2 receives one. -->
-    <fragment
-        android:id="@+id/resetNewPasswordFragment"
-        android:name="com.prash.petcare.ui.auth.reset.ResetNewPasswordFragment"
-        android:label="@string/reset_password_title"
-        tools:layout="@layout/fragment_reset_new_password" />
 
     <!-- ========================= Top-level: the bottom bar =========================
          These five are the bottom navigation bar's destinations. They are listed here in the same

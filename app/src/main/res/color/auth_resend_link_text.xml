@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The text colour of the reset confirmation screen's "RESEND" link.
+
+    The inherited text link has a single colour, so a disabled link would look tappable. While the
+    resend cooldown runs, the link is disabled and reads "RESEND IN 0:42". This list draws it in the
+    muted text colour, the same one as the helper text beside it, so it looks inactive. When the
+    cooldown ends it returns to the normal link colour.
+
+    Both colours are theme attributes, so light and dark mode need no separate file.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:color="?attr/colorOnSurfaceVariant" android:state_enabled="false" />
+
+    <item android:color="?attr/colorOnSurface" />
+
+</selector>

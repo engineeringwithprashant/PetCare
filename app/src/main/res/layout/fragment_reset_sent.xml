@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Reset confirmation (ResetSentFragment): the reset link has been sent, so the user should check
+    their email.
+
+    Uses the same shell as the request screen and the rest of the sign-in flow: a ScrollView page
+    around one vertical column, with the shared header at the top. The header's subtitle holds the
+    main message ("A reset link has been sent to …"), so the address appears in the same muted
+    paragraph style as the other screens' subtitles.
+
+    Below it is one row, "Didn't get it?" followed by "RESEND", then status lines that are hidden
+    until needed, then "← BACK TO LOG IN". There is no primary button. The next step happens in the
+    user's email app, not here.
+
+    The same text appears whether or not the address has an account. See PasswordResetResult.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Auth.Page"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.auth.reset.ResetSentFragment">
+
+    <LinearLayout
+        style="@style/PetCare.Auth.Column"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Logo block, "Check your email", and the sent-to message. Filled in by the fragment. -->
+        <include
+            android:id="@+id/header"
+            layout="@layout/view_auth_header" />
+
+        <!-- "Didn't get it?  RESEND". A horizontal row, centred as a pair under the centred header.
+             The link is a MaterialButton, for the ripple, touch target and "button" role. Its
+             countdown label ("RESEND IN 0:42") is a little wider than "RESEND", so the pair is
+             re-centred as it changes. -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/auth_header_gap"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/PetCare.Auth.Helper"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reset_sent_not_received" />
+
+            <!-- Starts disabled: a link was sent a moment ago, so the cooldown is already running
+                 when this screen opens. The fragment sets its label and enabled state. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/resendButton"
+                style="@style/PetCare.Auth.TextLink.Resend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_xs"
+                android:enabled="false"
+                android:text="@string/reset_sent_resend"
+                tools:text="Resend in 0:42" />
+        </LinearLayout>
+
+        <!-- Shown only while a resend is in progress. The same thin bar as the other auth screens. -->
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/sendingIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:trackCornerRadius="2dp" />
+
+        <!-- After a successful resend: a muted confirmation. A live region, so TalkBack reads it
+             when it appears, as it does for the error line below. -->
+        <TextView
+            android:id="@+id/resentNote"
+            style="@style/PetCare.Auth.Helper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center_horizontal"
+            android:text="@string/reset_sent_resent"
+            android:visibility="gone" />
+
+        <!-- After a failed resend: no network, rate limited, and so on. The fragment shows at most one
+             of these two lines. -->
+        <TextView
+            android:id="@+id/failureText"
+            style="@style/PetCare.Auth.ErrorText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:gravity="center_horizontal"
+            android:visibility="gone"
+            tools:text="@string/reset_error_rate_limited"
+            tools:visibility="visible" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backToLoginButton"
+            style="@style/PetCare.Auth.BackLink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/auth_back_to_login" />
+
+    </LinearLayout>
+</ScrollView>

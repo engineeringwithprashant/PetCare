@@ -11,9 +11,9 @@ import com.prash.petcare.databinding.ViewCodeKeypadBinding
 /**
  * The six code boxes and the numeric keypad under them, as one reusable component.
  *
- * Both the two-factor screen and reset step 2 place this in their layout with a single tag, so the
- * boxes, the keypad and their behaviour exist in exactly one place (this class and
- * res/layout/view_code_keypad.xml) instead of being copied into two screens.
+ * The two-factor screen places this in its layout with a single tag, and any other code-entry screen
+ * can do the same, so the boxes, the keypad and their behaviour exist in exactly one place (this class
+ * and res/layout/view_code_keypad.xml) instead of being copied into each screen.
  *
  * **Its part in MVVM.** It is purely View layer, and deliberately "dumb": it does not remember the code
  * itself. Key presses go *out* through [listener] to the fragment, which forwards them to a

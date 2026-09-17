@@ -11,14 +11,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * The shared half of every "type the six-digit code" screen: the two-factor check and reset step 2.
+ * The shared half of every "type the six-digit code" screen — currently the two-factor check.
  *
- * **Why a base class.** Both screens hold a partly typed code, change it from the same keypad, show the
- * same "wrong code" state and enable their verify button by the same rule. Only what *verify* does
- * differs. So that shared behaviour lives here once, and
- * [com.prash.petcare.ui.auth.twofactor.TwoFactorViewModel] and
- * [com.prash.petcare.ui.auth.reset.ResetCodeViewModel] extend it and add their own `onVerify`. On the
- * View side the same split is made by [CodeKeypadView], which both screens' layouts include.
+ * **Why a base class.** Any code screen holds a partly typed code, changes it from the same keypad,
+ * shows the same "wrong code" state and enables its verify button by the same rule. Only what *verify*
+ * does differs. So that shared behaviour lives here once, and a screen's ViewModel — today
+ * [com.prash.petcare.ui.auth.twofactor.TwoFactorViewModel] — extends it and adds its own `onVerify`.
+ * On the View side the same split is made by [CodeKeypadView], which such a screen's layout includes.
  *
  * It sits in the ViewModel layer of MVVM: the fragment forwards key presses here and draws [code],
  * [codeError] and [canVerify]; the rules themselves are in [CodeEntry].

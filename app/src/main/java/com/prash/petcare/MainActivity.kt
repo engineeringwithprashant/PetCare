@@ -391,15 +391,14 @@ class MainActivity : AppCompatActivity() {
 
         /**
          * Every screen shown before anyone is signed in: log in / register, the two-factor check and
-         * the three password-reset steps. All of them hide the app bar, the tabs and the account menu.
+         * the two password-reset screens. All of them hide the app bar, the tabs and the account menu.
          * One set, used by every check in this class, so adding a sign-in screen later is one line.
          */
         val AUTH_DESTINATIONS = setOf(
             R.id.authFragment,
             R.id.twoFactorFragment,
-            R.id.resetChooseFragment,
-            R.id.resetCodeFragment,
-            R.id.resetNewPasswordFragment
+            R.id.resetRequestFragment,
+            R.id.resetSentFragment
         )
     }
 }
