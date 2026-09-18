@@ -107,6 +107,34 @@
             app:destination="@id/homeFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
+
+        <!-- "LOST ACCESS?" — enter a recovery code instead. An ordinary forward step, so back
+             returns here with the digits as they were, in case the phone turns up after all. -->
+        <action
+            android:id="@+id/action_two_factor_to_recovery_code"
+            app:destination="@id/recoveryCodeFragment" />
+    </fragment>
+
+    <!-- Recovery code entry: the way in when the authenticator app is gone. Reached only from the
+         two-factor screen, and carrying the same account id for the same reason — the account is
+         still not signed in until this screen says so. -->
+    <fragment
+        android:id="@+id/recoveryCodeFragment"
+        android:name="com.prash.petcare.ui.auth.twofactor.RecoveryCodeFragment"
+        android:label="@string/recovery_code_title"
+        tools:layout="@layout/fragment_recovery_code">
+
+        <argument
+            android:name="userId"
+            app:argType="long" />
+
+        <!-- Code accepted: into the app, clearing every auth screen, exactly as the two-factor
+             screen's own route does. -->
+        <action
+            android:id="@+id/action_recovery_code_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- Password reset: type the account's email and ask Firebase for a reset link. Takes no
@@ -327,6 +355,12 @@
             android:id="@+id/action_profile_to_change_password"
             app:destination="@id/changePasswordFragment" />
 
+        <!-- Turning the two-factor switch on. Turning it *off* is a dialog on the profile screen
+             itself and needs no route, because it is one field and a confirm. -->
+        <action
+            android:id="@+id/action_profile_to_two_factor_setup"
+            app:destination="@id/twoFactorSetupFragment" />
+
         <!-- Tapping a saved delegation contact opens the Tasks tab with that person already chosen,
              so the checklist goes straight to its confirmation preview — see the two prefill
              arguments on checklistFragment. No petId is passed, so the checklist arrives at its
@@ -357,6 +391,55 @@
         android:name="com.prash.petcare.ui.profile.ChangePasswordFragment"
         android:label="@string/change_password_title"
         tools:layout="@layout/fragment_change_password" />
+
+    <!--
+        Two-factor setup, step 1 and 2: scan the QR code, then type a code back to prove the scan
+        worked.
+
+        Takes no arguments, like every other screen inside the app: the account is the signed-in one
+        from SessionViewModel. It is *not* one of the authentication destinations at the top of this
+        file, even though it is about signing in — those are the screens shown to somebody who is not
+        yet signed in, and this one is a setting changed by somebody who is. That distinction is what
+        MainActivity uses to decide whether to draw the bottom navigation bar.
+    -->
+    <fragment
+        android:id="@+id/twoFactorSetupFragment"
+        android:name="com.prash.petcare.ui.auth.twofactor.TwoFactorSetupFragment"
+        android:label="@string/two_factor_setup_title"
+        tools:layout="@layout/fragment_two_factor_setup">
+
+        <!-- Step 3: the recovery codes, shown once. The setup screen stays on the back stack, so
+             system back from the codes returns to the QR code — which is what the user wants if they
+             decide to re-scan rather than finish. -->
+        <action
+            android:id="@+id/action_two_factor_setup_to_recovery_codes"
+            app:destination="@id/recoveryCodesFragment" />
+    </fragment>
+
+    <!--
+        The ten recovery codes, shown once at the end of setup, and the screen that actually turns
+        two-factor authentication on — see RecoveryCodesViewModel for why the write waits until here.
+
+        **Both arguments are required and neither has a default**, because there is no sensible
+        "none" for either: a screen reached without the secret could not switch anything on, and one
+        reached without the codes would have nothing to show. `string[]` is the nav type for an array
+        of strings, which is what a Bundle carries and what survives the process being killed while
+        the user is writing the codes down.
+    -->
+    <fragment
+        android:id="@+id/recoveryCodesFragment"
+        android:name="com.prash.petcare.ui.auth.twofactor.RecoveryCodesFragment"
+        android:label="@string/recovery_codes_title"
+        tools:layout="@layout/fragment_recovery_codes">
+
+        <argument
+            android:name="secret"
+            app:argType="string" />
+
+        <argument
+            android:name="codes"
+            app:argType="string[]" />
+    </fragment>
 
     <!--
         Everything the app has noticed about the user's pets: care coming up, care that was missed,

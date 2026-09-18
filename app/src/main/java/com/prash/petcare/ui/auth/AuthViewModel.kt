@@ -13,6 +13,7 @@ import com.prash.petcare.data.local.LoginAttemptStore
 import com.prash.petcare.data.local.entity.User
 import com.prash.petcare.data.remote.AuthFailure
 import com.prash.petcare.data.repository.AccountResult
+import com.prash.petcare.data.repository.TwoFactorRepository
 import com.prash.petcare.data.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -157,10 +158,14 @@ sealed interface AuthEvent {
  * @property loginAttemptStore Counts wrong passwords per address and decides when this device locks
  *   sign-in. Injected for the same reason, and reached only through this property — the ViewModel
  *   never touches SharedPreferences itself.
+ * @property twoFactorRepository Asked one question only: does this account have an authenticator set
+ *   up? That is what decides whether a correct password finishes the sign-in or hands over to the
+ *   two-factor screen — see [requiresTwoFactor].
  */
 class AuthViewModel(
     private val userRepository: UserRepository,
-    private val loginAttemptStore: LoginAttemptStore
+    private val loginAttemptStore: LoginAttemptStore,
+    private val twoFactorRepository: TwoFactorRepository
 ) : ViewModel() {
 
     // Private mutable state, public read-only view: only the ViewModel changes the state.
@@ -644,13 +649,18 @@ class AuthViewModel(
     /**
      * Whether this account must pass the two-factor screen before it is signed in.
      *
-     * TODO(2fa): always false for now — nothing stores whether an account has an authenticator set up
-     *  (the profile screen's two-factor switch is deliberately inert, see SettingsStore). When the
-     *  backend can say so, return that here; login() already routes such accounts to the two-factor
-     *  screen through AuthEvent.TwoFactorRequired, and the navigation for it is in place.
+     * The answer is simply whether the account holds an authenticator secret — see
+     * [TwoFactorRepository]. It is asked *after* the password has been accepted and *before*
+     * [SessionViewModel.signIn] is called, which is what makes the second factor a real gate rather
+     * than a screen shown to somebody who is already in: nothing between here and the code screen
+     * records a session.
+     *
+     * A password sign-in and a Google sign-in both come through here, so "Continue with Google" is
+     * gated too. Google's own account security is not this app's second factor, and an account the
+     * user chose to protect should not have a way round it.
      */
-    @Suppress("UNUSED_PARAMETER", "SameReturnValue")
-    private fun requiresTwoFactor(user: User): Boolean = false
+    private suspend fun requiresTwoFactor(user: User): Boolean =
+        twoFactorRepository.isEnabled(user.id)
 
     companion object {
 
@@ -676,7 +686,8 @@ class AuthViewModel(
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PetCareApplication
                 AuthViewModel(
                     userRepository = application.userRepository,
-                    loginAttemptStore = application.loginAttemptStore
+                    loginAttemptStore = application.loginAttemptStore,
+                    twoFactorRepository = application.twoFactorRepository
                 )
             }
         }

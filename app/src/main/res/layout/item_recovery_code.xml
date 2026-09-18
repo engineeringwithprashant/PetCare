@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One recovery code in the grid on the recovery-codes screen: its number, then the code.
+
+    Inflated once per code by RecoveryCodesFragment into one of the two columns. A separate file
+    rather than ten copies in the screen's layout, so a change to how a code is drawn is made once.
+
+    A horizontal LinearLayout: two pieces side by side, the first at a fixed width so that every
+    number occupies the same space and the codes below one another line up into a column — a list of
+    codes that does not line up is much harder to read off and copy down without losing your place.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="true"
+    android:orientation="horizontal"
+    android:paddingTop="@dimen/recovery_code_row_padding"
+    android:paddingBottom="@dimen/recovery_code_row_padding">
+
+    <!-- "1." — quiet, because it is a label on the code rather than part of it. A fixed width keeps
+         single and double digits from shifting the codes beside them. -->
+    <TextView
+        android:id="@+id/codeIndex"
+        style="@style/PetCare.Auth.Helper"
+        android:layout_width="@dimen/recovery_code_index_width"
+        android:layout_height="wrap_content"
+        tools:text="1." />
+
+    <!--
+        The code itself.
+
+        Monospace and larger than the app's body text, because this is a string being transcribed one
+        character at a time onto paper, not prose being read.
+
+        textIsSelectable so a code can be long-pressed and copied — the app deliberately offers no
+        "copy all", since ten credentials on the clipboard is not a thing to do casually, but one at a
+        time into a password manager is exactly what a careful user will want.
+    -->
+    <TextView
+        android:id="@+id/codeValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:fontFamily="@font/ibm_plex_mono"
+        android:letterSpacing="0.08"
+        android:textColor="?attr/colorOnSurface"
+        android:textIsSelectable="true"
+        android:textSize="@dimen/recovery_code_text_size"
+        tools:text="482913" />
+
+</LinearLayout>

@@ -419,13 +419,19 @@ class MainActivity : AppCompatActivity() {
         const val NO_PET_ID = -1L
 
         /**
-         * Every screen shown before anyone is signed in: log in / register, the two-factor check and
-         * the two password-reset screens. All of them hide the app bar, the tabs and the account menu.
-         * One set, used by every check in this class, so adding a sign-in screen later is one line.
+         * Every screen shown before anyone is signed in: log in / register, the two-factor check, the
+         * recovery-code screen behind it, and the two password-reset screens. All of them hide the app
+         * bar, the tabs and the account menu. One set, used by every check in this class, so adding a
+         * sign-in screen later is one line.
+         *
+         * The two-factor *setup* screens are deliberately not here. They are about signing in, but
+         * they are reached from the profile screen by somebody who is already signed in — so they get
+         * the ordinary app bar with its back arrow, like the change-password form.
          */
         val AUTH_DESTINATIONS = setOf(
             R.id.authFragment,
             R.id.twoFactorFragment,
+            R.id.recoveryCodeFragment,
             R.id.resetRequestFragment,
             R.id.resetSentFragment
         )

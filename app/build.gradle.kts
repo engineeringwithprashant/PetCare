@@ -136,6 +136,23 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
 
+    // Two-factor authentication (TOTP), compatible with Google Authenticator.
+    //
+    // The library supplies the secret generator, the RFC 6238 code generator and the verifier that
+    // allows a step of clock drift either side — see data.auth.TotpAuthenticator, which is the only
+    // class in the app that names any of those types.
+    //
+    // **The two excludes matter.** `dev.samstevens.totp` also ships a ready-made QR generator, and
+    // that is the half that cannot come along: it draws through `com.google.zxing:javase`, which
+    // renders into a `java.awt.image.BufferedImage` and writes it with `javax.imageio`. Neither
+    // package exists on Android, so letting it onto the class path would put classes into the build
+    // that reference types the platform has never had. The QR code is therefore drawn from ZXing's
+    // pure-Java `core` encoder instead, declared below and painted by util.QrCodeRenderer.
+    implementation(libs.totp) {
+        exclude(group = "com.google.zxing", module = "javase")
+    }
+    implementation(libs.zxing.core)
+
     // Lifecycle-aware ViewModels and flow collection.
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

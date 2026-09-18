@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Two-factor setup (TwoFactorSetupFragment): scan the QR code into an authenticator app, then type
+    a code back to prove the scan worked.
+
+    Reached from the profile screen's two-factor switch, so — like the change-password form — it shows
+    the shared app bar with its back arrow rather than drawing the tab header. It is a step *into*
+    something, not a step sideways.
+
+    **Why both steps are on one screen.** They are two halves of one action, and the second is only
+    meaningful while the first is still in front of the user: a code that does not match means "scan
+    it again", and an answer like that is no use on a screen where the QR code is no longer visible.
+    A ScrollView is what makes one tall screen workable rather than forcing a split.
+
+    **Top to bottom.** A progress bar while the secret is being made; a failure line for the rare case
+    where the account has gone; then the content — the "STEP 1" label and instructions, the QR code on
+    its white card, which account it is for, the secret in text with a copy button for anyone setting
+    up an authenticator on this same phone, a divider, and then "STEP 2" with the six code boxes, the
+    keypad and the confirm button.
+
+    **Why the QR card is white in both themes.** A QR code is read by a camera, and scanners expect
+    dark modules on a light background; several refuse an inverted one outright. So this one card does
+    not follow the app's dark theme — it stays white with a light border around the code, which is the
+    quiet zone the format requires. See util.QrCodeRenderer.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="@dimen/list_padding_bottom"
+    tools:context=".ui.auth.twofactor.TwoFactorSetupFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_padding"
+        android:paddingTop="@dimen/content_top_padding"
+        android:paddingEnd="@dimen/screen_padding">
+
+        <!-- Shown only while the secret is being generated and the account read. GONE takes no space,
+             so the content does not jump down when it disappears. -->
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/setupProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:trackCornerRadius="2dp"
+            tools:visibility="visible" />
+
+        <!-- The account was deleted while this screen was opening — on another device, and pulled
+             down by a sync. There is nothing to set up, and saying so is better than a QR code that
+             belongs to nobody. -->
+        <TextView
+            android:id="@+id/setupFailedText"
+            style="@style/PetCare.Auth.ErrorText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/two_factor_setup_unavailable"
+            android:visibility="gone"
+            tools:visibility="gone" />
+
+        <!-- Everything else. Hidden as a block rather than line by line, so there is one visibility
+             rule for "is there a setup to show?" instead of a dozen that could disagree. -->
+        <LinearLayout
+            android:id="@+id/setupContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/PetCare.SectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/two_factor_setup_step_scan" />
+
+            <TextView
+                style="@style/PetCare.Subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/two_factor_setup_scan_body" />
+
+            <!-- The white card. layout_gravity centres it in the column; the card's padding is the
+                 quiet zone around the code. cardElevation 0 and a hairline stroke, so a white card on
+                 a white page in light mode still has a visible edge. -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/PetCare.Card"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/spacing_md"
+                app:cardBackgroundColor="@android:color/white"
+                app:contentPadding="@dimen/two_factor_qr_padding"
+                app:cardCornerRadius="@dimen/corner_radius_md"
+                app:cardElevation="0dp"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp">
+
+                <!-- A fixed square. The fragment reads this view's pixel width and generates the
+                     bitmap at exactly that size, so the modules are never resampled. The content
+                     description names what it is; the secret below is the accessible way to enter it,
+                     since a QR code cannot be read out. -->
+                <ImageView
+                    android:id="@+id/qrImage"
+                    android:layout_width="@dimen/two_factor_qr_size"
+                    android:layout_height="@dimen/two_factor_qr_size"
+                    android:contentDescription="@string/cd_two_factor_qr"
+                    tools:src="@tools:sample/avatars" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Shown only if the code could not be encoded at all. Setup is still possible — the
+                 secret underneath is typed in by hand — and this says so rather than leaving a blank
+                 square. -->
+            <TextView
+                android:id="@+id/qrFallbackText"
+                style="@style/PetCare.Auth.ErrorText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:gravity="center_horizontal"
+                android:text="@string/two_factor_setup_qr_failed"
+                android:visibility="gone"
+                tools:visibility="gone" />
+
+            <!-- Which account the authenticator entry will be filed under. Worth showing: on a shared
+                 handset it is the only thing on the screen that says whose account this protects. -->
+            <TextView
+                android:id="@+id/setupAccountText"
+                style="@style/PetCare.Auth.Helper"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:gravity="center_horizontal"
+                tools:text="For prashant@example.com" />
+
+            <TextView
+                style="@style/PetCare.SectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:text="@string/two_factor_setup_key_label" />
+
+            <!--
+                The secret in text, for anyone whose authenticator is on this same phone (nothing can
+                scan a code on the screen it is displayed on) or whose camera will not focus.
+
+                textIsSelectable so it can be selected and copied by hand as well as with the button.
+                Monospace because it is transcribed character by character, where the difference
+                between similar glyphs matters. The fragment inserts a space every four characters for
+                the same reason.
+            -->
+            <TextView
+                android:id="@+id/secretText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:fontFamily="@font/ibm_plex_mono"
+                android:textColor="?attr/colorOnSurface"
+                android:textIsSelectable="true"
+                android:textSize="@dimen/two_factor_secret_text_size"
+                tools:text="JBSW Y3DP EHPK 3PXP JBSW Y3DP EHPK 3PXP" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/copySecretButton"
+                style="@style/PetCare.TaskActionButton.Outlined"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/two_factor_setup_copy_key" />
+
+            <View
+                style="@style/PetCare.Profile.RowDivider"
+                android:layout_marginTop="@dimen/spacing_lg" />
+
+            <TextView
+                style="@style/PetCare.SectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:text="@string/two_factor_setup_step_confirm" />
+
+            <!-- Says why the second step exists, which is the thing most likely to be misread as
+                 busywork: the code is the only proof that the scan actually worked. -->
+            <TextView
+                style="@style/PetCare.Subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/two_factor_setup_confirm_body" />
+
+            <!-- The same six boxes and keypad the sign-in code screens use, so entering a code looks
+                 and behaves identically wherever it happens. See view_code_keypad.xml. -->
+            <com.prash.petcare.ui.auth.CodeKeypadView
+                android:id="@+id/codeKeypad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md" />
+
+            <!-- Starts disabled: bindCodeEntry enables it once all six digits are in. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/confirmButton"
+                style="@style/PetCare.TaskActionButton.Filled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:enabled="false"
+                android:text="@string/two_factor_setup_confirm" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

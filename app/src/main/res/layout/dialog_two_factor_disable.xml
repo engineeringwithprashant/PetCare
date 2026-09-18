@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The body of the "Turn off two-factor authentication?" dialog: one field for a current
+    authenticator code or a recovery code.
+
+    A dialog rather than a destination of its own, like the app's other confirmations on the profile
+    screen (add a contact, delete the account): it is one field and a confirm, and a whole screen with
+    a toolbar and a back-stack entry would be more ceremony than that deserves. The dialog's title,
+    its message and its two buttons come from MaterialAlertDialogBuilder, so this file is only the
+    field between them.
+
+    **Why a code is asked for at all.** Turning the second factor off is a change to how the account
+    is protected, and it is made from a screen that is already unlocked — so without this, a phone
+    left on a table for a minute is all it takes to remove the protection the owner set up. Asking for
+    a code means whoever is turning it off can still prove they are the person who turned it on.
+
+    **Why a text field here and the keypad elsewhere.** A dialog is a few lines tall by design; the
+    six boxes and their keypad are most of a screen. The field accepts the same six digits either way,
+    and the numeric keyboard makes it the same gesture.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/spacing_lg"
+    android:paddingTop="@dimen/spacing_sm"
+    android:paddingEnd="@dimen/spacing_lg">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/codeInputLayout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/two_factor_disable_code_hint"
+        app:errorEnabled="true">
+
+        <!--
+            inputType="number" brings up the numeric keypad, which is the only thing that can be typed
+            here; maxLength stops a seventh digit being entered at all, rather than accepting it and
+            failing the check afterwards.
+
+            The field is deliberately *not* a password field. The code is on the user's own phone in
+            front of them and is worthless thirty seconds from now, so masking it would only make
+            transcription errors more likely for no gain.
+        -->
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/codeInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:maxLength="6"
+            android:maxLines="1" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>

@@ -24,6 +24,7 @@ import com.prash.petcare.data.location.LocationRepository
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.data.repository.PlaceRepository
 import com.prash.petcare.data.repository.SyncDeletionRepository
+import com.prash.petcare.data.repository.TwoFactorRepository
 import com.prash.petcare.data.repository.UserRepository
 import com.prash.petcare.data.repository.WeatherRepository
 import com.prash.petcare.data.sync.NetworkMonitor
@@ -79,6 +80,25 @@ class PetCareApplication : Application() {
     /** Accounts: Firebase Authentication for the password, Room for the profile. */
     val userRepository: UserRepository by lazy {
         UserRepository(database.userDao(), firebaseAuthService)
+    }
+
+    /**
+     * The account's second factor: the authenticator secret, the recovery codes, and the checking of
+     * both.
+     *
+     * A repository of its own rather than more methods on [userRepository], because it owns a table
+     * that class knows nothing about and a piece of cryptography it has no other reason to hold. The
+     * two overlap only on the `users` row, which each reaches through the same DAO.
+     *
+     * Reached by the sign-in screen (to decide whether the code screen is needed), the code screen
+     * itself, the recovery screen, the setup flow and the profile screen — five ViewModels, one
+     * instance, so there is one answer to "is this account protected?".
+     *
+     * See [TwoFactorRepository] for what storing the secret on the device does and does not protect
+     * against; it is a boundary worth knowing before reading the screens.
+     */
+    val twoFactorRepository: TwoFactorRepository by lazy {
+        TwoFactorRepository(database.userDao(), database.recoveryCodeDao())
     }
 
     /**

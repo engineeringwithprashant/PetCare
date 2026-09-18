@@ -14,6 +14,7 @@ import com.prash.petcare.data.local.dao.CareTaskDao
 import com.prash.petcare.data.local.dao.ExpenseDao
 import com.prash.petcare.data.local.dao.PetDao
 import com.prash.petcare.data.local.dao.PlaceDao
+import com.prash.petcare.data.local.dao.RecoveryCodeDao
 import com.prash.petcare.data.local.dao.SyncDeletionDao
 import com.prash.petcare.data.local.dao.UserDao
 import com.prash.petcare.data.local.entity.CareCompletion
@@ -22,6 +23,7 @@ import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.entity.Expense
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.local.entity.Place
+import com.prash.petcare.data.local.entity.RecoveryCode
 import com.prash.petcare.data.local.entity.SyncDeletion
 import com.prash.petcare.data.local.entity.User
 
@@ -44,9 +46,10 @@ import com.prash.petcare.data.local.entity.User
         Expense::class,
         SyncDeletion::class,
         Place::class,
-        CareCompletion::class
+        CareCompletion::class,
+        RecoveryCode::class
     ],
-    version = 10,
+    version = 11,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -65,6 +68,7 @@ abstract class PetCareDatabase : RoomDatabase() {
     abstract fun syncDeletionDao(): SyncDeletionDao
     abstract fun placeDao(): PlaceDao
     abstract fun careCompletionDao(): CareCompletionDao
+    abstract fun recoveryCodeDao(): RecoveryCodeDao
 
     companion object {
 
@@ -425,6 +429,61 @@ abstract class PetCareDatabase : RoomDatabase() {
         }
 
         /**
+         * Version 10 to 11: adds two-factor authentication — the authenticator secret on the `users`
+         * table, and the `recovery_codes` table beside it.
+         *
+         * **Nothing existing is touched, so no reinstall is needed.** Two ADD COLUMNs and a CREATE
+         * TABLE: every pet, task, expense, place and account on the device survives untouched, and
+         * every account simply starts with two-factor authentication off — which is exactly what was
+         * true of them before this version.
+         *
+         * **Why both new columns are nullable with no default.** That is how Room maps `String?` and
+         * `Long?`, and null is the truthful value: an account that has never set up an authenticator
+         * has no secret and was never switched on. `twoFactorSecret` being null *is* how the app
+         * knows two-factor authentication is off (see [User]), so the accounts already on the device
+         * arrive in the off state without a single UPDATE.
+         *
+         * **The `recovery_codes` CREATE reproduces exactly what Room generates from [RecoveryCode]** —
+         * the same column types, `NOT NULL` on precisely the non-nullable properties, the foreign key
+         * with its CASCADE rule, and the index under the name Room gives it
+         * (`index_<table>_<columns>`). As on [MIGRATION_3_4] and [MIGRATION_5_6], Room compares the
+         * file against the entities every time it opens the database and refuses to start on any
+         * difference, so "close enough" here would be a crash on launch.
+         *
+         * Nothing is marked pending sync and nothing is added to the Firestore sync: an authenticator
+         * secret is a fact about *this device* — see the note on [User.twoFactorSecret] about what
+         * keeping it here does and does not protect — and uploading it would both defeat that and
+         * carry the protection onto a handset the user may not be holding.
+         */
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE users ADD COLUMN twoFactorSecret TEXT")
+                db.execSQL("ALTER TABLE users ADD COLUMN twoFactorEnabledAt INTEGER")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `recovery_codes` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `userId` INTEGER NOT NULL,
+                        `salt` TEXT NOT NULL,
+                        `codeHash` TEXT NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `usedAt` INTEGER,
+                        FOREIGN KEY(`userId`) REFERENCES `users`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS `index_recovery_codes_userId`
+                    ON `recovery_codes` (`userId`)
+                    """.trimIndent()
+                )
+            }
+        }
+
+        /**
          * The one shared instance.
          *
          * `@Volatile` means a write here is immediately visible to every thread, which stops one
@@ -463,7 +522,8 @@ abstract class PetCareDatabase : RoomDatabase() {
                         MIGRATION_6_7,
                         MIGRATION_7_8,
                         MIGRATION_8_9,
-                        MIGRATION_9_10
+                        MIGRATION_9_10,
+                        MIGRATION_10_11
                     )
                     .build()
                     .also { INSTANCE = it }

@@ -763,4 +763,28 @@
     <dimen name="auth_lock_info_badge_text_size">8sp</dimen>
     <dimen name="auth_lock_info_row_padding">14dp</dimen>
 
+    <!-- ===================== Two-factor setup and recovery codes =====================
+         The setup screen reached from the profile screen's two-factor switch, and the codes shown
+         once at the end of it. -->
+
+    <!-- The QR code image. Large enough that a camera focuses on it easily from a comfortable
+         distance, and small enough that the confirmation keypad is still partly visible below it on
+         a short screen — so the user can see there is a second step before they scroll. The bitmap is
+         generated at exactly this size in pixels, never scaled; see util.QrCodeRenderer. -->
+    <dimen name="two_factor_qr_size">220dp</dimen>
+    <!-- The white surround between the code and the card's edge. A QR code needs a light quiet zone
+         to be found by a scanner, and this is what supplies it in dark mode, where the page behind
+         the card is not light at all. -->
+    <dimen name="two_factor_qr_padding">16dp</dimen>
+
+    <!-- The secret printed under the QR code for manual entry. Monospace and a touch larger than body
+         text, because it is a string of characters being transcribed one at a time rather than read. -->
+    <dimen name="two_factor_secret_text_size">15sp</dimen>
+
+    <!-- One recovery code in the two-column grid: its number, the code itself, and the row's own
+         breathing room. -->
+    <dimen name="recovery_code_row_padding">10dp</dimen>
+    <dimen name="recovery_code_text_size">17sp</dimen>
+    <dimen name="recovery_code_index_width">22dp</dimen>
+
 </resources>

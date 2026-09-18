@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -11,7 +13,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentTwoFactorBinding
 import com.prash.petcare.ui.auth.CodeKeypadView
@@ -30,8 +31,7 @@ import kotlinx.coroutines.launch
  * no code itself.
  *
  * Reached from the log in screen with the account's id as an argument ([ARG_USER_ID]); the account is
- * *not* signed in until this screen says so. Checking the code is not connected yet — see the TODOs in
- * [TwoFactorViewModel].
+ * *not* signed in until this screen says so — see [TwoFactorViewModel], which does the checking.
  */
 class TwoFactorFragment : Fragment() {
 
@@ -41,10 +41,11 @@ class TwoFactorFragment : Fragment() {
     private val binding get() = _binding!!
 
     /**
-     * No factory needed: a ViewModel whose only constructor parameter is a SavedStateHandle is built
-     * by the fragment's default factory, which also copies this fragment's arguments into the handle.
+     * Built by the factory that supplies the two-factor repository and the shared attempt store. The
+     * factory's `createSavedStateHandle()` still carries this fragment's arguments, which is how the
+     * ViewModel reads [ARG_USER_ID].
      */
-    private val viewModel: TwoFactorViewModel by viewModels()
+    private val viewModel: TwoFactorViewModel by viewModels { TwoFactorViewModel.Factory }
 
     private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
@@ -93,14 +94,33 @@ class TwoFactorFragment : Fragment() {
     private fun handleEvent(event: TwoFactorEvent) {
         when (event) {
             is TwoFactorEvent.Verified -> {
+                // A recovery code was spent to get in. Said with a Toast rather than a Snackbar for
+                // one reason: a Snackbar belongs to the view it is shown on, and this view is about
+                // to be destroyed by the navigation on the next line, so it would flash and vanish.
+                // A Toast outlives the screen and is still readable on the dashboard, which is where
+                // the user will be by the time they read it.
+                event.recoveryCodesRemaining?.let { remaining ->
+                    Toast.makeText(
+                        requireContext(),
+                        resources.getQuantityString(
+                            R.plurals.two_factor_recovery_used,
+                            remaining,
+                            remaining
+                        ),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
                 // Only now is the account signed in — recorded before navigating, for the same reason
                 // as in AuthFragment.
                 sessionViewModel.signIn(event.userId)
                 findNavController().navigate(R.id.action_two_factor_to_home)
             }
 
-            is TwoFactorEvent.Message ->
-                Snackbar.make(binding.root, event.messageRes, Snackbar.LENGTH_LONG).show()
+            is TwoFactorEvent.OpenRecovery -> findNavController().navigate(
+                R.id.action_two_factor_to_recovery_code,
+                bundleOf(RecoveryCodeFragment.ARG_USER_ID to event.userId)
+            )
         }
     }
 
@@ -110,7 +130,14 @@ class TwoFactorFragment : Fragment() {
     }
 
     companion object {
-        /** Navigation argument: the id of the account whose second factor is being checked. */
-        const val ARG_USER_ID = "userId"
+
+        /**
+         * Navigation argument: the id of the account whose second factor is being checked.
+         *
+         * Aliased from [TwoFactorCheckViewModel.ARG_USER_ID] rather than spelled again, because the
+         * ViewModel reads the argument out of the SavedStateHandle by that name — two literals that
+         * had to match would be one rename away from a screen that silently checks nobody's account.
+         */
+        const val ARG_USER_ID = TwoFactorCheckViewModel.ARG_USER_ID
     }
 }

@@ -43,6 +43,18 @@ credentials = "1.5.0"
 # Google ID: the Google-specific request and result types (GetGoogleIdOption,
 # GoogleIdTokenCredential) that Credential Manager returns a Google ID token through.
 googleId = "1.1.1"
+# TOTP: the one-time-password algorithm behind Google Authenticator (RFC 6238). Deliberately a
+# library rather than a hand-written HMAC-SHA1-and-truncate: an authenticator code that is subtly
+# wrong fails in a way nobody can debug from the app, and getting the counter, the truncation and the
+# Base32 alphabet exactly right is precisely the sort of thing a tested library already does. See
+# data.auth.TotpAuthenticator.
+totp = "1.7.1"
+# ZXing's core encoder, used to turn the otpauth:// setup URI into a QR code the authenticator app
+# scans. `core` only — it produces an abstract BitMatrix of black and white modules with no drawing
+# code in it, which util.QrCodeRenderer paints into an Android Bitmap. The companion `javase`
+# artifact is deliberately excluded where this is declared: it draws through java.awt, which does not
+# exist on Android.
+zxing = "3.5.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -90,6 +102,9 @@ kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "ko
 # raw response body.
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+# Two-factor authentication: the TOTP algorithm and the QR encoder the setup screen needs.
+totp = { group = "dev.samstevens.totp", name = "totp", version.ref = "totp" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

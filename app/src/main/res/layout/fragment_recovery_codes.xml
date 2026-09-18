@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The recovery codes (RecoveryCodesFragment): ten single-use codes, shown exactly once.
+
+    The last step of two-factor setup. Reached from the setup screen once a code from the
+    authenticator has been typed back correctly, and — like it — shown under the shared app bar,
+    because it is a step into something rather than a tab.
+
+    **The screen is built around one instruction**, and the order says so: the warning comes *before*
+    the codes, not after, because a user who has already started copying them down has stopped reading.
+    Then the codes on a card of their own, then the tick, then the button the tick unlocks.
+
+    **Why the codes are in two columns.** Ten six-digit codes in one column makes a tall screen that
+    has to be scrolled while being copied, which is exactly when a line gets skipped. Two columns fit
+    on one screen at the normal font scale. They are filled *down* the left and then down the right
+    (see RecoveryCodesFragment.renderCodes) so the numbering reads in the order the eye moves.
+
+    A ScrollView all the same, because at a large font scale two columns will not fit either — and
+    this is a screen nobody should be unable to finish.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="@dimen/list_padding_bottom"
+    tools:context=".ui.auth.twofactor.RecoveryCodesFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_padding"
+        android:paddingTop="@dimen/content_top_padding"
+        android:paddingEnd="@dimen/screen_padding">
+
+        <TextView
+            style="@style/PetCare.SectionLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/recovery_codes_label" />
+
+        <!-- What the codes are for and why this is the only time they appear. Deliberately above the
+             codes themselves: once the user starts copying, they are no longer reading.
+
+             There is no heading between the step label and this paragraph, and that is on purpose:
+             the app bar above already reads "Your recovery codes", and repeating it here would be the
+             same four words twice within an inch. The setup screen leads with its step label for the
+             same reason. -->
+        <TextView
+            style="@style/PetCare.Subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="@string/recovery_codes_body" />
+
+        <!-- The codes, on a card so they read as one block to be copied rather than as part of the
+             page's prose. -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/PetCare.Card.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            app:cardCornerRadius="@dimen/corner_radius_md">
+
+            <!-- Two equal columns. weight 1 on each rather than a fixed width, so they split whatever
+                 the screen is and stay even on a tablet as on a phone. The fragment fills them. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:padding="@dimen/card_padding">
+
+                <LinearLayout
+                    android:id="@+id/codesLeftColumn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical" />
+
+                <LinearLayout
+                    android:id="@+id/codesRightColumn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_sm"
+                    android:layout_weight="1"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- The hint about where to put them. Under the card, because it is advice about what to do
+             with what is above rather than something to read before it. -->
+        <TextView
+            style="@style/PetCare.Auth.Helper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="@string/recovery_codes_where" />
+
+        <!--
+            The confirmation.
+
+            A checkbox rather than a second button, because it is a statement the user is making about
+            something they have done, not an action. It gates the finish button below: until it is
+            ticked, there is no way off this screen that turns two-factor authentication on — which is
+            the whole reason the write happens here rather than on the screen before.
+        -->
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/savedCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/recovery_codes_confirm_saved" />
+
+        <!-- Starts disabled; the fragment enables it from the ViewModel's canFinish. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/finishButton"
+            style="@style/PetCare.TaskActionButton.Filled"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:enabled="false"
+            android:text="@string/recovery_codes_finish" />
+
+    </LinearLayout>
+
+</ScrollView>

@@ -28,6 +28,7 @@ import com.prash.petcare.data.local.WeekStart
 import com.prash.petcare.data.local.WeightUnit
 import com.prash.petcare.data.local.entity.User
 import com.prash.petcare.data.local.entity.UserRole
+import com.prash.petcare.data.repository.TwoFactorStatus
 import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.databinding.FragmentProfileBinding
 import com.prash.petcare.databinding.ItemProfileContactBinding
@@ -192,15 +193,29 @@ class ProfileFragment : Fragment() {
     }
 
     /**
-     * The two security switches that store something.
+     * The three security switches.
      *
      * `setOnCheckedChangeListener` fires for a programmatic change as well as a tap, which would make
      * [renderSecurity] writing the stored value back into the switch look like the user having
      * toggled it — a loop. `isPressed` tells the two apart: it is true only while a real touch is in
-     * progress. The two-factor switch gets no listener at all, because it is disabled and stores
-     * nothing.
+     * progress.
      */
     private fun setUpSwitches() {
+        // The two-factor switch is the odd one out: it saves nothing by itself. Turning it on takes a
+        // QR code, an authenticator app and a proof that the two agree; turning it off takes a
+        // current code. So the tap opens the screen or the dialog that can actually do the work, and
+        // the switch is put back where it belongs by renderTwoFactor on the next emission — see
+        // there for why it is deliberately left out of position for a moment rather than moved here.
+        binding.twoFactorSwitch.setOnCheckedChangeListener { button, isChecked ->
+            if (!button.isPressed) return@setOnCheckedChangeListener
+
+            if (isChecked) {
+                findNavController().navigate(R.id.action_profile_to_two_factor_setup)
+            } else {
+                confirmDisableTwoFactor()
+            }
+        }
+
         binding.fingerprintSwitch.setOnCheckedChangeListener { button, isChecked ->
             if (button.isPressed) viewModel.onFingerprintUnlockChanged(isChecked)
         }
@@ -208,6 +223,48 @@ class ProfileFragment : Fragment() {
         binding.careRemindersSwitch.setOnCheckedChangeListener { button, isChecked ->
             if (button.isPressed) viewModel.onCareRemindersChanged(isChecked)
         }
+    }
+
+    /**
+     * Asks for a code before turning two-factor authentication off.
+     *
+     * **Why a code and not just a confirmation.** This screen is already unlocked, so a plain "are
+     * you sure?" would mean a phone left on a table for a minute is all it takes to strip the
+     * protection its owner set up. A code proves whoever is turning it off is the person who turned
+     * it on. A recovery code is accepted too, for the user who has switched phones and is tidying up
+     * — it is spent in the process, which is fine, since every code is about to be deleted anyway.
+     *
+     * Cancel is listed first and does nothing, so the safe choice is the easy one. The empty-field
+     * case is caught here because it is a typing check with nothing to ask the data layer about;
+     * whether the code is *right* is emphatically not decided here — see
+     * [ProfileViewModel.onTwoFactorDisableConfirmed].
+     */
+    private fun confirmDisableTwoFactor() {
+        val dialogBinding = com.prash.petcare.databinding.DialogTwoFactorDisableBinding
+            .inflate(LayoutInflater.from(requireContext()))
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.two_factor_disable_title)
+            .setMessage(R.string.two_factor_disable_message)
+            .setView(dialogBinding.root)
+            .setNegativeButton(R.string.delegate_cancel, null)
+            .setPositiveButton(R.string.two_factor_disable_confirm) { _, _ ->
+                val code = dialogBinding.codeInput.text?.toString().orEmpty().trim()
+
+                if (code.isEmpty()) {
+                    showMessage(getString(R.string.two_factor_disable_code_required))
+                } else {
+                    viewModel.onTwoFactorDisableConfirmed(code)
+                }
+            }
+            .setOnDismissListener {
+                // Whatever happens next, the switch must go back to describing the account rather
+                // than the tap. Cancelling, dismissing, or a code that turns out to be wrong all end
+                // here with two-factor authentication still on, and a switch left sitting in the off
+                // position would be claiming otherwise.
+                renderTwoFactor(viewModel.twoFactor.value)
+            }
+            .show()
     }
 
     /**
@@ -262,6 +319,7 @@ class ProfileFragment : Fragment() {
                 launch { viewModel.uiState.collect(::render) }
                 launch { viewModel.preferences.collect(::renderPreferences) }
                 launch { viewModel.security.collect(::renderSecurity) }
+                launch { viewModel.twoFactor.collect(::renderTwoFactor) }
                 launch { viewModel.syncStatus.collect(::renderBackupStatus) }
                 launch { viewModel.events.collect(::handleEvent) }
             }
@@ -421,7 +479,37 @@ class ProfileFragment : Fragment() {
         second.isSelected = !isFirstChosen
     }
 
-    /** The two switches that store something, and their subtitles. */
+    /**
+     * The two-factor row: its switch and the subtitle that says what is actually protecting the
+     * account.
+     *
+     * The subtitle earns its place by being specific. "On" alone tells the user nothing they could
+     * act on; "On · authenticator app · 3 recovery codes left" tells someone down to their last few
+     * codes that they should turn it off and on again to get a fresh ten, which is the one piece of
+     * maintenance this feature ever needs. The "off" line says what turning it on would buy, rather
+     * than just naming the state the user can already see from the switch.
+     *
+     * The switch is set from the account's real state on every emission, which is what puts it back
+     * after a tap that opened a screen the user then backed out of.
+     */
+    private fun renderTwoFactor(status: TwoFactorStatus) {
+        binding.twoFactorSwitch.isChecked = status.isEnabled
+
+        binding.twoFactorSubtitle.text = if (status.isEnabled) {
+            getString(
+                R.string.profile_row_two_factor_on,
+                resources.getQuantityString(
+                    R.plurals.profile_row_two_factor_codes,
+                    status.recoveryCodesRemaining,
+                    status.recoveryCodesRemaining
+                )
+            )
+        } else {
+            getString(R.string.profile_row_two_factor_off)
+        }
+    }
+
+    /** The two switches whose value comes from the preferences file, and their subtitles. */
     private fun renderSecurity(security: ProfileSecurity) {
         binding.fingerprintSwitch.isChecked = security.fingerprintUnlock
         binding.fingerprintSubtitle.setText(
@@ -683,6 +771,16 @@ class ProfileFragment : Fragment() {
 
             // Nothing was deleted. Say why and stay on the profile screen.
             is ProfileEvent.AccountDeletionFailed -> showMessage(getString(event.messageRes))
+
+            // The switch is already right: the row observes the database rows the turn-off just
+            // changed, so renderTwoFactor has run with the new state before this arrives. All that is
+            // left is to say what happened, because a switch moving on its own is easy to miss.
+            is ProfileEvent.TwoFactorDisabled ->
+                showMessage(getString(R.string.two_factor_disable_done))
+
+            // The code was refused, so it is still on. The dialog's dismiss listener has already put
+            // the switch back; this says which refusal it was.
+            is ProfileEvent.TwoFactorDisableFailed -> showMessage(getString(event.messageRes))
         }
     }
 

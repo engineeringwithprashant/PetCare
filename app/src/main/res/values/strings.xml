@@ -185,8 +185,86 @@
     <string name="two_factor_lost_access">Lost access?</string>
     <string name="two_factor_submit">Verify &amp; log in</string>
     <string name="two_factor_different_account">← Use a different account</string>
-    <string name="two_factor_unavailable">Authenticator codes can\'t be checked yet.</string>
-    <string name="two_factor_lost_access_unavailable">Account recovery isn\'t available yet.</string>
+
+    <!-- Wrong code, and the lock that follows too many of them.
+
+         The lock message quotes the same fifteen minutes LoginAttemptStore.LOCK_DURATION_MILLIS
+         enforces, so the two have to be kept in step — as login_alert_detail already has to be. It
+         deliberately does not say how many attempts are left beforehand: the code screen has no room
+         for the warning card the log in form shows, and a half-told version of that ("2 left") on its
+         own is more alarming than useful. -->
+    <string name="two_factor_locked">Too many wrong codes. Sign-in is locked on this device for 15 minutes.</string>
+
+    <!-- A recovery code that is genuinely one of the user's, but has already been spent. Points them
+         at the next line of their list rather than at the code they just typed, which is correct and
+         simply used up. -->
+    <string name="two_factor_recovery_already_used">You\'ve already used that recovery code. Try the next one on your list.</string>
+
+    <!-- Recovery codes: the way in when the authenticator app is gone. -->
+    <string name="recovery_code_title">Use a recovery code</string>
+    <string name="recovery_code_subtitle">Enter one of the 6-digit recovery codes you saved when you turned on two-factor authentication.</string>
+    <string name="recovery_code_note">Each code works once. Cross it off your list after using it.</string>
+    <string name="recovery_code_submit">Use code &amp; log in</string>
+    <string name="recovery_code_back">← Back to code entry</string>
+    <!-- Wrong code here means "not one of yours", not "check your authenticator" — the user is
+         reading a printed list, and telling them to look at their phone would be no help at all. -->
+    <string name="two_factor_recovery_incorrect">That isn\'t one of your recovery codes. Check your saved list.</string>
+    <!-- Said after a recovery code gets someone in. The count is the point: somebody down to their
+         last one or two needs to know now, while they can still generate a fresh set. -->
+    <plurals name="two_factor_recovery_used">
+        <item quantity="one">Recovery code used. %d code left — turn two-factor off and on again for a new set.</item>
+        <item quantity="other">Recovery code used. %d codes left.</item>
+    </plurals>
+
+    <!-- ============ Two-factor setup, reached from the profile screen ============ -->
+
+    <string name="two_factor_setup_title">Two-factor authentication</string>
+    <string name="two_factor_setup_step_scan">Step 1 · Scan</string>
+    <string name="two_factor_setup_scan_body">Open Google Authenticator (or any authenticator app) and scan this code to add PetCare.</string>
+    <string name="two_factor_setup_account">For %1$s</string>
+    <string name="two_factor_setup_key_label">Or enter this key by hand</string>
+    <string name="two_factor_setup_copy_key">Copy key</string>
+    <string name="two_factor_setup_secret_label">PetCare setup key</string>
+    <string name="two_factor_setup_secret_copied">Setup key copied.</string>
+    <string name="cd_two_factor_qr">QR code for adding PetCare to your authenticator app</string>
+    <!-- Shown only if the code could not be drawn. Setup is still possible by hand, and saying so
+         matters more than the failure itself. -->
+    <string name="two_factor_setup_qr_failed">The QR code couldn\'t be drawn. Enter the key below by hand instead.</string>
+    <string name="two_factor_setup_unavailable">This account is no longer available on this device.</string>
+
+    <string name="two_factor_setup_step_confirm">Step 2 · Confirm</string>
+    <!-- Says why the second step exists. Without this it reads as busywork, when it is in fact the
+         only thing standing between the user and an account protected by a scan that silently
+         failed. -->
+    <string name="two_factor_setup_confirm_body">Enter the code your authenticator now shows. Nothing is switched on until it matches, so a scan that didn\'t work can\'t lock you out.</string>
+    <string name="two_factor_setup_confirm">Confirm code</string>
+    <string name="two_factor_setup_code_wrong">That code doesn\'t match. Check the entry in your authenticator, or scan the code again.</string>
+    <string name="two_factor_setup_failed">Two-factor authentication couldn\'t be turned on. This account is no longer available on this device.</string>
+
+    <!-- The recovery codes, shown once at the end of setup. -->
+    <string name="recovery_codes_label">Step 3 · Save these</string>
+    <string name="recovery_codes_title">Your recovery codes</string>
+    <!-- The warning, and it comes before the codes on purpose: a user who has started copying has
+         stopped reading. -->
+    <string name="recovery_codes_body">These are the only way into your account if you lose your phone. You won\'t be shown them again — the app stores only a scrambled copy it can check against, not the codes themselves.</string>
+    <string name="recovery_codes_where">Keep them somewhere other than this phone: a password manager, or written down and put away.</string>
+    <string name="recovery_codes_index">%1$d.</string>
+    <string name="recovery_codes_confirm_saved">I\'ve saved these codes somewhere safe</string>
+    <string name="recovery_codes_finish">Finish setup</string>
+    <!-- Leaving early. The message says what is really at stake: nothing is broken, two-factor is
+         simply not turned on, and setup can be started again. -->
+    <string name="recovery_codes_leave_title">Leave without saving your codes?</string>
+    <string name="recovery_codes_leave_message">Two-factor authentication won\'t be turned on, and these codes will be discarded. You can start setup again from the profile screen whenever you like.</string>
+    <string name="recovery_codes_leave_stay">Keep setting up</string>
+    <string name="recovery_codes_leave_confirm">Leave</string>
+
+    <!-- Turning two-factor authentication off, from the profile screen. -->
+    <string name="two_factor_disable_title">Turn off two-factor authentication?</string>
+    <string name="two_factor_disable_message">Your account will be protected by its password alone. Enter a current code from your authenticator, or one of your recovery codes, to confirm it\'s you.</string>
+    <string name="two_factor_disable_code_hint">6-digit code</string>
+    <string name="two_factor_disable_confirm">Turn off</string>
+    <string name="two_factor_disable_code_required">Enter a code to confirm.</string>
+    <string name="two_factor_disable_done">Two-factor authentication is off. Your recovery codes have been deleted.</string>
 
     <!-- Password reset, by email only. Firebase Authentication sends the email and hosts the page
          where the new password is chosen, so the app has just two screens: ask for the address, then
@@ -1559,9 +1637,21 @@
     <string name="profile_section_security">Security</string>
 
     <string name="profile_row_two_factor_title">Two-factor authentication</string>
-    <!-- The switch is disabled and stores nothing, so its subtitle says so plainly rather than
-         reporting a state. -->
-    <string name="profile_row_two_factor_subtitle">Off · coming in a later release</string>
+    <!--
+        The subtitle describes what is actually protecting the account, and the "on" version names a
+        live figure because the figure is the only part the user can act on: someone down to their
+        last few recovery codes should turn the feature off and on again for a fresh ten, and the row
+        is the only place they would ever find that out.
+
+        The "off" version says what turning it on would buy rather than repeating the switch's own
+        position, which the user can already see.
+    -->
+    <string name="profile_row_two_factor_on">On · authenticator app · %1$s</string>
+    <string name="profile_row_two_factor_off">Off · add a code from an authenticator app at sign-in</string>
+    <plurals name="profile_row_two_factor_codes">
+        <item quantity="one">%d recovery code left</item>
+        <item quantity="other">%d recovery codes left</item>
+    </plurals>
 
     <string name="profile_row_fingerprint_title">Unlock with fingerprint</string>
     <!--
@@ -1583,9 +1673,17 @@
     <string name="profile_row_reminders_on">On · at each task\'s time</string>
     <string name="profile_row_reminders_off">Off · no reminders will be posted</string>
 
-    <!-- The pale note under the three switches. It exists because a disabled switch with no
-         explanation reads as a bug; saying why it is there turns it into a stated plan. -->
-    <string name="profile_security_note">Two-factor authentication ships in a later release. The switch is here so the flow is already in place.</string>
+    <!--
+        The pale note under the three switches.
+
+        It used to explain the dead two-factor switch; two-factor authentication now works, so what is
+        left to explain is the fingerprint row, which is still a remembered preference rather than a
+        working lock. The second sentence states the limit of on-device two-factor plainly — the same
+        point TwoFactorRepository makes to whoever reads the code. A user deciding whether this is
+        enough protection deserves to know where it stops, not to be left assuming it covers a stolen
+        unlocked phone.
+    -->
+    <string name="profile_security_note">Fingerprint unlock is remembered but not yet enforced. Two-factor codes are checked on this device, so they protect your account from someone who knows your password — not from someone holding your unlocked phone.</string>
 
     <!-- ============================== PREFERENCES ============================== -->
 

@@ -532,9 +532,11 @@
             <!-- ==================================================================================
                  SECURITY
 
-                 Three switches and a note. The two-factor switch is disabled and stores nothing; the
-                 note beneath says why it is there at all, because a dead control with no explanation
-                 reads as a bug rather than as a stated plan.
+                 Three switches and a note. Two of them save a value and take effect at once; the
+                 two-factor switch instead opens the flow that can do the work, because turning a
+                 second factor on takes a QR code and a proof, and turning it off takes a code. The
+                 note beneath covers the one row that is still a stated intention rather than a
+                 working feature.
                  ================================================================================== -->
 
             <com.google.android.material.card.MaterialCardView
@@ -561,13 +563,17 @@
                     <View style="@style/PetCare.Profile.RowDivider" />
 
                     <!--
-                        Two-factor authentication.
+                        Two-factor authentication: a six-digit code from an authenticator app, asked
+                        for after the password at every sign-in.
 
-                        `android:enabled="false"` on the switch, set here rather than in code so the
-                        control is never briefly live while the screen loads. A disabled Material
-                        switch draws itself greyed and is skipped by TalkBack's "activate" gesture, so
-                        it cannot be toggled by touch or by a screen reader — which is the point: the
-                        flow is laid out, and nothing behind it exists yet.
+                        The switch opens a flow rather than saving a value. On, and it goes to the
+                        setup screen (scan, confirm, save the recovery codes); off, and it asks for a
+                        current code first. Either way the switch's own position comes back from the
+                        account — see ProfileFragment.renderTwoFactor — so it can never be left
+                        claiming something the account is not.
+
+                        The subtitle is filled in by the fragment, because it names a live figure: how
+                        many recovery codes are left.
                     -->
                     <LinearLayout
                         style="@style/PetCare.Profile.Row"
@@ -588,10 +594,11 @@
                                 android:text="@string/profile_row_two_factor_title" />
 
                             <TextView
+                                android:id="@+id/twoFactorSubtitle"
                                 style="@style/PetCare.Profile.RowSubtitle"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="@string/profile_row_two_factor_subtitle" />
+                                tools:text="On · authenticator app · 9 recovery codes left" />
 
                         </LinearLayout>
 
@@ -599,8 +606,7 @@
                             android:id="@+id/twoFactorSwitch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:checked="false"
-                            android:enabled="false" />
+                            android:checked="false" />
 
                     </LinearLayout>
 

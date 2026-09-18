@@ -22,6 +22,9 @@ import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
 import com.prash.petcare.data.repository.PetRepository
+import com.prash.petcare.data.repository.TwoFactorCheck
+import com.prash.petcare.data.repository.TwoFactorRepository
+import com.prash.petcare.data.repository.TwoFactorStatus
 import com.prash.petcare.data.repository.UserRepository
 import com.prash.petcare.data.sync.SyncManager
 import com.prash.petcare.data.sync.SyncStatus
@@ -60,11 +63,13 @@ data class ProfilePreferences(
 )
 
 /**
- * The two security switches that store something.
+ * The two security switches whose value lives in the preferences file.
  *
- * Two-factor authentication is deliberately absent: its switch is disabled and persists nothing, so
- * there is no state for it to have. See [SettingsStore] and the note the screen draws under those
- * rows.
+ * Two-factor authentication is deliberately *not* here, even though its switch sits in the same card.
+ * It is not a preference: it is a property of the account, it lives in the database beside the
+ * account's own row, and it means nothing without the secret and recovery codes stored with it. So it
+ * is published separately, from [ProfileViewModel.twoFactor], by the repository that owns it. Folding
+ * it into this object would have put one fact about the account into a file about this installation.
  */
 data class ProfileSecurity(
     val fingerprintUnlock: Boolean = false,
@@ -112,6 +117,18 @@ sealed interface ProfileEvent {
 
     /** Deleting failed (wrong password, no network…), so nothing was deleted. */
     data class AccountDeletionFailed(@param:StringRes val messageRes: Int) : ProfileEvent
+
+    /** Two-factor authentication has been turned off, and the secret and codes are gone. */
+    data object TwoFactorDisabled : ProfileEvent
+
+    /**
+     * The code typed to turn two-factor authentication off was refused, so it is still on.
+     *
+     * Carries the message rather than a plain failure flag, because "that code is not right" and
+     * "you have already used that recovery code" send the user to different places — see
+     * [com.prash.petcare.data.repository.TwoFactorCheck].
+     */
+    data class TwoFactorDisableFailed(@param:StringRes val messageRes: Int) : ProfileEvent
 }
 
 /**
@@ -147,6 +164,7 @@ class ProfileViewModel(
     private val settingsStore: SettingsStore,
     private val contactStore: DelegationContactStore,
     private val syncManager: SyncManager,
+    private val twoFactorRepository: TwoFactorRepository,
     private val userId: Long
 ) : ViewModel() {
 
@@ -172,7 +190,7 @@ class ProfileViewModel(
         initialValue = ProfilePreferences()
     )
 
-    /** The two switches that store something. */
+    /** The two switches whose value comes from the preferences file. */
     val security: StateFlow<ProfileSecurity> = combine(
         settingsStore.fingerprintUnlock,
         settingsStore.careRemindersEnabled,
@@ -182,6 +200,20 @@ class ProfileViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = ProfileSecurity()
     )
+
+    /**
+     * Whether the account has an authenticator set up, and how many recovery codes it has left.
+     *
+     * Straight from the repository, which reads it out of the database — so the row redraws by itself
+     * when setup finishes on another screen, and when a recovery code is spent at sign-in. Nothing
+     * here has to be told that something changed.
+     */
+    val twoFactor: StateFlow<TwoFactorStatus> = twoFactorRepository.observeStatus(userId)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = TwoFactorStatus()
+        )
 
     /**
      * Each pet with its routines, tasks and expenses.
@@ -289,6 +321,52 @@ class ProfileViewModel(
 
     fun onFingerprintUnlockChanged(enabled: Boolean) =
         settingsStore.setFingerprintUnlock(enabled)
+
+    /** True while a turn-off is in flight, so a second confirm cannot start another. */
+    private var isDisablingTwoFactor = false
+
+    /**
+     * Turns two-factor authentication off, once [code] has been accepted.
+     *
+     * **The check and the change are one call**, deliberately. Verifying in the dialog and disabling
+     * from a separate method would be two steps with a gap between them, and the gap is the bug: the
+     * second could be reached without the first by any future caller who did not know the rule. Here
+     * the only way to reach [TwoFactorRepository.disable] is through a code that has just been
+     * accepted.
+     *
+     * A recovery code is accepted as well as an authenticator code, and doing so *spends* it — which
+     * is right: it was used, and the codes are about to be deleted anyway.
+     *
+     * Every refusal leaves the account exactly as it was and says which refusal it is, so someone who
+     * mistyped can try again and someone reading a spent line off their sheet is told to try another.
+     */
+    fun onTwoFactorDisableConfirmed(code: String) {
+        if (isDisablingTwoFactor) return
+        isDisablingTwoFactor = true
+
+        viewModelScope.launch {
+            val event = when (twoFactorRepository.verify(userId, code)) {
+                TwoFactorCheck.Correct, is TwoFactorCheck.RecoveryCodeAccepted -> {
+                    twoFactorRepository.disable(userId)
+                    ProfileEvent.TwoFactorDisabled
+                }
+
+                TwoFactorCheck.RecoveryCodeAlreadyUsed ->
+                    ProfileEvent.TwoFactorDisableFailed(R.string.two_factor_recovery_already_used)
+
+                TwoFactorCheck.Incorrect ->
+                    ProfileEvent.TwoFactorDisableFailed(R.string.error_code_incorrect)
+
+                // Already off — turned off on another device, or while this dialog was open. There is
+                // nothing to do and nothing has gone wrong, so this reports the outcome the user
+                // asked for rather than an error about a state they cannot see.
+                TwoFactorCheck.NotEnabled -> ProfileEvent.TwoFactorDisabled
+            }
+
+            isDisablingTwoFactor = false
+            _events.send(event)
+        }
+    }
 
     /**
      * Turns care reminders on or off.
@@ -455,6 +533,7 @@ class ProfileViewModel(
                     settingsStore = application.settingsStore,
                     contactStore = application.delegationContactStore,
                     syncManager = application.syncManager,
+                    twoFactorRepository = application.twoFactorRepository,
                     userId = userId
                 )
             }

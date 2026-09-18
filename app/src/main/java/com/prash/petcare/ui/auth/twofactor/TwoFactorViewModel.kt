@@ -1,72 +1,73 @@
 package com.prash.petcare.ui.auth.twofactor
 
-import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.prash.petcare.PetCareApplication
 import com.prash.petcare.R
-import com.prash.petcare.ui.auth.CodeEntryViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
-
-/** One-off outcomes of the two-factor screen, delivered once each (see AuthEvent for why). */
-sealed interface TwoFactorEvent {
-
-    /** The code checked out; [userId] can now be signed in. */
-    data class Verified(val userId: Long) : TwoFactorEvent
-
-    /** Something to tell the user that is not tied to the code boxes. */
-    data class Message(@param:StringRes val messageRes: Int) : TwoFactorEvent
-}
+import com.prash.petcare.data.local.LoginAttemptStore
+import com.prash.petcare.data.repository.TwoFactorRepository
+import com.prash.petcare.data.repository.UserRepository
 
 /**
- * The ViewModel behind the two-factor check (TwoFactorFragment).
+ * The ViewModel behind the two-factor check (TwoFactorFragment) — step 2 of signing in.
  *
- * Everything about *typing* the code — the digits, the "wrong code" state, when the verify button is
- * enabled — is inherited from [CodeEntryViewModel], the reusable code-entry base class. This class adds
- * only what is particular to two-factor: which account is being checked, and what verify and "lost
- * access" do.
- *
- * **UI only for now.** The screen, its input and its states are complete; checking the code against an
- * authenticator is not built yet. The stubs below **fail closed**: pressing verify never signs anyone
- * in. A stub that let any six digits through would make this screen look like protection it is not.
- *
- * @param savedStateHandle Holds the typed code (see the base class) and the `userId` navigation
- *   argument, which the default ViewModel factory copies in from the fragment's arguments.
+ * Almost everything it does is inherited: typing the code from [com.prash.petcare.ui.auth.CodeEntryViewModel],
+ * and checking it (with the failed-attempt lockout around it) from [TwoFactorCheckViewModel], which
+ * explains the rules at length. What is left here is the one thing only *this* screen has: the way
+ * out for somebody whose authenticator is gone.
  */
-class TwoFactorViewModel(savedStateHandle: SavedStateHandle) : CodeEntryViewModel(savedStateHandle) {
+class TwoFactorViewModel(
+    savedStateHandle: SavedStateHandle,
+    twoFactorRepository: TwoFactorRepository,
+    userRepository: UserRepository,
+    loginAttemptStore: LoginAttemptStore
+) : TwoFactorCheckViewModel(
+    savedStateHandle,
+    twoFactorRepository,
+    userRepository,
+    loginAttemptStore
+) {
 
-    /** The account that passed the password check and is waiting on its second factor. */
-    private val userId: Long = savedStateHandle[TwoFactorFragment.ARG_USER_ID] ?: NO_USER
-
-    private val _events = Channel<TwoFactorEvent>(Channel.BUFFERED)
-    val events = _events.receiveAsFlow()
-
-    /**
-     * "VERIFY & LOG IN".
-     *
-     * TODO(2fa): verify `code.value` for `userId` against the account's authenticator (TOTP) secret via
-     *  the auth backend, off the main thread (viewModelScope.launch + withContext(Dispatchers.IO)).
-     *  - Correct: `_events.send(TwoFactorEvent.Verified(userId))` — TwoFactorFragment already records
-     *    the session and navigates home for that event.
-     *  - Wrong or expired: call `rejectCode()` to show the error state and clear the boxes.
-     *  Until then this signs nobody in and only says the check is unavailable.
-     */
-    override fun onVerify() {
-        if (!canVerify.value || userId == NO_USER) return
-        _events.trySend(TwoFactorEvent.Message(R.string.two_factor_unavailable))
-    }
+    /** This screen asks for an authenticator code, so a wrong one points back at the app. */
+    override val wrongCodeMessage: Int = R.string.error_code_incorrect
 
     /**
-     * "LOST ACCESS?".
+     * "LOST ACCESS?" — the way through for someone whose authenticator is gone.
      *
-     * TODO(2fa-recovery): route to account recovery (backup codes, or a reset of the second factor by
-     *  email/SMS) once that flow exists. There is no recovery screen yet, so this only says so.
+     * It opens the recovery-code screen rather than doing anything itself. That screen types its code
+     * on the same keypad and checks it through the same repository; what it adds is wording aimed at
+     * a person holding a printed list rather than a phone. Without a link like this one, a user whose
+     * phone is lost has no way of learning from the app that a way through exists at all.
      */
     fun onLostAccess() {
-        _events.trySend(TwoFactorEvent.Message(R.string.two_factor_lost_access_unavailable))
+        if (userId == NO_USER) return
+        send(TwoFactorEvent.OpenRecovery(userId))
     }
 
-    private companion object {
-        /** Matches SessionViewModel.NO_USER_ID: the app's value for "no account". */
-        const val NO_USER = -1L
+    companion object {
+
+        /**
+         * Builds the ViewModel with its repositories and the shared attempt store.
+         *
+         * A factory is needed because the default ViewModelProvider can only build ViewModels with no
+         * constructor arguments beyond a SavedStateHandle. `createSavedStateHandle()` produces the
+         * same handle the default factory would have — which matters here, because it is the handle
+         * that carries both the typed digits and the `userId` navigation argument.
+         */
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application =
+                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PetCareApplication
+                TwoFactorViewModel(
+                    savedStateHandle = createSavedStateHandle(),
+                    twoFactorRepository = application.twoFactorRepository,
+                    userRepository = application.userRepository,
+                    loginAttemptStore = application.loginAttemptStore
+                )
+            }
+        }
     }
 }

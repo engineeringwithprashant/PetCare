@@ -40,6 +40,24 @@ import androidx.room.PrimaryKey
  * @property photoPath Optional absolute path to a profile photo copied into the app's internal
  *   storage, exactly as [Pet.photoPath] works and for the same reason — see
  *   [com.prash.petcare.util.PetPhotoStorage] on why a picked image is copied rather than referenced.
+ * @property twoFactorSecret The account's authenticator (TOTP) secret, Base32-encoded, or null when
+ *   two-factor authentication is off. Null *is* the "off" switch: there is no separate boolean that
+ *   could disagree with it, so an account can never be marked protected while holding no secret to
+ *   check a code against.
+ *
+ * **What keeping this on the device does and does not protect against.** The secret is what turns
+ * the clock into the six-digit code, so whoever holds it can produce codes. It lives here, in this
+ * app's own database file, which means two-factor authentication in PetCare protects against
+ * **someone who has learned the password but does not have this phone** — a reused password, a
+ * leaked one, someone watching it being typed. It is **not** protection against someone holding the
+ * unlocked handset: they have both the password prompt and the secret in front of them. That second
+ * threat is the phone's own lock screen's job, not this app's. A service that checked codes on a
+ * server would keep the secret away from the client and cover more, but Firebase's multi-factor
+ * support requires the paid Identity Platform upgrade, so on-device is deliberately where this sits.
+ *
+ * @property twoFactorEnabledAt When two-factor authentication was switched on, as epoch
+ *   milliseconds, or null when it is off. Kept beside the secret rather than derived from it because
+ *   "protected since March" is a thing the profile screen can say and a secret alone cannot.
  * @property createdAt When the account was created, as epoch milliseconds.
  */
 @Entity(
@@ -61,5 +79,7 @@ data class User(
     // so the two tables describe the same kind of thing the same way.
     @ColumnInfo(name = "photoUri")
     val photoPath: String? = null,
+    val twoFactorSecret: String? = null,
+    val twoFactorEnabledAt: Long? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

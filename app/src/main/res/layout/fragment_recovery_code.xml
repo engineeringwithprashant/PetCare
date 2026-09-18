@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The recovery-code screen (RecoveryCodeFragment): the way in when the authenticator app is gone.
+
+    Reached from "LOST ACCESS?" on the two-factor screen, and deliberately built from the same pieces
+    in the same order — the shared auth header, the code boxes with their keypad, a helper note, the
+    verify button, and a way back. Somebody arriving here is already anxious; a screen that looks like
+    a different app would not help. What changes is only the wording.
+
+    Top to bottom: the header (its heading and subtitle set by the fragment), the CodeKeypadView (the
+    same reusable six boxes and keypad the two-factor screen uses — see view_code_keypad.xml), a note
+    saying plainly that the code will be used up, the verify button, and "← BACK TO CODE ENTRY".
+
+    **No step bar**, unlike the two-factor screen. That bar says "STEP 2 OF 2" — a position in the
+    ordinary sign-in sequence. This screen is a detour out of it, not a step along it, and drawing a
+    progress bar on a detour would misdescribe where the user is.
+
+    There is deliberately no text field anywhere, so the system keyboard has nothing to open for.
+
+    ScrollView so the keypad stays reachable on short screens, in landscape, and at large font sizes,
+    where the whole column is taller than the window.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Auth.Page"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.auth.twofactor.RecoveryCodeFragment">
+
+    <LinearLayout
+        style="@style/PetCare.Auth.Column"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- The logo block plus this screen's heading and subtitle, which the fragment fills in. -->
+        <include
+            android:id="@+id/header"
+            layout="@layout/view_auth_header" />
+
+        <!-- auth_header_gap rather than spacing_md, because with no step bar between them this sits
+             directly under the header and takes the gap the header expects beneath it. -->
+        <com.prash.petcare.ui.auth.CodeKeypadView
+            android:id="@+id/codeKeypad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/auth_header_gap" />
+
+        <!-- Says the code is spent by using it. Worth stating before the tap rather than after: a
+             user working down a printed list needs to know to cross the line off, and someone who
+             only has two left should find that out while they can still do something about it. -->
+        <TextView
+            style="@style/PetCare.Auth.Helper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/recovery_code_note" />
+
+        <!-- Starts disabled: bindCodeEntry enables it once all six digits are in. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/verifyButton"
+            style="@style/PetCare.Auth.PrimaryButton"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:enabled="false"
+            android:text="@string/recovery_code_submit" />
+
+        <!-- Back to the two-factor screen, which is directly below this one on the back stack. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backToCodeButton"
+            style="@style/PetCare.Auth.BackLink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/recovery_code_back" />
+
+    </LinearLayout>
+</ScrollView>
