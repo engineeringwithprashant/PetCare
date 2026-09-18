@@ -70,21 +70,67 @@
         what. On the profile screen itself the tap is unhooked and the label removed again — see
         TabHeader.kt, which does the same for the badge on the notifications screen.
     -->
-    <TextView
+    <!--
+        **Two layers, letter behind photo.** The mark is the yellow "p" until the user sets a profile
+        photo, and their face afterwards. Both are laid out here and the photo is simply shown or
+        hidden (TabHeader.showProfilePhoto), rather than one view swapping between a letter and a
+        bitmap: they need different view types — a TextView draws the letter from the font, and only
+        a ShapeableImageView clips a photograph to the rounded square — and stacking them means the
+        letter is already in place as the correct fallback whenever there is no photo, or the file
+        behind it has gone missing.
+
+        The FrameLayout carries the id, the tap, the ripple and the label, so everything that made
+        the monogram a control still applies to the pair as a whole and TabHeader is unchanged in that
+        respect. A FrameLayout is the right container because this is the one arrangement it
+        expresses in a single attribute: two children occupying the same space.
+    -->
+    <FrameLayout
         android:id="@+id/monogram"
         android:layout_width="@dimen/monogram_size"
         android:layout_height="@dimen/monogram_size"
-        android:background="@drawable/bg_monogram"
         android:clickable="true"
         android:contentDescription="@string/cd_open_profile"
         android:focusable="true"
-        android:fontFamily="@font/bricolage_grotesque"
-        android:foreground="?attr/selectableItemBackgroundBorderless"
-        android:gravity="center"
-        android:text="@string/home_monogram"
-        android:textAppearance="?attr/textAppearanceTitleMedium"
-        android:textColor="@color/on_accent_yellow"
-        android:textStyle="bold" />
+        android:foreground="?attr/selectableItemBackgroundBorderless">
+
+        <!-- The fallback: a "p" on the rounded yellow square, from bg_monogram.xml. In Bricolage
+             Grotesque, the app's character face, so the mark matches the headlines. Hidden from
+             TalkBack because the frame around it carries the label for the pair. -->
+        <TextView
+            android:id="@+id/monogramLetter"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_monogram"
+            android:fontFamily="@font/bricolage_grotesque"
+            android:gravity="center"
+            android:importantForAccessibility="no"
+            android:text="@string/home_monogram"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="@color/on_accent_yellow"
+            android:textStyle="bold" />
+
+        <!--
+            The user's photo, drawn over the letter when there is one.
+
+            A ShapeableImageView clips the bitmap to the same rounded square the yellow tile uses, so
+            the mark keeps its shape whichever layer is showing — the radius lives in one shape style
+            rather than being baked into a cropped image. centerCrop fills the tile, which is what
+            makes the rounded corners visible on a photo of any aspect ratio.
+
+            Starts GONE so a header drawn before the photo has loaded shows the letter rather than an
+            empty square.
+        -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/monogramPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Monogram"
+            tools:visibility="visible" />
+
+    </FrameLayout>
 
     <!-- The screen's name, set by the fragment ("Home", "Pets"). layout_weight="1" on a zero-width
          view is LinearLayout's "take everything left over", which is what pushes the two controls to

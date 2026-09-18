@@ -15,19 +15,21 @@
     roomier padding — takes that dominance away, which is why the card carries no decoration of its
     own beyond its border.
 
+    **The card's look is PetCare.Card.Outlined**, the app's small flat outlined card, rather than
+    attributes set here. The dashboard's quick actions and the profile screen's stat row are the same
+    object in other places, and naming one style is what keeps the three rows identical — see that
+    style for why these particular cards draw a border instead of relying on a shadow.
+
     The fragment fills all three texts and swaps the pill's colours; nothing here is specific to any
     one card.
 -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.Card.Outlined"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:minWidth="@dimen/home_stat_card_min_width"
-    app:cardCornerRadius="@dimen/home_stat_card_corner_radius"
-    app:cardElevation="0dp"
-    app:strokeColor="?attr/colorOutlineVariant"
-    app:strokeWidth="1dp">
+    android:minWidth="@dimen/home_stat_card_min_width">
 
     <!--
         Label, figure and pill stacked top to bottom with one even gap between them. A vertical

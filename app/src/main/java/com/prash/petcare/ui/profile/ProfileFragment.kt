@@ -31,13 +31,14 @@ import com.prash.petcare.data.local.entity.UserRole
 import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.databinding.FragmentProfileBinding
 import com.prash.petcare.databinding.ItemProfileContactBinding
+import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.setUp
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.common.showAssistantPill
+import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.util.PetPhotoStorage
-import kotlinx.coroutines.launch
 import java.text.NumberFormat
+import kotlinx.coroutines.launch
 
 /**
  * The profile screen: who is signed in, how the app behaves for them, and the way out.
@@ -144,6 +145,10 @@ class ProfileFragment : Fragment() {
             onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
             onMonogramClick = null
         )
+
+        // Keeps the header's mark showing the user's profile photo, falling back to the app's
+        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
+        bindHeaderProfilePhoto(binding.header, sessionViewModel)
 
         binding.header.showAssistantPill {
             findNavController().navigate(R.id.action_profile_to_assistant)

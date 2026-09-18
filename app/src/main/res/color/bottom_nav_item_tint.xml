@@ -16,8 +16,9 @@
     right here are not: ?attr/colorOnSurfaceVariant is a dark grey in light mode and would leave
     three of the four tabs invisible against the bar.
 
-    The label has its own selector, bottom_nav_label_tint.xml, because the two do not share a
-    selected colour: the icon sits on the yellow pill and the label sits on the dark bar beside it.
+    There used to be a second selector beside this one for the labels, because the two did not share a
+    selected colour: the icon sat on the yellow pill and the label on the dark bar beside it. The bar
+    no longer draws labels at all — see PetCare.BottomNav — so this is the only tint it needs.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 

@@ -282,6 +282,14 @@
     <dimen name="bottom_nav_margin_vertical">8dp</dimen>
     <dimen name="bottom_nav_corner_radius">28dp</dimen>
     <dimen name="bottom_nav_height">64dp</dimen>
+    <!-- The tab icons, which carry the bar alone now that it draws no labels. Well above Material's
+         24dp default: at 24dp in an unlabelled bar the glyphs read as small marks adrift in the
+         capsule, where the row is meant to be the five icons. -->
+    <dimen name="bottom_nav_icon_size">28dp</dimen>
+    <!-- The accent pill behind the selected icon: wide enough to read as a pill rather than a circle.
+         Its *height* is deliberately not set here — see PetCare.BottomNav.ActiveIndicator for why an
+         explicit height crops the glyph in an unlabelled bar. -->
+    <dimen name="bottom_nav_indicator_width">56dp</dimen>
 
     <!-- ================================= Money tab =================================
          The dark total card, its stacked category bar, the legend and the expense cards. -->

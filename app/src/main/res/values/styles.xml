@@ -61,6 +61,16 @@
 
     <!-- The logo tile at the top of every sign-in screen: the square logo artwork clipped to the
          rounded corner the auth mockups draw. See view_auth_header.xml. -->
+    <!-- The rounded square the header's profile photo is clipped to.
+
+         The same radius as bg_monogram.xml, referenced from the same dimension, so the photo and the
+         yellow letter tile it replaces are exactly the same shape — the mark must not appear to
+         change form depending on whether a photo has been set. -->
+    <style name="ShapeAppearance.PetCare.Monogram" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/monogram_corner_radius</item>
+    </style>
+
     <style name="ShapeAppearance.PetCare.AuthBrandMark" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">@dimen/auth_brand_mark_corner_radius</item>
@@ -131,6 +141,41 @@
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="cardElevation">@dimen/card_elevation</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!--
+        A **small, flat, outlined** card: the dashboard's three stat cards, its three quick actions,
+        and the profile screen's three stat cards.
+
+        **Why these do not use the shadow the ordinary card relies on.** [PetCare.Card] separates
+        itself from the page with elevation alone, which works for a full-width panel with room around
+        it. It does not work for a row of small cards: a 2dp shadow under a third-of-the-screen card
+        is nearly invisible on the cream page, and in dark mode it is invisible outright — a shadow is
+        drawn *darker* than its background, and there is nothing darker than the near-black page. The
+        three cards then read as bare text floating in a row rather than as surfaces, which is exactly
+        what was happening to the quick actions and the profile stats before this style existed.
+
+        So the separation is drawn instead of cast: a hairline border in the theme's outline colour,
+        which is visible in both themes, with the elevation dropped to zero so the card is not
+        describing its edge twice.
+
+        The radius is the stat card's rather than the app's general medium, because these three rows
+        are the one place the app puts small cards side by side, and they should read as one family.
+    -->
+    <style name="PetCare.Card.Outlined" parent="PetCare.Card">
+        <item name="cardCornerRadius">@dimen/home_stat_card_corner_radius</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <!-- The same card where it is a control — the dashboard's quick actions. Pressable, with the
+         ripple following the rounded outline; it stays flat while held rather than lifting, because
+         it has no shadow to lift with. -->
+    <style name="PetCare.Card.Outlined.Clickable" parent="PetCare.Card.Outlined">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
@@ -1300,10 +1345,10 @@
     </style>
 
     <!-- A quick-action card: an ordinary pressable white card with the dashboard's softer corner. -->
-    <style name="PetCare.Home.QuickActionCard" parent="PetCare.Card.Clickable">
+    <!-- Only the height is its own: everything that makes it look like a card comes from the shared
+         outlined style, so a quick action and the stat card above it cannot drift apart. -->
+    <style name="PetCare.Home.QuickActionCard" parent="PetCare.Card.Outlined.Clickable">
         <item name="android:minHeight">@dimen/home_quick_action_height</item>
-        <item name="cardCornerRadius">@dimen/corner_radius_lg</item>
-        <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Large</item>
     </style>
 
     <!-- =========================== Bottom navigation bar ===========================
@@ -1314,54 +1359,47 @@
          colors.xml for why the app's chrome is one treatment rather than two, and bg_bottom_nav.xml
          for the shape itself.
 
-         The selected tab is marked by the accent pill Material 3 draws behind the active icon, with
-         its label in the accent below. That is the one place in the app's chrome the accent appears,
-         so "where am I?" is answered by the same colour that answers "what do I press?".
+         The selected tab is marked by the accent pill Material 3 draws behind the active icon. That is
+         the one place in the app's chrome the accent appears, so "where am I?" is answered by the
+         same colour that answers "what do I press?".
 
-         The icon and label take *different* state lists, because the two do not share a selected
-         colour — the icon sits on the yellow pill, the label on the bar beside it. -->
+         **Icons only, no labels.** The bar is an inset capsule 64dp tall, and five labelled items do
+         not fit in it: Material lays the label out below the icon, and at this height the two
+         collided and the text was drawn over the glyphs. Rather than grow the capsule or shrink the
+         type to the point of being decorative, the labels are dropped and the icons take the room —
+         which is the usual reading of a five-tab bar anyway, and the pill still says which tab is
+         current. Each item keeps its title as a content description and a long-press tooltip, so
+         nothing is lost to a screen-reader user; see MainActivity.describeNavigationItems. -->
     <style name="PetCare.BottomNav" parent="Widget.Material3.BottomNavigationView">
         <item name="android:background">@drawable/bg_bottom_nav</item>
         <item name="itemActiveIndicatorStyle">@style/PetCare.BottomNav.ActiveIndicator</item>
         <item name="itemIconTint">@color/bottom_nav_item_tint</item>
-        <item name="itemTextColor">@color/bottom_nav_label_tint</item>
-        <item name="itemTextAppearanceActive">@style/TextAppearance.PetCare.NavLabel</item>
-        <item name="itemTextAppearanceInactive">@style/TextAppearance.PetCare.NavLabel</item>
-        <item name="labelVisibilityMode">labeled</item>
+        <!-- Larger than Material's 24dp default, taking back the space the labels used. Big enough
+             to carry the bar on its own, and still comfortably inside the pill behind it. -->
+        <item name="itemIconSize">@dimen/bottom_nav_icon_size</item>
+        <item name="labelVisibilityMode">unlabeled</item>
         <!-- The capsule is drawn by the background drawable, so the view must not also cast a
              shadow — a shadow follows the view's rectangular bounds, not the drawable's rounded
              outline, and would show as a faint square behind the rounded ends. -->
         <item name="elevation">0dp</item>
     </style>
 
-    <!-- The pill drawn behind the selected tab's icon: the accent itself rather than the muted
-         container the app uses elsewhere, since on a dark bar the muted variant barely registers. -->
+    <!--
+        The pill drawn behind the selected tab's icon: the accent itself rather than the muted
+        container the app uses elsewhere, since on a dark bar the muted variant barely registers.
+
+        **Only the width is set here, and the height is deliberately left to Material.** An explicit
+        height is not simply ignored in an unlabelled bar — it is measured from the top of the item's
+        icon container and grows *downwards*, so a pill taller than the container ends up sitting
+        below the glyph and cropping it. (That is exactly what happened: the selected icon showed only
+        its top half against a pill hanging beneath it.) Material already sizes the indicator around
+        the icon in this mode, including the larger icon set by itemIconSize, so letting it do that
+        keeps the glyph centred in the pill at any icon size.
+    -->
     <style name="PetCare.BottomNav.ActiveIndicator"
         parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">@color/accent_yellow</item>
-    </style>
-
-    <!--
-        The tab labels: small, bold, upper-case and letter-spaced.
-
-        Upper-case is applied through `textAllCaps` rather than by capitalising the strings
-        themselves, so the same resource can stay sentence-case where it is also used as a screen
-        title — see the note at the top of the bottom-navigation strings in strings.xml.
-
-        No textColor here. A text *appearance* that named a colour would override the state list the
-        bar applies through itemTextColor, and every tab would end up looking identically selected.
-
-        IBM Plex Mono, like the app's other upper-case micro-labels. It is named here rather than
-        inherited because this style extends Material's LabelSmall *directly* — not through the
-        theme's ?attr/textAppearanceLabelSmall — so it would otherwise keep Material's system font.
-    -->
-    <style name="TextAppearance.PetCare.NavLabel" parent="TextAppearance.Material3.LabelSmall">
-        <item name="android:fontFamily">@font/ibm_plex_mono</item>
-        <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textSize">10sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textAllCaps">true</item>
-        <item name="android:letterSpacing">0.08</item>
+        <item name="android:width">@dimen/bottom_nav_indicator_width</item>
     </style>
 
     <!-- ================================= Places tab =================================
@@ -1858,10 +1896,9 @@
 
     <!-- One of the three cards. Its width is shared out by layout_weight, so only the padding and the
          corner are set here. -->
-    <style name="PetCare.Profile.StatCard" parent="PetCare.Card">
-        <item name="cardCornerRadius">@dimen/home_stat_card_corner_radius</item>
-        <item name="cardElevation">@dimen/card_elevation</item>
-    </style>
+    <!-- The shared outlined card with nothing added: these three are the dashboard's stat row in a
+         different place, and are meant to be recognisably the same object. -->
+    <style name="PetCare.Profile.StatCard" parent="PetCare.Card.Outlined" />
 
     <!-- The bold figure. A number, so Bricolage Grotesque rather than the face its Title role would
          otherwise give it — the same choice the dashboard's stat cards make. -->

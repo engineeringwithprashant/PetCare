@@ -11,6 +11,7 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.ImageViewCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -24,6 +25,7 @@ import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.databinding.FragmentPetDetailBinding
 import com.prash.petcare.ui.checklist.ChecklistFragment
+import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.formatAge
 import com.prash.petcare.ui.common.formatStoredDate
 import com.prash.petcare.ui.common.formatWeightWithUnit
@@ -37,6 +39,7 @@ import com.prash.petcare.ui.expense.ExpensesFragment
 import com.prash.petcare.ui.routine.AddRoutineFragment
 import com.prash.petcare.ui.routine.RoutineAdapter
 import com.prash.petcare.ui.routine.RoutineDetailFragment
+import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
 /**
@@ -63,6 +66,13 @@ class PetDetailFragment : Fragment() {
     private val viewModel: PetDetailViewModel by viewModels {
         PetDetailViewModel.factory(petId)
     }
+
+    /**
+     * The Activity-wide record of who is signed in, used here only for the profile photo drawn in
+     * the shared header — this screen's own data is about the pet, not the account. Scoped to the
+     * Activity, so it is the same instance every other screen reads the photo from.
+     */
+    private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     /**
      * Guards against re-decoding the same photo on every state emission.
@@ -107,6 +117,10 @@ class PetDetailFragment : Fragment() {
             onBadgeClick = ::openNotifications,
             onMonogramClick = ::openProfile
         )
+
+        // Keeps the header's mark showing the user's profile photo, falling back to the app's
+        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
+        bindHeaderProfilePhoto(binding.header, sessionViewModel)
 
         setUpRecyclerView()
         setUpClickListeners()

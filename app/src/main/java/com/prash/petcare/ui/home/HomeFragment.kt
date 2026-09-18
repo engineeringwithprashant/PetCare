@@ -26,13 +26,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
+import com.prash.petcare.data.local.CurrencyPreference
 import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.data.repository.WeatherState
 import com.prash.petcare.data.sync.SyncStatus
-import com.prash.petcare.data.local.CurrencyPreference
 import com.prash.petcare.databinding.FragmentHomeBinding
 import com.prash.petcare.databinding.ItemHomeStatBinding
 import com.prash.petcare.databinding.ItemStreakDayBinding
+import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.formatCurrency
 import com.prash.petcare.ui.common.formatTimeOfDay
 import com.prash.petcare.ui.common.openProfile
@@ -46,12 +47,12 @@ import com.prash.petcare.ui.place.LocationPermissionRequester
 import com.prash.petcare.ui.routine.RoutineDetailFragment
 import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.util.WalkComfort
-import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 /**
  * The Home tab: the dashboard the app opens on once signed in.
@@ -220,6 +221,10 @@ class HomeFragment : Fragment() {
             onBadgeClick = ::openNotifications,
             onMonogramClick = ::openProfile
         )
+
+        // Keeps the header's mark showing the user's profile photo, falling back to the app's
+        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
+        bindHeaderProfilePhoto(binding.header, sessionViewModel)
         binding.header.showAssistantPill(::openAssistant)
 
         streakCells = listOf(

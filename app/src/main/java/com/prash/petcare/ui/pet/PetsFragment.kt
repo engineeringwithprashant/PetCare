@@ -17,12 +17,13 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentPetsBinding
+import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
-import kotlinx.coroutines.launch
 import java.text.NumberFormat
+import kotlinx.coroutines.launch
 
 /**
  * The Pets tab: a large card for every animal the signed-in user has, and the way in to adding
@@ -98,6 +99,10 @@ class PetsFragment : Fragment() {
             onBadgeClick = ::openNotifications,
             onMonogramClick = ::openProfile
         )
+
+        // Keeps the header's mark showing the user's profile photo, falling back to the app's
+        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
+        bindHeaderProfilePhoto(binding.header, sessionViewModel)
 
         setUpRecyclerView()
         binding.emptyAddPetButton.setOnClickListener { openNewPetForm() }

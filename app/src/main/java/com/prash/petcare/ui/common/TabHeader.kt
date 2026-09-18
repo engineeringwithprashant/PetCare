@@ -2,8 +2,18 @@ package com.prash.petcare.ui.common
 
 import android.view.View
 import androidx.annotation.StringRes
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.prash.petcare.R
 import com.prash.petcare.databinding.ViewTabHeaderBinding
+import com.prash.petcare.ui.session.SessionViewModel
+import com.prash.petcare.util.PetPhotoStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 
 /*
@@ -117,6 +127,70 @@ fun ViewTabHeaderBinding.setUp(
 /** Replaces the header's title — for a screen whose title arrives with its data. */
 fun ViewTabHeaderBinding.showTitle(title: CharSequence) {
     headerTitle.text = title
+}
+
+/**
+ * Draws the user's profile photo over the monogram, or falls back to the yellow "p".
+ *
+ * The header's mark is the app's letter until a photo has been set and the user's face afterwards —
+ * see the note on the two stacked layers in view_tab_header.xml. Only visibility changes here: the
+ * letter is always underneath, so it is already the right answer whenever there is no photo.
+ *
+ * **Three ways there can be no photo**, and all of them land on the letter: the account has none
+ * ([path] is null), the file has been deleted from under the app (the decode returns null), or the
+ * decode has not finished yet (the photo starts hidden).
+ *
+ * The decode touches the disk, so it runs in [scope] — callers pass `viewLifecycleOwner.lifecycleScope`,
+ * so leaving the screen cancels a load rather than letting it finish and write into a destroyed view.
+ * The previous load is cancelled first, which matters because this is called again every time the
+ * photo changes: without it, two decodes could finish out of order and leave the older image showing.
+ *
+ * @param path Absolute path to the stored photo, or null when the account has none.
+ * @param scope The scope the decode runs in, tied to the view's lifetime.
+ */
+fun ViewTabHeaderBinding.showProfilePhoto(path: String?, scope: CoroutineScope): Job? {
+    if (path == null) {
+        monogramPhoto.setImageDrawable(null)
+        monogramPhoto.isVisible = false
+        return null
+    }
+
+    return scope.launch {
+        val bitmap = PetPhotoStorage.load(path)
+        monogramPhoto.setImageBitmap(bitmap)
+        // Only reveal the photo once there is actually a bitmap behind it; a visible but empty
+        // ImageView would punch a blank square where the mark should be.
+        monogramPhoto.isVisible = bitmap != null
+    }
+}
+
+/**
+ * Keeps this screen's header mark showing the signed-in user's photo, for as long as the screen is
+ * visible.
+ *
+ * **One call per screen, because the photo is not any screen's data.** Nine screens draw this header
+ * and every one of them has to show the same mark. The photo is published by [SessionViewModel],
+ * which every screen already shares, so each fragment adds this single line rather than nine
+ * ViewModels each growing a query for the same value.
+ *
+ * **This is what makes a new photo appear immediately.** The flow it collects is backed by a Room
+ * query, so saving a photo on the profile screen re-emits here and every header still in memory
+ * redraws on the spot — there is nothing to refresh by hand and no need to restart the app.
+ *
+ * `repeatOnLifecycle(STARTED)` collects only while the screen is actually on screen, and the
+ * in-flight decode is cancelled when a newer path arrives so two loads finishing out of order cannot
+ * leave the older image showing.
+ */
+fun Fragment.bindHeaderProfilePhoto(header: ViewTabHeaderBinding, session: SessionViewModel) {
+    viewLifecycleOwner.lifecycleScope.launch {
+        viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            var load: Job? = null
+            session.profilePhotoPath.collect { path ->
+                load?.cancel()
+                load = header.showProfilePhoto(path, this)
+            }
+        }
+    }
 }
 
 /**

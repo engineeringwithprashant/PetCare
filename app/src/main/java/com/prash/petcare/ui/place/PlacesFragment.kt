@@ -30,13 +30,14 @@ import com.prash.petcare.databinding.FragmentPlacesBinding
 import com.prash.petcare.ui.checklist.RoutineOption
 import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.badgeRes
+import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.bindOptions
 import com.prash.petcare.ui.common.formatAxisKm
 import com.prash.petcare.ui.common.formatDistanceKm
 import com.prash.petcare.ui.common.formatTimeOfDay
 import com.prash.petcare.ui.common.labelRes
-import com.prash.petcare.ui.common.placeSubtitle
 import com.prash.petcare.ui.common.openProfile
+import com.prash.petcare.ui.common.placeSubtitle
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
@@ -118,6 +119,10 @@ class PlacesFragment : Fragment() {
             // The monogram opens the profile screen, as on every other screen that draws it.
             onMonogramClick = ::openProfile
         )
+
+        // Keeps the header's mark showing the user's profile photo, falling back to the app's
+        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
+        bindHeaderProfilePhoto(binding.header, sessionViewModel)
 
         binding.placesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())

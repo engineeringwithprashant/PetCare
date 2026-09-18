@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.chip.Chip
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentAssistantBinding
+import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
@@ -82,6 +83,10 @@ class AssistantFragment : Fragment() {
             onBadgeClick = ::openNotifications,
             onMonogramClick = ::openProfile
         )
+
+        // Keeps the header's mark showing the user's profile photo, falling back to the app's
+        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
+        bindHeaderProfilePhoto(binding.header, sessionViewModel)
 
         setUpList()
         setUpInput()

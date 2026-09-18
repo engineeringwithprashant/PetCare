@@ -3,11 +3,14 @@ package com.prash.petcare
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.TooltipCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.forEach
 import androidx.core.view.isVisible
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -118,6 +121,7 @@ class MainActivity : AppCompatActivity() {
         // it, which is the behaviour users expect and which a hand-written click listener almost
         // always gets wrong.
         binding.bottomNav.setupWithNavController(navController)
+        describeNavigationItems()
 
         // Added *after* setupActionBarWithNavController, so this listener runs after NavigationUI's
         // own and can correct the two things NavigationUI cannot know about — see updateChromeFor
@@ -125,6 +129,31 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, arguments ->
             updateChromeFor(destination.id, arguments)
             restoreUpArrowForPetScopedScreen(destination.id, arguments)
+        }
+    }
+
+    /**
+     * Gives every bottom-navigation tab a spoken name.
+     *
+     * The bar shows icons only (see PetCare.BottomNav in styles.xml for why the labels went), and an
+     * icon with no text beside it is nothing at all to a screen reader — five unnamed buttons on the
+     * one control that moves between the app's five sections. Each item's `android:title` from
+     * bottom_nav_menu.xml is therefore attached to its view as a content description, so TalkBack
+     * still announces "Pets, tab" exactly as it did when the label was drawn.
+     *
+     * A long-press tooltip is set from the same title, which is what a sighted user gets in place of
+     * the label if an icon is ever ambiguous.
+     *
+     * Done in code rather than in the menu because a menu item's view is created by
+     * BottomNavigationView, and `android:contentDescription` is not a menu attribute. Each tab's view
+     * carries the item's own id, which is how it is found here.
+     */
+    private fun describeNavigationItems() {
+        binding.bottomNav.menu.forEach { item ->
+            binding.bottomNav.findViewById<View>(item.itemId)?.let { tab ->
+                tab.contentDescription = item.title
+                TooltipCompat.setTooltipText(tab, item.title)
+            }
         }
     }
 

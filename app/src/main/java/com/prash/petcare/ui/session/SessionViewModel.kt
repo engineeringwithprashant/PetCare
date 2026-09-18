@@ -4,11 +4,19 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
 import com.prash.petcare.data.repository.UserRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 /**
  * Remembers which account is signed in, for as long as the app is open.
@@ -28,9 +36,10 @@ import kotlinx.coroutines.flow.StateFlow
  * in a [SavedStateHandle] are written to the same saved-instance bundle the back stack is, so the
  * two are restored together or not at all.
  *
- * It holds an id and nothing else. The user's name, email and pets are read from Room by the screen
- * that needs them, so there is no second copy of the account here to drift out of date when the
- * profile is edited or synced.
+ * It holds an id, and one *derived* value read straight from Room: the profile photo drawn in the
+ * shared header, which belongs to no single screen — see [profilePhotoPath]. The user's name, email
+ * and pets are read from Room by the screen that needs them, so there is no second copy of the
+ * account here to drift out of date when the profile is edited or synced.
  *
  * **Why it has a [Factory].** Signing out also has to sign the account out of Firebase
  * Authentication, which needs [UserRepository], and the default factory cannot supply one. Every
@@ -38,8 +47,12 @@ import kotlinx.coroutines.flow.StateFlow
  * They all get the same Activity-scoped instance; the factory only matters to whichever screen asks
  * first, but using it everywhere means it does not matter which one that is.
  *
- * @param userRepository Used only to sign out of Firebase.
+ * @param userRepository Signs out of Firebase, and supplies the account row the header's photo is
+ *   read from. Both go through the repository rather than a DAO, as the MVVM chain requires.
  */
+// flatMapLatest is still marked experimental in kotlinx.coroutines but is long-settled API, used
+// here for the reason given on profilePhotoPath: the photo query has to follow the signed-in id.
+@OptIn(ExperimentalCoroutinesApi::class)
 class SessionViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val userRepository: UserRepository
@@ -56,6 +69,36 @@ class SessionViewModel(
 
     /** True once an account has been signed in and not yet signed out. */
     val isSignedIn: Boolean get() = userId.value != NO_USER_ID
+
+    /**
+     * The signed-in account's profile photo, as a path on disk, or null when there is none.
+     *
+     * **Why the account's photo lives here when nothing else about the account does.** The rule
+     * above still holds — this class keeps an id, and each screen reads the data it needs from Room.
+     * The photo is the one exception because it is not any screen's data: it is drawn in the shared
+     * header (res/layout/view_tab_header.xml) by the nine screens that show it, none of which
+     * otherwise has any reason to know who the user is. Threading it through nine ViewModels would
+     * put the same query in nine places; reading it once here, in the one object every screen already
+     * shares, puts it in one.
+     *
+     * **Why it updates by itself.** `observeUser` is a Room Flow, so changing the photo on the
+     * profile screen re-emits here, and every header collecting this redraws — no broadcast, no
+     * manual refresh, and no waiting for a restart. `flatMapLatest` re-subscribes when the account
+     * changes and drops the previous account's rows, so signing out and in as somebody else cannot
+     * leave the first user's face in the corner.
+     *
+     * `WhileSubscribed` stops the database query when no header is on screen (during the sign-in
+     * flow, for instance), and the five-second grace period keeps it alive across a rotation so the
+     * photo does not visibly reload. `distinctUntilChanged` means an unrelated edit to the account —
+     * a new phone number, a sync writing the row back — does not make every header reload the same
+     * image.
+     */
+    val profilePhotoPath: StateFlow<String?> = userId
+        .flatMapLatest { id ->
+            if (id == NO_USER_ID) flowOf(null) else userRepository.observeUser(id).map { it?.photoPath }
+        }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
      * Records a successful sign-in or sign-up.

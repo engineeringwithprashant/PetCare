@@ -34,10 +34,11 @@ import com.prash.petcare.databinding.FragmentChecklistBinding
 import com.prash.petcare.databinding.ItemWeekDayBinding
 import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.SwipeActionCallback
+import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.bindOptions
 import com.prash.petcare.ui.common.labelRes
-import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.common.openProfile
+import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
@@ -48,9 +49,9 @@ import com.prash.petcare.util.ContactReader
 import com.prash.petcare.util.EmailComposer
 import com.prash.petcare.util.ShakeDetector
 import com.prash.petcare.util.SmsSender
-import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 /**
  * The ways a checklist can be handed over, in the order they are offered in the chooser.
@@ -302,6 +303,10 @@ class ChecklistFragment : Fragment() {
                 // The monogram opens the profile screen, as on every other screen that draws it.
                 onMonogramClick = ::openProfile
             )
+
+            // Keeps the header's mark showing the user's profile photo, falling back to the app's
+            // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
+            bindHeaderProfilePhoto(binding.header, sessionViewModel)
         }
 
         dayCells = listOf(
