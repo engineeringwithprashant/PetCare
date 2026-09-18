@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The small rounded square behind a mark on the sign-in screens: the exclamation on the
+    wrong-password warning, and the "TRY" / "SAFE" codes on the locked screen's info rows.
+
+    The same shape family as the notifications screen's type badge (bg_alert_badge.xml) and the Money
+    tab's category badge, so a small square code means the same kind of thing wherever it appears in
+    the app — only rounded a little tighter, because these badges are smaller.
+
+    **No colour is set here.** The exclamation badge is yellow on the warning card and red on the last
+    -chance one, and the info-row badges take a quiet surface colour, so AuthFragment applies a tint
+    over this shape. One drawable with a tint rather than three drawables keeps the corner radius
+    defined in a single place.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- White rather than transparent: a tint multiplies against the fill, so a shape with no solid
+         colour would tint to nothing and the badge would vanish. -->
+    <solid android:color="@android:color/white" />
+
+    <corners android:radius="@dimen/auth_alert_badge_corner_radius" />
+
+</shape>

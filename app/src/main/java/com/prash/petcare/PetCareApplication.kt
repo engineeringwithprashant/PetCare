@@ -10,6 +10,7 @@ import com.prash.petcare.data.auth.PasswordResetRepository
 import com.prash.petcare.data.remote.assistant.OpenAiApi
 import com.prash.petcare.data.local.AlertReadStore
 import com.prash.petcare.data.local.DelegationContactStore
+import com.prash.petcare.data.local.LoginAttemptStore
 import com.prash.petcare.data.local.PetCareDatabase
 import com.prash.petcare.data.local.SettingsStore
 import com.prash.petcare.data.local.WeatherCache
@@ -125,6 +126,20 @@ class PetCareApplication : Application() {
      * SharedPreferences rather than in the database the alerts are derived from.
      */
     val alertReadStore: AlertReadStore by lazy { AlertReadStore(this) }
+
+    /**
+     * How many wrong passwords each email address has collected on this device, and whether one of
+     * them is currently locked out of the log in screen.
+     *
+     * One instance for the whole process, like the stores above, and here for a reason of its own:
+     * the log in screen and the password-reset screen both touch it — the first counts failures, the
+     * second clears them once a reset email goes out — and two instances would let a reset leave a
+     * lock standing on the screen behind it.
+     *
+     * See [LoginAttemptStore] for why this is a *local* speed bump rather than account security, and
+     * why it is not in the Room database.
+     */
+    val loginAttemptStore: LoginAttemptStore by lazy { LoginAttemptStore(this) }
 
     /**
      * The display and security settings the profile screen controls.

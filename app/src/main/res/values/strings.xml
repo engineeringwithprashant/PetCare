@@ -50,11 +50,11 @@
     <!-- What TalkBack says for the logo. -->
     <string name="auth_brand_mark_description">PetCare</string>
 
-    <!-- Log in / register toggle. -->
-    <string name="auth_mode_login">Log in</string>
-    <string name="auth_mode_register">Register</string>
-    <!-- What TalkBack calls each half of the toggle ("Log in, tab, selected"). -->
-    <string name="auth_tab_role">Tab</string>
+    <!-- The line at the foot of each form that leads to the other one. The <annotation> marks which
+         words become the tappable link, exactly as in register_consent below, so a translation can
+         place the link wherever its grammar needs it without any code changing. -->
+    <string name="login_register_prompt">New to PetCare? <annotation link="register">Create an account</annotation></string>
+    <string name="register_login_prompt">Already have an account? <annotation link="login">Log in</annotation></string>
 
     <!-- Log in. -->
     <string name="login_title">Welcome back</string>
@@ -66,9 +66,62 @@
     <string name="login_forgot_password">Forgot password?</string>
     <string name="login_submit">Log in</string>
 
+    <!-- ~~~~~~~~~~ Wrong-password warnings and the lockout ~~~~~~~~~~
+         See data/local/LoginAttemptStore.kt for what is being counted, and for why this lock is a
+         local speed bump rather than account security. -->
+
+    <!-- The warning card's title: the first three wrong passwords, then the last one before the
+         lock. -->
+    <string name="login_alert_wrong_password">Wrong password</string>
+    <string name="login_alert_last_try">Last try before a 15-minute lock</string>
+    <!-- The muted second line, on both cards. %1$d is how many tries are left and %2$d how many
+         there are in total (LoginAttemptStore.MAX_ATTEMPTS), %3$d the lock in minutes.
+
+         "the 5th" is written out rather than built from %2$d: English ordinals are irregular, so
+         "%2$dth" would produce "3th" if the limit ever changed. It must therefore be kept in step
+         with MAX_ATTEMPTS by hand — change the constant and this sentence together. -->
+    <string name="login_alert_detail">%1$d of %2$d attempts left · locks for %3$d minutes after the 5th</string>
+
+    <!-- The locked screen. -->
+    <string name="login_locked_label">Account locked</string>
+    <string name="login_locked_title">Too many wrong passwords</string>
+    <!-- %1$d is how many attempts failed, %2$s the clock time sign-in reopens at ("5:53 PM"). A
+         plural because which forms exist differs by language, even though on this screen the count is
+         always the full five. -->
+    <plurals name="login_locked_body">
+        <item quantity="one">%1$d failed attempt on this device. Sign-in reopens at %2$s. Reset your password to get straight back in.</item>
+        <item quantity="other">%1$d failed attempts on this device. Sign-in reopens at %2$s. Reset your password to get straight back in.</item>
+    </plurals>
+    <!-- Under the number in the countdown ring. -->
+    <string name="login_locked_min_left">Min left</string>
+    <!-- What TalkBack reads for the ring, which is otherwise two unlabelled numbers. %1$d is the
+         minutes remaining. -->
+    <plurals name="login_locked_ring_description">
+        <item quantity="one">%1$d minute left</item>
+        <item quantity="other">%1$d minutes left</item>
+    </plurals>
+
+    <!-- The two info rows under the card. Each has a square code badge, a bold title and a muted
+         line, like an alert card on the notifications screen. -->
+    <string name="login_locked_attempts_badge">Try</string>
+    <plurals name="login_locked_attempts_title">
+        <item quantity="one">%1$d failed attempt</item>
+        <item quantity="other">%1$d failed attempts</item>
+    </plurals>
+    <!-- %1$s is the time of the last attempt, %2$s the handset it was made on. -->
+    <string name="login_locked_attempts_detail">Last try %1$s · this device, %2$s</string>
+    <string name="login_locked_safe_badge">Safe</string>
+    <string name="login_locked_safe_title">Your pet records are untouched</string>
+    <string name="login_locked_safe_detail">Nothing was accessed. The lock is only a precaution</string>
+
+    <!-- The two buttons. The second is disabled until the wait is over, and counts down while it
+         waits; %1$d is the minutes remaining. -->
+    <string name="login_locked_reset">Reset password instead</string>
+    <string name="login_locked_retry">Try again in %1$d min</string>
+
     <!-- Register. -->
     <string name="register_title">Make your account</string>
-    <string name="register_subtitle">Email and phone both work for sign-in — the phone number also receives delegation SMS replies.</string>
+    <string name="register_subtitle">Email and phone both work for sign-in. The phone number also receives delegation SMS replies.</string>
     <string name="register_full_name_label">Full name</string>
     <string name="register_full_name_hint">Prashant Pant</string>
     <string name="register_email_label">Email</string>
@@ -214,7 +267,7 @@
     <string name="home_stat_next_vet">Next vet</string>
     <!-- A stat card with nothing to report. A dash rather than "0" or "None", so an absent figure
          never reads as a real one. -->
-    <string name="home_stat_empty_value">—</string>
+    <string name="home_stat_empty_value">–</string>
 
     <!-- The walk window card's live temperature. %1$d is the reading rounded to whole degrees; the
          degree sign is a real ° (U+00B0), never a masculine ordinal or a superscript o. -->
@@ -321,11 +374,11 @@
          in here, so it can be translated like any other text. -->
     <string name="home_insight_label">Today\'s insight</string>
     <string name="home_ask_assistant">Ask the assistant</string>
-    <string name="home_insight_nothing_scheduled">No care is scheduled today — a good moment to plan a walk or set up a routine.</string>
+    <string name="home_insight_nothing_scheduled">No care is scheduled today. A good moment to plan a walk or set up a routine.</string>
     <!-- %1$d is the streak's count of full days. -->
     <plurals name="home_insight_all_done">
-        <item quantity="one">Everything is done for today — that\'s %1$d full day this week.</item>
-        <item quantity="other">Everything is done for today — that\'s %1$d full days this week.</item>
+        <item quantity="one">Everything is done for today. That\'s %1$d full day this week.</item>
+        <item quantity="other">Everything is done for today. That\'s %1$d full days this week.</item>
     </plurals>
     <!-- One pet holds most of what is left. %1$s the pet, %2$d its open tasks, %3$d all open tasks,
          %4$s a possessive pronoun for the pet (below), %5$s that pet's first task, %6$s the time of
@@ -336,12 +389,12 @@
          open tasks for one pet — but languages such as Polish or Russian word 2–4 differently from 5+,
          so the count still has to pick the form. -->
     <plurals name="home_insight_busiest_evening">
-        <item quantity="one">%1$s has %2$d of today\'s %3$d open task — front-load %4$s %5$s before the %6$s %7$s so the evening is clear.</item>
-        <item quantity="other">%1$s has %2$d of today\'s %3$d open tasks — front-load %4$s %5$s before the %6$s %7$s so the evening is clear.</item>
+        <item quantity="one">%1$s has %2$d of today\'s %3$d open task. Front-load %4$s %5$s before the %6$s %7$s so the evening is clear.</item>
+        <item quantity="other">%1$s has %2$d of today\'s %3$d open tasks. Front-load %4$s %5$s before the %6$s %7$s so the evening is clear.</item>
     </plurals>
     <plurals name="home_insight_busiest_day">
-        <item quantity="one">%1$s has %2$d of today\'s %3$d open task — front-load %4$s %5$s before the %6$s %7$s so the rest of the day is clear.</item>
-        <item quantity="other">%1$s has %2$d of today\'s %3$d open tasks — front-load %4$s %5$s before the %6$s %7$s so the rest of the day is clear.</item>
+        <item quantity="one">%1$s has %2$d of today\'s %3$d open task. Front-load %4$s %5$s before the %6$s %7$s so the rest of the day is clear.</item>
+        <item quantity="other">%1$s has %2$d of today\'s %3$d open tasks. Front-load %4$s %5$s before the %6$s %7$s so the rest of the day is clear.</item>
     </plurals>
     <!-- The pronoun in the sentences above, from the pet's recorded gender; "their" when it was not
          recorded. -->
@@ -350,8 +403,8 @@
     <string name="home_pronoun_their">their</string>
     <!-- Something is late. %1$s the earliest late task, %2$s its pet, %3$d how many are late. -->
     <plurals name="home_insight_overdue">
-        <item quantity="one">%1$s for %2$s is overdue — knock it out first and the rest of today is back on schedule.</item>
-        <item quantity="other">%1$s for %2$s is the first of %3$d overdue tasks — start there and work forward.</item>
+        <item quantity="one">%1$s for %2$s is overdue. Knock it out first and the rest of today is back on schedule.</item>
+        <item quantity="other">%1$s for %2$s is the first of %3$d overdue tasks. Start there and work forward.</item>
     </plurals>
     <!-- The general case. %1$d tasks left, %2$s the next task, %3$s its pet, %4$s its time. -->
     <plurals name="home_insight_next_timed">
@@ -428,12 +481,12 @@
          A plurals resource because the wording changes with the count, and which forms exist
          differs by language. %1$d is the number of records waiting. -->
     <plurals name="sync_status_pending">
-        <item quantity="one">%1$d change saved here — will upload when online</item>
-        <item quantity="other">%1$d changes saved here — will upload when online</item>
+        <item quantity="one">%1$d change saved here, will upload when online</item>
+        <item quantity="other">%1$d changes saved here, will upload when online</item>
     </plurals>
     <!-- The quiet case: no connection, but nothing is waiting either, so there is nothing at risk
          and nothing for the user to do. -->
-    <string name="sync_status_offline">Offline — nothing waiting to upload</string>
+    <string name="sync_status_offline">Offline, nothing waiting to upload</string>
 
     <!-- ================================ Pets tab ================================
          The second bottom-navigation tab: every pet the user has. -->
@@ -483,7 +536,7 @@
     <string name="pets_stat_due_today">Due today</string>
     <!-- Stands in for an age or weight that was never recorded, so the three blocks keep their
          shape. A dash rather than "Unknown", which would not fit a third of a card's width. -->
-    <string name="pets_stat_unknown">—</string>
+    <string name="pets_stat_unknown">–</string>
     <!-- What a screen reader says in place of that dash, which would otherwise be read out as a
          punctuation mark. -->
     <string name="cd_pets_stat_unknown">Not recorded</string>
@@ -578,7 +631,7 @@
     <string name="error_identifier_invalid">Enter a valid email address or phone number</string>
     <!-- Phone numbers are accepted on the log-in form, but accounts can only be looked up by email
          until phone sign-in is connected. -->
-    <string name="error_phone_login_unavailable">Phone sign-in isn\'t available yet — use your email</string>
+    <string name="error_phone_login_unavailable">Phone sign-in isn\'t available yet. Use your email</string>
     <string name="error_phone_required">Please enter your phone number</string>
     <string name="error_phone_invalid">Enter a valid phone number, e.g. +977 9812345678</string>
     <string name="error_consent_required">Please accept the terms to create an account</string>
@@ -800,7 +853,7 @@
     <!-- One routine in that list. %1$s is the routine's name, %2$s its pet. -->
     <string name="tasks_add_task_routine_option">%1$s · %2$s</string>
     <!-- Routines are created on a pet's own page, so this points there rather than offering a form. -->
-    <string name="tasks_add_task_no_routine">Set up a care routine first — open a pet from the Pets tab and add one there.</string>
+    <string name="tasks_add_task_no_routine">Set up a care routine first. Open a pet from the Pets tab and add one there.</string>
     <!-- ============================== Checklist gestures ==============================
          Swipe a row to complete or delete it; shake the phone to start the day over. -->
     <!-- %1$s is the deleted task's title. -->
@@ -833,7 +886,7 @@
     <string name="delegate_channel_email">Email</string>
     <!-- Shown on the checklist when every task due today has been ticked off, explaining why the
          delegate action is unavailable rather than leaving it greyed out with no reason given. -->
-    <string name="checklist_all_done">Everything is done for today — there is nothing left to delegate.</string>
+    <string name="checklist_all_done">Everything is done for today. There is nothing left to delegate.</string>
     <!-- Headline of the confirmation preview, summarising what is about to be sent. Plural because
          the wording changes with the count. %1$d is the number of outstanding tasks, %2$s the
          pet's name. -->
@@ -902,7 +955,7 @@
     <!-- Confirmation before signing out. It says what is *not* lost, because the main worry at this
          point is whether signing out discards anything. -->
     <string name="profile_sign_out_dialog_title">Sign out?</string>
-    <string name="profile_sign_out_dialog_message">You will be returned to the sign-in screen. Nothing is deleted — your pets and their care will be here when you sign back in.</string>
+    <string name="profile_sign_out_dialog_message">You will be returned to the sign-in screen. Nothing is deleted. Your pets and their care will be here when you sign back in.</string>
     <string name="profile_sign_out_dialog_confirm">Sign out</string>
     <string name="profile_sign_out_dialog_cancel">Cancel</string>
 
@@ -1120,7 +1173,7 @@
     <string name="places_strip_within">within %1$s</string>
     <!-- The label under the blue origin dot on the axis. Lower case, like the tick labels beside it. -->
     <string name="places_axis_home">home</string>
-    <string name="places_strip_help">Walking distance from home. Each place keeps its GPS geotag — open it in your maps app for directions.</string>
+    <string name="places_strip_help">Walking distance from home. Each place keeps its GPS geotag. Open it in your maps app for directions.</string>
     <!-- Shown in place of the axis when location access has not been granted. -->
     <string name="places_strip_no_permission">Allow location access to see how far each saved place is. Every place still keeps its GPS geotag for directions.</string>
     <!-- Shown when access is granted but the phone has not produced a location yet. -->
@@ -1261,7 +1314,7 @@
     <string name="assistant_header_title_no_pets">Ask about your pets</string>
     <!-- What it can see and what it is not. The vet sentence is not boilerplate: an app that answers
          questions about an animal's care has to say plainly that it is not clinical advice. -->
-    <string name="assistant_header_body">It reads this app\'s own pet profiles, checklist and spend data. Private to your account — no vet advice replaces a real clinic visit.</string>
+    <string name="assistant_header_body">It reads this app\'s own pet profiles, checklist and spend data. Private to your account. No vet advice replaces a real clinic visit.</string>
     <!-- The separator between pet names in the header title. -->
     <string name="assistant_pet_name_separator"> &amp; </string>
 
@@ -1532,7 +1585,7 @@
 
     <!-- The pale note under the three switches. It exists because a disabled switch with no
          explanation reads as a bug; saying why it is there turns it into a stated plan. -->
-    <string name="profile_security_note">Two-factor authentication ships in a later release — the switch is here so the flow is already in place.</string>
+    <string name="profile_security_note">Two-factor authentication ships in a later release. The switch is here so the flow is already in place.</string>
 
     <!-- ============================== PREFERENCES ============================== -->
 
@@ -1560,7 +1613,7 @@
     <!-- The honest half of the currency setting. The app has no exchange-rate source, so switching
          changes the symbol and leaves every digit alone — and a user who was not told that would read
          a relabelled rupee figure as a dollar one. -->
-    <string name="profile_row_currency_subtitle">Symbol only — amounts are not converted</string>
+    <string name="profile_row_currency_subtitle">Symbol only, amounts are not converted</string>
 
     <!-- ========================== DELEGATION CONTACTS ==========================
          The people the user hands a checklist to. Not a "care team": nobody is invited, nobody signs
@@ -1617,7 +1670,7 @@
     <string name="profile_row_backup_subtitle">Last backup %1$s</string>
     <string name="profile_row_backup_never">Not backed up yet</string>
     <string name="profile_row_backup_syncing">Backing up now</string>
-    <string name="profile_row_backup_offline">Offline — will back up when you reconnect</string>
+    <string name="profile_row_backup_offline">Offline, will back up when you reconnect</string>
     <plurals name="profile_row_backup_pending">
         <item quantity="one">%d change waiting to back up</item>
         <item quantity="other">%d changes waiting to back up</item>

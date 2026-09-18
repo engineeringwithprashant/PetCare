@@ -88,4 +88,20 @@
     <attr name="colorPillVerified" format="color" />
     <attr name="colorOnPillVerified" format="color" />
 
+    <!--
+        The log in screen's wrong-password warning cards: the yellow one for attempts 1–3, the red one
+        for the last attempt before sign-in locks.
+
+        Exposed as roles for the same reason as the pills above: each card's light and dark values are
+        not a lighter and darker version of one another — the light theme washes the page colour, the
+        dark theme darkens it — so a layout has to ask for the role rather than name a colour. Three
+        roles per card, because a card is a fill, an edge and (for the red one) a title colour that all
+        have to move together; see the log in section of colors.xml for the values.
+    -->
+    <attr name="colorAuthAlertWarning" format="color" />
+    <attr name="colorAuthAlertWarningEdge" format="color" />
+    <attr name="colorAuthAlertDanger" format="color" />
+    <attr name="colorAuthAlertDangerEdge" format="color" />
+    <attr name="colorOnAuthAlertDanger" format="color" />
+
 </resources>

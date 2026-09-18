@@ -10,6 +10,7 @@ import com.prash.petcare.PetCareApplication
 import com.prash.petcare.R
 import com.prash.petcare.data.auth.PasswordResetRepository
 import com.prash.petcare.data.auth.PasswordResetResult
+import com.prash.petcare.data.local.LoginAttemptStore
 import com.prash.petcare.ui.auth.AuthValidation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,8 +69,13 @@ sealed interface ResetRequestEvent {
  * again through the same change listener, which rebuilds this state.
  *
  * @param repository The only way this ViewModel reaches Firebase, as MVVM requires.
+ * @param loginAttemptStore The log in screen's failed-attempt counter, cleared for an address once a
+ *   reset link has gone to it — see [onSendLink].
  */
-class ResetRequestViewModel(private val repository: PasswordResetRepository) : ViewModel() {
+class ResetRequestViewModel(
+    private val repository: PasswordResetRepository,
+    private val loginAttemptStore: LoginAttemptStore
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ResetRequestUiState())
     val uiState: StateFlow<ResetRequestUiState> = _uiState.asStateFlow()
@@ -134,8 +140,20 @@ class ResetRequestViewModel(private val repository: PasswordResetRepository) : V
             _uiState.update { it.copy(isSending = false) }
 
             when (result) {
-                PasswordResetResult.Sent ->
+                PasswordResetResult.Sent -> {
+                    // Resetting the password gets the user back in straight away, as the locked
+                    // screen promises: sending the link clears any lock and failure count this
+                    // device was holding against the address.
+                    //
+                    // Sending the email is the last thing the *app* can observe — the new password
+                    // is set on Firebase's own web page, which never tells the app it happened — so
+                    // this is the moment the lock has to go. That is deliberately generous, and
+                    // costs nothing: someone who can ask for a link at this address is either its
+                    // owner or is no worse off than before, and Firebase's own server-side
+                    // throttling is what actually protects the account. See LoginAttemptStore.
+                    loginAttemptStore.clear(email)
                     _events.send(ResetRequestEvent.LinkSent(email))
+                }
 
                 // Firebase rejected the address itself, so the error goes under the field, just
                 // like the app's own format check.
@@ -158,7 +176,10 @@ class ResetRequestViewModel(private val repository: PasswordResetRepository) : V
             initializer {
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PetCareApplication
-                ResetRequestViewModel(application.passwordResetRepository)
+                ResetRequestViewModel(
+                    repository = application.passwordResetRepository,
+                    loginAttemptStore = application.loginAttemptStore
+                )
             }
         }
     }

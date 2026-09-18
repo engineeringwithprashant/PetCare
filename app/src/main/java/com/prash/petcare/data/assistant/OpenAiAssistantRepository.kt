@@ -229,8 +229,12 @@ class OpenAiAssistantRepository(
          * Written as rules rather than a persona because the constraints are the point. The last one
          * matters most: this is an app about animals' health, so it will be asked to diagnose, and
          * the only safe answer is to decline and name the vet. The instruction to work only from the
-         * supplied data is what keeps it from inventing a weight or a cost that sounds plausible —
+         * supplied data is what keeps it from inventing a weight or a cost that sounds plausible,
          * the failure a chat assistant over private records is most likely to produce.
+         *
+         * The last rule is a house style rule rather than a safety one: the app's own copy uses no
+         * em dashes, and a model left to itself produces them constantly, so its replies would be
+         * the one place in the app where they appeared.
          */
         private val SYSTEM_PROMPT = """
             You are the in-app assistant for PetCare, a pet care app. You help one user understand
@@ -251,6 +255,8 @@ class OpenAiAssistantRepository(
               what you are for.
             - Be brief: two or three sentences, plain language, no lists unless asked. You are
               answering in a small chat bubble on a phone.
+            - Never use an em dash. Write the sentence with a full stop or a comma instead, or
+              split it in two.
         """.trimIndent()
     }
 }

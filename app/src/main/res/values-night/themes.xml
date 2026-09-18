@@ -90,6 +90,15 @@
         <item name="colorPillVerified">@color/verified_pill_dark</item>
         <item name="colorOnPillVerified">@color/on_verified_pill_dark</item>
 
+        <!-- The warning cards inverted for dark mode: a deep tinted ground with a lighter edge, like
+             the pills above, so "the yellow one is a warning and the red one is the last try" stays
+             true in either theme. A pale wash here would glare on the near-black page. -->
+        <item name="colorAuthAlertWarning">@color/auth_alert_warning_fill_dark</item>
+        <item name="colorAuthAlertWarningEdge">@color/auth_alert_warning_edge_dark</item>
+        <item name="colorAuthAlertDanger">@color/auth_alert_danger_fill_dark</item>
+        <item name="colorAuthAlertDangerEdge">@color/auth_alert_danger_edge_dark</item>
+        <item name="colorOnAuthAlertDanger">@color/auth_alert_danger_title_dark</item>
+
         <!-- The shape scale and the default component styles are identical in both themes: dark
              mode changes what colour a card is, never how round it is. They are repeated rather
              than inherited because this style declares its own Material parent, and an Android

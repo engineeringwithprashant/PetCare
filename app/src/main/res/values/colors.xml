@@ -456,4 +456,65 @@
     <color name="verified_pill_dark">#1C3624</color>
     <color name="on_verified_pill_dark">#B9E5C6</color>
 
+    <!-- ===================== Log in: wrong-password warnings and the lock =====================
+         The yellow card after a wrong password, the red one on the last attempt before the lock, and
+         the dark panel that replaces the form once sign-in is locked.
+
+         **The two alert cards come as light/dark pairs** (reached through the roles in attrs.xml),
+         unlike the dark panels elsewhere in the app: these sit *inline in the form*, between the
+         password field and the button, so they have to belong to the page around them in either
+         theme. A fixed pale yellow wash would glare on the near-black page, and a fixed dark one
+         would look like a hole punched in the light one.
+
+         The **badge fills and the lock red are single values**, for the reason the pet cards and the
+         bottom bar are: an exclamation mark in a coloured square and a countdown ring on a dark panel
+         are marks rather than page content, and their contrast comes from the colour they are drawn
+         on, which does not change with the theme. -->
+
+    <!-- The yellow warning card, attempts 1–3: a wash a shade warmer than the page with a visible
+         edge, so it reads as an inserted notice rather than as another field. -->
+    <color name="auth_alert_warning_fill_light">#FCF6D8</color>
+    <color name="auth_alert_warning_edge_light">#E3D06A</color>
+    <color name="auth_alert_warning_fill_dark">#2E2A11</color>
+    <color name="auth_alert_warning_edge_dark">#5C5320</color>
+
+    <!-- The red card on the last attempt. The same construction in the error hue, so the two cards
+         are plainly the same object with the volume turned up rather than two different notices. -->
+    <color name="auth_alert_danger_fill_light">#FDECE8</color>
+    <color name="auth_alert_danger_edge_light">#EFB3A6</color>
+    <color name="auth_alert_danger_fill_dark">#33201C</color>
+    <color name="auth_alert_danger_edge_dark">#6B3A31</color>
+
+    <!-- The red card's bold title. Not colorError: that red is tuned for a thin line of text on the
+         page, and on this pale red wash it sits too close to the fill. These are a step darker in
+         light mode and a step lighter in dark, measuring comfortably over 4.5:1 on the fill above. -->
+    <color name="auth_alert_danger_title_light">#B03A22</color>
+    <color name="auth_alert_danger_title_dark">#FFB4A0</color>
+
+    <!-- The exclamation badge on each card. The warning's is the app's accent with its guaranteed
+         legible near-black on it, exactly as the accent is used everywhere else; the danger's is the
+         lock red below, with white on it. -->
+    <color name="auth_alert_warning_badge">@color/accent_yellow</color>
+    <color name="on_auth_alert_warning_badge">@color/on_accent_yellow</color>
+    <color name="auth_alert_danger_badge">@color/auth_lock_red</color>
+    <color name="on_auth_alert_danger_badge">#FFFFFF</color>
+
+    <!-- The one red the lockout is drawn in: the countdown ring, the "ACCOUNT LOCKED" label and the
+         danger badge above. A warm red rather than the Material error red, which would read as a
+         validation failure; this is a state the account is in, not a mistake in a field. Light enough
+         to hold up against the near-black panel it is drawn on. -->
+    <color name="auth_lock_red">#E5664A</color>
+
+    <!-- The locked panel. Dark in both themes for the reason given for the dashboard's next-up card
+         and the profile header above — it is a single deliberate treatment, and the one dark panel on
+         the page either way, so the eye lands on it before the two info rows beneath. Its values are
+         the existing dark-card family, referenced rather than repeated, so all the app's dark panels
+         stay one family. -->
+    <color name="auth_lock_card_ground">@color/places_strip_ground</color>
+    <color name="on_auth_lock_card">@color/total_card_amount</color>
+    <color name="on_auth_lock_card_muted">@color/places_strip_muted</color>
+    <!-- The unfilled remainder of the countdown ring: a step lighter than the panel, just visible,
+         and nothing like the red that fills it. -->
+    <color name="auth_lock_ring_track">@color/total_card_track</color>
+
 </resources>

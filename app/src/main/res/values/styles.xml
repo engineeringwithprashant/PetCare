@@ -2151,10 +2151,15 @@
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
-    <!-- ~~~~~~~~~~ The log in / register toggle ~~~~~~~~~~
+    <!-- ~~~~~~~~~~ A two-option toggle on a sign-in screen ~~~~~~~~~~
          The profile screen's two-option toggle, which already has exactly the design's behaviour: a
          groove with a strong-filled pill in the chosen half. Only the height and the lettering change,
-         so these inherit rather than re-describe it. -->
+         so these inherit rather than re-describe it.
+
+         Currently unused: the log in screen these were written for now switches between its two forms
+         from the link at the foot of the page rather than from a toggle above the fields — see the
+         note at the top of fragment_auth.xml. Kept because the look is part of the sign-in screens'
+         vocabulary and is a style, not a screen. -->
 
     <style name="PetCare.Auth.SegmentTrack" parent="PetCare.Profile.SegmentTrack">
         <item name="android:layout_height">@dimen/auth_segment_height</item>
@@ -2391,6 +2396,153 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">@dimen/auth_key_gap</item>
         <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The "New to PetCare? Create an account" footer ~~~~~~~~~~ -->
+
+    <!--
+        The line at the foot of each form leading to the other one, which replaced the toggle that
+        used to sit at the top of the screen.
+
+        Body text rather than the app's link style: the sentence is mostly ordinary prose with only
+        two or three words tappable, and setting the whole line in bold monospace capitals would make
+        a quiet footnote shout louder than the Google button above it. The link inside it is drawn
+        underlined in the full text colour by AuthFragment, as the mockup shows.
+    -->
+    <style name="PetCare.Auth.SwitchFormText" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textColorLink">?attr/colorOnSurface</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The wrong-password warning card ~~~~~~~~~~
+         Shown between the password helper line and "FORGOT PASSWORD?" after a failed attempt. Its
+         fill, edge and title colour are applied by AuthFragment, because the same card is drawn in
+         yellow for attempts 1–3 and in red for the last one — see the log in section of colors.xml. -->
+
+    <!-- The exclamation mark in its rounded square. Bold and centred; the mark's colour and the
+         square's fill are set per style of card. Hidden from TalkBack, which reads the title and
+         detail beneath instead — "exclamation mark" adds nothing to "Wrong password". -->
+    <style name="PetCare.Auth.AlertBadge" parent="">
+        <item name="android:layout_width">@dimen/auth_alert_badge_size</item>
+        <item name="android:layout_height">@dimen/auth_alert_badge_size</item>
+        <item name="android:background">@drawable/bg_auth_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textSize">@dimen/auth_alert_badge_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- "Wrong password" / "Last try before a 15-minute lock". -->
+    <style name="PetCare.Auth.AlertTitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- "4 of 5 attempts left · locks for 15 minutes after the 5th": the same small muted monospace
+         as the form's other helper lines, so it reads as an annotation on the form. -->
+    <style name="PetCare.Auth.AlertDetail" parent="PetCare.Auth.Helper">
+        <item name="android:textSize">@dimen/auth_alert_detail_text_size</item>
+        <item name="android:layout_marginTop">2dp</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The locked screen ~~~~~~~~~~
+         The dark panel that replaces the whole form once sign-in locks, and the two pale rows under
+         it. The panel's colours are fixed rather than theme roles, because it is dark in both modes
+         by design — see the log in section of colors.xml. -->
+
+    <!-- The number of minutes inside the countdown ring: the largest thing on the panel, in the
+         display face, because it is the one figure the user is waiting on. -->
+    <style name="PetCare.Auth.LockMinutes" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textSize">@dimen/auth_lock_ring_minutes_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/on_auth_lock_card</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "MIN LEFT" under it: the app's micro-label, at its smallest, naming the unit of the figure
+         above rather than making a statement of its own. -->
+    <style name="PetCare.Auth.LockRingCaption" parent="PetCare.SectionLabel">
+        <item name="android:textSize">@dimen/auth_lock_ring_caption_text_size</item>
+        <item name="android:textColor">@color/on_auth_lock_card_muted</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- "ACCOUNT LOCKED": the micro-label in the lock red, which is the one thing on the panel that
+         says what state the account is in. -->
+    <style name="PetCare.Auth.LockLabel" parent="PetCare.SectionLabel">
+        <item name="android:textSize">@dimen/auth_lock_label_text_size</item>
+        <item name="android:textColor">@color/auth_lock_red</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.18</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- "Too many wrong passwords": the panel's heading, in the display face like every other
+         headline in the app, sized between the screen heading and a card title. -->
+    <style name="PetCare.Auth.LockTitle" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textSize">@dimen/auth_lock_title_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/on_auth_lock_card</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- The paragraph under it: what happened, when it reopens, and the way round it. Muted against
+         the panel but comfortably legible, with a little extra leading because it runs to three
+         lines. -->
+    <style name="PetCare.Auth.LockBody" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:textColor">@color/on_auth_lock_card_muted</item>
+        <item name="android:gravity">center</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+
+    <!-- "TRY" / "SAFE" on the two info rows: the alert badge above in the app's micro-label
+         treatment, since these carry a word rather than a single mark. -->
+    <style name="PetCare.Auth.LockInfoBadge" parent="PetCare.SectionLabel">
+        <item name="android:layout_width">@dimen/auth_lock_info_badge_size</item>
+        <item name="android:layout_height">@dimen/auth_lock_info_badge_size</item>
+        <item name="android:background">@drawable/bg_auth_badge</item>
+        <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
+        <item name="android:textSize">@dimen/auth_lock_info_badge_text_size</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:gravity">center</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- An info row's bold first line. -->
+    <style name="PetCare.Auth.LockInfoTitle" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Its muted second line, in the form's helper face. -->
+    <style name="PetCare.Auth.LockInfoDetail" parent="PetCare.Auth.Helper">
+        <item name="android:layout_marginTop">2dp</item>
+    </style>
+
+    <!-- "TRY AGAIN IN 15 MIN": the outlined companion to the filled reset button, disabled until the
+         wait is over. Built on the Google button so the two outlined pills on the sign-in screens are
+         one object — minus the icon, and upper-cased like the app's own buttons. -->
+    <style name="PetCare.Auth.SecondaryButton" parent="PetCare.Auth.GoogleButton">
+        <item name="icon">@null</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <!-- The disabled state has to be spelled out: Material's default is the enabled colour at low
+             opacity, which on the cream page reads as broken rather than as "not yet". This is the
+             same reasoning as the primary button's colour state lists — see attrs.xml. -->
+        <item name="android:textColor">@color/auth_secondary_button_text</item>
     </style>
 
 </resources>

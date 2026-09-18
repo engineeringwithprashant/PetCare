@@ -1,10 +1,13 @@
 package com.prash.petcare.ui.auth
 
+import android.content.res.ColorStateList
+import android.os.Build
 import android.os.Bundle
 import android.text.Annotation
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextPaint
+import android.text.format.DateFormat
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.view.LayoutInflater
@@ -12,10 +15,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
+import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
-import androidx.core.view.AccessibilityDelegateCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
@@ -25,14 +30,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.prash.petcare.R
+import com.prash.petcare.data.local.LoginAttemptStore
 import com.prash.petcare.databinding.FragmentAuthBinding
 import com.prash.petcare.ui.auth.twofactor.TwoFactorFragment
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.util.Date
+import com.google.android.material.R as MaterialR
 
 /**
  * The log in / register screen — the app's front door.
@@ -42,9 +52,16 @@ import kotlinx.coroutines.launch
  * back. It contains no validation and no database access: both live in the ViewModel, which survives
  * rotation, and in [AuthValidation], which is unit-tested.
  *
- * Log in and register are one screen with a toggle rather than two destinations, as in the design.
- * Both forms are in the layout at once and only one is visible, which is how typed text survives
- * switching back and forth — see the note at the top of fragment_auth.xml.
+ * Log in and register are one screen rather than two destinations, as in the design; the link at the
+ * foot of each form switches between them. Both forms are in the layout at once and only one is
+ * visible, which is how typed text survives switching back and forth — see the note at the top of
+ * fragment_auth.xml.
+ *
+ * It also draws the two faces of the failed-attempt lockout: the inline warning card after a wrong
+ * password, and the locked panel that replaces the form once there have been five. Neither decides
+ * anything — the ViewModel works out what to show, including the live countdown, and this only turns
+ * its state into views. See [com.prash.petcare.data.local.LoginAttemptStore] for what the lock is and
+ * is not.
  */
 class AuthFragment : Fragment() {
 
@@ -109,7 +126,6 @@ class AuthFragment : Fragment() {
             AuthValidation.MIN_PASSWORD_LENGTH
         )
 
-        bindModeToggle()
         bindConsentText()
         bindButtons()
         observeViewModel()
@@ -132,27 +148,24 @@ class AuthFragment : Fragment() {
         binding.consentCheckBox.setOnCheckedChangeListener { _, _ ->
             viewModel.clearError(AuthField.CONSENT)
         }
-    }
 
-    /** Wires the two halves of the log in / register toggle. */
-    private fun bindModeToggle() {
-        binding.loginModeButton.setOnClickListener { viewModel.setMode(AuthMode.LOGIN) }
-        binding.registerModeButton.setOnClickListener { viewModel.setMode(AuthMode.REGISTER) }
-
-        // The halves are plain TextViews, so TalkBack would otherwise announce them as text. Declaring
-        // them as selectable tabs makes it say "Log in, tab, selected" — the same as a real tab bar.
-        listOf(binding.loginModeButton, binding.registerModeButton).forEach { half ->
-            ViewCompat.setAccessibilityDelegate(half, object : AccessibilityDelegateCompat() {
-                override fun onInitializeAccessibilityNodeInfo(
-                    host: View,
-                    info: AccessibilityNodeInfoCompat
-                ) {
-                    super.onInitializeAccessibilityNodeInfo(host, info)
-                    info.roleDescription = getString(R.string.auth_tab_role)
-                    info.isSelected = host.isSelected
-                }
-            })
+        // The log in address is reported as well as cleared, because the failed-attempt count and the
+        // lock belong to the account being typed rather than to the screen. See
+        // AuthViewModel.onIdentifierChanged.
+        binding.identifierInput.doOnTextChanged { text, _, _, _ ->
+            viewModel.onIdentifierChanged(text?.toString().orEmpty())
         }
+
+        // On a cold start the field is empty but the ViewModel may already hold the address of a
+        // lock left over from a previous run (see its init block). Putting it into the field is what
+        // keeps the two in step, so that when the wait ends the form returns with the account that
+        // was locked already filled in. Setting the text fires the listener above with the same
+        // value, which onIdentifierChanged ignores, so this cannot loop.
+        val restored = viewModel.uiState.value.identifier
+        if (restored.isNotEmpty() && binding.identifierInput.textString().isEmpty()) {
+            binding.identifierInput.setText(restored)
+        }
+        viewModel.onIdentifierChanged(binding.identifierInput.textString())
     }
 
     /**
@@ -163,46 +176,85 @@ class AuthFragment : Fragment() {
      * the checkbox, the way a checkbox's own label would.
      */
     private fun bindConsentText() {
-        val source = getText(R.string.register_consent)
-        val text = SpannableString(source)
-
-        text.getSpans(0, text.length, Annotation::class.java)
-            .filter { it.key == "link" && it.value == "terms" }
-            .forEach { annotation ->
-                text.setSpan(
-                    TermsLinkSpan(),
-                    text.getSpanStart(annotation),
-                    text.getSpanEnd(annotation),
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-            }
-
-        binding.consentText.text = text
+        binding.consentText.text = linkedText(R.string.register_consent, "terms") {
+            // TODO(terms): there is no terms page yet. Navigate to it (or open its URL in a Custom
+            //  Tab) once it exists; until then this only says so.
+            showMessage(getString(R.string.auth_terms_unavailable))
+        }
         // Without a LinkMovementMethod a ClickableSpan draws as a link but never receives the tap.
         binding.consentText.movementMethod = LinkMovementMethod.getInstance()
         binding.consentText.setOnClickListener { binding.consentCheckBox.toggle() }
     }
 
     /**
-     * The "terms" link inside the consent sentence.
+     * Draws the footer line for [mode] with its last words as a link to the other form.
+     *
+     * This replaced the toggle that used to sit above the fields — see the note at the top of
+     * fragment_auth.xml for why the switch moved to the bottom of the page. It is rebuilt on each
+     * render rather than once, because the sentence and the destination both change with the mode.
+     */
+    private fun bindSwitchFormText(mode: AuthMode) {
+        val isLogin = mode == AuthMode.LOGIN
+        val sentence = if (isLogin) R.string.login_register_prompt else R.string.register_login_prompt
+        val target = if (isLogin) AuthMode.REGISTER else AuthMode.LOGIN
+
+        binding.switchFormText.text = linkedText(sentence, if (isLogin) "register" else "login") {
+            viewModel.setMode(target)
+        }
+        binding.switchFormText.movementMethod = LinkMovementMethod.getInstance()
+    }
+
+    /**
+     * Reads [sentenceRes] and makes the range marked `<annotation link="[key]">` tappable, running
+     * [onClick] when it is.
+     *
+     * Shared by the consent sentence and the footer link because both are the same idea: a line of
+     * ordinary prose with two or three words that do something. Taking the range from the annotation
+     * rather than searching for the words is what lets a translation move the link — see the note on
+     * register_consent in strings.xml.
+     */
+    private fun linkedText(
+        @StringRes sentenceRes: Int,
+        key: String,
+        onClick: () -> Unit
+    ): CharSequence {
+        val text = SpannableString(getText(sentenceRes))
+
+        text.getSpans(0, text.length, Annotation::class.java)
+            .filter { it.key == "link" && it.value == key }
+            .forEach { annotation ->
+                text.setSpan(
+                    InlineLinkSpan(onClick),
+                    text.getSpanStart(annotation),
+                    text.getSpanEnd(annotation),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+        return text
+    }
+
+    /**
+     * A tappable range inside a sentence: "terms" in the consent line, "Create an account" in the
+     * footer.
      *
      * Tapping a link also counts as tapping the TextView that contains it — the view queues its own
-     * click before the link handles the touch — which would tick the checkbox every time someone only
-     * wanted to read the terms. cancelPendingInputEvents removes that queued click.
+     * click before the link handles the touch — which would tick the consent checkbox every time
+     * someone only wanted to read the terms. cancelPendingInputEvents removes that queued click.
      */
-    private inner class TermsLinkSpan : ClickableSpan() {
+    private inner class InlineLinkSpan(private val onClick: () -> Unit) : ClickableSpan() {
 
         override fun onClick(widget: View) {
             widget.cancelPendingInputEvents()
-            // TODO(terms): there is no terms page yet. Navigate to it (or open its URL in a Custom
-            //  Tab) once it exists; until then this only says so.
-            showMessage(getString(R.string.auth_terms_unavailable))
+            onClick.invoke()
         }
 
-        /** Underlined in the full text colour, as in the mockup, rather than the default link blue. */
+        /**
+         * Underlined in the full text colour, as in the mockups, rather than the default link blue.
+         * The colour comes from the host TextView's own link colour, so each style decides its own —
+         * both happen to set it to the strong text colour against their muted sentence.
+         */
         override fun updateDrawState(paint: TextPaint) {
             super.updateDrawState(paint)
-            paint.color = binding.consentText.linkTextColors.defaultColor
             paint.isUnderlineText = true
         }
     }
@@ -220,11 +272,28 @@ class AuthFragment : Fragment() {
             (actionId == EditorInfo.IME_ACTION_DONE).also { if (it) submitLogin() }
         }
 
-        binding.forgotPasswordButton.setOnClickListener {
-            // No arguments: the reset screen asks for the account's email itself, starting empty.
-            // Navigating by action id keeps the route itself declared in nav_graph.xml.
-            findNavController().navigate(R.id.action_auth_to_reset_request)
+        binding.forgotPasswordButton.setOnClickListener { openPasswordReset() }
+
+        // "RESET PASSWORD INSTEAD" on the locked screen goes to the same place: it is the one action
+        // that ends the lock early, because sending a reset link clears it (see ResetRequestViewModel).
+        binding.lockedPanel.lockResetButton.setOnClickListener { openPasswordReset() }
+
+        // "TRY AGAIN IN n MIN" is disabled for the whole lock, so this only ever runs once the wait is
+        // over — and by then the ViewModel's countdown has already put the form back. It is wired
+        // anyway so the button is never a dead control if that ordering ever changes.
+        binding.lockedPanel.lockRetryButton.setOnClickListener {
+            binding.identifierInput.requestFocus()
         }
+    }
+
+    /**
+     * Opens the password reset flow.
+     *
+     * No arguments: the reset screen asks for the account's email itself, starting empty. Navigating
+     * by action id keeps the route itself declared in nav_graph.xml.
+     */
+    private fun openPasswordReset() {
+        findNavController().navigate(R.id.action_auth_to_reset_request)
     }
 
     /**
@@ -289,18 +358,30 @@ class AuthFragment : Fragment() {
     /** Applies the current state to the views. */
     private fun render(state: AuthUiState) {
         val isLogin = state.mode == AuthMode.LOGIN
+        val isLocked = state.lock != null
 
-        // The heading and subtitle follow the mode.
+        // The heading and subtitle follow the mode, and step aside entirely for the locked panel,
+        // which carries a heading of its own — see fragment_auth.xml.
         binding.header.show(
             title = if (isLogin) R.string.login_title else R.string.register_title,
             subtitle = getString(if (isLogin) R.string.login_subtitle else R.string.register_subtitle)
         )
+        binding.header.title.isVisible = !isLocked
+        binding.header.subtitle.isVisible = !isLocked
 
-        // `isSelected` is all the toggle needs — its drawable and text colour are state lists.
-        binding.loginModeButton.isSelected = isLogin
-        binding.registerModeButton.isSelected = !isLogin
+        // The lock replaces the whole form rather than covering it: there is nothing useful to do
+        // with a password field that cannot be submitted.
+        binding.authContent.isVisible = !isLocked
+        binding.lockedPanel.root.isVisible = isLocked
+        state.lock?.let(::renderLock)
+
         binding.loginForm.isVisible = isLogin
         binding.registerForm.isVisible = !isLogin
+        bindSwitchFormText(state.mode)
+
+        // The wrong-password warning, on the log in form only. The register form has no attempts to
+        // count, and the ViewModel never sets it there.
+        renderAlert(state.alert)
 
         // Resolving the string here, in the View layer, is what keeps Context out of the ViewModel.
         // A null error clears the message rather than leaving an empty red line.
@@ -315,10 +396,144 @@ class AuthFragment : Fragment() {
         // pressable.
         binding.progressIndicator.isVisible = state.isSubmitting
         listOf(
-            binding.loginButton, binding.registerButton, binding.googleButton,
-            binding.loginModeButton, binding.registerModeButton
+            binding.loginButton, binding.registerButton, binding.googleButton
         ).forEach { it.isEnabled = !state.isSubmitting }
+        binding.switchFormText.isEnabled = !state.isSubmitting
     }
+
+    /**
+     * Draws the wrong-password warning, or hides it when there is nothing to warn about.
+     *
+     * **One card, two colour schemes.** The design's yellow and red versions are the same layout with
+     * a different fill, edge, badge and title colour, so those four are applied here rather than
+     * duplicating view_auth_alert.xml — see the note at the top of that file. Resolving the colours in
+     * the fragment is also what keeps them out of the ViewModel, which knows only that this is a
+     * [LoginAlertStyle.WARNING] or a [LoginAlertStyle.LAST_CHANCE].
+     */
+    private fun renderAlert(alert: LoginAlert?) {
+        binding.loginAlert.root.isVisible = alert != null
+        if (alert == null) return
+
+        val isLastChance = alert.style == LoginAlertStyle.LAST_CHANCE
+
+        binding.loginAlert.root.apply {
+            setCardBackgroundColor(
+                themeColor(
+                    if (isLastChance) R.attr.colorAuthAlertDanger else R.attr.colorAuthAlertWarning
+                )
+            )
+            strokeColor = themeColor(
+                if (isLastChance) R.attr.colorAuthAlertDangerEdge else R.attr.colorAuthAlertWarningEdge
+            )
+        }
+
+        binding.loginAlert.loginAlertBadge.apply {
+            backgroundTintList = ColorStateList.valueOf(
+                resolveColor(
+                    if (isLastChance) R.color.auth_alert_danger_badge
+                    else R.color.auth_alert_warning_badge
+                )
+            )
+            setTextColor(
+                resolveColor(
+                    if (isLastChance) R.color.on_auth_alert_danger_badge
+                    else R.color.on_auth_alert_warning_badge
+                )
+            )
+        }
+
+        binding.loginAlert.loginAlertTitle.apply {
+            setText(
+                if (isLastChance) R.string.login_alert_last_try
+                else R.string.login_alert_wrong_password
+            )
+            // The red card's title carries the warning's weight, so it takes the alert colour; the
+            // yellow card's stays in the ordinary text colour, with the badge doing the signalling.
+            // Both are set every time rather than only the red one, so switching back from red to
+            // yellow restores the ordinary colour instead of leaving the last one applied.
+            setTextColor(
+                themeColor(
+                    if (isLastChance) R.attr.colorOnAuthAlertDanger
+                    else MaterialR.attr.colorOnSurface
+                )
+            )
+        }
+
+        binding.loginAlert.loginAlertDetail.text = getString(
+            R.string.login_alert_detail,
+            alert.attemptsRemaining,
+            LoginAttemptStore.MAX_ATTEMPTS,
+            LOCK_MINUTES
+        )
+    }
+
+    /**
+     * Draws the locked panel: the countdown ring, the explanation, the last attempt, and the two
+     * buttons.
+     *
+     * Called on every tick of the ViewModel's countdown — once a second — so it only sets values and
+     * does no allocation beyond the formatted strings.
+     *
+     * The two times are formatted here rather than in the ViewModel because
+     * [DateFormat.getTimeFormat] needs a Context: it follows the user's own 12-/24-hour setting, so
+     * the same moment reads as "5:53 PM" or "17:53" depending on how their phone is set.
+     */
+    private fun renderLock(lock: LoginLock) {
+        val panel = binding.lockedPanel
+        val timeFormat = DateFormat.getTimeFormat(requireContext())
+
+        // The ring empties over the whole lock, so it is a picture of the wait rather than of the
+        // last minute. setProgressCompat animates between values, which at one tick a second reads as
+        // a smooth sweep instead of a series of jumps.
+        val progress = lock.minutesRemaining * 100 / lock.lockDurationMinutes.coerceAtLeast(1)
+        panel.lockRingProgress.setProgressCompat(progress.coerceIn(0, 100), true)
+        // Through the locale's number format rather than toString(), so the figure is drawn in the
+        // digits the user's language actually uses — Devanagari numerals for a Nepali locale, say.
+        panel.lockMinutesText.text = NumberFormat.getIntegerInstance().format(lock.minutesRemaining)
+
+        // The ring is two unlabelled numbers to TalkBack, so the pair is described on the frame that
+        // holds them and both children are hidden from it — see view_auth_locked.xml.
+        panel.lockRing.contentDescription = resources.getQuantityString(
+            R.plurals.login_locked_ring_description,
+            lock.minutesRemaining,
+            lock.minutesRemaining
+        )
+
+        panel.lockBodyText.text = resources.getQuantityString(
+            R.plurals.login_locked_body,
+            lock.failedAttempts,
+            lock.failedAttempts,
+            timeFormat.format(Date(lock.unlockAt))
+        )
+
+        panel.lockAttemptsTitle.text = resources.getQuantityString(
+            R.plurals.login_locked_attempts_title,
+            lock.failedAttempts,
+            lock.failedAttempts
+        )
+        // Build.MODEL is the handset's own name ("Pixel 7"), which is what makes "this device" mean
+        // something to someone reading the row on a different phone later.
+        panel.lockAttemptsDetail.text = getString(
+            R.string.login_locked_attempts_detail,
+            timeFormat.format(Date(lock.lastAttemptAt)),
+            Build.MODEL
+        )
+
+        panel.lockRetryButton.text = getString(R.string.login_locked_retry, lock.minutesRemaining)
+        // Disabled for as long as the lock stands. The ViewModel puts the form back the moment it
+        // expires, so this never actually reaches its enabled state — it is the countdown in words.
+        panel.lockRetryButton.isEnabled = false
+    }
+
+    /** Resolves a theme colour *attribute* (?attr/…) to the colour it stands for in this theme. */
+    @ColorInt
+    private fun themeColor(@AttrRes attribute: Int): Int =
+        MaterialColors.getColor(binding.root, attribute)
+
+    /** Resolves a colour *resource* against the view's context, so it follows the current theme. */
+    @ColorInt
+    private fun resolveColor(@ColorRes colorRes: Int): Int =
+        ContextCompat.getColor(requireContext(), colorRes)
 
     /** Reacts to a one-off event from the ViewModel. */
     private fun handleEvent(event: AuthEvent) {
@@ -348,6 +563,17 @@ class AuthFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private companion object {
+
+        /**
+         * The lock's length in whole minutes, for the warning card's "locks for 15 minutes" line.
+         *
+         * Derived from [LoginAttemptStore.LOCK_DURATION_MILLIS] rather than written as 15, so the
+         * sentence cannot end up promising a different wait from the one actually enforced.
+         */
+        val LOCK_MINUTES = (LoginAttemptStore.LOCK_DURATION_MILLIS / 60_000L).toInt()
     }
 }
 

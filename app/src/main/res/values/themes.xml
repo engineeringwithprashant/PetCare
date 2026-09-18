@@ -105,6 +105,14 @@
         <item name="colorPillVerified">@color/verified_pill_light</item>
         <item name="colorOnPillVerified">@color/on_verified_pill_light</item>
 
+        <!-- The log in screen's wrong-password warning cards — see attrs.xml. Pale washes of the
+             accent and the error hue on the cream page. -->
+        <item name="colorAuthAlertWarning">@color/auth_alert_warning_fill_light</item>
+        <item name="colorAuthAlertWarningEdge">@color/auth_alert_warning_edge_light</item>
+        <item name="colorAuthAlertDanger">@color/auth_alert_danger_fill_light</item>
+        <item name="colorAuthAlertDangerEdge">@color/auth_alert_danger_edge_light</item>
+        <item name="colorOnAuthAlertDanger">@color/auth_alert_danger_title_light</item>
+
         <!-- ============================== Shape scale ==============================
              Material components read their corner radius from these three attributes. Overriding
              them here rounds *everything* — dialogs, menus, text fields, bottom sheets — in one

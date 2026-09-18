@@ -8,11 +8,15 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
 import com.prash.petcare.R
+import com.prash.petcare.data.local.LoginAttemptRecord
+import com.prash.petcare.data.local.LoginAttemptStore
 import com.prash.petcare.data.local.entity.User
 import com.prash.petcare.data.remote.AuthFailure
 import com.prash.petcare.data.repository.AccountResult
 import com.prash.petcare.data.repository.UserRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,25 +40,81 @@ enum class AuthField {
 }
 
 /**
+ * How loudly the inline warning under the password field is speaking.
+ *
+ * Two looks rather than one, because the last attempt before a lock is a different message from the
+ * three before it: the earlier ones are information, the last one is a consequence about to happen.
+ * The fragment maps each to the yellow or the red card in the design.
+ */
+enum class LoginAlertStyle { WARNING, LAST_CHANCE }
+
+/**
+ * The warning card shown between the password helper line and "FORGOT PASSWORD?" after a wrong
+ * password.
+ *
+ * @property style Yellow for attempts 1–3, red for the last attempt before the lock.
+ * @property attemptsRemaining How many tries are left before sign-in locks — the "4" in "4 of 5
+ *   attempts left".
+ */
+data class LoginAlert(
+    val style: LoginAlertStyle,
+    val attemptsRemaining: Int
+)
+
+/**
+ * The locked screen's state, shown in place of the whole log in form.
+ *
+ * [minutesRemaining] is a *derived* figure rather than something the store holds: it is recomputed
+ * once a second by [AuthViewModel]'s countdown, which is what makes the ring and the "TRY AGAIN IN
+ * 14 MIN" button tick down while the screen is open.
+ *
+ * @property failedAttempts How many wrong passwords caused this lock — "5 failed attempts".
+ * @property unlockAt When sign-in reopens, shown as a clock time ("Sign-in reopens at 5:53 PM").
+ * @property lastAttemptAt When the most recent wrong password was entered.
+ * @property minutesRemaining Whole minutes left, rounded *up* so the last part-minute still reads as
+ *   "1 min" rather than "0 min" — a countdown that reaches zero before the button works would look
+ *   broken.
+ * @property lockDurationMinutes The full length of the lock, which the countdown ring draws as its
+ *   100% — so the ring empties over the whole fifteen minutes rather than jumping.
+ */
+data class LoginLock(
+    val failedAttempts: Int,
+    val unlockAt: Long,
+    val lastAttemptAt: Long,
+    val minutesRemaining: Int,
+    val lockDurationMinutes: Int
+)
+
+/**
  * Everything the log in / register screen needs to draw itself.
  *
  * Errors hold string *resource ids*, not finished text. Resolving a resource needs a Context, and
  * keeping Context out of the ViewModel is what lets it outlive a rotation without leaking the old
  * Activity; the fragment turns the ids into text when it draws.
  *
- * The typed text itself is deliberately **not** here. It lives in the EditTexts, which already keep it
+ * Most typed text is deliberately **not** here. It lives in the EditTexts, which already keep it
  * across rotation and across switching modes; copying every keystroke into the ViewModel would add a
  * second source of truth for no gain. The fragment hands the text over only when the user submits.
+ * The one exception is the log in identifier, in [identifier] — see [AuthViewModel.onIdentifierChanged]
+ * for why the failed-attempt count forces that one field to be watched.
  *
  * @property mode Which form is showing.
  * @property errors The message for each field currently in error; a field absent from the map is fine.
  * @property isSubmitting True while a sign-in or sign-up is being checked, so the buttons can be
  *   disabled and a double tap cannot create two accounts.
+ * @property identifier The address currently typed in the log in field, which decides whose failed
+ *   attempts [alert] and [lock] describe.
+ * @property alert The wrong-password warning, or null when there is nothing to warn about.
+ * @property lock The lock covering the form, or null when sign-in is open. Never both this and
+ *   [alert]: a locked account has run out of attempts to count down.
  */
 data class AuthUiState(
     val mode: AuthMode = AuthMode.LOGIN,
     val errors: Map<AuthField, Int> = emptyMap(),
-    val isSubmitting: Boolean = false
+    val isSubmitting: Boolean = false,
+    val identifier: String = "",
+    val alert: LoginAlert? = null,
+    val lock: LoginLock? = null
 )
 
 /**
@@ -85,12 +145,23 @@ sealed interface AuthEvent {
  * it survives configuration changes — a rotation mid-sign-in neither restarts the check nor loses the
  * errors.
  *
- * Log in and register share this one ViewModel because they share one screen: the toggle between them
+ * Log in and register share this one ViewModel because they share one screen: which form is showing
  * is part of this screen's state, and so is the "busy" flag that must block both forms at once.
  *
+ * It also owns the **failed-attempt lockout**: it counts wrong passwords per address through
+ * [LoginAttemptStore], turns that count into the warning card or the locked screen, and runs the
+ * countdown that clears the lock when its fifteen minutes are up. See [LoginAttemptStore] for the
+ * important caveat that this is a local speed bump rather than account security.
+ *
  * @property userRepository Passed in through the constructor so a test can substitute a fake.
+ * @property loginAttemptStore Counts wrong passwords per address and decides when this device locks
+ *   sign-in. Injected for the same reason, and reached only through this property — the ViewModel
+ *   never touches SharedPreferences itself.
  */
-class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
+class AuthViewModel(
+    private val userRepository: UserRepository,
+    private val loginAttemptStore: LoginAttemptStore
+) : ViewModel() {
 
     // Private mutable state, public read-only view: only the ViewModel changes the state.
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -102,6 +173,39 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
     val events = _events.receiveAsFlow()
 
     /**
+     * The coroutine re-reading the lock once a second while one is in force, or null when sign-in is
+     * open. Held so it can be cancelled: a countdown left running for an address the user has
+     * stopped typing would keep overwriting the state with the wrong account's lock.
+     */
+    private var countdown: Job? = null
+
+    /**
+     * Restores a lock left behind by an earlier run of the app, before the screen first draws.
+     *
+     * **Why this is needed even though the lock was already on disk.** Every other read here is
+     * keyed by the address in the log in field, which is empty on a cold start — so until this
+     * existed, reopening the app showed an ordinary form, and the lock only reappeared if the user
+     * happened to retype the same address. The lock was in force the whole time, but it did not look
+     * like it, which is indistinguishable from a lock that closing the app had cleared.
+     *
+     * [LoginAttemptStore.lockedEmail] asks the opposite question — "is anything locked?" — and the
+     * remaining time comes from the stored expiry measured against the clock now (see [lockFrom]),
+     * never from a timer that starts again at fifteen minutes each launch. So the wait continues
+     * across a force stop, a reboot, or the process being killed in the background.
+     *
+     * The address is put back into [AuthUiState.identifier] as well, because the countdown and every
+     * later read work from it; the fragment writes it into the empty field so the two agree when the
+     * form returns.
+     */
+    init {
+        val lockedEmail = loginAttemptStore.lockedEmail()
+        if (lockedEmail != null) {
+            _uiState.update { it.copy(identifier = lockedEmail) }
+            startCountdown(loginAttemptStore.recordFor(lockedEmail))
+        }
+    }
+
+    /**
      * Switches between the log in and register forms.
      *
      * Errors are cleared on the way: they described the last submit of the *other* form, and a red
@@ -111,6 +215,121 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
         _uiState.update { state ->
             if (state.mode == mode) state else state.copy(mode = mode, errors = emptyMap())
         }
+    }
+
+    /**
+     * The address in the log in field changed — including the first time the screen is drawn, so the
+     * state always describes whatever is actually in the box.
+     *
+     * **Why this one field is watched when no other is.** Failed attempts are counted *per account*,
+     * so "3 of 5 attempts left" and the lock itself are facts about the address currently typed, not
+     * about the screen. Without following the field, someone locked out of one address could clear
+     * the box, type another, and still be looking at the first one's lock; and a lock would only
+     * ever appear after a failed submit, never when returning to a locked address with the app
+     * freshly opened.
+     *
+     * It is also why the *stored* count, rather than a count kept in memory, drives the card: that
+     * is what survives the app being closed, and it means a single code path draws the warning
+     * whether it was earned a second ago or yesterday.
+     */
+    fun onIdentifierChanged(identifier: String) {
+        if (_uiState.value.identifier == identifier) return
+        _uiState.update { it.copy(identifier = identifier) }
+        refreshAttemptState()
+    }
+
+    /**
+     * Re-reads the failed-attempt record for the address being typed and rebuilds [AuthUiState.alert]
+     * and [AuthUiState.lock] from it.
+     *
+     * One function for both, because they are two views of the same record and must never disagree:
+     * a locked account shows the locked screen and *no* warning card, and an account with attempts
+     * left shows the card and no lock.
+     *
+     * A blank field, or one holding something that is not an email address, simply has no record —
+     * there is no account to have failed at yet.
+     */
+    private fun refreshAttemptState() {
+        val email = _uiState.value.identifier.trim()
+        val record = if (email.isEmpty()) LoginAttemptRecord() else loginAttemptStore.recordFor(email)
+
+        if (record.isLocked) {
+            startCountdown(record)
+            return
+        }
+
+        stopCountdown()
+        _uiState.update { it.copy(lock = null, alert = alertFor(record.failedAttempts)) }
+    }
+
+    /**
+     * The warning card for [failedAttempts] consecutive failures, or null when there is nothing to
+     * say (none yet, or the account is locked and the locked screen is saying it instead).
+     *
+     * The last attempt before the lock gets the red treatment; everything before it the yellow one.
+     */
+    private fun alertFor(failedAttempts: Int): LoginAlert? {
+        if (failedAttempts <= 0 || failedAttempts >= LoginAttemptStore.MAX_ATTEMPTS) return null
+        val remaining = LoginAttemptStore.MAX_ATTEMPTS - failedAttempts
+        return LoginAlert(
+            style = if (remaining == 1) LoginAlertStyle.LAST_CHANCE else LoginAlertStyle.WARNING,
+            attemptsRemaining = remaining
+        )
+    }
+
+    /**
+     * Shows the locked screen for [record] and keeps its countdown running until the lock expires.
+     *
+     * **Why a loop rather than a single delay to the unlock time.** The screen shows live minutes
+     * remaining, so something has to redraw while it is open; ticking once a second also means the
+     * figure is right after the phone has been asleep, where a single long `delay` would come back
+     * late. Each tick re-reads the store rather than counting down a local number, so the one place
+     * that decides whether a lock is still in force is [LoginAttemptStore.recordFor] — and the
+     * moment it reports the lock gone, this clears it and the form comes back by itself.
+     *
+     * Any previous countdown is cancelled first, so switching between two locked addresses cannot
+     * leave two loops writing over each other.
+     */
+    private fun startCountdown(record: LoginAttemptRecord) {
+        stopCountdown()
+        countdown = viewModelScope.launch {
+            var current = record
+            while (current.isLocked) {
+                _uiState.update {
+                    it.copy(alert = null, errors = emptyMap(), lock = lockFrom(current))
+                }
+                delay(COUNTDOWN_TICK_MILLIS)
+                // Re-read rather than subtract: the store expires the lock itself, and this also
+                // picks up a lock cleared elsewhere (a password reset) without any signal.
+                current = loginAttemptStore.recordFor(_uiState.value.identifier.trim())
+            }
+            // The wait is over. The form returns, with a clean slate rather than the old warning.
+            _uiState.update { it.copy(lock = null, alert = null) }
+        }
+    }
+
+    /** Stops the countdown, if one is running. */
+    private fun stopCountdown() {
+        countdown?.cancel()
+        countdown = null
+    }
+
+    /**
+     * Turns a stored record into what the locked screen draws, working out the minutes left now.
+     *
+     * Rounded up (`+ 59_999`), so any part of a minute still counts as a whole one — see
+     * [LoginLock.minutesRemaining]. Never below 1 while the lock stands, because a screen saying
+     * "try again in 0 min" beside a disabled button contradicts itself.
+     */
+    private fun lockFrom(record: LoginAttemptRecord): LoginLock {
+        val millisLeft = (record.lockedUntil - System.currentTimeMillis()).coerceAtLeast(0L)
+        return LoginLock(
+            failedAttempts = record.failedAttempts,
+            unlockAt = record.lockedUntil,
+            lastAttemptAt = record.lastAttemptAt,
+            minutesRemaining = ((millisLeft + 59_999L) / 60_000L).toInt().coerceAtLeast(1),
+            lockDurationMinutes = (LoginAttemptStore.LOCK_DURATION_MILLIS / 60_000L).toInt()
+        )
     }
 
     /** Removes the error from one field, called as soon as the user starts correcting it. */
@@ -133,6 +352,10 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
         if (_uiState.value.isSubmitting) return
         val trimmed = identifier.trim()
 
+        // A locked address cannot be tried at all — the form is not even on screen while the locked
+        // panel is showing, but the keyboard's "done" key can still reach this.
+        if (_uiState.value.lock != null) return
+
         val errors = buildMap {
             identifierError(trimmed)?.let { put(AuthField.IDENTIFIER, it) }
             // Only emptiness is checked, not length: enforcing today's minimum on sign-in would lock
@@ -154,12 +377,53 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
             _uiState.update { it.copy(isSubmitting = false) }
 
             when (result) {
-                is AccountResult.Failed ->
-                    _events.send(AuthEvent.Message(loginFailureMessage(result.reason)))
+                is AccountResult.Failed -> {
+                    // A rejected password is reported by the warning card (or the locked screen),
+                    // which says the same thing and stays on screen while the next attempt is typed.
+                    // A Snackbar as well would tell the user twice — so it is kept for the failures
+                    // the card says nothing about, such as being offline.
+                    if (!countFailedAttempt(trimmed, result.reason)) {
+                        _events.send(AuthEvent.Message(loginFailureMessage(result.reason)))
+                    }
+                }
 
-                is AccountResult.Success -> continueSignedIn(result.user)
+                is AccountResult.Success -> {
+                    // A successful sign-in ends the run of failures, which is what makes the count
+                    // "consecutive": five wrong passwords spread around one correct one never lock.
+                    loginAttemptStore.clear(trimmed)
+                    refreshAttemptState()
+                    continueSignedIn(result.user)
+                }
             }
         }
+    }
+
+    /**
+     * Records a wrong password against [email] and redraws the warning — or the locked screen, if
+     * that was the fifth. Returns whether this failure was counted, which is also whether the screen
+     * is now showing the user what went wrong.
+     *
+     * **Only a rejected credential counts.** A sign-in that failed because the phone is offline or
+     * because Firebase was busy says nothing about whether the password was right, and locking
+     * someone out of their own account for having poor signal would be indefensible. Firebase
+     * reports a wrong password and an unknown address identically ([AuthFailure.INVALID_CREDENTIALS]),
+     * which is deliberate — see [loginFailureMessage] — and both are worth counting here.
+     */
+    private fun countFailedAttempt(email: String, reason: AuthFailure): Boolean {
+        if (reason != AuthFailure.INVALID_CREDENTIALS) return false
+
+        val record = loginAttemptStore.recordFailure(email)
+        if (record.isLocked) {
+            startCountdown(record)
+        } else {
+            _uiState.update { it.copy(alert = alertFor(record.failedAttempts)) }
+        }
+        return true
+    }
+
+    /** Stops the countdown when the screen is finished with, so no coroutine outlives the ViewModel. */
+    override fun onCleared() {
+        stopCountdown()
     }
 
     /**
@@ -391,7 +655,16 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
     companion object {
 
         /**
-         * Builds the ViewModel with its repository.
+         * How often the locked screen's countdown redraws.
+         *
+         * A second rather than a minute: the ring and the "TRY AGAIN IN 14 MIN" button have to
+         * become accurate the instant the lock expires, and a minute-long tick could leave a
+         * finished lock on screen for most of a minute.
+         */
+        private const val COUNTDOWN_TICK_MILLIS = 1_000L
+
+        /**
+         * Builds the ViewModel with its repository and the failed-attempt store.
          *
          * A factory is needed because the default ViewModelProvider can only build ViewModels with no
          * constructor arguments. The application is read through APPLICATION_KEY rather than a static
@@ -401,7 +674,10 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
             initializer {
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PetCareApplication
-                AuthViewModel(application.userRepository)
+                AuthViewModel(
+                    userRepository = application.userRepository,
+                    loginAttemptStore = application.loginAttemptStore
+                )
             }
         }
     }

@@ -662,11 +662,15 @@
          three lines of the header step down in size as they go. -->
     <dimen name="auth_brand_name_text_size">19sp</dimen>
 
-    <!-- The gap between the header block and the first control (toggle or step bar). -->
+    <!-- The gap between the header block and the first control (the first field, or the step bar). -->
     <dimen name="auth_header_gap">20dp</dimen>
 
     <!-- The log in / register toggle: taller than the profile screen's preference toggle because it is
-         the main navigation on this screen rather than a setting. -->
+         the main navigation on this screen rather than a setting.
+
+         No longer used by the log in screen, whose two forms are now reached from the link at the foot
+         of each rather than from a toggle. Kept because PetCare.Auth.SegmentTrack still refers to it
+         and a two-option toggle is likely to return on another sign-in screen. -->
     <dimen name="auth_segment_height">42dp</dimen>
 
     <!-- Text fields. The height comes from vertical padding inside the field rather than a fixed
@@ -700,5 +704,55 @@
     <dimen name="auth_key_text_size">18sp</dimen>
     <!-- The "CLEAR" key's label: the app's 11sp micro-label size, well below the digits. -->
     <dimen name="auth_key_label_text_size">11sp</dimen>
+
+    <!-- ~~~~~~~~~~ Wrong-password warning card ~~~~~~~~~~
+         The yellow (and, on the last attempt, red) notice that appears between the password helper
+         line and "FORGOT PASSWORD?". -->
+    <dimen name="auth_alert_corner_radius">14dp</dimen>
+    <dimen name="auth_alert_padding">12dp</dimen>
+    <!-- The exclamation badge: a rounded square, deliberately smaller than the notifications screen's
+         44dp type badge — it marks a line of text inside a form rather than heading a whole card. -->
+    <dimen name="auth_alert_badge_size">26dp</dimen>
+    <dimen name="auth_alert_badge_corner_radius">8dp</dimen>
+    <dimen name="auth_alert_badge_text_size">14sp</dimen>
+    <!-- The muted second line, a touch smaller than the title above it. -->
+    <dimen name="auth_alert_detail_text_size">11sp</dimen>
+
+    <!-- ~~~~~~~~~~ The locked screen ~~~~~~~~~~ -->
+
+    <!-- The dark panel. A larger radius than a card elsewhere in the app, as the mockup draws it: it
+         is a full-width panel rather than an item in a list. -->
+    <dimen name="auth_lock_card_corner_radius">24dp</dimen>
+    <dimen name="auth_lock_card_padding">24dp</dimen>
+
+    <!-- The countdown ring. Sized so the two-digit minute figure inside it sits comfortably clear of
+         the stroke at large font settings. -->
+    <dimen name="auth_lock_ring_size">96dp</dimen>
+    <dimen name="auth_lock_ring_thickness">7dp</dimen>
+    <!-- The square drawn inside the ring, which is the only area two stacked lines are certain to
+         clear the arc at every height: the inner diameter (96dp less the 7dp stroke on each side, so
+         82dp) times about 0.7. The figure and "MIN LEFT" autosize down to fit it, which is what keeps
+         them inside the circle at large font scales. -->
+    <dimen name="auth_lock_ring_inner_size">58dp</dimen>
+    <dimen name="auth_lock_ring_minutes_text_size">26sp</dimen>
+    <!-- How far the figure may shrink before it would stop being the thing the eye lands on. -->
+    <dimen name="auth_lock_ring_minutes_min_text_size">15sp</dimen>
+    <!-- "MIN LEFT" under the figure: the app's smallest micro-label, since it only names the unit of
+         the number above it. -->
+    <dimen name="auth_lock_ring_caption_text_size">8sp</dimen>
+    <!-- How far "MIN LEFT" may shrink to stay inside the ring at a large system font scale. IBM Plex
+         Mono stays legible this small because the label is always upper case. -->
+    <dimen name="auth_lock_ring_caption_min_text_size">6sp</dimen>
+
+    <!-- "ACCOUNT LOCKED" and the heading beneath it. -->
+    <dimen name="auth_lock_label_text_size">10sp</dimen>
+    <dimen name="auth_lock_title_text_size">21sp</dimen>
+
+    <!-- The two pale info rows under the panel ("5 failed attempts", "Your pet records are
+         untouched"). Their badge is square and uppercase like the alert badge above, one step larger
+         because it carries a word rather than a single mark. -->
+    <dimen name="auth_lock_info_badge_size">34dp</dimen>
+    <dimen name="auth_lock_info_badge_text_size">8sp</dimen>
+    <dimen name="auth_lock_info_row_padding">14dp</dimen>
 
 </resources>

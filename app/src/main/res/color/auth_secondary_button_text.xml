@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The label colour of the outlined secondary button on the sign-in screens — "TRY AGAIN IN 15 MIN"
+    on the locked screen, which spends most of its life disabled while the lock runs down.
+
+    Two states rather than one, for the reason given in auth_primary_button_text.xml: Material's
+    default disabled treatment is the enabled colour at low opacity, which turns the label into a grey
+    smudge that reads as broken. The muted text colour instead says "not yet" in a way the user can
+    still read — which matters here, because the disabled label *is* the countdown.
+
+    Declared as a colour state list rather than set in Kotlin so the button's appearance lives in
+    resources and follows the theme by itself.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:color="?attr/colorOnSurfaceVariant" android:state_enabled="false" />
+
+    <item android:color="?attr/colorOnSurface" />
+
+</selector>
