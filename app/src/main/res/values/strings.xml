@@ -1414,10 +1414,15 @@
     <string name="permission_location_distance_denied">Distances stay hidden without location access. Your saved places and directions still work.</string>
 
     <!-- ============================ Assistant ============================
-         The screen the AI pill and Home's "Ask the assistant" button open. There is no language
-         model behind it: it answers from the account's own records — see
-         data/assistant/AssistantRepository.kt — and every sentence here is written to be true of
-         that, rather than implying an intelligence the app does not have. -->
+         The screen the AI pill and Home's "Ask the assistant" button open.
+
+         It is a general assistant that also knows the account's pets: it answers questions on any
+         subject, and pulls the stored profiles, routines, checklist and spend into its answers
+         whenever the question is about the user's own animals. See
+         data/assistant/OpenAiAssistantRepository.kt, whose system prompt is where that scope is
+         actually set. Every sentence here is written to be true of that — including the limit, which
+         is that it will talk about a sick animal and say when one needs seeing urgently, but will not
+         diagnose or prescribe. -->
     <string name="nav_assistant">Assistant</string>
 
     <!-- The dark header card. The pet names in the title are built from the database at runtime and
@@ -1427,9 +1432,21 @@
     <!-- Shown in place of the title before any pet has been added, so the card never reads
          "Ask about " with nothing after it. -->
     <string name="assistant_header_title_no_pets">Ask about your pets</string>
-    <!-- What it can see and what it is not. The vet sentence is not boilerplate: an app that answers
-         questions about an animal's care has to say plainly that it is not clinical advice. -->
-    <string name="assistant_header_body">It reads this app\'s own pet profiles, checklist and spend data. Private to your account. No vet advice replaces a real clinic visit.</string>
+    <!--
+        What it will answer, why its answers fit these particular animals, and what it is not.
+
+        The old wording said it "reads this app's own pet profiles, checklist and spend data", which
+        described an assistant that could do nothing else. It can: the first sentence now says so, so
+        that nobody is left thinking a question about feeding or training is out of bounds.
+
+        The vet sentence stays, and is not boilerplate. An assistant that will discuss a sick animal
+        has more need of it than one that refused to, not less. It is worded as a limit on what the
+        assistant is rather than as a refusal, which is what it actually does now.
+
+        Four lines is the card's limit (see fragment_assistant.xml), so this stays about the length
+        of the sentence it replaces.
+    -->
+    <string name="assistant_header_body">Ask it anything, pet care or not. It knows your pets\' profiles, routines and spend, so answers fit your animals. Private to your account, and never a substitute for a vet.</string>
     <!-- The separator between pet names in the header title. -->
     <string name="assistant_pet_name_separator"> &amp; </string>
 

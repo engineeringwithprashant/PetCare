@@ -65,8 +65,10 @@
                 android:layout_marginTop="9dp"
                 tools:text="Ask about Krishala &amp; Ddjw" />
 
-            <!-- What it reads, who can see it, and what it is not. Body face, muted, up to four
-                 lines — this is the one paragraph on the screen meant to be read as prose. -->
+            <!-- What it will answer, why its answers fit these animals, and what it is not. Body
+                 face, muted, up to four lines — this is the one paragraph on the screen meant to be
+                 read as prose, and the four-line cap is what the wording in strings.xml is written
+                 to fit. -->
             <TextView
                 style="@style/PetCare.Home.NextUpMeta"
                 android:layout_width="match_parent"

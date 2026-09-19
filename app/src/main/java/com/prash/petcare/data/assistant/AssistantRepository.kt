@@ -18,12 +18,18 @@ data class AssistantTask(
 )
 
 /**
- * Everything the assistant is allowed to know about, gathered from the account's own records.
+ * Everything the assistant is given about *this account*, gathered from the user's own records.
  *
- * It exists so the boundary is **explicit**: this is the whole of what the assistant can see, and a
- * reader can check that claim by reading one data class rather than auditing every call site. The
- * screen tells the user as much in its header, so the promise printed on screen and the data
- * actually sent are the same list.
+ * It exists so the boundary is **explicit**: this is the whole of what the assistant can see of the
+ * user's data, and a reader can check that claim by reading one data class rather than auditing every
+ * call site. The screen tells the user as much in its header, so the promise printed on screen and the
+ * data actually sent are the same list.
+ *
+ * Note what the boundary is and is not. It bounds the assistant's knowledge of *this user* — it does
+ * not bound the subjects it will discuss. The assistant answers questions on anything, and the point
+ * of this class is that everything it says about the user's own animals is grounded in these fields
+ * rather than invented. See [com.prash.petcare.data.assistant.OpenAiAssistantRepository]'s system
+ * prompt, which draws that distinction explicitly.
  *
  * Plain values rather than DAOs or flows: the assistant is handed a *snapshot* to answer from, and
  * cannot reach back into the database to widen it. That matters more now than it did when the
