@@ -25,6 +25,7 @@ import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Place
 import com.prash.petcare.data.local.entity.PlaceCategory
 import com.prash.petcare.databinding.FragmentAddEditPlaceBinding
+import com.prash.petcare.ui.common.PhoneNumberInput
 import com.prash.petcare.ui.common.formatTimeOfDay
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.setToolbarTitle
@@ -65,6 +66,14 @@ class AddEditPlaceFragment : Fragment() {
         AddEditPlaceViewModel.factory(ownerId = sessionViewModel.userId.value, placeId = placeId)
     }
 
+    /**
+     * The country selector and number box, driven as one control.
+     *
+     * Created in [onViewCreated] and dropped in [onDestroyView] with the binding, since it holds
+     * views from this hierarchy.
+     */
+    private var phoneInput: PhoneNumberInput? = null
+
     /** See the class comment for the flow this drives. A property so it registers during creation. */
     private val locationPermission = LocationPermissionRequester(
         fragment = this,
@@ -84,6 +93,17 @@ class AddEditPlaceFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // The two phone boxes behave as one control. Editing either clears the error left by a
+        // previous save attempt, exactly as the name field does below.
+        phoneInput = PhoneNumberInput(
+            countryLayout = binding.phoneCountryLayout,
+            countryInput = binding.phoneCountryInput,
+            numberLayout = binding.phoneInputLayout,
+            numberInput = binding.phoneInput,
+            onChanged = { viewModel.clearPhoneError() }
+        )
+
         setUpCategoryDropdown()
         setUpClickListeners()
         observeViewModel()
@@ -120,10 +140,15 @@ class AddEditPlaceFragment : Fragment() {
         binding.captureLocationButton.setOnClickListener { locationPermission.request() }
 
         binding.savePlaceButton.setOnClickListener {
+            val phone = phoneInput ?: return@setOnClickListener
+
             viewModel.save(
                 name = binding.nameInput.text?.toString().orEmpty(),
                 area = binding.areaInput.text?.toString().orEmpty(),
-                phone = binding.phoneInput.text?.toString().orEmpty(),
+                // The country and the digits go over separately: whether the two make a real number,
+                // and what its international form is, are the ViewModel's decisions.
+                phoneRegion = phone.regionCode(),
+                phone = phone.nationalNumber(),
                 notes = binding.notesInput.text?.toString().orEmpty()
             )
         }
@@ -163,6 +188,9 @@ class AddEditPlaceFragment : Fragment() {
         val context = requireContext()
 
         binding.nameInputLayout.error = state.nameError?.let { getString(it) }
+        // Under the number rather than the country, because the number is usually the part to change
+        // — and the message itself names the country as the other possibility.
+        binding.phoneInputLayout.error = state.phoneError?.let { getString(it) }
         // `false` stops the dropdown filtering its own list as if the label had been typed.
         binding.categoryInput.setText(getString(state.category.labelRes()), false)
 
@@ -231,7 +259,10 @@ class AddEditPlaceFragment : Fragment() {
     private fun prefill(place: Place) {
         binding.nameInput.setText(place.name)
         binding.areaInput.setText(place.area.orEmpty())
-        binding.phoneInput.setText(place.phone.orEmpty())
+        // Splits the stored number back into a country and the local digits. A number saved before
+        // this form had a selector is bare digits and is read as a Nepali number, so an existing
+        // place's number does not disappear the first time it is edited after this change.
+        phoneInput?.setStoredNumber(place.phone)
         binding.notesInput.setText(place.notes.orEmpty())
     }
 
@@ -274,6 +305,8 @@ class AddEditPlaceFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Dropped with the binding: it holds views from this hierarchy.
+        phoneInput = null
         _binding = null
     }
 

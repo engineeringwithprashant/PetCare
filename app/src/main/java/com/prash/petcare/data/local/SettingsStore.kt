@@ -82,8 +82,8 @@ enum class CurrencyPreference(val symbol: String) {
  * to another handset. None of these is that: they are a handful of single values describing how this
  * installation should present itself, they are read on nearly every screen, and carrying "I prefer
  * pounds" to a borrowed tablet would be presumptuous rather than helpful. Adding an entity, a DAO, a
- * migration and a place in the sync for six values would be a great deal of machinery around a
- * preferences file.
+ * migration and a place in the sync for a handful of values would be a great deal of machinery around
+ * a preferences file.
  *
  * It lives under `data.local` because it *is* local persistence, alongside [AlertReadStore] and
  * [WeatherCache]. Being in the data layer is also what lets a ViewModel depend on it without holding
@@ -137,32 +137,44 @@ class SettingsStore(context: Context) {
     // Security
     // ---------------------------------------------------------------------------------------------
 
-    private val _fingerprintUnlock =
-        MutableStateFlow(preferences.getBoolean(KEY_FINGERPRINT_UNLOCK, false))
-
-    /**
-     * Whether the user has asked for the app to be locked behind their fingerprint.
-     *
-     * **Stored, but not yet enforced.** Actually gating the app would need the biometric library and
-     * a lock screen in front of the navigation graph, neither of which exists — so the preference is
-     * remembered and the profile row says exactly that, in the same way the two-factor row does.
-     * Recording the intent now is what makes adding the gate later a change to one screen rather than
-     * a change to the settings as well.
-     */
-    val fingerprintUnlock: StateFlow<Boolean> = _fingerprintUnlock.asStateFlow()
-
     private val _careRemindersEnabled =
         MutableStateFlow(preferences.getBoolean(KEY_CARE_REMINDERS, true))
 
     /**
      * Whether care reminders are posted at all.
      *
-     * Unlike [fingerprintUnlock] this one is genuinely wired: [com.prash.petcare.reminder.ReminderManager]
+     * The one security-card switch that does real work: [com.prash.petcare.reminder.ReminderManager]
      * reads it and withdraws every scheduled alarm when it is off. Defaulting to true keeps the
      * behaviour every existing installation already has — reminders were unconditional before this
      * switch existed, and an upgrade that silently turned them off would make people miss doses.
      */
     val careRemindersEnabled: StateFlow<Boolean> = _careRemindersEnabled.asStateFlow()
+
+    init {
+        forgetFingerprintUnlock()
+    }
+
+    /**
+     * Deletes the "unlock with fingerprint" preference left behind by earlier versions.
+     *
+     * The row that set it has been removed from the profile screen. It was a switch that saved a
+     * value and changed nothing: there was no biometric gate behind it and never had been, so the app
+     * was offering a security feature it did not have — which is worse than not offering it, because
+     * somebody could turn it on and believe their pets' records were behind their fingerprint.
+     *
+     * The stored value is removed rather than simply ignored. A preference nothing reads is dead
+     * weight that outlives the feature and invites a future reader to wire it back up to the wrong
+     * thing; and a value saying "this user wanted biometric unlock" sitting in a file, with nothing
+     * that could ever act on it, is a claim about the app that is not true. `remove` on a key that is
+     * not there is a no-op, so this costs nothing on a fresh install and runs once on an upgraded one.
+     *
+     * **No database migration is involved.** This was always a SharedPreferences value, never a
+     * column, so nothing needs reinstalling.
+     */
+    private fun forgetFingerprintUnlock() {
+        if (!preferences.contains(KEY_REMOVED_FINGERPRINT_UNLOCK)) return
+        preferences.edit { remove(KEY_REMOVED_FINGERPRINT_UNLOCK) }
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Writes
@@ -176,11 +188,6 @@ class SettingsStore(context: Context) {
     fun setWeekStart(value: WeekStart) = write(KEY_WEEK_START, value.name, _weekStart, value)
 
     fun setCurrency(value: CurrencyPreference) = write(KEY_CURRENCY, value.name, _currency, value)
-
-    fun setFingerprintUnlock(enabled: Boolean) {
-        preferences.edit { putBoolean(KEY_FINGERPRINT_UNLOCK, enabled) }
-        _fingerprintUnlock.value = enabled
-    }
 
     fun setCareRemindersEnabled(enabled: Boolean) {
         preferences.edit { putBoolean(KEY_CARE_REMINDERS, enabled) }
@@ -239,7 +246,14 @@ class SettingsStore(context: Context) {
         const val KEY_REMINDER_CHANNEL = "reminder_channel"
         const val KEY_WEEK_START = "week_start"
         const val KEY_CURRENCY = "currency"
-        const val KEY_FINGERPRINT_UNLOCK = "fingerprint_unlock"
         const val KEY_CARE_REMINDERS = "care_reminders_enabled"
+
+        /**
+         * The key the removed "unlock with fingerprint" switch used to write to.
+         *
+         * Kept only so [forgetFingerprintUnlock] can delete it from files written by earlier
+         * versions. Nothing reads it, and nothing should: see that function for why the setting went.
+         */
+        const val KEY_REMOVED_FINGERPRINT_UNLOCK = "fingerprint_unlock"
     }
 }

@@ -32,6 +32,7 @@ import com.prash.petcare.data.repository.TwoFactorStatus
 import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.databinding.FragmentProfileBinding
 import com.prash.petcare.databinding.ItemProfileContactBinding
+import com.prash.petcare.ui.common.PhoneNumberInput
 import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showAssistantPill
@@ -193,7 +194,7 @@ class ProfileFragment : Fragment() {
     }
 
     /**
-     * The three security switches.
+     * The two security switches.
      *
      * `setOnCheckedChangeListener` fires for a programmatic change as well as a tap, which would make
      * [renderSecurity] writing the stored value back into the switch look like the user having
@@ -214,10 +215,6 @@ class ProfileFragment : Fragment() {
             } else {
                 confirmDisableTwoFactor()
             }
-        }
-
-        binding.fingerprintSwitch.setOnCheckedChangeListener { button, isChecked ->
-            if (button.isPressed) viewModel.onFingerprintUnlockChanged(isChecked)
         }
 
         binding.careRemindersSwitch.setOnCheckedChangeListener { button, isChecked ->
@@ -509,17 +506,8 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    /** The two switches whose value comes from the preferences file, and their subtitles. */
+    /** The security-card switch whose value comes from the preferences file, and its subtitle. */
     private fun renderSecurity(security: ProfileSecurity) {
-        binding.fingerprintSwitch.isChecked = security.fingerprintUnlock
-        binding.fingerprintSubtitle.setText(
-            if (security.fingerprintUnlock) {
-                R.string.profile_row_fingerprint_on
-            } else {
-                R.string.profile_row_fingerprint_off
-            }
-        )
-
         binding.careRemindersSwitch.isChecked = security.careRemindersEnabled
         binding.careRemindersSubtitle.setText(
             if (security.careRemindersEnabled) {
@@ -691,22 +679,31 @@ class ProfileFragment : Fragment() {
         val dialogBinding = com.prash.petcare.databinding.DialogAddContactBinding
             .inflate(LayoutInflater.from(requireContext()))
 
+        // The number's two boxes behave as one control — the country chooser, the per-country length
+        // cap and the international form all come from here. No onChanged callback: the dialog shows
+        // its failures as a message rather than as an inline error, so there is nothing to clear.
+        val phoneInput = PhoneNumberInput(
+            countryLayout = dialogBinding.contactPhoneCountryLayout,
+            countryInput = dialogBinding.contactPhoneCountryInput,
+            numberLayout = dialogBinding.contactPhoneInputLayout,
+            numberInput = dialogBinding.contactPhoneInput
+        )
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.profile_add_contact_title)
             .setView(dialogBinding.root)
             .setNegativeButton(R.string.delegate_cancel, null)
             .setPositiveButton(R.string.profile_add_contact_save) { _, _ ->
-                val name = dialogBinding.contactNameInput.text?.toString().orEmpty().trim()
-                val phone = dialogBinding.contactPhoneInput.text?.toString().orEmpty().trim()
-                val note = dialogBinding.contactNoteInput.text?.toString().orEmpty().trim()
-
-                // Both halves are needed: a contact with no number is one nothing can be delegated to,
-                // which is the single thing this list exists for.
-                if (name.isEmpty() || phone.isEmpty()) {
-                    showMessage(getString(R.string.profile_add_contact_incomplete))
-                } else {
-                    viewModel.onContactAdded(name, phone, note.takeIf { it.isNotEmpty() })
-                }
+                // Whether the fields are acceptable is the ViewModel's decision, not this dialog's —
+                // it reports back through ProfileEvent, which handleEvent turns into a message. The
+                // country and the digits go over separately, for the reason given on every other
+                // phone form: assembling them is what the rules do after checking them.
+                viewModel.onContactAdded(
+                    name = dialogBinding.contactNameInput.text?.toString().orEmpty(),
+                    phoneRegion = phoneInput.regionCode(),
+                    phone = phoneInput.nationalNumber(),
+                    note = dialogBinding.contactNoteInput.text?.toString().orEmpty()
+                )
             }
             .show()
     }
@@ -766,6 +763,15 @@ class ProfileFragment : Fragment() {
             }
 
             is ProfileEvent.ExportEmpty -> showMessage(getString(R.string.profile_export_empty))
+
+            // The add-contact dialog has already closed by the time either of these arrives, so its
+            // fields are gone and there is nowhere to put an inline error — a message is what is
+            // left. The two are separate cases because "you left something out" and "that number is
+            // not valid for that country" send the user back for different reasons.
+            is ProfileEvent.ContactIncomplete ->
+                showMessage(getString(R.string.profile_add_contact_incomplete))
+
+            is ProfileEvent.ContactPhoneInvalid -> showMessage(getString(R.string.error_phone_invalid))
 
             is ProfileEvent.AccountDeleted -> leaveForSignIn()
 

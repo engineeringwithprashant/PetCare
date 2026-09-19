@@ -63,6 +63,26 @@ interface UserDao {
     suspend fun getByEmail(email: String): User?
 
     /**
+     * Every profile on this device that has a phone number recorded, for the sign-in-by-number
+     * lookup.
+     *
+     * **Why the whole (small) set rather than `WHERE phone = :number`.** Numbers are stored in one
+     * canonical format now (`+9779812345678` — see [com.prash.petcare.util.PhoneNumbers]), but
+     * numbers saved before the country selector existed are stored however the user typed them:
+     * "9812345678", "+977 981-234 5678", "098…".
+     * SQL cannot strip punctuation or expand a national number to its international form, so an
+     * equality match would simply fail to find those accounts and their owners would be told their
+     * number is not registered. The comparison is therefore made in Kotlin, where the library that
+     * understands the formats can be used — see
+     * [com.prash.petcare.data.repository.UserRepository.findEmailForPhone].
+     *
+     * The cost is nothing: this table holds the profiles that have signed in *on this handset*,
+     * which is one row on almost every device and a handful on a shared one.
+     */
+    @Query("SELECT * FROM users WHERE phone IS NOT NULL AND phone != ''")
+    suspend fun getAllWithPhone(): List<User>
+
+    /**
      * Observes an account together with all of its pets.
      *
      * `@Transaction` is required for relation queries: Room runs one query for the user and

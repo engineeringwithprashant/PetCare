@@ -52,28 +52,78 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- The phone number. Optional, and the helper says what it is for rather than only that it
-             may be left blank — a field whose purpose is stated is one people are willing to fill in.
+        <!--
+            The phone number: a country selector and the local number beside it.
 
-             inputType="phone" brings up the dialling keypad and allows the "+", spaces and dashes a
-             real number is written with. The app never parses it; it is shown as typed. -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            Optional, and the helper says what it is for rather than only that it may be left blank —
+            a field whose purpose is stated is one people are willing to fill in.
+
+            **Why the country is asked for separately.** The number is stored in one international
+            form, which is what lets the same account be found by that number at sign-in, and a number
+            can only be turned into that form — or checked at all — against a country. The behaviour
+            behind the pair is ui/common/PhoneNumberInput.kt, shared with the register form and the
+            two dialogs that ask for a number.
+
+            A number saved before this form had a selector is read back into the two boxes on open;
+            see PhoneNumberInput.setStoredNumber, which is why an existing profile's number does not
+            simply vanish the first time this screen is opened after the change.
+
+            A horizontal LinearLayout: the selector at a fixed width so the number box always begins
+            in the same place whatever the dialling code, and the number taking the rest (width 0 +
+            weight 1). baselineAligned="false" because a baseline-aligning row measures a weighted
+            child before it knows its width, and can then keep the wrong height.
+        -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_md"
-            android:hint="@string/account_details_phone_label"
-            app:helperText="@string/account_details_phone_helper"
-            app:helperTextEnabled="true">
+            android:baselineAligned="false"
+            android:orientation="horizontal">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/phoneInput"
-                android:layout_width="match_parent"
+            <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it
+                 unfocusable, so it can never summon the keyboard, and gives it a spoken description
+                 naming the country in full — the label itself is a flag and a number. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/phoneCountryLayout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="@dimen/phone_country_field_width"
                 android:layout_height="wrap_content"
-                android:inputType="phone"
-                android:maxLines="1" />
+                android:hint="@string/phone_country_label">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/phoneCountryInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    android:maxLines="1"
+                    tools:text="🇳🇵 +977" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- inputType="phone" brings up the dialling keypad. How many digits it accepts is capped
+                 per country by PhoneNumberInput, so an over-long number cannot be typed at all. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/phoneInputLayout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/phone_country_field_gap"
+                android:layout_weight="1"
+                android:hint="@string/account_details_phone_label"
+                app:errorEnabled="true"
+                app:helperText="@string/account_details_phone_helper"
+                app:helperTextEnabled="true">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/phoneInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="phone"
+                    android:maxLines="1" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
 
         <!--
             The email, shown and locked.

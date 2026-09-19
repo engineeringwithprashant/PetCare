@@ -153,6 +153,12 @@ dependencies {
     }
     implementation(libs.zxing.core)
 
+    // Phone numbers. Every form that asks for one pairs a country selector with a local-number
+    // field, and this is what decides whether the two together make a real number: the digit count,
+    // the valid prefixes and the E.164 form all come from its per-country metadata rather than from
+    // rules written here. See ui.common.PhoneNumbers, which is the only file that names its types.
+    implementation(libs.libphonenumber)
+
     // Lifecycle-aware ViewModels and flow collection.
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

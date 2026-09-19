@@ -612,46 +612,14 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Unlock with fingerprint. Genuinely persisted; not yet enforced, and the
-                         subtitle says so — see profile_row_fingerprint_on in strings.xml. -->
-                    <LinearLayout
-                        style="@style/PetCare.Profile.Row"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="@dimen/profile_row_gap"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/PetCare.Profile.RowTitle"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="@string/profile_row_fingerprint_title" />
-
-                            <TextView
-                                android:id="@+id/fingerprintSubtitle"
-                                style="@style/PetCare.Profile.RowSubtitle"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                tools:text="On · saved, enforced in a later release" />
-
-                        </LinearLayout>
-
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/fingerprintSwitch"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-
-                    </LinearLayout>
-
-                    <View style="@style/PetCare.Profile.RowDivider" />
-
                     <!-- Care reminders. This one does real work: ReminderManager reads it and
-                         withdraws every scheduled alarm when it is off. -->
+                         withdraws every scheduled alarm when it is off.
+
+                         An "Unlock with fingerprint" row used to sit between this and the two-factor
+                         row above. It was removed rather than finished: nothing gated the app behind
+                         a fingerprint, so the switch saved a preference and changed nothing, which is
+                         a security control that lies about itself. Its stored value is deleted on
+                         first launch — see SettingsStore.forgetFingerprintUnlock. -->
                     <LinearLayout
                         style="@style/PetCare.Profile.Row"
                         android:layout_width="match_parent"

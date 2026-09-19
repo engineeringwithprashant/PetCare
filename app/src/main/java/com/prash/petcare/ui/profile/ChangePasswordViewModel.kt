@@ -36,8 +36,15 @@ sealed interface ChangePasswordEvent {
     /** The current password typed does not match the stored one. */
     data object CurrentWrong : ChangePasswordEvent
 
-    /** The new password is shorter than [ChangePasswordViewModel.MINIMUM_LENGTH]. */
-    data object TooShort : ChangePasswordEvent
+    /**
+     * The new password does not satisfy the rules, and [messageRes] says which rule it broke first.
+     *
+     * This replaces the old "too short" case. Length is now one of six rules rather than the only
+     * one, and the message comes straight from [AuthValidation.validateNewPassword] — so the form
+     * cannot say something different from what the checklist above the field is showing, and adding a
+     * rule later needs no new event here.
+     */
+    data class NewPasswordRejected(@param:StringRes val messageRes: Int) : ChangePasswordEvent
 
     /** The new password and its confirmation differ. */
     data object Mismatch : ChangePasswordEvent
@@ -91,6 +98,31 @@ class ChangePasswordViewModel(
     private val _events = Channel<ChangePasswordEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
+    private val _passwordRequirements =
+        MutableStateFlow(AuthValidation.PasswordRequirements())
+
+    /**
+     * Which password rules the new-password field currently meets, for the live checklist under it.
+     *
+     * **Why the ViewModel measures this and not the fragment.** The checklist has to answer every
+     * keystroke, and what it shows must be exactly what the submit below enforces. Measuring in one
+     * place — with [AuthValidation.requirementsFor], the same function
+     * [AuthValidation.validateNewPassword] is built on — is what guarantees that. A copy of the rules
+     * in the View layer would eventually disagree, and a checklist showing six green ticks over a
+     * form that then refuses the password is worse than no checklist at all.
+     *
+     * Only the six booleans are held here, never the password itself: a credential kept in a
+     * ViewModel outlives the screen and is written into the saved-state bundle on process death,
+     * whereas these measurements say nothing about what was typed.
+     */
+    val passwordRequirements: StateFlow<AuthValidation.PasswordRequirements> =
+        _passwordRequirements.asStateFlow()
+
+    /** The new-password field changed; re-measure it for the checklist. */
+    fun onNewPasswordChanged(password: String) {
+        _passwordRequirements.value = AuthValidation.requirementsFor(password)
+    }
+
     /**
      * Checks the form, then asks the repository to make the change.
      *
@@ -98,16 +130,23 @@ class ChangePasswordViewModel(
      * problem rather than the last one — and so Firebase is never contacted for a form that could not
      * have succeeded anyway.
      *
+     * The new password is measured by [AuthValidation.validateNewPassword], the very function the
+     * register form uses. That matters in a specific way: a stricter rule here would tell people the
+     * password they already have is not good enough while leaving it in place and still accepting it
+     * at sign-in, and a looser one would let them set a password sign-up would have refused.
+     *
      * Passwords are deliberately **not** trimmed. A leading or trailing space is a legitimate part of
      * a password, and silently removing it here would let someone set a password they could then never
      * type — the sign-in screen does not trim either, so the two agree.
      */
     fun onSubmit(currentPassword: String, newPassword: String, confirmPassword: String) {
-        when {
-            currentPassword.isEmpty() -> return send(ChangePasswordEvent.CurrentRequired)
-            newPassword.length < MINIMUM_LENGTH -> return send(ChangePasswordEvent.TooShort)
-            newPassword != confirmPassword -> return send(ChangePasswordEvent.Mismatch)
+        if (currentPassword.isEmpty()) return send(ChangePasswordEvent.CurrentRequired)
+
+        AuthValidation.validateNewPassword(newPassword)?.let {
+            return send(ChangePasswordEvent.NewPasswordRejected(it))
         }
+
+        if (newPassword != confirmPassword) return send(ChangePasswordEvent.Mismatch)
 
         // Guards against a second submission slipping through while the first is still in flight.
         if (_isWorking.value) return
@@ -149,16 +188,16 @@ class ChangePasswordViewModel(
     companion object {
 
         /**
-         * The shortest password the form accepts.
+         * The longest password the form accepts, applied as a cap on the two new-password fields so
+         * an over-long paste is trimmed as it lands rather than refused after submit.
          *
          * **Referenced from the sign-in screens' shared rules (AuthValidation) rather than repeated**,
-         * so sign-up, password reset and this form can never disagree.
-         * That matters in a specific way: a stricter rule here would tell people their existing
-         * password is not good enough while leaving it in place and still accepting it at sign-in,
-         * and a looser one would let them set a password sign-up would have refused. One constant,
-         * raised or lowered in one file, keeps both screens honest.
+         * so sign-up and this form can never disagree. The *whole* rule set is shared the same way —
+         * see [onSubmit], which calls the same validation function the register form does. This
+         * constant is here only because the fragment needs the number itself to build the field's
+         * input filter.
          */
-        const val MINIMUM_LENGTH = AuthValidation.MIN_PASSWORD_LENGTH
+        const val MAXIMUM_LENGTH = AuthValidation.MAX_PASSWORD_LENGTH
 
         fun factory(userId: Long): ViewModelProvider.Factory = viewModelFactory {
             initializer {

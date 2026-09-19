@@ -267,6 +267,26 @@
         <item name="android:ellipsize">end</item>
     </style>
 
+    <!--
+        One line of the password checklist (ui/common/PasswordChecklistView.kt): a tick or an empty
+        ring, then the rule.
+
+        Small type, because six of these sit under a field and must not out-shout the field itself.
+        The colour is deliberately *not* set here — the view sets it per row, since a met rule and an
+        outstanding one are drawn differently and neither is a fixed property of the style.
+
+        drawablePadding is the gap between the icon and the text. lineSpacingExtra keeps the rows from
+        crowding each other at a large font scale, where six lines close together become a block.
+    -->
+    <style name="PetCare.PasswordRule" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:drawablePadding">@dimen/spacing_sm</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+    </style>
+
     <!-- ============================== Pastel stat pills ==============================
          A small fact in a soft tinted capsule — "3 years old", "24.5 kg", "Dog".
 

@@ -22,6 +22,12 @@
     plus weight 1), so a long sentence wraps within the column instead of pushing the badge off the
     card. The same shape as the Money tab's expense card, deliberately: a badge, a title and a meta
     line is the same kind of row, and it should read as one.
+
+    **The card's own measurements are a little tighter than the app's general card.** The padding, the
+    badge and the gap between cards each come down a step (alert_card_padding, alert_badge_size and
+    alert_card_spacing in dimens.xml, each with its reasoning). The title, the meta line and the unread
+    dot are deliberately untouched: those carry the information, and the card is still comfortably
+    above the 48dp a tap target needs.
 -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -39,7 +45,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="@dimen/card_padding">
+        android:padding="@dimen/alert_card_padding">
 
         <!-- "VAX", "MISS", "MILE". Its fill and text colour are set by the adapter: the accent while
              unread, the quiet surface once read. -->
@@ -92,8 +98,8 @@
         android:layout_width="@dimen/alert_dot_size"
         android:layout_height="@dimen/alert_dot_size"
         android:layout_gravity="top|end"
-        android:layout_marginTop="@dimen/card_padding"
-        android:layout_marginEnd="@dimen/card_padding"
+        android:layout_marginTop="@dimen/alert_card_padding"
+        android:layout_marginEnd="@dimen/alert_card_padding"
         android:background="@drawable/bg_alert_dot"
         android:importantForAccessibility="no"
         tools:visibility="visible" />

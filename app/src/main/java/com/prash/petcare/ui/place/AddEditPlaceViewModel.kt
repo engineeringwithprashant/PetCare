@@ -12,7 +12,10 @@ import com.prash.petcare.data.local.entity.Place
 import com.prash.petcare.data.local.entity.PlaceCategory
 import com.prash.petcare.data.location.LocationRepository
 import com.prash.petcare.data.repository.PlaceRepository
+import com.prash.petcare.ui.common.messageRes
 import com.prash.petcare.util.Coordinates
+import com.prash.petcare.util.PhoneCheck
+import com.prash.petcare.util.PhoneNumbers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,7 +52,8 @@ data class PlaceFormState(
     val isSaving: Boolean = false,
     @param:StringRes val nameError: Int? = null,
     @param:StringRes val hoursError: Int? = null,
-    @param:StringRes val locationError: Int? = null
+    @param:StringRes val locationError: Int? = null,
+    @param:StringRes val phoneError: Int? = null
 )
 
 /** A one-off occurrence the place form reacts to exactly once. */
@@ -149,6 +153,11 @@ class AddEditPlaceViewModel(
         _formState.value = _formState.value.copy(nameError = null)
     }
 
+    /** Called as the number or its country is edited, so a corrected field stops complaining. */
+    fun clearPhoneError() {
+        _formState.value = _formState.value.copy(phoneError = null)
+    }
+
     /**
      * Takes a GPS fix and stores it as this place's geotag.
      *
@@ -178,10 +187,18 @@ class AddEditPlaceViewModel(
         }
     }
 
-    /** Validates and writes the place. */
-    fun save(name: String, area: String, phone: String, notes: String) {
+    /**
+     * Validates and writes the place.
+     *
+     * @param phoneRegion The country chosen beside the number box, and [phone] the local number typed
+     *   next to it. The number is optional — many parks have none — but a number that *is* given has
+     *   to be a real one for that country, because the saved-place row offers to dial it. A number
+     *   stored in a shape nothing can dial is a button that fails at the moment somebody needs a vet.
+     */
+    fun save(name: String, area: String, phoneRegion: String, phone: String, notes: String) {
         val state = _formState.value
         val trimmedName = name.trim()
+        val trimmedPhone = phone.trim()
 
         val nameError = if (trimmedName.isEmpty()) R.string.error_place_name_required else null
         // Half a set of hours cannot answer "is it open?", so both or neither.
@@ -191,12 +208,16 @@ class AddEditPlaceViewModel(
             null
         }
         val locationError = if (state.coordinates == null) R.string.error_place_location_required else null
+        val phoneCheck = PhoneNumbers.check(phoneRegion, trimmedPhone)
+        // requireNumber = false: an empty box is fine here, unlike on the register form.
+        val phoneError = phoneCheck.messageRes(requireNumber = false)
 
-        if (nameError != null || hoursError != null || locationError != null) {
+        if (nameError != null || hoursError != null || locationError != null || phoneError != null) {
             _formState.value = state.copy(
                 nameError = nameError,
                 hoursError = hoursError,
-                locationError = locationError
+                locationError = locationError,
+                phoneError = phoneError
             )
             return
         }
@@ -220,7 +241,13 @@ class AddEditPlaceViewModel(
                 area = area.trimToNull(),
                 latitude = coordinates.latitude,
                 longitude = coordinates.longitude,
-                phone = phone.trimToNull(),
+                // Stored in international form, so a saved place's number dials the same whether the
+                // user is standing in Kathmandu or abroad. An empty box stays null, as before.
+                phone = if (phoneCheck == PhoneCheck.EMPTY) {
+                    null
+                } else {
+                    PhoneNumbers.toE164(phoneRegion, trimmedPhone) ?: trimmedPhone
+                },
                 openingMinutes = state.openingMinutes,
                 closingMinutes = state.closingMinutes,
                 notes = notes.trimToNull()

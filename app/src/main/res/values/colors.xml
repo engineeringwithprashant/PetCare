@@ -517,4 +517,16 @@
          and nothing like the red that fills it. -->
     <color name="auth_lock_ring_track">@color/total_card_track</color>
 
+    <!-- A satisfied rule in the password checklist (ui/common/PasswordChecklistView.kt).
+
+         The "open now" green, referenced rather than repeated, because the app deliberately has one
+         green meaning "all good" — the same one behind the Places tab's OPEN NOW pill and the
+         dashboard's "All synced" dot. A single value rather than a light/dark pair, for the reason
+         the other accents are single: it is a small mark on a page, saturated enough to read against
+         the cream and the near-black alike.
+
+         The *unmet* rows take no colour of their own. They use the theme's muted text colour, which
+         is exactly what they are — text that has not become important yet. -->
+    <color name="password_rule_met">@color/open_now_container</color>
+
 </resources>

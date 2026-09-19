@@ -106,13 +106,24 @@
                     android:labelFor="@id/loginPasswordInput"
                     android:text="@string/login_password_label" />
 
-                <!-- No visibility toggle icon: the design shows a plain field. actionDone on the
-                     keyboard submits the form, wired in AuthFragment. -->
+                <!-- endIconMode="password_toggle" puts the eye icon inside the right edge of the
+                     box. Material swaps the icon between "eye" and "eye with a stroke through it" as
+                     the field is revealed and hidden, so the icon always shows the current state, and
+                     each field keeps its own toggle — revealing one never reveals another.
+
+                     Showing a password on request is not a weakening: it is the standard answer to
+                     typos in a masked field, it is the user's own choice made on their own screen,
+                     and the alternative — typing a long password blind — reliably produces *weaker*
+                     passwords, because people pick ones that are easy to type.
+
+                     actionDone on the keyboard submits the form, wired in AuthFragment. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/loginPasswordLayout"
                     style="@style/PetCare.Auth.Field"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    app:endIconContentDescription="@string/cd_toggle_password_visibility"
+                    app:endIconMode="password_toggle">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/loginPasswordInput"
@@ -232,24 +243,73 @@
                     android:labelFor="@id/phoneInput"
                     android:text="@string/register_phone_label" />
 
-                <!-- inputType="phone" brings up the dial-pad keyboard, which still offers "+" and
-                     spaces for an international number. -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/phoneLayout"
-                    style="@style/PetCare.Auth.Field"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                <!--
+                    The phone number: a country selector and the local number beside it.
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/phoneInput"
-                        style="@style/PetCare.Auth.FieldInput"
-                        android:layout_width="match_parent"
+                    **Why two boxes rather than one.** A number only means anything against a country
+                    — how many digits it has, which prefixes exist, what it looks like written
+                    internationally — so asking for the country explicitly is what lets the form check
+                    the number properly instead of guessing, and what lets it be stored in one
+                    canonical international form. The behaviour behind the pair (the country chooser,
+                    the length cap, the inline error) is ui/common/PhoneNumberInput.kt, shared with
+                    every other phone field in the app.
+
+                    A horizontal LinearLayout: the selector at a fixed width so the number box always
+                    starts in the same place (see phone_country_field_width in dimens.xml), and the
+                    number taking the rest with width 0 + weight 1.
+
+                    baselineAligned="false" for the reason set out on the consent row below — a
+                    baseline-aligning row measures a weighted child before it knows its width, which
+                    with two text fields of different content leaves the row the wrong height.
+                -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it
+                         unfocusable, so it can never summon the keyboard, and gives it a spoken
+                         description naming the country in full — the label itself is a flag and a
+                         number, which a screen reader cannot usefully read out. -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/phoneCountryLayout"
+                        style="@style/PetCare.Auth.Field"
+                        android:layout_width="@dimen/phone_country_field_width"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/phoneCountryInput"
+                            style="@style/PetCare.Auth.FieldInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            tools:text="🇳🇵 +977" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- inputType="phone" brings up the dial-pad keyboard. The number of digits it
+                         will accept is capped per country by PhoneNumberInput, so an over-long number
+                         cannot be typed at all. -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/phoneLayout"
+                        style="@style/PetCare.Auth.Field"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:autofillHints="phone"
-                        android:hint="@string/register_phone_hint"
-                        android:imeOptions="actionNext"
-                        android:inputType="phone" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_marginStart="@dimen/phone_country_field_gap"
+                        android:layout_weight="1">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/phoneInput"
+                            style="@style/PetCare.Auth.FieldInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:autofillHints="phone"
+                            android:hint="@string/register_phone_hint"
+                            android:imeOptions="actionNext"
+                            android:inputType="phone" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
 
                 <!-- A standalone helper line rather than TextInputLayout's helperText, because the
                      mockup sets it in the mono helper face, and an error on the field should appear
@@ -270,13 +330,25 @@
                     android:text="@string/register_password_label" />
 
                 <!-- The "At least 8 characters" placeholder is set by AuthFragment from the same
-                     constant the validation uses. -->
+                     constant the validation uses. The eye icon works exactly as on the log in field
+                     above, and independently of it and of the confirmation field below: each
+                     TextInputLayout owns its own toggle and its own masked/revealed state.
+
+                     The maximum length is applied by AuthFragment rather than written here, from the
+                     same AuthValidation constant the rule uses — a number typed into the layout could
+                     drift from the one enforced, and a field that accepted more than the form does
+                     would refuse a paste only after the user pressed the button. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/registerPasswordLayout"
                     style="@style/PetCare.Auth.Field"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    app:endIconContentDescription="@string/cd_toggle_password_visibility"
+                    app:endIconMode="password_toggle">
 
+                    <!-- textPassword rather than textNewPassword: this field is revealed by the eye
+                         icon beside it, and on some keyboards textNewPassword suppresses that in
+                         favour of the keyboard's own suggestion flow. -->
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/registerPasswordInput"
                         style="@style/PetCare.Auth.FieldInput"
@@ -287,6 +359,17 @@
                         android:inputType="textPassword"
                         tools:hint="At least 8 characters" />
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- The six rules, ticking off live as the password is typed. Directly under the
+                     field it describes and above the confirmation, which is where someone inventing a
+                     password is already looking. See ui/common/PasswordChecklistView.kt for why the
+                     rules are shown while the password is being chosen rather than reported after it
+                     has been rejected. -->
+                <com.prash.petcare.ui.common.PasswordChecklistView
+                    android:id="@+id/registerPasswordChecklist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/auth_label_gap" />
 
                 <TextView
                     style="@style/PetCare.Auth.FieldLabel"
@@ -299,7 +382,9 @@
                     android:id="@+id/confirmPasswordLayout"
                     style="@style/PetCare.Auth.Field"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    app:endIconContentDescription="@string/cd_toggle_password_visibility"
+                    app:endIconMode="password_toggle">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/confirmPasswordInput"

@@ -127,8 +127,38 @@
     <string name="register_email_label">Email</string>
     <string name="register_email_hint">you@example.com</string>
     <string name="register_phone_label">Phone</string>
-    <string name="register_phone_hint">+977 98XXXXXXXX</string>
-    <string name="register_phone_helper">Used for delegation SMS and OTP login</string>
+    <string name="register_phone_hint">98XXXXXXXX</string>
+    <string name="register_phone_helper">Pick your country, then type the number without the dialling code</string>
+
+    <!-- ~~~~~~~~~~ The country-code selector ~~~~~~~~~~
+         Shared by every form that asks for a phone number — see ui/common/PhoneNumberInput.kt. -->
+    <string name="phone_country_label">Country</string>
+    <string name="phone_country_dialog_title">Choose a country</string>
+    <!-- %1$s is the country's name in the user's own language, %2$d its dialling code. The label on
+         screen is a flag and a number, which a screen reader would otherwise read as "flag plus nine
+         seven seven". -->
+    <string name="cd_phone_country">Country code: %1$s, plus %2$d. Double tap to change.</string>
+
+    <!-- ~~~~~~~~~~ The password checklist ~~~~~~~~~~
+         The six rules shown live under every field where a password is chosen. See
+         ui/common/PasswordChecklistView.kt. -->
+    <!-- %1$d and %2$d are AuthValidation.MIN_PASSWORD_LENGTH and MAX_PASSWORD_LENGTH, filled in at
+         runtime so the figures shown are always the figures enforced. -->
+    <string name="password_rule_length">%1$d–%2$d characters</string>
+    <string name="password_rule_uppercase">An upper case letter (A–Z)</string>
+    <string name="password_rule_lowercase">A lower case letter (a–z)</string>
+    <string name="password_rule_digit">A number (0–9)</string>
+    <string name="password_rule_special">A symbol (!, ?, #, …)</string>
+    <string name="password_rule_pattern">Not all one character or a straight run (aaaa, 1234)</string>
+    <!-- The whole checklist is announced as one summary rather than as six live rows, because it is
+         redrawn on every keystroke. %1$d met out of %2$d. -->
+    <string name="cd_password_rules_progress">Password requirements: %1$d of %2$d met</string>
+
+    <!-- ~~~~~~~~~~ Show / hide a password ~~~~~~~~~~
+         The eye icon inside the right edge of every password field. Material swaps the icon itself;
+         this is what TalkBack reads, and it names the action rather than the state, which is the
+         convention for a control that does something when activated. -->
+    <string name="cd_toggle_password_visibility">Show or hide password</string>
     <string name="register_password_label">Password</string>
     <!-- %1$d is AuthValidation.MIN_PASSWORD_LENGTH, filled in at runtime so the placeholder can never
          disagree with the rule actually enforced. A plural because "At least 1 characters" would be
@@ -696,6 +726,14 @@
     <string name="error_email_taken">An account already uses this email address</string>
     <string name="error_password_required">Please enter your password</string>
     <string name="error_password_too_short">Password must be at least 8 characters</string>
+    <!-- The upper bound from AuthValidation.MAX_PASSWORD_LENGTH. Reached only by a paste, since the
+         fields cap typing at the same length. -->
+    <string name="error_password_too_long">Password must be 64 characters or fewer</string>
+    <!-- One message for all four variety rules rather than four. The checklist under the field names
+         exactly which are outstanding, so repeating that here would be saying the same thing twice in
+         two places at once. -->
+    <string name="error_password_missing_variety">Your password needs an upper case letter, a lower case letter, a number and a symbol</string>
+    <string name="error_password_predictable">Choose something less predictable than a repeated or sequential run of characters</string>
     <string name="error_confirm_password_required">Please confirm your password</string>
     <string name="error_password_mismatch">Passwords do not match</string>
     <!-- Firebase Authentication refused the password under the project's password policy, which can
@@ -707,11 +745,10 @@
     <string name="error_invalid_credentials">Incorrect email or password</string>
     <string name="error_identifier_required">Please enter your email or phone number</string>
     <string name="error_identifier_invalid">Enter a valid email address or phone number</string>
-    <!-- Phone numbers are accepted on the log-in form, but accounts can only be looked up by email
-         until phone sign-in is connected. -->
-    <string name="error_phone_login_unavailable">Phone sign-in isn\'t available yet. Use your email</string>
     <string name="error_phone_required">Please enter your phone number</string>
-    <string name="error_phone_invalid">Enter a valid phone number, e.g. +977 9812345678</string>
+    <!-- Deliberately points at the country as well as the number: the commonest cause of a number
+         that will not validate is the selector still sitting on the country the form opened with. -->
+    <string name="error_phone_invalid">That is not a valid number for the country selected. Check the number and the dialling code.</string>
     <string name="error_consent_required">Please accept the terms to create an account</string>
     <!-- Ready for the code screens once verification is connected; see CodeEntryViewModel. -->
     <string name="error_code_incorrect">That code is not right. Check it and try again.</string>
@@ -1653,17 +1690,9 @@
         <item quantity="other">%d recovery codes left</item>
     </plurals>
 
-    <string name="profile_row_fingerprint_title">Unlock with fingerprint</string>
-    <!--
-        Two subtitles, and neither claims the app is locked.
-
-        The preference is genuinely stored, but nothing enforces it yet: that would need the biometric
-        library and a lock screen in front of the navigation graph. Saying "required to open the app"
-        would be telling the user their pets' records are protected when they are not, which is the one
-        kind of inaccuracy a security setting must never commit. See SettingsStore.fingerprintUnlock.
-    -->
-    <string name="profile_row_fingerprint_on">On · saved, enforced in a later release</string>
-    <string name="profile_row_fingerprint_off">Off</string>
+    <!-- An "Unlock with fingerprint" row and its two subtitles used to sit here. Both are gone: the
+         switch stored a preference that nothing enforced, so the app was offering a lock it did not
+         have. See SettingsStore.forgetFingerprintUnlock. -->
 
     <string name="profile_row_reminders_title">Care reminders</string>
     <!-- This one *is* wired: ReminderManager reads it and withdraws every alarm when it is off. The
@@ -1674,16 +1703,15 @@
     <string name="profile_row_reminders_off">Off · no reminders will be posted</string>
 
     <!--
-        The pale note under the three switches.
+        The pale note under the switches.
 
-        It used to explain the dead two-factor switch; two-factor authentication now works, so what is
-        left to explain is the fingerprint row, which is still a remembered preference rather than a
-        working lock. The second sentence states the limit of on-device two-factor plainly — the same
-        point TwoFactorRepository makes to whoever reads the code. A user deciding whether this is
-        enough protection deserves to know where it stops, not to be left assuming it covers a stolen
-        unlocked phone.
+        Every row in this card now does what it says, so the note no longer has to disclaim any of
+        them. What is left is the one thing the rows cannot show: where two-factor protection stops.
+        Codes are checked on this device — the same point TwoFactorRepository makes to whoever reads
+        the code — and a user deciding whether this is enough protection deserves to know that, rather
+        than being left assuming it covers a stolen unlocked phone.
     -->
-    <string name="profile_security_note">Fingerprint unlock is remembered but not yet enforced. Two-factor codes are checked on this device, so they protect your account from someone who knows your password — not from someone holding your unlocked phone.</string>
+    <string name="profile_security_note">Two-factor codes are checked on this device, so they protect your account from someone who knows your password — not from someone holding your unlocked phone.</string>
 
     <!-- ============================== PREFERENCES ============================== -->
 
@@ -1814,7 +1842,10 @@
     <string name="account_details_title">Name &amp; details</string>
     <string name="account_details_name_label">Full name</string>
     <string name="account_details_phone_label">Phone number</string>
-    <string name="account_details_phone_helper">Optional. Shown on your profile so carers know who is texting them.</string>
+    <!-- Says what the number is *for*, now that it does something: it is what the account can be
+         found by at sign-in, as well as what carers see. A field whose purpose is stated is one
+         people are willing to fill in. -->
+    <string name="account_details_phone_helper">Optional. You can sign in with this number, and carers see it on your profile.</string>
     <string name="account_details_role_label">Your role</string>
     <string name="account_details_role_helper">Owner if the pets are yours; carer if you look after someone else\'s.</string>
     <!-- The email is shown but not editable, and the screen says why rather than leaving a greyed-out
@@ -1832,12 +1863,15 @@
     <string name="change_password_current_label">Current password</string>
     <string name="change_password_new_label">New password</string>
     <string name="change_password_confirm_label">Confirm new password</string>
-    <string name="change_password_helper">At least %1$d characters.</string>
     <string name="change_password_save">Change password</string>
     <string name="change_password_changed">Password changed.</string>
     <string name="change_password_current_required">Enter your current password.</string>
     <string name="change_password_current_wrong">That is not your current password.</string>
-    <string name="change_password_too_short">Use at least %1$d characters.</string>
+    <!-- A "change_password_helper" line and a "too short" error used to sit here, both naming the
+         minimum length. Both are gone: length is now one of six rules, the checklist under the field
+         shows all six live, and a rejected password reports whichever rule it broke through the
+         shared messages in the validation section above. Two screens saying the same policy in two
+         different wordings is exactly how they come to disagree. -->
     <string name="change_password_mismatch">The two new passwords do not match.</string>
     <string name="change_password_same">That is the password you already have.</string>
 

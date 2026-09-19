@@ -519,19 +519,34 @@
          user's font size. -->
     <dimen name="notifications_headline_text_size">26sp</dimen>
 
-    <!-- The square code badge on an alert card ("VAX", "MISS"). The Money tab's badge size and
-         corner, so a small square abbreviation is the same object on both screens. -->
-    <dimen name="alert_badge_size">44dp</dimen>
-    <dimen name="alert_badge_corner_radius">12dp</dimen>
+    <!-- The padding inside an alert card.
+
+         A step tighter than the app's general card_padding (16dp), which these cards used to take.
+         An alert is a one-line sentence with a small badge beside it, and at the general inset the
+         cards read as panels rather than as rows of a list — the Money tab's cards carry an amount
+         and a category as well, so the same padding buys more there. Trimmed rather than halved:
+         these are still tappable cards and the text still needs air around it. -->
+    <dimen name="alert_card_padding">13dp</dimen>
+
+    <!-- The square code badge on an alert card ("VAX", "MISS").
+
+         A little under the Money tab's 44dp badge. It is the one element on the card with no
+         information density to justify its size — three letters — so it is where size can come off
+         without the card losing anything. The corner radius comes down with it, so the square keeps
+         the same proportions rather than looking more rounded at the smaller size. -->
+    <dimen name="alert_badge_size">38dp</dimen>
+    <dimen name="alert_badge_corner_radius">10dp</dimen>
 
     <!-- The red dot in an unread card's top corner. A touch larger than the header's 9dp dot, which
          has to squeeze onto the corner of a 32dp badge; this one sits in the open space of a card and
          is sized to be found rather than to fit. -->
     <dimen name="alert_dot_size">8dp</dimen>
 
-    <!-- Gap between alert cards. The Money tab's spacing: these are rows of a list grouped under
-         headings, and a wider gap would break the groups apart visually. -->
-    <dimen name="alert_card_spacing">12dp</dimen>
+    <!-- Gap between alert cards. Tightened alongside the padding above: the cards are shorter now,
+         and a gap left at the old size would have been a larger share of each row than before, which
+         would have undone some of what the tighter padding bought. Still a clear gap — these are
+         separate cards grouped under headings, not one continuous list. -->
+    <dimen name="alert_card_spacing">9dp</dimen>
 
     <!-- ============================== Assistant ==============================
          The chat screen opened from the dashboard. -->
@@ -691,6 +706,20 @@
     <dimen name="auth_field_gap">14dp</dimen>
     <!-- The small mono helper lines ("Forgot it? Reset by email."). -->
     <dimen name="auth_helper_text_size">11sp</dimen>
+
+    <!-- ============================== Phone number fields ==============================
+         The country selector that now sits beside every phone-number box in the app — the register
+         form, the profile's details form, the delegation-contact dialog and the place form. See
+         ui/common/PhoneNumberInput.kt.
+
+         Its width is fixed rather than wrap_content so the number box beside it starts at the same
+         place whichever country is chosen: with wrap_content, picking a one-digit dialling code (+1)
+         after a three-digit one (+977) would shuffle the whole row sideways. Wide enough for a flag,
+         a "+" and four digits — the longest dialling code in use — at the default text size. -->
+    <dimen name="phone_country_field_width">116dp</dimen>
+    <!-- The gap between the selector and the number box. The app's small spacing: the two are one
+         control split in half, so they should read as a pair rather than as two separate fields. -->
+    <dimen name="phone_country_field_gap">@dimen/spacing_sm</dimen>
 
     <!-- The main filled button and the Google button. -->
     <dimen name="auth_button_height">52dp</dimen>

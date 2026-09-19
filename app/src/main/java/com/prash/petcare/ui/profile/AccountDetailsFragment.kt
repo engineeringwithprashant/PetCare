@@ -16,6 +16,7 @@ import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.User
 import com.prash.petcare.data.local.entity.UserRole
 import com.prash.petcare.databinding.FragmentAccountDetailsBinding
+import com.prash.petcare.ui.common.PhoneNumberInput
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
@@ -53,6 +54,14 @@ class AccountDetailsFragment : Fragment() {
      */
     private var hasFilledForm = false
 
+    /**
+     * The country selector and number box, driven as one control.
+     *
+     * Created in [onViewCreated] and dropped in [onDestroyView] with the binding, since it holds
+     * views from this hierarchy.
+     */
+    private var phoneInput: PhoneNumberInput? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -64,6 +73,16 @@ class AccountDetailsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // The two phone boxes behave as one control. Editing either clears the error left by a
+        // previous save attempt, so a corrected field stops complaining.
+        phoneInput = PhoneNumberInput(
+            countryLayout = binding.phoneCountryLayout,
+            countryInput = binding.phoneCountryInput,
+            numberLayout = binding.phoneInputLayout,
+            numberInput = binding.phoneInput,
+            onChanged = { binding.phoneInputLayout.error = null }
+        )
 
         binding.saveButton.setOnClickListener { save() }
         observeViewModel()
@@ -86,7 +105,11 @@ class AccountDetailsFragment : Fragment() {
         hasFilledForm = true
 
         binding.nameInput.setText(user.fullName)
-        binding.phoneInput.setText(user.phone.orEmpty())
+
+        // Splits the stored number back into a country and the local digits. A number saved before
+        // this form had a selector is bare digits and is read as a Nepali number, which is what stops
+        // an existing profile's number disappearing the first time this screen is opened.
+        phoneInput?.setStoredNumber(user.phone)
 
         // The email is shown but not editable. The field is disabled rather than absent, because the
         // address is one of the account's defining facts and a form that simply omitted it would look
@@ -101,9 +124,14 @@ class AccountDetailsFragment : Fragment() {
     }
 
     private fun save() {
+        val phone = phoneInput ?: return
+
         viewModel.onSave(
             fullName = binding.nameInput.text?.toString().orEmpty(),
-            phone = binding.phoneInput.text?.toString().orEmpty(),
+            // The country and the digits go over separately: whether the two make a real number, and
+            // what its international form is, are the ViewModel's decisions rather than this screen's.
+            phoneRegion = phone.regionCode(),
+            phone = phone.nationalNumber(),
             role = if (binding.roleToggleGroup.checkedButtonId == R.id.roleCarerButton) {
                 UserRole.CARER
             } else {
@@ -121,6 +149,7 @@ class AccountDetailsFragment : Fragment() {
      */
     private fun handleEvent(event: AccountDetailsEvent) {
         binding.nameInputLayout.error = null
+        binding.phoneInputLayout.error = null
 
         when (event) {
             is AccountDetailsEvent.Saved -> {
@@ -132,6 +161,11 @@ class AccountDetailsFragment : Fragment() {
 
             is AccountDetailsEvent.NameRequired ->
                 binding.nameInputLayout.error = getString(R.string.account_details_name_required)
+
+            // Under the number rather than the country, because the number is usually the part to
+            // change — and the message itself names the country as the other possibility.
+            is AccountDetailsEvent.PhoneInvalid ->
+                binding.phoneInputLayout.error = getString(R.string.error_phone_invalid)
 
             is AccountDetailsEvent.AccountMissing -> {
                 showMessage(getString(R.string.account_details_gone))
@@ -146,6 +180,8 @@ class AccountDetailsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Dropped with the binding: it holds views from this hierarchy.
+        phoneInput = null
         _binding = null
     }
 }

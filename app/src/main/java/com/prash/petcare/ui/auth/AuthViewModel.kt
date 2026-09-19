@@ -15,6 +15,8 @@ import com.prash.petcare.data.remote.AuthFailure
 import com.prash.petcare.data.repository.AccountResult
 import com.prash.petcare.data.repository.TwoFactorRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.ui.common.messageRes
+import com.prash.petcare.util.PhoneNumbers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -105,6 +107,11 @@ data class LoginLock(
  *   disabled and a double tap cannot create two accounts.
  * @property identifier The address currently typed in the log in field, which decides whose failed
  *   attempts [alert] and [lock] describe.
+ * @property passwordRequirements Which password rules the register form's password currently meets,
+ *   for the live checklist under the field. The second exception to the paragraph above, and for a
+ *   similar reason: the checklist has to answer every keystroke, and the rule it answers with must be
+ *   the same rule the submit enforces — so the password is measured in one place, here, rather than
+ *   measured again in the fragment where the two could drift apart.
  * @property alert The wrong-password warning, or null when there is nothing to warn about.
  * @property lock The lock covering the form, or null when sign-in is open. Never both this and
  *   [alert]: a locked account has run out of attempts to count down.
@@ -114,6 +121,8 @@ data class AuthUiState(
     val errors: Map<AuthField, Int> = emptyMap(),
     val isSubmitting: Boolean = false,
     val identifier: String = "",
+    val passwordRequirements: AuthValidation.PasswordRequirements =
+        AuthValidation.PasswordRequirements(),
     val alert: LoginAlert? = null,
     val lock: LoginLock? = null
 )
@@ -337,6 +346,32 @@ class AuthViewModel(
         )
     }
 
+    /**
+     * The register form's password changed; re-measure it for the checklist under the field.
+     *
+     * **Why the password is watched when most fields are not.** The checklist exists precisely so
+     * the user learns the rules while inventing the password rather than after pressing the button,
+     * which means it has to redraw on every keystroke. Measuring here rather than in the fragment is
+     * what guarantees the ticks on screen and the rules applied at submit are the same function's
+     * answer — a second copy in the View layer would eventually disagree with this one, and a
+     * checklist showing six green ticks over a form that then refuses the password is worse than no
+     * checklist at all.
+     *
+     * The password itself is deliberately *not* kept in state — only the six booleans derived from
+     * it. A credential held in a ViewModel would outlive the screen and be written into the saved
+     * state bundle on process death; the measurements say nothing about what the password is.
+     */
+    fun onPasswordChanged(password: String) {
+        val requirements = AuthValidation.requirementsFor(password)
+        _uiState.update { state ->
+            if (state.passwordRequirements == requirements) {
+                state
+            } else {
+                state.copy(passwordRequirements = requirements)
+            }
+        }
+    }
+
     /** Removes the error from one field, called as soon as the user starts correcting it. */
     fun clearError(field: AuthField) {
         _uiState.update { state ->
@@ -345,11 +380,23 @@ class AuthViewModel(
     }
 
     /**
-     * Signs an existing user in with an email (or, once connected, a phone number) and a password.
+     * Signs an existing user in with either an email address or a phone number, and a password.
      *
-     * The failure message is deliberately vague — "Incorrect email or password" — so the form cannot be
-     * used to discover which addresses have accounts. Only problems that say nothing about the account,
-     * such as no network, get their own message.
+     * **How signing in by number works.** Firebase Authentication signs in by email and password; a
+     * phone number is not a credential it has ever heard of. So a number typed here is looked up
+     * against the numbers on the profiles this device holds, and the *email address* behind it is
+     * what is then signed in with — see [UserRepository.findEmailForPhone], which also sets out the
+     * one limit worth knowing: a brand-new handset has no profiles to look the number up in, so the
+     * first sign-in there needs the email address.
+     *
+     * **An unregistered number and a wrong password are deliberately indistinguishable.** A number
+     * that matches no account produces the same generic failure as a wrong password *and is counted
+     * as a failed attempt in the same way*, which is the part that actually matters: a message that
+     * differed, or a lockout that did not tick, would turn this form into a way of discovering which
+     * numbers have accounts, one guess at a time.
+     *
+     * The failure message is vague for the same reason — "Incorrect email or password". Only problems
+     * that say nothing about the account, such as no network, get their own message.
      *
      * The first login on a device needs a connection, since Firebase has to check the password.
      */
@@ -363,8 +410,8 @@ class AuthViewModel(
 
         val errors = buildMap {
             identifierError(trimmed)?.let { put(AuthField.IDENTIFIER, it) }
-            // Only emptiness is checked, not length: enforcing today's minimum on sign-in would lock
-            // out any account whose password predates that rule.
+            // Only emptiness is checked, not the password rules: enforcing today's rules on sign-in
+            // would lock out any account whose password predates them.
             if (password.isEmpty()) put(AuthField.LOGIN_PASSWORD, R.string.error_password_required)
         }
         if (errors.isNotEmpty()) {
@@ -375,9 +422,18 @@ class AuthViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, errors = emptyMap()) }
 
-            // Firebase checks the password. The repository then finds (or, on a first login on this
-            // device, creates) the local profile for the account.
-            val result = userRepository.signIn(email = trimmed, password = password)
+            // A number becomes the address on its account; an address is already one. A number that
+            // belongs to no account here resolves to null, and is then failed exactly as a wrong
+            // password is — see the note above on why the two must look the same.
+            val email = resolveSignInEmail(trimmed)
+
+            val result = if (email == null) {
+                AccountResult.Failed(AuthFailure.INVALID_CREDENTIALS)
+            } else {
+                // Firebase checks the password. The repository then finds (or, on a first login on
+                // this device, creates) the local profile for the account.
+                userRepository.signIn(email = email, password = password)
+            }
 
             _uiState.update { it.copy(isSubmitting = false) }
 
@@ -402,6 +458,22 @@ class AuthViewModel(
             }
         }
     }
+
+    /**
+     * The email address to sign in with for whatever was typed into the log-in field, or null when a
+     * phone number matches no account on this device.
+     *
+     * The identifier has already passed [identifierError], so it is either a well-formed address or a
+     * valid phone number; anything containing "@" is the former. Note the *failed attempt is still
+     * counted against what the user typed* rather than against the address it resolved to, so the
+     * lockout follows the number they are actually entering.
+     */
+    private suspend fun resolveSignInEmail(identifier: String): String? =
+        if (identifier.contains('@')) {
+            identifier
+        } else {
+            userRepository.findEmailForPhone(identifier)
+        }
 
     /**
      * Records a wrong password against [email] and redraws the warning — or the locked screen, if
@@ -436,10 +508,16 @@ class AuthViewModel(
      *
      * Every field is validated in one pass before anything is written, so the user sees all of their
      * mistakes at once and a rejected form never leaves a half-created account behind.
+     *
+     * @param phoneRegion The country chosen beside the phone field ("NP"), and [phone] the local
+     *   number typed next to it. The two are checked together — a number is only meaningful against a
+     *   country — and stored as one international number, which is what lets the same account later
+     *   be found by that number at sign-in. See [PhoneNumbers].
      */
     fun register(
         fullName: String,
         email: String,
+        phoneRegion: String,
         phone: String,
         password: String,
         confirmPassword: String,
@@ -453,7 +531,11 @@ class AuthViewModel(
         val errors = buildMap {
             if (trimmedName.isEmpty()) put(AuthField.FULL_NAME, R.string.error_name_required)
             AuthValidation.validateEmail(trimmedEmail)?.let { put(AuthField.EMAIL, it) }
-            AuthValidation.validatePhone(trimmedPhone)?.let { put(AuthField.PHONE, it) }
+            // requireNumber = true: registration is the one form that insists on a number, because
+            // it is what makes signing in by phone possible for this account at all.
+            PhoneNumbers.check(phoneRegion, trimmedPhone)
+                .messageRes(requireNumber = true)
+                ?.let { put(AuthField.PHONE, it) }
             AuthValidation.validateNewPassword(password)?.let { put(AuthField.REGISTER_PASSWORD, it) }
             AuthValidation.validateConfirmation(password, confirmPassword)
                 ?.let { put(AuthField.CONFIRM_PASSWORD, it) }
@@ -469,10 +551,15 @@ class AuthViewModel(
 
             // Firebase creates the account (and refuses an address already in use), then the
             // repository writes the local profile. The password is handed over and not kept here.
+            //
+            // The number is stored in international form rather than as typed. The `?: trimmedPhone`
+            // can only be reached if the number stopped being valid between the check above and this
+            // line, which it cannot — it is there because toE164 is nullable, not because the
+            // fallback is expected.
             val result = userRepository.register(
                 fullName = trimmedName,
                 email = trimmedEmail,
-                phone = trimmedPhone,
+                phone = PhoneNumbers.toE164(phoneRegion, trimmedPhone) ?: trimmedPhone,
                 password = password
             )
 
@@ -633,16 +720,25 @@ class AuthViewModel(
      * The field accepts an email or a phone number, and which one it is decides the rule: anything
      * containing "@" is treated as an attempted email address, so a typo in one gets the email error
      * rather than a confusing phone error.
+     *
+     * **A well-formed number always passes here**, whether or not any account has it. That is not an
+     * oversight: rejecting an unregistered number at *this* point — before the password has even been
+     * looked at — would announce that the number has no account, which is exactly what
+     * [login] goes to some trouble to conceal. An unknown number therefore travels the whole way
+     * through and fails as a wrong password would.
+     *
+     * The field has no country selector of its own, unlike the register form: a returning user types
+     * the number they know, so [PhoneNumbers.parseLoginNumber] reads a bare local number as a Nepali
+     * one and an international one by its own dialling code.
      */
     @StringRes
     private fun identifierError(identifier: String): Int? = when {
         identifier.isEmpty() -> R.string.error_identifier_required
         identifier.contains('@') -> AuthValidation.validateEmail(identifier)
-        // TODO(phone-login): a well-formed phone number is recognised but cannot sign in yet.
-        //  Firebase Authentication signs in by email and password, and signing in by phone number is a
-        //  separate Firebase flow (a one-time SMS code). Once that is built, return null here and send
-        //  phone numbers to it from login().
-        AuthValidation.isPhone(identifier) -> R.string.error_phone_login_unavailable
+        PhoneNumbers.parseLoginNumber(identifier) != null -> null
+        // Digits and separators, but not a real number anywhere: say so as a phone problem rather
+        // than complaining about an email address the user plainly was not typing.
+        PhoneNumbers.looksLikePhoneAttempt(identifier) -> R.string.error_phone_invalid
         else -> R.string.error_identifier_invalid
     }
 

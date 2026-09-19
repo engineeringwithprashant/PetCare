@@ -1,9 +1,11 @@
 package com.prash.petcare.ui.profile
 
 import android.os.Bundle
+import android.text.InputFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -52,13 +54,18 @@ class ChangePasswordFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // The minimum is built here from the ViewModel's constant rather than typed into the layout,
-        // so the number the user is told matches the number actually enforced — the sign-up screen
-        // does the same, from the same constant.
-        binding.newPasswordInputLayout.helperText = getString(
-            R.string.change_password_helper,
-            ChangePasswordViewModel.MINIMUM_LENGTH
-        )
+        // The upper bound, applied from the ViewModel's constant rather than typed into the layout,
+        // so the cap on the field is the cap the rule enforces. Capping here means an over-long paste
+        // is trimmed as it lands instead of being refused after the user presses the button.
+        listOf(binding.newPasswordInput, binding.confirmPasswordInput).forEach { field ->
+            field.filters = arrayOf(InputFilter.LengthFilter(ChangePasswordViewModel.MAXIMUM_LENGTH))
+        }
+
+        // The checklist under the field answers every keystroke. The measuring is the ViewModel's —
+        // see ChangePasswordViewModel.passwordRequirements for why the rules are applied there.
+        binding.newPasswordInput.doAfterTextChanged { text ->
+            viewModel.onNewPasswordChanged(text?.toString().orEmpty())
+        }
 
         binding.saveButton.setOnClickListener { submit() }
         observeViewModel()
@@ -68,6 +75,11 @@ class ChangePasswordFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.events.collect(::handleEvent) }
+                launch {
+                    // Drawn from the ViewModel's measurement, so what is ticked here and what the
+                    // form enforces on submit are the same function's answer.
+                    viewModel.passwordRequirements.collect(binding.passwordChecklist::show)
+                }
                 launch {
                     // The change is a round trip to Firebase, so the button is disabled while it
                     // runs rather than letting three taps queue three changes.
@@ -113,11 +125,10 @@ class ChangePasswordFragment : Fragment() {
                 binding.currentPasswordInputLayout.error =
                     getString(R.string.change_password_current_wrong)
 
-            is ChangePasswordEvent.TooShort ->
-                binding.newPasswordInputLayout.error = getString(
-                    R.string.change_password_too_short,
-                    ChangePasswordViewModel.MINIMUM_LENGTH
-                )
+            // The message comes from the shared validation, so it says exactly which of the six rules
+            // the password broke — and cannot contradict the checklist sitting above the field.
+            is ChangePasswordEvent.NewPasswordRejected ->
+                binding.newPasswordInputLayout.error = getString(event.messageRes)
 
             // On the confirmation field, not the new-password one: the user is being asked to retype
             // what they already meant, so that is the field to look at again.

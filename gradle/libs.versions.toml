@@ -49,6 +49,16 @@ googleId = "1.1.1"
 # Base32 alphabet exactly right is precisely the sort of thing a tested library already does. See
 # data.auth.TotpAuthenticator.
 totp = "1.7.1"
+# Google's libphonenumber: the phone-number rules behind the country-code selector on every form
+# that asks for a number. Deliberately a library rather than a hand-written "ten digits" check — the
+# number of digits, the valid prefixes and the way a number is grouped differ per country and change
+# over time, so per-country rules written by hand are wrong the day they are written and wrong again
+# a year later. This is the same metadata Android's own dialler uses. See ui.common.PhoneNumbers.
+#
+# The plain (non-Android) artifact is used on purpose: it is pure Java with no Context to pass
+# around, so the validation rules stay callable from a ViewModel and from an ordinary JVM unit test
+# — see PhoneNumbersTest — which the Android port, needing a Context to load its metadata, would not.
+libphonenumber = "9.0.19"
 # ZXing's core encoder, used to turn the otpauth:// setup URI into a QR code the authenticator app
 # scans. `core` only — it produces an abstract BitMatrix of black and white modules with no drawing
 # code in it, which util.QrCodeRenderer paints into an Android Bitmap. The companion `javase`
@@ -104,6 +114,8 @@ retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = 
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 # Two-factor authentication: the TOTP algorithm and the QR encoder the setup screen needs.
 totp = { group = "dev.samstevens.totp", name = "totp", version.ref = "totp" }
+# Phone-number parsing, validation and formatting, per country.
+libphonenumber = { group = "com.googlecode.libphonenumber", name = "libphonenumber", version.ref = "libphonenumber" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 
 [plugins]

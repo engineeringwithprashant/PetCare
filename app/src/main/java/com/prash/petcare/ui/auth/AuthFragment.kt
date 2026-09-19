@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.text.Annotation
+import android.text.InputFilter
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextPaint
@@ -37,6 +38,7 @@ import com.prash.petcare.R
 import com.prash.petcare.data.local.LoginAttemptStore
 import com.prash.petcare.databinding.FragmentAuthBinding
 import com.prash.petcare.ui.auth.twofactor.TwoFactorFragment
+import com.prash.petcare.ui.common.PhoneNumberInput
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -94,6 +96,14 @@ class AuthFragment : Fragment() {
     /** The Google account picker currently open, if any. See [startGoogleSignIn]. */
     private var googleRequest: Job? = null
 
+    /**
+     * The country selector and number box on the register form, driven as one control.
+     *
+     * Created in [onViewCreated] and dropped in [onDestroyView] with the binding it holds views from,
+     * since it would otherwise keep the destroyed view hierarchy alive.
+     */
+    private var phoneInput: PhoneNumberInput? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -126,6 +136,24 @@ class AuthFragment : Fragment() {
             AuthValidation.MIN_PASSWORD_LENGTH
         )
 
+        // The upper bound, applied from the same constant the rule uses rather than typed into the
+        // layout. Capping the field means an over-long paste is trimmed as it lands instead of being
+        // refused after the user has pressed the button.
+        listOf(binding.registerPasswordInput, binding.confirmPasswordInput).forEach { field ->
+            field.filters = arrayOf(InputFilter.LengthFilter(AuthValidation.MAX_PASSWORD_LENGTH))
+        }
+
+        // The country selector and the number box are one control; this is what makes them behave as
+        // one. Editing either clears a stale error from the previous submit, exactly as the plain
+        // fields do through the listeners in onViewStateRestored.
+        phoneInput = PhoneNumberInput(
+            countryLayout = binding.phoneCountryLayout,
+            countryInput = binding.phoneCountryInput,
+            numberLayout = binding.phoneLayout,
+            numberInput = binding.phoneInput,
+            onChanged = { viewModel.clearError(AuthField.PHONE) }
+        )
+
         bindConsentText()
         bindButtons()
         observeViewModel()
@@ -155,6 +183,17 @@ class AuthFragment : Fragment() {
         binding.identifierInput.doOnTextChanged { text, _, _, _ ->
             viewModel.onIdentifierChanged(text?.toString().orEmpty())
         }
+
+        // The chosen password is reported as well as cleared, because the checklist beneath it has to
+        // answer every keystroke. The measuring is done by the ViewModel — see
+        // AuthViewModel.onPasswordChanged for why the rules are applied there and not here.
+        binding.registerPasswordInput.doOnTextChanged { text, _, _, _ ->
+            viewModel.onPasswordChanged(text?.toString().orEmpty())
+        }
+        // Attached after the restore, like the listeners above, but the password still has to be
+        // measured once now: after a rotation the field has its text back and the checklist would
+        // otherwise sit on six empty rings until the next key was pressed.
+        viewModel.onPasswordChanged(binding.registerPasswordInput.textString())
 
         // On a cold start the field is empty but the ViewModel may already hold the address of a
         // lock left over from a previous run (see its init block). Putting it into the field is what
@@ -327,12 +366,22 @@ class AuthFragment : Fragment() {
         )
     }
 
-    /** Hands the register form's text and the consent tick to the ViewModel. */
+    /**
+     * Hands the register form's text and the consent tick to the ViewModel.
+     *
+     * The phone number goes over as the country *and* the local digits, unjoined: the ViewModel is
+     * what decides whether the two make a real number and what the stored international form is, so
+     * handing it a pre-assembled string would mean assembling it in the View layer — and then having
+     * nothing to validate against if it turned out to be wrong.
+     */
     private fun submitRegistration() {
+        val phone = phoneInput ?: return
+
         viewModel.register(
             fullName = binding.fullNameInput.textString(),
             email = binding.emailInput.textString(),
-            phone = binding.phoneInput.textString(),
+            phoneRegion = phone.regionCode(),
+            phone = phone.nationalNumber(),
             password = binding.registerPasswordInput.textString(),
             confirmPassword = binding.confirmPasswordInput.textString(),
             hasAcceptedTerms = binding.consentCheckBox.isChecked
@@ -382,6 +431,10 @@ class AuthFragment : Fragment() {
         // The wrong-password warning, on the log in form only. The register form has no attempts to
         // count, and the ViewModel never sets it there.
         renderAlert(state.alert)
+
+        // The password checklist. Drawn from the ViewModel's measurement of the field, so what is
+        // ticked here and what the form enforces on submit are the same answer.
+        binding.registerPasswordChecklist.show(state.passwordRequirements)
 
         // Resolving the string here, in the View layer, is what keeps Context out of the ViewModel.
         // A null error clears the message rather than leaving an empty red line.
@@ -562,6 +615,9 @@ class AuthFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Dropped with the binding: it holds views from this hierarchy, and keeping it would keep the
+        // destroyed hierarchy alive for as long as the fragment sits on the back stack.
+        phoneInput = null
         _binding = null
     }
 

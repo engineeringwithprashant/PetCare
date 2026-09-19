@@ -81,22 +81,68 @@
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- inputType="phone" brings up the dial pad, and the number is stored exactly as typed. -->
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            <!--
+                The place's number: a country selector and the local number beside it.
+
+                Optional — many parks have none — but a number that *is* given is stored in one
+                international form and checked against the country chosen. That matters here because
+                the saved-place row offers to dial this number: a number kept in whatever shape it was
+                typed is a call button that may fail at the moment somebody needs a vet. The behaviour
+                behind the pair is ui/common/PhoneNumberInput.kt, shared with the sign-in and profile
+                forms, and a number saved before this form had a selector is read back into the two
+                boxes on open.
+
+                A horizontal LinearLayout: the selector at a fixed width so the number box always
+                starts in the same place whatever the dialling code, and the number taking the rest
+                (width 0 + weight 1).
+            -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_md"
-                android:hint="@string/place_phone_label">
+                android:baselineAligned="false"
+                android:orientation="horizontal">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/phoneInput"
-                    android:layout_width="match_parent"
+                <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it
+                     unfocusable and gives it a spoken description naming the country in full. -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/phoneCountryLayout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="@dimen/phone_country_field_width"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionNext"
-                    android:inputType="phone"
-                    android:maxLines="1" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:hint="@string/phone_country_label">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/phoneCountryInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        tools:text="🇳🇵 +977" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- inputType="phone" brings up the dial pad. How many digits it accepts is capped per
+                     country by PhoneNumberInput, so an over-long number cannot be typed at all. -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/phoneInputLayout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/phone_country_field_gap"
+                    android:layout_weight="1"
+                    android:hint="@string/place_phone_label"
+                    app:errorEnabled="true">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/phoneInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionNext"
+                        android:inputType="phone"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
 
             <!-- ============================ Opening hours ============================ -->
             <TextView

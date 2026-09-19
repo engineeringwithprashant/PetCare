@@ -17,6 +17,7 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -40,24 +41,66 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+    <!--
+        The number to text, as a country selector and the local number beside it.
+
+        **Why the country is asked for here too.** A delegation message is sent to this number by the
+        SMS manager, and a number saved in whatever shape it was typed is one that may or may not
+        reach anybody — a local number with no dialling code will not leave the country it was typed
+        in. Storing it in one international form, checked against the country the user picked, is what
+        makes "text this person" work for a carer with a number from anywhere. The behaviour behind
+        the pair is ui/common/PhoneNumberInput.kt, shared with the register and profile forms.
+
+        A horizontal LinearLayout: the selector at a fixed width so the number box always starts in
+        the same place whatever the dialling code, and the number taking the rest (width 0 + weight 1).
+    -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_md"
-        android:hint="@string/profile_add_contact_phone_hint">
+        android:baselineAligned="false"
+        android:orientation="horizontal">
 
-        <!-- inputType="phone" brings up the dialling keypad and allows the "+", spaces and dashes a
-             real number is written with — a numeric-only field would reject "+977 98…" outright. The
-             number is never parsed by the app; it is handed to the SMS manager as typed. -->
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/contactPhoneInput"
-            android:layout_width="match_parent"
+        <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it unfocusable
+             and gives it a spoken description naming the country in full. -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/contactPhoneCountryLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="@dimen/phone_country_field_width"
             android:layout_height="wrap_content"
-            android:inputType="phone"
-            android:maxLines="1" />
+            android:hint="@string/phone_country_label">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/contactPhoneCountryInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:maxLines="1"
+                tools:text="🇳🇵 +977" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- inputType="phone" brings up the dialling keypad. How many digits it accepts is capped per
+             country by PhoneNumberInput, so an over-long number cannot be typed at all. -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/contactPhoneInputLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/phone_country_field_gap"
+            android:layout_weight="1"
+            android:hint="@string/profile_add_contact_phone_hint">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/contactPhoneInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"

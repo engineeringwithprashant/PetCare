@@ -9,6 +9,7 @@ import com.prash.petcare.data.remote.AuthException
 import com.prash.petcare.data.remote.AuthFailure
 import com.prash.petcare.data.remote.FirebaseAuthService
 import com.prash.petcare.util.PetPhotoStorage
+import com.prash.petcare.util.PhoneNumbers
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -104,6 +105,42 @@ class UserRepository(
 
         val fallbackName = displayName?.takeIf { it.isNotBlank() } ?: email.substringBefore('@')
         return AccountResult.Success(findOrCreateProfile(email, fallbackName, phone = null))
+    }
+
+    /**
+     * Finds the email address of the account whose stored phone number is [phoneNumber], or null if
+     * no profile on this device has that number.
+     *
+     * **What this is for.** The log-in field accepts an email address or a phone number, but Firebase
+     * Authentication signs in by email and password — a phone number is not a credential it knows
+     * about. So a number is turned into the address behind it here, and the ordinary email sign-in
+     * then runs unchanged. That is the whole of "sign in with your phone number": a lookup, then the
+     * sign-in that always happened.
+     *
+     * **Why the numbers are compared after parsing rather than as text.** Two people can write the
+     * same number four ways — "+9779812345678", "+977 981-234 5678", "09812345678", "9812345678" —
+     * and none of those strings equals another. [PhoneNumbers.parseLoginNumber] reduces both sides to
+     * the one canonical E.164 form first, so a number typed the way its owner says it aloud still
+     * matches the number their profile was saved with, including for profiles saved before this app
+     * had a country selector at all.
+     *
+     * **The limit worth being clear about.** The `users` table is this *device's* profiles — the
+     * accounts that have signed in on this handset. The number-to-address mapping is not synced (see
+     * [com.prash.petcare.data.sync.SyncManager]: only pets and their records are), because publishing
+     * a directory of numbers to addresses is precisely the thing that should not leave the device. So
+     * signing in by number works on a phone the account has used before, and a *brand new* phone
+     * needs the email address once. The caller must not say which case it hit — see
+     * [com.prash.petcare.ui.auth.AuthViewModel.login] on why an unknown number and a wrong password
+     * must look identical.
+     */
+    suspend fun findEmailForPhone(phoneNumber: String): String? {
+        val wanted = PhoneNumbers.parseLoginNumber(phoneNumber) ?: return null
+
+        return userDao.getAllWithPhone()
+            .firstOrNull { user ->
+                user.phone?.let(PhoneNumbers::parseLoginNumber) == wanted
+            }
+            ?.email
     }
 
     /**

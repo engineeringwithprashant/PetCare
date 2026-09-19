@@ -9,6 +9,8 @@ import com.prash.petcare.PetCareApplication
 import com.prash.petcare.data.local.entity.User
 import com.prash.petcare.data.local.entity.UserRole
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.util.PhoneCheck
+import com.prash.petcare.util.PhoneNumbers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +30,14 @@ sealed interface AccountDetailsEvent {
 
     /** The name was blank. */
     data object NameRequired : AccountDetailsEvent
+
+    /**
+     * Something was typed in the phone box, but it is not a real number for the country chosen.
+     *
+     * An *empty* number has no event of its own, because it is not an error here — this field is
+     * optional, unlike the one on the register form.
+     */
+    data object PhoneInvalid : AccountDetailsEvent
 
     /** The account was deleted while the form was open — on another device, pulled down by a sync. */
     data object AccountMissing : AccountDetailsEvent
@@ -74,21 +84,38 @@ class AccountDetailsViewModel(
     /**
      * Validates and saves.
      *
-     * The only rule is that a name is present: an account with a blank name would leave the profile
-     * card, the greeting and every delegation message with a gap where a person should be. The phone
-     * number is deliberately *not* validated beyond being trimmed — numbers are written with spaces,
-     * dashes, brackets and country codes that differ by country, and a pattern strict enough to be
-     * worth having would reject somebody's real number. It is never parsed by the app; it is shown as
-     * typed and handed to the SMS manager as typed.
+     * Two rules. A name must be present: an account with a blank name would leave the profile card,
+     * the greeting and every delegation message with a gap where a person should be.
      *
-     * Blank and null mean the same thing for the number — "none given" — and the repository stores an
-     * emptied field as null rather than as an empty string that would later print as a gap.
+     * **And a number, if one is given, must be a real number for the country chosen.** This form used
+     * to accept whatever was typed, on the reasoning that number formats differ too much by country
+     * for any check to be safe — which was true of a hand-written pattern and is no longer true now
+     * that the rules come from a per-country library (see [PhoneNumbers]). The check earns its place
+     * here specifically because this number is now used for something: it is what the account is
+     * found by when its owner signs in with their phone number instead of their email, and a number
+     * stored in a form nothing can parse would silently never match.
+     *
+     * The number is stored in international form rather than as typed, for the same reason — one
+     * canonical form is what makes that lookup possible at all.
+     *
+     * Blank and null still mean the same thing — "none given" — and the repository stores an emptied
+     * field as null rather than as an empty string that would later print as a gap.
+     *
+     * @param phoneRegion The country chosen beside the number box ("NP"), and [phone] the local
+     *   number typed next to it.
      */
-    fun onSave(fullName: String, phone: String, role: UserRole) {
+    fun onSave(fullName: String, phoneRegion: String, phone: String, role: UserRole) {
         val trimmedName = fullName.trim()
+        val trimmedPhone = phone.trim()
 
         if (trimmedName.isEmpty()) {
             viewModelScope.launch { _events.send(AccountDetailsEvent.NameRequired) }
+            return
+        }
+
+        val phoneCheck = PhoneNumbers.check(phoneRegion, trimmedPhone)
+        if (phoneCheck == PhoneCheck.INVALID) {
+            viewModelScope.launch { _events.send(AccountDetailsEvent.PhoneInvalid) }
             return
         }
 
@@ -96,7 +123,15 @@ class AccountDetailsViewModel(
             val saved = userRepository.updateDetails(
                 userId = userId,
                 fullName = trimmedName,
-                phone = phone,
+                // EMPTY passes the check above and lands here as an empty string, which the
+                // repository stores as null. Anything else has just been confirmed valid, so toE164
+                // cannot return null — the elvis is there because the function is nullable, not
+                // because the fallback is reachable.
+                phone = if (phoneCheck == PhoneCheck.EMPTY) {
+                    ""
+                } else {
+                    PhoneNumbers.toE164(phoneRegion, trimmedPhone) ?: trimmedPhone
+                },
                 role = role
             )
 

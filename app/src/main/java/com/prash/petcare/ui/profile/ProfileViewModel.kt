@@ -31,6 +31,8 @@ import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.ui.home.HomeDashboard
 import com.prash.petcare.ui.home.PetCareData
 import com.prash.petcare.util.CareSchedule
+import com.prash.petcare.util.PhoneCheck
+import com.prash.petcare.util.PhoneNumbers
 import com.prash.petcare.util.RecordsCsv
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -41,6 +43,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -63,16 +66,21 @@ data class ProfilePreferences(
 )
 
 /**
- * The two security switches whose value lives in the preferences file.
+ * The security-card setting whose value lives in the preferences file.
  *
  * Two-factor authentication is deliberately *not* here, even though its switch sits in the same card.
  * It is not a preference: it is a property of the account, it lives in the database beside the
  * account's own row, and it means nothing without the secret and recovery codes stored with it. So it
  * is published separately, from [ProfileViewModel.twoFactor], by the repository that owns it. Folding
  * it into this object would have put one fact about the account into a file about this installation.
+ *
+ * A wrapper around a single Boolean may look like ceremony, and today it nearly is — the "unlock with
+ * fingerprint" switch that used to sit beside it has been removed (see [SettingsStore]). It is kept
+ * as a type rather than collapsed to a bare `StateFlow<Boolean>` because the screen renders this card
+ * from one object, and adding the next preference-backed security row should be a field here rather
+ * than a new flow, a new collector and a new render call.
  */
 data class ProfileSecurity(
-    val fingerprintUnlock: Boolean = false,
     val careRemindersEnabled: Boolean = true
 )
 
@@ -111,6 +119,17 @@ sealed interface ProfileEvent {
 
     /** There was nothing to export. */
     data object ExportEmpty : ProfileEvent
+
+    /** A delegation contact was saved without a name or without a number; nothing was added. */
+    data object ContactIncomplete : ProfileEvent
+
+    /**
+     * A delegation contact's number is not a real number for the country chosen; nothing was added.
+     *
+     * Kept apart from [ContactIncomplete] because the two send the user to different places: one
+     * field is empty, or the country beside the number is wrong.
+     */
+    data object ContactPhoneInvalid : ProfileEvent
 
     /** The account and everything under it is gone; the fragment returns to the sign-in screen. */
     data object AccountDeleted : ProfileEvent
@@ -190,16 +209,14 @@ class ProfileViewModel(
         initialValue = ProfilePreferences()
     )
 
-    /** The two switches whose value comes from the preferences file. */
-    val security: StateFlow<ProfileSecurity> = combine(
-        settingsStore.fingerprintUnlock,
-        settingsStore.careRemindersEnabled,
-        ::ProfileSecurity
-    ).stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = ProfileSecurity()
-    )
+    /** The security-card switch whose value comes from the preferences file. */
+    val security: StateFlow<ProfileSecurity> = settingsStore.careRemindersEnabled
+        .map(::ProfileSecurity)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = ProfileSecurity()
+        )
 
     /**
      * Whether the account has an authenticator set up, and how many recovery codes it has left.
@@ -319,9 +336,6 @@ class ProfileViewModel(
 
     fun onCurrencyChosen(currency: CurrencyPreference) = settingsStore.setCurrency(currency)
 
-    fun onFingerprintUnlockChanged(enabled: Boolean) =
-        settingsStore.setFingerprintUnlock(enabled)
-
     /** True while a turn-off is in flight, so a second confirm cannot start another. */
     private var isDisablingTwoFactor = false
 
@@ -382,8 +396,47 @@ class ProfileViewModel(
     // Delegation contacts
     // ---------------------------------------------------------------------------------------------
 
-    fun onContactAdded(name: String, phoneNumber: String, note: String?) {
-        contactStore.add(name, phoneNumber, note)
+    /**
+     * Saves a delegation contact, once its name and number are acceptable.
+     *
+     * **Why the checks moved here from the dialog.** They were a pair of `isEmpty()` calls in
+     * [ProfileFragment], which was fine while "acceptable" meant "not blank". It no longer does: the
+     * number now has to be a real number for the country chosen, because the whole point of this list
+     * is that a delegation message can be *sent* to it, and a local number saved with no dialling
+     * code will not leave the country it was typed in. A rule with that much behind it belongs where
+     * the app's other rules are, and where it can be tested without driving a dialog.
+     *
+     * Both halves are required: a contact with no number is one nothing can be delegated to, which is
+     * the single thing this list exists for.
+     *
+     * @param phoneRegion The country chosen beside the number box, and [phone] the local number typed
+     *   next to it. Stored as one international number — see [PhoneNumbers].
+     * @param note Optional; blank is stored as no note rather than as an empty line.
+     */
+    fun onContactAdded(name: String, phoneRegion: String, phone: String, note: String) {
+        val trimmedName = name.trim()
+        val trimmedPhone = phone.trim()
+
+        val event = when {
+            trimmedName.isEmpty() || trimmedPhone.isEmpty() -> ProfileEvent.ContactIncomplete
+            PhoneNumbers.check(phoneRegion, trimmedPhone) != PhoneCheck.VALID ->
+                ProfileEvent.ContactPhoneInvalid
+
+            else -> null
+        }
+
+        if (event != null) {
+            viewModelScope.launch { _events.send(event) }
+            return
+        }
+
+        contactStore.add(
+            name = trimmedName,
+            // Just confirmed valid above, so toE164 cannot return null here; the elvis is there
+            // because the function is nullable, not because the fallback is reachable.
+            phoneNumber = PhoneNumbers.toE164(phoneRegion, trimmedPhone) ?: trimmedPhone,
+            note = note.trim().takeIf { it.isNotEmpty() }
+        )
     }
 
     fun onContactRemoved(contactId: String) {
