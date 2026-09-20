@@ -275,21 +275,56 @@
          home_quick_action_height, further down with the rest of the redesigned dashboard. -->
     <dimen name="quick_action_icon_size">26dp</dimen>
 
-    <!-- The floating bottom navigation bar. The bar keeps its own space in the Activity's layout
-         rather than overlapping the content — see activity_main.xml — and these are the margins that
-         inset the dark capsule within that space. -->
-    <dimen name="bottom_nav_margin_horizontal">12dp</dimen>
-    <dimen name="bottom_nav_margin_vertical">8dp</dimen>
-    <dimen name="bottom_nav_corner_radius">28dp</dimen>
-    <dimen name="bottom_nav_height">64dp</dimen>
-    <!-- The tab icons, which carry the bar alone now that it draws no labels. Well above Material's
-         24dp default: at 24dp in an unlabelled bar the glyphs read as small marks adrift in the
-         capsule, where the row is meant to be the five icons. -->
-    <dimen name="bottom_nav_icon_size">28dp</dimen>
-    <!-- The accent pill behind the selected icon: wide enough to read as a pill rather than a circle.
-         Its *height* is deliberately not set here — see PetCare.BottomNav.ActiveIndicator for why an
-         explicit height crops the glyph in an unlabelled bar. -->
-    <dimen name="bottom_nav_indicator_width">56dp</dimen>
+    <!-- ===================== The floating bottom navigation bar =====================
+         The bar genuinely floats: it is laid over the content rather than taking a row of its own,
+         so these margins are the gap between the slab and the edges of the screen, not padding
+         inside a reserved band. See activity_main.xml.
+
+         The three that set its height are deliberately arithmetic: 7 + 46 + 7 = 60dp, a control
+         small enough to hover over a page without becoming the page's bottom edge. Changing the tab
+         height without changing the padding is what would quietly turn it back into a bar. -->
+    <dimen name="nav_bar_margin_horizontal">14dp</dimen>
+    <dimen name="nav_bar_margin_bottom">16dp</dimen>
+    <dimen name="nav_bar_padding">7dp</dimen>
+    <dimen name="nav_bar_corner_radius">24dp</dimen>
+
+    <!-- One tab. The height doubles as the touch target, which is why it is checked against
+         nav_tab_min_touch_target below rather than chosen freely. -->
+    <dimen name="nav_tab_height">46dp</dimen>
+    <!-- A touch under half the tab's height: the pill's ends are strongly rounded but not a full
+         lozenge, matching the slab's own corner treatment one scale down. -->
+    <dimen name="nav_tab_corner_radius">18dp</dimen>
+    <!-- The gap between two tabs. Small enough that the row still reads as one control; large enough
+         that the active pill has visible air around it rather than butting into its neighbours. -->
+    <dimen name="nav_tab_gap">4dp</dimen>
+    <!-- Breathing room inside the *active* pill only. An inactive tab has none: it holds an icon and
+         nothing else, and padding would only make the icon's target smaller. -->
+    <dimen name="nav_tab_active_padding_horizontal">14dp</dimen>
+
+    <dimen name="nav_tab_icon_size">21dp</dimen>
+    <!-- Between the icon and the label that appears beside it on the active pill. -->
+    <dimen name="nav_tab_icon_label_gap">8dp</dimen>
+
+    <!-- Android's own minimum for anything a finger presses. Applied as the tab's minHeight, so the
+         44dp floor holds even if nav_tab_height above is ever reduced — the two are related but not
+         the same statement, and a design tweak should not be able to shrink a target below the
+         guideline in silence. The tab's *width* is not set here at all — it is a share of the row —
+         but it clears the same floor by construction; FloatingNavBar works the arithmetic out for
+         the narrowest screen Android supports. -->
+    <dimen name="nav_tab_min_touch_target">44dp</dimen>
+
+    <!-- The Tasks tab's open-count badge. Square at rest (a single digit in a circle) and stretching
+         only as wide as a second digit needs, which is what min_width plus horizontal padding
+         expresses; the radius is far larger than the box so the ends stay fully round at any width. -->
+    <dimen name="nav_badge_size">16dp</dimen>
+    <dimen name="nav_badge_padding_horizontal">4dp</dimen>
+    <dimen name="nav_badge_corner_radius">999dp</dimen>
+    <!-- Where the badge sits within the tab: high and to the right, clear of the icon's top corner.
+         The inset from the right is tighter on the active tab, because that tab is wider and the
+         badge would otherwise drift away from the icon it belongs to. -->
+    <dimen name="nav_badge_margin_top">9dp</dimen>
+    <dimen name="nav_badge_margin_end">14dp</dimen>
+    <dimen name="nav_badge_margin_end_active">10dp</dimen>
 
     <!-- ================================= Money tab =================================
          The dark total card, its stacked category bar, the legend and the expense cards. -->

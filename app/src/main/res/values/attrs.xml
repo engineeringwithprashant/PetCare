@@ -104,4 +104,42 @@
     <attr name="colorAuthAlertDangerEdge" format="color" />
     <attr name="colorOnAuthAlertDanger" format="color" />
 
+    <!--
+        ===================== The floating bottom navigation bar =====================
+
+        Six roles for one control, which needs a word of justification given how few things in the
+        app declare any.
+
+        The bar is drawn almost entirely from *drawables* — a rounded slab, a pill behind the active
+        tab, a rounded badge, plus two colour state lists for the ink on them. A drawable cannot ask
+        "which theme am I in?"; it can only name a colour or read a theme attribute. So every value
+        in the bar that differs between light and dark has to be reachable as an attribute, or the
+        whole set would have to be duplicated into res/drawable-night and res/color-night — six more
+        files saying the same thing twice, and six more chances for one to be updated and its twin
+        forgotten.
+
+        None of the six maps onto a Material role. colorSurface has no alpha and the slab needs one;
+        colorPrimary is the accent, but the *active pill* is near-black by day and the accent only at
+        night, which is the exact inverse; and Material has no role at all for "an alert count drawn
+        inside the control it belongs to". See the bottom-navigation section of colors.xml for the
+        values and the contrast reasoning behind them.
+    -->
+
+    <!-- The translucent slab the bar is drawn on. -->
+    <attr name="colorNavBarSurface" format="color" />
+
+    <!-- The active tab's pill, and the icon and label written on it. Always used as a pair: ink that
+         is not colorOnNavTabActive is not guaranteed legible on the pill. -->
+    <attr name="colorNavTabActive" format="color" />
+    <attr name="colorOnNavTabActive" format="color" />
+
+    <!-- The four inactive tabs' icons — a solid value, never the active ink at reduced opacity; see
+         colors.xml for why that distinction is load-bearing here. -->
+    <attr name="colorNavTabMuted" format="color" />
+
+    <!-- The open-task badge as it appears *on the active pill*. Its inactive colours are fixed rather
+         than themed (a red dot with white on it), so they need no roles. -->
+    <attr name="colorNavBadgeActive" format="color" />
+    <attr name="colorOnNavBadgeActive" format="color" />
+
 </resources>

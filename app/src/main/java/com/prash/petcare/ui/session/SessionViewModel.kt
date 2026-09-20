@@ -8,12 +8,19 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
+import com.prash.petcare.data.repository.CareRoutineRepository
+import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.util.CareSchedule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -36,10 +43,12 @@ import kotlinx.coroutines.flow.stateIn
  * in a [SavedStateHandle] are written to the same saved-instance bundle the back stack is, so the
  * two are restored together or not at all.
  *
- * It holds an id, and one *derived* value read straight from Room: the profile photo drawn in the
- * shared header, which belongs to no single screen — see [profilePhotoPath]. The user's name, email
- * and pets are read from Room by the screen that needs them, so there is no second copy of the
- * account here to drift out of date when the profile is edited or synced.
+ * It holds an id, and two *derived* values read straight from Room, both of them drawn by the app's
+ * chrome rather than by any one screen: the profile photo in the shared header
+ * ([profilePhotoPath]), and the number of care tasks still open today, which the navigation bar
+ * badges the Tasks tab with ([openTasksToday]). The user's name, email and pets are read from Room
+ * by the screen that needs them, so there is no second copy of the account here to drift out of date
+ * when the profile is edited or synced.
  *
  * **Why it has a [Factory].** Signing out also has to sign the account out of Firebase
  * Authentication, which needs [UserRepository], and the default factory cannot supply one. Every
@@ -49,13 +58,20 @@ import kotlinx.coroutines.flow.stateIn
  *
  * @param userRepository Signs out of Firebase, and supplies the account row the header's photo is
  *   read from. Both go through the repository rather than a DAO, as the MVVM chain requires.
+ * @param careRoutineRepository Supplies the repeat schedules the badge count is projected from —
+ *   which days each routine runs. See [openTasksToday] for why a date cannot answer that alone.
+ * @param careTaskRepository Supplies the tasks those schedules are matched against. Together the two
+ *   give the count behind the navigation bar's Tasks badge — the second value here that belongs to
+ *   the app's chrome rather than to any screen.
  */
 // flatMapLatest is still marked experimental in kotlinx.coroutines but is long-settled API, used
 // here for the reason given on profilePhotoPath: the photo query has to follow the signed-in id.
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionViewModel(
     private val savedStateHandle: SavedStateHandle,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val careRoutineRepository: CareRoutineRepository,
+    private val careTaskRepository: CareTaskRepository
 ) : ViewModel() {
 
     /**
@@ -99,6 +115,85 @@ class SessionViewModel(
         }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * How many care tasks are due today and still not ticked off — the number on the Tasks tab's
+     * badge.
+     *
+     * **Why this lives here, like the profile photo above and for the same reason.** It is drawn by
+     * the navigation bar, which belongs to no screen: it is visible on all five tabs and on every
+     * detail screen under them. The Tasks tab itself already counts its own work, but the badge has
+     * to be right while the user is looking at the dashboard, or a pet, or their spending — so
+     * asking the Tasks screen would mean keeping a screen alive to answer a question about a screen
+     * nobody is on. The Activity-scoped ViewModel every screen already shares is the level the
+     * figure belongs at.
+     *
+     * **Why it is live rather than fetched.** Both inputs are Room queries, so ticking a task off on
+     * the Tasks tab, marking one done from the dashboard's "next up" card, adding or pausing a
+     * routine, or a sync writing rows in from another device all move the badge by themselves.
+     * Nothing pushes an update and nothing has to remember to.
+     *
+     * **Why the count cannot be a SQL `WHERE dueAt` clause, tempting as that is.** A repeating task
+     * is one row, not one row per occurrence: its stored date is the day the routine began, and
+     * whether it falls due *today* has to be projected from that routine's repeat schedule. A task
+     * repeating daily since last week is due today with a `dueAt` of last Tuesday, and its
+     * `isCompleted` flag is still set from the last time it was ticked. So the rule is
+     * [CareSchedule.tasksDueOn] for what today holds and [CareSchedule.isDoneOn] for what has
+     * actually been done *today* — the same two calls the dashboard's "things left for today" and
+     * the Tasks tab's own list are built from. A date filter here would have read zero on a day the
+     * dashboard was reporting four, which is the kind of disagreement a badge exists to avoid.
+     *
+     * Routines and tasks are fetched for the whole account in one query each rather than per pet.
+     * Routine ids are unique across the database and a task names its routine, so matching the two
+     * whole lists gives exactly what matching them pet by pet would, without a query per animal.
+     *
+     * **Two nested [flatMapLatest]s, for the two things that can change underneath the pair.** The
+     * account, as everywhere else in this class — switching users has to drop the previous user's
+     * rows rather than keep counting them. And *today*: the day is worked out from the device clock,
+     * so it has to be recomputed when the date rolls over, which is what [todayWindow] does.
+     *
+     * `distinctUntilChanged` means an edit that leaves the total alone — retitling a task, moving one
+     * an hour later — does not redraw the badge.
+     */
+    val openTasksToday: StateFlow<Int> = userId
+        .flatMapLatest { id ->
+            if (id == NO_USER_ID) {
+                flowOf(0)
+            } else {
+                todayWindow().flatMapLatest { (dayStart, dayEnd) ->
+                    combine(
+                        careRoutineRepository.observeActiveRoutinesForOwner(id),
+                        careTaskRepository.observeTasksForOwner(id)
+                    ) { routines, tasks ->
+                        CareSchedule.tasksDueOn(routines, tasks, dayStart)
+                            .count { task -> !CareSchedule.isDoneOn(task, dayStart, dayEnd) }
+                    }
+                }
+            }
+        }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    /**
+     * Today's first and last millisecond, re-emitted when the day changes.
+     *
+     * A badge reading "3 left today" on a phone left on the kitchen counter overnight would still
+     * say three the next morning, counting yesterday's tasks, if the window were worked out once. So
+     * this emits the current day and then waits exactly as long as is left of it before emitting the
+     * next — no polling, and no clock ticking every minute for a value that changes once a day.
+     *
+     * A cold flow, collected only through [openTasksToday]'s `WhileSubscribed`, so it stops with the
+     * rest of the chain when no bar is on screen and costs nothing while the app is closed.
+     */
+    private fun todayWindow(): Flow<Pair<Long, Long>> = flow {
+        while (true) {
+            val dayStart = CareSchedule.startOfToday()
+            val dayEnd = CareSchedule.endOfToday()
+            emit(dayStart to dayEnd)
+            // +1 to land on the first millisecond of the new day rather than the last of the old one.
+            delay(dayEnd - System.currentTimeMillis() + 1)
+        }
+    }
 
     /**
      * Records a successful sign-in or sign-up.
@@ -148,7 +243,12 @@ class SessionViewModel(
             initializer {
                 val application =
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PetCareApplication
-                SessionViewModel(createSavedStateHandle(), application.userRepository)
+                SessionViewModel(
+                    createSavedStateHandle(),
+                    application.userRepository,
+                    application.careRoutineRepository,
+                    application.careTaskRepository
+                )
             }
         }
     }

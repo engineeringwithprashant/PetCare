@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The ink of one navigation tab — its icon and, when it has one, its label.
+
+    A *colour state list*: one resource that resolves differently depending on what the view is
+    doing. The tab's icon and label always take the same colour as each other, and that colour
+    always follows the tab's selected state, so stating the rule once here is what keeps the two in
+    step — and what means FloatingNavBar sets `isSelected` and nothing else.
+
+    Both values are theme attributes rather than colours, because both flip between the themes: the
+    active ink is the accent on a near-black pill by day and near-black on an accent pill at night,
+    and the muted ink has to be measured against a pale slab in one theme and a dark one in the
+    other. See attrs.xml.
+
+    Order matters. Android walks the list top to bottom and takes the first item whose conditions all
+    match, so the selected state has to come first: with the catch-all above it, every tab would
+    resolve to the muted colour and nothing would ever look active.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The active tab, drawn on its filled pill. -->
+    <item
+        android:color="?attr/colorOnNavTabActive"
+        android:state_selected="true" />
+
+    <!-- The other four. A solid value, never the active ink at reduced opacity — see the
+         bottom-navigation section of colors.xml for why that distinction matters on a bar the page
+         shows through. -->
+    <item android:color="?attr/colorNavTabMuted" />
+
+</selector>

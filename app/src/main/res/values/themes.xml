@@ -6,10 +6,10 @@
     app means editing this one file. values-night/themes.xml declares the same roles with the dark
     values, which is the entire mechanism behind dark mode: no layout knows which is in use.
 
-    The theme also sets the app's **default component styles** — materialCardViewStyle,
-    bottomNavigationStyle and the shape scale. That is what makes the redesign hold: a card added to
-    a new screen next month is rounded, white and softly shadowed because the theme says every card
-    is, not because whoever wrote it remembered to name a style.
+    The theme also sets the app's **default component styles** — materialCardViewStyle and the shape
+    scale. That is what makes the redesign hold: a card added to a new screen next month is rounded,
+    white and softly shadowed because the theme says every card is, not because whoever wrote it
+    remembered to name a style.
 
     The parent is Theme.Material3.DayNight.NoActionBar. "NoActionBar" is required because the app
     supplies its own MaterialToolbar in activity_main.xml — with the platform action bar still in
@@ -113,6 +113,17 @@
         <item name="colorAuthAlertDangerEdge">@color/auth_alert_danger_edge_light</item>
         <item name="colorOnAuthAlertDanger">@color/auth_alert_danger_title_light</item>
 
+        <!-- The floating navigation bar — see attrs.xml for why it needs roles of its own, and the
+             bottom-navigation section of colors.xml for the values. In this theme the slab is white
+             at 86% over the cream page and the active tab is a near-black pill with the accent
+             written on it: the strongest mark available on a light page. -->
+        <item name="colorNavBarSurface">@color/nav_bar_surface_light</item>
+        <item name="colorNavTabActive">@color/nav_tab_active_light</item>
+        <item name="colorOnNavTabActive">@color/on_nav_tab_active_light</item>
+        <item name="colorNavTabMuted">@color/nav_tab_muted_light</item>
+        <item name="colorNavBadgeActive">@color/nav_badge_active_light</item>
+        <item name="colorOnNavBadgeActive">@color/on_nav_badge_active_light</item>
+
         <!-- ============================== Shape scale ==============================
              Material components read their corner radius from these three attributes. Overriding
              them here rounds *everything* — dialogs, menus, text fields, bottom sheets — in one
@@ -147,8 +158,11 @@
         <!-- ========================== Default component styles ==========================
              Pointing these theme attributes at the app's own styles is what applies the redesign
              to every instance of a component without a single layout naming a style. -->
+        <!-- The bottom bar has no entry here. It is a MaterialCardView naming PetCare.NavBar
+             explicitly in activity_main.xml, because it is one view rather than a component class
+             the app uses repeatedly — pointing materialCardViewStyle at it would restyle every card
+             in the app. -->
         <item name="materialCardViewStyle">@style/PetCare.Card</item>
-        <item name="bottomNavigationStyle">@style/PetCare.BottomNav</item>
 
         <!-- The status and navigation bar icons. The app's page is a light cream in this theme, so
              the system icons drawn over it must be dark to be visible at all. The night theme sets

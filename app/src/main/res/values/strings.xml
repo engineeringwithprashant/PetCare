@@ -15,21 +15,33 @@
     <string name="nav_label_routine">Care routine</string>
 
     <!-- ========================== Bottom navigation tabs ==========================
-         Each of these is used twice, and has to work in both places: as the label under a tab's
-         icon, and as the app bar title for the screen that tab leads to. That is why they are
-         single words — a longer phrase would be truncated in the bar even if it read well at the
+         Each of these is used three times, and has to work in all three places: as the label inside
+         the active tab's pill, as every tab's spoken name and long-press tooltip, and as the app bar
+         title for the screen the tab leads to. That is why they are single words — the pill is only
+         wide enough for one, and a longer phrase would be clipped there even if it read well at the
          top of the screen.
 
-         They are stored in sentence case even though the bar shows them in capitals. The upper-case
-         is applied by the label's text appearance at display time (see TextAppearance.PetCare.
-         NavLabel in styles.xml), which keeps the same resource usable as a screen title, and keeps
-         the capitalisation right in languages where blanket upper-casing is wrong. -->
+         Sentence case, and drawn that way. The bar used to upper-case them at display time; it no
+         longer does, because only one label is ever visible at a time and it sits inside the control
+         the user just pressed. A single word in capitals there reads as a system label rather than
+         as the name of the place they have arrived at. Storing the case the user sees also keeps the
+         capitalisation right in languages where blanket upper-casing is wrong. -->
     <string name="nav_home">Home</string>
     <string name="nav_pets">Pets</string>
     <string name="nav_tasks">Tasks</string>
     <!-- "Money" rather than "Expenses": the screen reports totals and a breakdown as well as the
-         individual costs, and the shorter word leaves the four labels evenly weighted in the bar. -->
+         individual costs, and the shorter word leaves the five labels evenly weighted in the bar. -->
     <string name="nav_money">Money</string>
+
+    <!-- What TalkBack reads for the Tasks tab while its badge is showing a count.
+
+         The badge itself is excluded from accessibility, because "Tasks" followed by "3" tells a
+         screen-reader user that there are three of something without saying three of what. %1$s is
+         the tab's own name, so the sentence still begins the way every other tab's does. -->
+    <plurals name="nav_tab_open_tasks">
+        <item quantity="one">%1$s, %2$d task left today</item>
+        <item quantity="other">%1$s, %2$d tasks left today</item>
+    </plurals>
 
     <!-- ======================== Top app bar overflow menu ========================
          The account actions. "Sign out" rather than "Log out" to match the sign-in screen's own

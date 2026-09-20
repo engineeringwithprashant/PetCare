@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Tasks tab's icon: a checklist — two ticked boxes' worth of ticks with a written line beside
+    each.
+
+    Stroked, untinted and drawn on the same 24dp grid as the rest of the set — see ic_tab_home.xml.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!--
+        Four subpaths in one path element: two tick marks down the left of the frame and two
+        horizontal rules to their right, the pair repeated at 7.2 and 16.4 so the icon reads as two
+        rows of a list rather than as one mark.
+
+        The ticks are deliberately drawn without their boxes. At 21dp a box around a tick closes up
+        into a filled square, and the tick — the part that says "done" — is what survives the
+        reduction.
+    -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M4,7.2 L6,9.2 L9.4,5.6 M4,16.4 L6,18.4 L9.4,14.8 M13,7.4 H20 M13,16.6 H20"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.8" />
+
+</vector>

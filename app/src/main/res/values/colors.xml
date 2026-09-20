@@ -284,21 +284,63 @@
     <color name="gender_female">#FF8AC4</color>
 
     <!-- ========================= Bottom navigation bar =========================
-         The bar is a dark capsule floating over the page in *both* themes, for the same reason the
-         pet cards are dark in both: it is chrome rather than content, and a single treatment makes
-         it read as the app's frame instead of as part of whichever page is scrolling behind it.
+         The bar is a floating control: a translucent, hairline-bordered slab hovering over whatever
+         page is scrolling beneath it, with the current tab widened into a filled pill.
 
-         Its colours therefore cannot come from the theme roles — colorSurface is white in light mode
-         and the tabs would vanish — so they are fixed here and used directly by
-         res/color/bottom_nav_item_tint.xml. -->
-    <color name="nav_bar_ground">#17180F</color>
-    <!-- The selected tab's icon and label. The icon sits on the accent pill, so it takes the colour
-         guaranteed legible on the accent; the label sits on the bar itself and takes the accent. -->
-    <color name="nav_item_selected_icon">@color/on_accent_yellow</color>
-    <color name="nav_item_selected_label">@color/accent_yellow</color>
-    <!-- The other three. Quiet enough that the selected tab is the one the eye finds, light enough
-         to stay legible on the dark bar. -->
-    <color name="nav_item_unselected">#8E8D7E</color>
+         **These are light/dark pairs, where the old dark capsule was a single treatment.** The bar
+         is no longer an opaque object with a world of its own inside it — it is a *surface*, and a
+         surface that lets the page show through has to belong to the page's theme. A near-white slab
+         over the near-black night page would glare; a near-black slab over the cream day page would
+         read as a solid bar again, which is the thing this design is not.
+
+         They are still declared here rather than taken from the Material roles, because the roles
+         carry no alpha and the pill's fill has no role at all: "the strongest possible mark on this
+         page" flips from near-black to yellow between the themes. Each pair is bound to a theme
+         attribute in values/themes.xml and values-night/themes.xml — see attrs.xml. -->
+
+    <!-- The slab itself: white at 86% in the day theme, near-black at 90% at night. The alpha is
+         what makes the bar read as floating *over* content rather than as a band cut out of it — a
+         hint of the page's colour comes through and moves as the page scrolls. -->
+    <color name="nav_bar_surface_light">#DBFFFFFF</color>
+    <color name="nav_bar_surface_dark">#E6141412</color>
+
+    <!-- The active tab's pill, and the icon and label written on it. The pairs are inverses of each
+         other: near-black pill with yellow on it by day, yellow pill with near-black on it at night.
+         Either way the active tab is the highest-contrast thing on the bar, which is the property
+         that has to survive the theme — a near-black pill on the night page would disappear into it. -->
+    <color name="nav_tab_active_light">#14130F</color>
+    <color name="nav_tab_active_dark">@color/accent_yellow</color>
+    <color name="on_nav_tab_active_light">@color/accent_yellow</color>
+    <color name="on_nav_tab_active_dark">#14130F</color>
+
+    <!-- The four inactive tabs' icons.
+
+         **Solid values, deliberately, rather than the on-surface ink at 70% alpha.** They are the
+         same colour to the eye, but not the same thing: an alpha would let the scrolling page show
+         through the glyphs themselves, so a tab icon would change shade as a dark photo passed
+         underneath it — and a translucent icon over a translucent bar compounds to something too
+         faint to read. These are the blend already done, measured against the bar's own tone: about
+         6:1 against the day slab and about 8:1 against the night one, so they stay legible while
+         staying clearly quieter than the active tab. -->
+    <color name="nav_tab_muted_light">#625F57</color>
+    <color name="nav_tab_muted_dark">#A8A79E</color>
+
+    <!-- The Tasks tab's open-count badge while that tab is *inactive*: a red dot with white on it,
+         the one place in the bar the accent is not used. It is not a "selected" mark but an alert,
+         and the accent already means "you are here" two tabs away — the same colour saying both
+         would make the count read as a second active tab. Single values: a warning keeps its colour
+         in either theme. -->
+    <color name="nav_badge_ground">#FF4D2E</color>
+    <color name="on_nav_badge">#FFFFFF</color>
+
+    <!-- The same badge once the Tasks tab *is* active. Red on the near-black pill is legible but
+         reads as an error inside the control the user has just pressed, so on the pill the badge
+         drops to the pill's own inverse — accent on near-black by day, near-black on accent at
+         night — and is simply a number the user is already looking at. -->
+    <color name="nav_badge_active_light">@color/accent_yellow</color>
+    <color name="on_nav_badge_active_light">#14130F</color>
+    <color name="nav_badge_active_dark">#14130F</color>
+    <color name="on_nav_badge_active_dark">@color/accent_yellow</color>
 
     <!-- ============================== Places tab ==============================
          The dark distance strip at the top of the Places tab, and the "open now" pill.

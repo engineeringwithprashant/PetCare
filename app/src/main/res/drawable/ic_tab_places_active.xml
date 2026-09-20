@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Places tab's pin as drawn on the *active* pill: the outline in ic_tab_places.xml at the
+    heavier stroke width. See ic_tab_home_active.xml for why the pair exists as two files.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,21 S18.4,15.4 18.4,10.8 A6.4,6.4 0 0 0 5.6,10.8 C5.6,15.4 12,21 12,21 Z M9.7,10.6 A2.3,2.3 0 1 1 14.3,10.6 A2.3,2.3 0 1 1 9.7,10.6 Z"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.2" />
+
+</vector>

@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The Places tab in the bottom navigation bar: a map pin.
+    The Places screen's empty-state mark: a filled map pin.
 
     A pin rather than a map because the tab is a list of *specific places*, not a map view — and a pin
     is the mark every maps app uses for "a saved location", which is exactly what each entry is. The
     hole in the head keeps it legible as a pin at 24dp rather than as a teardrop.
 
-    Deliberately untinted; see the note in ic_nav_home.xml for why.
+    Filled, and not the pin the Places *tab* draws in the bottom bar — that one is an outline at two
+    stroke weights, see ic_tab_places.xml. The two are deliberately separate files: this one is a
+    large mark in the middle of an empty screen, where an outline reads as faint, and the bar's is a
+    small glyph in a row of five, where a solid shape reads as a blob.
+
+    No tint here; fragment_places.xml applies one, so the same drawing could be used at another
+    weight of grey elsewhere without a second copy.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"

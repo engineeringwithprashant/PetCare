@@ -8,15 +8,18 @@
     and ids already declared in res/navigation/nav_graph.xml. Twelve fragments each managing their
     own chrome would be twelve chances for them to drift apart.
 
-    **Why three siblings in a vertical LinearLayout.** The bar at the top and the bar at the bottom
-    both have to *reserve* their space rather than float over the content: a list scrolling
-    underneath a solid bottom bar would leave its last row permanently unreachable. A LinearLayout
-    with the middle child weighted expresses that directly, and is cheaper to measure than a
-    ConstraintLayout doing the same job with four constraints.
+    **Why a vertical LinearLayout with a FrameLayout in it.** The top app bar *reserves* its space:
+    it is opaque and sits above the content, so a LinearLayout with the screen area weighted
+    expresses that directly and is cheaper to measure than a ConstraintLayout doing the same job.
 
-    The bar is deliberately fixed rather than scrolling away with the content: the app's screens are
-    short forms and lists, and a title that disappears on a flick is more distracting than useful at
-    that size.
+    The bottom bar is the opposite — a translucent control floating *over* the page rather than a
+    band cut out of the foot of it, which is what the FrameLayout around the screen area provides:
+    the NavHostFragment fills it, and the navigation bar is laid over the top of that, anchored to
+    the bottom with margins on three sides.
+
+    The top bar is deliberately fixed rather than scrolling away with the content: the app's screens
+    are short forms and lists, and a title that disappears on a flick is more distracting than useful
+    at that size.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -62,53 +65,66 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <!--
-        The NavHostFragment: the window the Navigation Component swaps screens into. Every actual
-        screen is a fragment declared in res/navigation/nav_graph.xml.
+        The screen area, and the navigation bar floating over the bottom of it.
 
-        layout_height="0dp" with layout_weight="1" makes it take all the room the two bars do not.
-
-        app:defaultNavHost="true" lets this host intercept the system back button, so back moves
-        through the navigation history rather than closing the app straight away.
+        layout_height="0dp" with layout_weight="1" makes this take all the room the app bar does not.
+        Its two children are stacked: the screen fills the frame, the bar is drawn on top of it.
     -->
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/nav_host_fragment"
-        android:name="androidx.navigation.fragment.NavHostFragment"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/nav_graph" />
+        android:layout_weight="1">
 
-    <!--
-        The bottom navigation bar: the app's four top-level destinations.
+        <!--
+            The NavHostFragment: the window the Navigation Component swaps screens into. Every actual
+            screen is a fragment declared in res/navigation/nav_graph.xml.
 
-        It carries no click listeners. MainActivity hands it to NavigationUI, which matches each
-        menu item to the destination sharing its id — see the note at the top of bottom_nav_menu.xml
-        — so tapping a tab navigates, and arriving anywhere highlights the right tab, in both
-        directions with no code.
+            app:defaultNavHost="true" lets this host intercept the system back button, so back moves
+            through the navigation history rather than closing the app straight away.
+        -->
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/nav_host_fragment"
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/nav_graph" />
 
-        Everything about how it *looks* comes from PetCare.BottomNav, wired in as the theme's default
-        bottomNavigationStyle, which is why no style is named here: a dark rounded capsule, in light
-        mode as well as dark.
+        <!--
+            The bottom navigation bar: the app's five top-level destinations.
 
-        **Margins, not an overlay.** The capsule looks detached from the page, but the view still
-        takes its own row in this LinearLayout and reserves the space it occupies — the margins
-        simply inset the bar within that row. Genuinely floating it over the content would leave the
-        last row of every list in the app sitting underneath it and permanently unreachable, and
-        fixing that would mean adding bottom padding to every scrolling screen.
+            **A genuine overlay, not a reserved row.** The bar is translucent and the page is meant
+            to be seen moving underneath it — that is the whole of the design, and it only works if
+            the content really does pass behind. So it is a child of this FrameLayout pinned to the
+            bottom with margins on three sides, rather than a fourth row of the LinearLayout above.
 
-        The hairline divider that used to sit above the bar is gone with the redesign. It existed to
-        stop a list scrolled to the bottom appearing to run into the tabs; now that the bar is inset
-        on all sides with the page visible around it, there is nothing left for a line to separate.
-    -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/bottom_nav_height"
-        android:layout_marginStart="@dimen/bottom_nav_margin_horizontal"
-        android:layout_marginTop="@dimen/bottom_nav_margin_vertical"
-        android:layout_marginEnd="@dimen/bottom_nav_margin_horizontal"
-        android:layout_marginBottom="@dimen/bottom_nav_margin_vertical"
-        app:menu="@menu/bottom_nav_menu" />
+            The slab is an ordinary M3 card: PetCare.NavBar gives it the shape, the translucent fill,
+            the hairline edge and the app's standard card shadow, and 7dp of content padding that
+            together with the 46dp tabs makes the bar 60dp tall. The row of tabs inside it is a
+            custom view, because no Material bar can widen one item and write its name in it — see
+            FloatingNavBar for the whole of that argument.
+
+            The bar carries no click listeners of its own. MainActivity supplies the tap handler and
+            tells it which tab is current on every destination change, so navigation stays described
+            in one place.
+        -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/bottomNav"
+            style="@style/PetCare.NavBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="@dimen/nav_bar_margin_horizontal"
+            android:layout_marginEnd="@dimen/nav_bar_margin_horizontal"
+            android:layout_marginBottom="@dimen/nav_bar_margin_bottom">
+
+            <com.prash.petcare.ui.common.FloatingNavBar
+                android:id="@+id/navTabs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </FrameLayout>
 
 </LinearLayout>

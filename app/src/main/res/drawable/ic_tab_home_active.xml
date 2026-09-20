@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Home tab's icon as drawn on the *active* pill.
+
+    Exactly the outline in ic_tab_home.xml — see that file for what the path describes — at the
+    heavier stroke width. Two drawables rather than one, because a VectorDrawable's strokeWidth is
+    fixed when the asset is inflated and there is no public API to change it afterwards; the tab
+    swaps the whole drawable when it becomes active instead (see FloatingNavBar).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M4,10.4 L12,4 L20,10.4 V19 A1,1 0 0 1 19,20 H14.8 V14.8 H9.2 V20 H5 A1,1 0 0 1 4,19 Z"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.2" />
+
+</vector>

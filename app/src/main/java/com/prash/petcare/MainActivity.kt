@@ -3,25 +3,27 @@ package com.prash.petcare
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.TooltipCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.forEach
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.navOptions
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.onNavDestinationSelected
 import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
 import com.prash.petcare.databinding.ActivityMainBinding
+import com.prash.petcare.ui.common.NavTab
 import com.prash.petcare.ui.session.SessionViewModel
+import kotlinx.coroutines.launch
 
 /**
  * The app's only Activity.
@@ -115,44 +117,95 @@ class MainActivity : AppCompatActivity() {
         // it afterwards — see ui.common.setToolbarTitle.
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        // One line for the whole bottom bar. NavigationUI matches each menu item to the destination
-        // sharing its id, so this gives both directions at once: a tap navigates, and arriving at a
-        // destination selects its tab. It also handles re-tapping the current tab by popping back to
-        // it, which is the behaviour users expect and which a hand-written click listener almost
-        // always gets wrong.
-        binding.bottomNav.setupWithNavController(navController)
-        describeNavigationItems()
+        // The bottom bar's outward half: a tap asks this Activity to navigate. The bar does not
+        // light the tab itself — it waits to be told by the listener below, which is what stops a
+        // tap that navigation declines to honour leaving the bar pointing at a screen nobody is on.
+        binding.navTabs.onTabSelected = ::navigateToTab
 
         // Added *after* setupActionBarWithNavController, so this listener runs after NavigationUI's
         // own and can correct the two things NavigationUI cannot know about — see updateChromeFor
-        // and restoreUpArrowForPetScopedScreen.
+        // and restoreUpArrowForPetScopedScreen. It also fires once immediately with the current
+        // destination, which is what lights the right tab after a rotation.
         navController.addOnDestinationChangedListener { _, destination, arguments ->
             updateChromeFor(destination.id, arguments)
             restoreUpArrowForPetScopedScreen(destination.id, arguments)
+            highlightTabFor(destination.id)
         }
+
+        observeOpenTaskCount()
     }
 
     /**
-     * Gives every bottom-navigation tab a spoken name.
+     * Navigates to a tapped tab, with the behaviour a set of tabs is expected to have.
      *
-     * The bar shows icons only (see PetCare.BottomNav in styles.xml for why the labels went), and an
-     * icon with no text beside it is nothing at all to a screen reader — five unnamed buttons on the
-     * one control that moves between the app's five sections. Each item's `android:title` from
-     * bottom_nav_menu.xml is therefore attached to its view as a content description, so TalkBack
-     * still announces "Pets, tab" exactly as it did when the label was drawn.
+     * **Why this is written out rather than left to `setupWithNavController`.** NavigationUI drives
+     * a bar from a *menu*, matching each item's id to a destination's. The new bar has no menu —
+     * it cannot, because a menu item has nowhere to say that its tab should widen, or carry a label
+     * that appears only when it does — so the wiring a menu bought has to be supplied here. The
+     * options below are deliberately the same ones NavigationUI builds, so nothing about how the app
+     * actually moves between tabs has changed:
      *
-     * A long-press tooltip is set from the same title, which is what a sighted user gets in place of
-     * the label if an icon is ever ambiguous.
-     *
-     * Done in code rather than in the menu because a menu item's view is created by
-     * BottomNavigationView, and `android:contentDescription` is not a menu attribute. Each tab's view
-     * carries the item's own id, which is how it is found here.
+     * - **popUpTo the graph's start, saving state.** Tabs are peers, not a stack. Without this,
+     *   hopping between them would pile five screens up and the system back button would walk back
+     *   through every tab the user had visited. `saveState` is what lets each tab keep its scroll
+     *   position and filters while it is away.
+     * - **restoreState** puts that saved state back on return, so a tab is where the user left it.
+     * - **launchSingleTop** stops a second copy of a tab being stacked on the one already showing —
+     *   which, combined with the pop above, is what makes re-tapping the current tab return to its
+     *   root rather than do nothing or duplicate it.
+     * - The four animations are the Navigation library's own defaults, named explicitly because they
+     *   came free with NavigationUI and their absence would be a visible change to every tab switch.
      */
-    private fun describeNavigationItems() {
-        binding.bottomNav.menu.forEach { item ->
-            binding.bottomNav.findViewById<View>(item.itemId)?.let { tab ->
-                tab.contentDescription = item.title
-                TooltipCompat.setTooltipText(tab, item.title)
+    private fun navigateToTab(tab: NavTab) {
+        navController.navigate(
+            tab.destinationId,
+            null,
+            navOptions {
+                launchSingleTop = true
+                restoreState = true
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                anim {
+                    enter = androidx.navigation.ui.R.anim.nav_default_enter_anim
+                    exit = androidx.navigation.ui.R.anim.nav_default_exit_anim
+                    popEnter = androidx.navigation.ui.R.anim.nav_default_pop_enter_anim
+                    popExit = androidx.navigation.ui.R.anim.nav_default_pop_exit_anim
+                }
+            }
+        )
+    }
+
+    /**
+     * Lights the tab the destination just arrived at belongs to.
+     *
+     * The inward half of the wiring NavigationUI used to provide, and it does one thing the menu
+     * version could not: a tab stays lit for the screens *underneath* it, so opening a pet and then
+     * adding a routine to it keeps Pets marked all the way down. Which screens belong to which tab is
+     * declared in [NavTab].
+     *
+     * Destinations belonging to no tab — the profile, the notifications list, the assistant, all
+     * reached from the shared header rather than from the bar — deliberately change nothing. They
+     * are a step sideways available from all five tabs, so leaving the tab the user came from lit is
+     * what tells them where they will be when they come back.
+     */
+    private fun highlightTabFor(destinationId: Int) {
+        NavTab.forDestination(destinationId)?.let(binding.navTabs::selectTab)
+    }
+
+    /**
+     * Keeps the Tasks tab's badge showing how many care tasks are still open today.
+     *
+     * Collected here rather than in a fragment because the bar belongs to this Activity and is on
+     * screen for all five tabs and every detail screen under them — see [SessionViewModel.openTasksToday]
+     * for why the count lives at that level too.
+     *
+     * `repeatOnLifecycle(STARTED)` is what stops the collection while the app is in the background:
+     * the flow behind it is a Room query, and left running it would keep re-counting for a bar
+     * nobody can see. It resumes with the current value when the Activity comes back.
+     */
+    private fun observeOpenTaskCount() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                sessionViewModel.openTasksToday.collect(binding.navTabs::setOpenTaskCount)
             }
         }
     }

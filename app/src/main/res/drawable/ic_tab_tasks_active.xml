@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Tasks tab's checklist as drawn on the *active* pill: the outline in ic_tab_tasks.xml at the
+    heavier stroke width. See ic_tab_home_active.xml for why the pair exists as two files.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M4,7.2 L6,9.2 L9.4,5.6 M4,16.4 L6,18.4 L9.4,14.8 M13,7.4 H20 M13,16.6 H20"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.2" />
+
+</vector>

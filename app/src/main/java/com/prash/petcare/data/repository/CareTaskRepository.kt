@@ -45,6 +45,17 @@ class CareTaskRepository(
         careTaskDao.observePendingCountByPet(petId)
 
     /**
+     * Observes every task belonging to an owner, unfiltered.
+     *
+     * For callers that have to project a repeat schedule to decide what falls due on a given day —
+     * a repeating task's stored date is the day it began, not the day it next runs, so the question
+     * cannot be answered by a date filter in SQL. See [CareTaskDao.observeByOwner], and
+     * [com.prash.petcare.util.CareSchedule.tasksDueOn] for the projection itself.
+     */
+    fun observeTasksForOwner(ownerId: Long): Flow<List<CareTask>> =
+        careTaskDao.observeByOwner(ownerId)
+
+    /**
      * Observes an owner's outstanding tasks falling inside a time window.
      *
      * The caller supplies the window — typically the start and end of today, worked out in the

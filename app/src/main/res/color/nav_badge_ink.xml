@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The number written inside the Tasks tab's open-task badge.
+
+    The companion to bg_nav_badge.xml and switched by the same state: the two are always used
+    together, since a colour is only legible against the fill it was chosen for. White on the alert
+    red while the tab is inactive; on the active pill, the pill's own inverse.
+
+    See nav_tab_ink.xml for why the selected item has to be listed first.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:color="?attr/colorOnNavBadgeActive"
+        android:state_selected="true" />
+
+    <item android:color="@color/on_nav_badge" />
+
+</selector>

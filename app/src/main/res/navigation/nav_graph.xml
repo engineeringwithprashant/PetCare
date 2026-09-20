@@ -16,11 +16,11 @@
     form the user has already completed.
 
     *The signed-in app* — five **top-level** destinations (homeFragment, petsFragment,
-    checklistFragment, placesFragment, expensesFragment), each matching an item in
-    res/menu/bottom_nav_menu.xml by id, plus the detail and form screens reached from them. Top-level
+    checklistFragment, placesFragment, expensesFragment), each named by an entry in the NavTab table
+    in ui/common/FloatingNavBar.kt, plus the detail and form screens reached from them. Top-level
     here has a precise meaning: these five are peers of one another rather than ancestors, so moving between them is a switch
     and not a journey — which is why none of them shows a back arrow and why none has an `action`
-    pointing at another. NavigationUI moves between them from the bottom bar alone.
+    pointing at another. The bottom bar moves between them by destination id alone.
 
     **Which destinations carry a userId, and which do not.** None of them. The signed-in account
     used to be a navigation argument on the home screen, but a bottom bar navigates by destination
@@ -171,8 +171,9 @@
 
     <!-- ========================= Top-level: the bottom bar =========================
          These five are the bottom navigation bar's destinations. They are listed here in the same
-         order as res/menu/bottom_nav_menu.xml, and each id matches an item there — see the note at
-         the top of that file for why the ids have to agree. -->
+         order as the NavTab table in ui/common/FloatingNavBar.kt, and each id appears there — that
+         id is the only thing tying a tab to a screen, so a tab naming a destination this file does
+         not declare is a tab that silently fails to navigate. -->
 
     <!-- Tab 1. The dashboard: greeting, clock and sync status, three stat cards, the next task,
          today's care and streak, the pets, an insight, the week ahead and quick actions. -->

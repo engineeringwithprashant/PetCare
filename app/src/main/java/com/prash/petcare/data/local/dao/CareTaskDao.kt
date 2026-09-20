@@ -122,6 +122,32 @@ interface CareTaskDao {
     fun observePendingByPet(petId: Long): Flow<List<CareTask>>
 
     /**
+     * Every task across all of an owner's pets, whatever its date or state.
+     *
+     * **Why an unfiltered query, when the two below filter by date in SQL.** A repeating task has one
+     * row, not one row per occurrence: its `dueAt` is the date it was first set for, and whether it
+     * falls due *today* is worked out from the routine that owns it — see
+     * [com.prash.petcare.util.CareSchedule.tasksDueOn]. So a task repeating daily since last week has
+     * a `dueAt` well outside today and is still due today, and a WHERE clause on the date would
+     * quietly drop it. Anything asking "what is due today?" has to project the schedule in Kotlin,
+     * which means starting from all of the rows.
+     *
+     * The windowed queries below are not wrong — they answer a different question, "what was set for
+     * this stretch of time?", which is what a diary of upcoming one-offs needs.
+     *
+     * The Flow twin of [getByOwner], which the sync layer uses for the same rows as a one-off read.
+     */
+    @Query(
+        """
+        SELECT care_tasks.* FROM care_tasks
+        INNER JOIN pets ON pets.id = care_tasks.petId
+        WHERE pets.ownerId = :ownerId
+        ORDER BY care_tasks.dueAt ASC
+        """
+    )
+    fun observeByOwner(ownerId: Long): Flow<List<CareTask>>
+
+    /**
      * Every outstanding task across all of an owner's pets, due within a time window.
      *
      * The home screen calls this with the start and end of today to build its "due today" list;

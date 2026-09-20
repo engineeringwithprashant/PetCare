@@ -1372,54 +1372,107 @@
     </style>
 
     <!-- =========================== Bottom navigation bar ===========================
-         Wired into the theme as the default bottomNavigationStyle, so activity_main.xml declares
-         the view and inherits all of this.
+         The bar is a floating control rather than a band across the foot of the screen: a
+         translucent slab with a hairline edge, hovering over whatever page is scrolling beneath it,
+         with the current tab widened into a filled pill that carries its name.
 
-         The bar is a dark rounded capsule in *both* themes — see the bottom-navigation note in
-         colors.xml for why the app's chrome is one treatment rather than two, and bg_bottom_nav.xml
-         for the shape itself.
+         **Why it is a MaterialCardView with a custom view inside, rather than a
+         BottomNavigationView.** Material's bar lays each item out as a fixed-width column with the
+         label beneath the icon, and it has no notion of one item being *wider* than the others. The
+         design turns on exactly that: the active tab grows to nearly twice an inactive one and its
+         label appears beside the icon inside the pill. There is no combination of BottomNavigationView
+         attributes that produces it, so the row is a custom view — see FloatingNavBar — and the slab
+         around it is an ordinary M3 card, which already knows how to draw a shape, a hairline stroke
+         and a shadow correctly in both themes.
 
-         The selected tab is marked by the accent pill Material 3 draws behind the active icon. That is
-         the one place in the app's chrome the accent appears, so "where am I?" is answered by the
-         same colour that answers "what do I press?".
+         Everything about the row's *behaviour* lives in FloatingNavBar; everything about how the slab
+         and its tabs *look* lives here and in the drawables the tab layout names. -->
 
-         **Icons only, no labels.** The bar is an inset capsule 64dp tall, and five labelled items do
-         not fit in it: Material lays the label out below the icon, and at this height the two
-         collided and the text was drawn over the glyphs. Rather than grow the capsule or shrink the
-         type to the point of being decorative, the labels are dropped and the icons take the room —
-         which is the usual reading of a five-tab bar anyway, and the pill still says which tab is
-         current. Each item keeps its title as a content description and a long-press tooltip, so
-         nothing is lost to a screen-reader user; see MainActivity.describeNavigationItems. -->
-    <style name="PetCare.BottomNav" parent="Widget.Material3.BottomNavigationView">
-        <item name="android:background">@drawable/bg_bottom_nav</item>
-        <item name="itemActiveIndicatorStyle">@style/PetCare.BottomNav.ActiveIndicator</item>
-        <item name="itemIconTint">@color/bottom_nav_item_tint</item>
-        <!-- Larger than Material's 24dp default, taking back the space the labels used. Big enough
-             to carry the bar on its own, and still comfortably inside the pill behind it. -->
-        <item name="itemIconSize">@dimen/bottom_nav_icon_size</item>
-        <item name="labelVisibilityMode">unlabeled</item>
-        <!-- The capsule is drawn by the background drawable, so the view must not also cast a
-             shadow — a shadow follows the view's rectangular bounds, not the drawable's rounded
-             outline, and would show as a faint square behind the rounded ends. -->
-        <item name="elevation">0dp</item>
+    <!--
+        The slab. Parented on the app's card rather than on Material's, so it inherits the one
+        elevation the whole app uses for a resting surface — the spec's "standard card shadow" is
+        literally the same value every other card casts, and taking it from PetCare.Card is what
+        keeps that true if the scale is ever retuned.
+
+        Three things are its own:
+
+        - **A translucent background.** colorSurface would be opaque, and an opaque bar is the thing
+          this design is not; the fill comes from a themed role carrying its own alpha.
+        - **A hairline stroke.** PetCare.Card deliberately has none — its shadow does the separating.
+          A translucent surface has a much weaker shadow relationship with the page behind it, and
+          without an edge the slab's boundary is ambiguous exactly where the page is busiest.
+        - **Content padding.** 7dp on every side, which together with the 46dp tab height is what
+          makes the bar 60dp tall. See dimens.xml.
+    -->
+    <style name="PetCare.NavBar" parent="PetCare.Card">
+        <item name="shapeAppearance">@style/ShapeAppearance.PetCare.NavBar</item>
+        <item name="cardBackgroundColor">?attr/colorNavBarSurface</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="contentPadding">@dimen/nav_bar_padding</item>
     </style>
 
     <!--
-        The pill drawn behind the selected tab's icon: the accent itself rather than the muted
-        container the app uses elsewhere, since on a dark bar the muted variant barely registers.
+        The slab's corner.
 
-        **Only the width is set here, and the height is deliberately left to Material.** An explicit
-        height is not simply ignored in an unlabelled bar — it is measured from the top of the item's
-        icon container and grows *downwards*, so a pill taller than the container ends up sitting
-        below the glyph and cropping it. (That is exactly what happened: the selected icon showed only
-        its top half against a pill hanging beneath it.) Material already sizes the indicator around
-        the icon in this mode, including the larger icon set by itemIconSize, so letting it do that
-        keeps the glyph centred in the pill at any icon size.
+        A shape appearance rather than a plain cardCornerRadius, because PetCare.Card already sets
+        one and a MaterialCardView takes its shape from the appearance in preference to the radius —
+        setting only the radius here would be silently ignored and the bar would keep the app's
+        medium corner.
     -->
-    <style name="PetCare.BottomNav.ActiveIndicator"
-        parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
-        <item name="android:color">@color/accent_yellow</item>
-        <item name="android:width">@dimen/bottom_nav_indicator_width</item>
+    <style name="ShapeAppearance.PetCare.NavBar" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/nav_bar_corner_radius</item>
+    </style>
+
+    <!--
+        The active tab's label — the one piece of text the bar draws.
+
+        Schibsted Grotesk Bold rather than the mono face the app's other micro-labels use, and not
+        upper-cased. Those labels are readings off an instrument ("AGE", "0.5 km"); this one is a
+        *place name*, and the tab it names is a destination rather than a value. Set in sentence case
+        at 11sp with a little tracking, so it reads as a word at a glance beside its icon.
+
+        singleLine with no ellipsize is the spec's `white-space: nowrap`, and it is what makes the
+        reveal work: while the pill is widening there is not yet room for the whole word, and a
+        TextView in that position clips its text — so the label is uncovered from the left as the
+        pill grows, rather than appearing first as an ellipsis.
+    -->
+    <style name="PetCare.NavTab.Label" parent="">
+        <item name="android:fontFamily">@font/schibsted_grotesk</item>
+        <item name="fontFamily">@font/schibsted_grotesk</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:textColor">@color/nav_tab_ink</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!--
+        The Tasks tab's open-task count.
+
+        IBM Plex Mono, like every other figure in the app that is read rather than spoken — and here
+        for a second reason: the badge is a box that has to hold "1" and "12" without jumping about,
+        and a monospaced face keeps each digit the same width so the box grows by exactly one
+        character. The family ships Medium and SemiBold, and `bold` resolves to the heavier of the
+        two; see res/font/ibm_plex_mono.xml for why those are the two weights worth shipping at these
+        sizes.
+
+        includeFontPadding is off and the height is fixed, which together centre the digit optically
+        in a 16dp box — with the default font padding the glyph sits noticeably high in a box this
+        small.
+    -->
+    <style name="PetCare.NavTab.Badge" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">9.5sp</item>
+        <item name="android:textColor">@color/nav_badge_ink</item>
+        <item name="android:background">@drawable/bg_nav_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:includeFontPadding">false</item>
     </style>
 
     <!-- ================================= Places tab =================================
@@ -2447,12 +2500,27 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- A row of three keys. -->
+    <!--
+        A row of three keys.
+
+        **baselineAligned must be false.** A horizontal LinearLayout aligns its children by their
+        text *baseline* by default, shifting each one down until the words line up. That is right for
+        a row of labels and wrong for a row of buttons: the bottom row mixes "0" and the backspace
+        glyph at 18sp with "CLEAR" at 11sp, so the small key was pushed about 4dp down the row to
+        bring its baseline level with the digits. The row is wrap_content and sized to an unshifted
+        key, so those 4dp hung off the bottom and were clipped — which took the CLEAR key's bottom
+        outline with them, leaving a key open along its bottom edge while its neighbours were closed.
+
+        Turning it off aligns the keys by their boxes, which is what a keypad is: a grid of equal
+        tiles whose labels happen to be different sizes. The three digit rows never showed the bug
+        only because every key in them carries the same text size.
+    -->
     <style name="PetCare.Auth.KeyRow" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">@dimen/auth_key_gap</item>
         <item name="android:orientation">horizontal</item>
+        <item name="android:baselineAligned">false</item>
     </style>
 
     <!-- ~~~~~~~~~~ The "New to PetCare? Create an account" footer ~~~~~~~~~~ -->

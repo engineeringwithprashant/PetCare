@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Pets tab's icon: a paw print.
+
+    Stroked, untinted and drawn on the same 24dp grid as the rest of the set — see ic_tab_home.xml
+    for why all three of those are true of every nav icon.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!--
+        Five circles in one path: the large pad low in the frame, then four toes above it, the outer
+        pair set wider and lower than the inner pair so the print reads as a paw rather than as a
+        row of dots.
+
+        **Why circles are written as two arcs.** A VectorDrawable has no <circle> element — it draws
+        paths only — so each circle is a move to its leftmost point followed by two half-circle arcs
+        back to the start. Keeping all five in a single path (rather than five <path> elements) means
+        the stroke settings below are stated once and cannot drift apart between the toes and the pad.
+    -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M7.9,15.4 A4.1,4.1 0 1 1 16.1,15.4 A4.1,4.1 0 1 1 7.9,15.4 Z M3.7,10.7 A2,2 0 1 1 7.7,10.7 A2,2 0 1 1 3.7,10.7 Z M16.3,10.7 A2,2 0 1 1 20.3,10.7 A2,2 0 1 1 16.3,10.7 Z M7.2,5.6 A2,2 0 1 1 11.2,5.6 A2,2 0 1 1 7.2,5.6 Z M12.8,5.6 A2,2 0 1 1 16.8,5.6 A2,2 0 1 1 12.8,5.6 Z"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.8" />
+
+</vector>
