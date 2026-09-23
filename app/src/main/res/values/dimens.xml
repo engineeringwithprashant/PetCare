@@ -564,10 +564,34 @@
          The screen the header's pet-count badge opens: a headline, two group headings and one card
          per alert. -->
 
-    <!-- "3 new alerts". The largest text on the screen and its subject, so it is set a step above the
-         Money tab's headings and just under the dashboard's greeting. In sp, so it grows with the
-         user's font size. -->
-    <dimen name="notifications_headline_text_size">26sp</dimen>
+    <!--
+        The screen's type sizes, all set 15% below the app's shared scale.
+
+        **Why this screen is smaller than the rest of the app.** A notification list is skimmed rather
+        than read: the user is looking for whether anything here needs them, not settling in with it.
+        At the app's normal sizes each alert card filled a large part of the screen and three alerts
+        needed a scroll, which is the wrong shape for that job — the point of the screen is to take in
+        the whole list at a glance.
+
+        Stated here as explicit sizes rather than by shrinking the shared styles, because
+        PetCare.ListTitle, PetCare.Places.Meta and PetCare.SectionLabel are used by the Money, Places
+        and Pets screens too, and those are read rather than skimmed. Every value is in sp, so the
+        whole screen still grows with the user's font-size setting.
+    -->
+
+    <!-- "3 new alerts": the screen's subject and its largest text. Was 26sp. -->
+    <dimen name="notifications_headline_text_size">22sp</dimen>
+    <!-- The "NEW" / "EARLIER" group headings. The shared section label is 11sp. -->
+    <dimen name="notifications_section_text_size">9.5sp</dimen>
+    <!-- An alert's sentence, and the line height that goes with it when it wraps to two lines. The
+         shared list title is 16sp on a 21sp line. -->
+    <dimen name="notifications_title_text_size">13.5sp</dimen>
+    <dimen name="notifications_title_line_height">18sp</dimen>
+    <!-- "Care reminder · 2h ago". The shared meta line is 12sp. -->
+    <dimen name="notifications_meta_text_size">10sp</dimen>
+    <!-- The square type code, "VAX". Was the 11sp label; kept level with the group headings so the
+         badge does not end up the largest thing on a card. -->
+    <dimen name="notifications_badge_text_size">9.5sp</dimen>
 
     <!-- The padding inside an alert card.
 

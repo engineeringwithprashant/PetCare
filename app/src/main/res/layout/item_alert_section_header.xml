@@ -6,10 +6,12 @@
     (item_task_section_header.xml) there is no count and no rule to lay out beside it — the heading's
     whole job is to name the group underneath.
 
-    PetCare.SectionLabel is the app's shared quiet heading: small, upper-cased by the style, widely
-    letter-spaced and muted, in the monospace face used for every micro-label in the app. Quiet on
-    purpose — the alert cards below are the subject, and a full-sized heading above them would compete
-    with the sentences they carry.
+    PetCare.Notifications.SectionLabel is the app's shared quiet heading — small, upper-cased by the
+    style, widely letter-spaced and muted, in the monospace face used for every micro-label in the app
+    — set to this screen's own smaller scale, which is a step below the rest of the app because a
+    notification list is skimmed rather than read (see the Notifications block in dimens.xml). Quiet on
+    purpose either way: the alert cards below are the subject, and a full-sized heading above them
+    would compete with the sentences they carry.
 
     The margins are the group's spacing: a wide gap above separates it from the cards of the previous
     group, a tight one below ties it to its own. A RecyclerView has no gap attribute of its own, so
@@ -21,7 +23,7 @@
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/alertSectionLabel"
-    style="@style/PetCare.SectionLabel"
+    style="@style/PetCare.Notifications.SectionLabel"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/spacing_md"

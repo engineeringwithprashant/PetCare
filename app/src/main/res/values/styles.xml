@@ -1898,7 +1898,8 @@
         <item name="android:textSize">@dimen/notifications_headline_text_size</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
         <item name="android:textStyle">bold</item>
-        <!-- -0.9px at 26px. -->
+        <!-- Set as an em fraction rather than a pixel figure, so the tightening stays proportional
+             when the size changes — here, and again whenever the user's font-size setting scales it. -->
         <item name="android:letterSpacing">-0.035</item>
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
@@ -1924,22 +1925,37 @@
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textSize">@dimen/notifications_badge_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="android:maxLines">1</item>
         <item name="android:importantForAccessibility">no</item>
     </style>
 
-    <!-- An alert's sentence. The Money tab's list title, but allowed to wrap to a second line: an
-         expense's title is a noun the user typed and fits, whereas this is a whole sentence built from
-         a pet's name and a task's, and truncating it would cut off the very thing being reported. -->
-    <style name="PetCare.Notifications.Title" parent="PetCare.ListTitle">
-        <item name="android:textStyle">bold</item>
-        <item name="android:maxLines">2</item>
-        <item name="lineHeight">21sp</item>
+    <!-- The "NEW" and "EARLIER" group headings. The app's section label, set down to this screen's
+         smaller scale — see the Notifications block in dimens.xml for why the whole screen is a step
+         below the rest of the app. A style of its own rather than a size on the shared label, which
+         heads sections on five other screens. -->
+    <style name="PetCare.Notifications.SectionLabel" parent="PetCare.SectionLabel">
+        <item name="android:textSize">@dimen/notifications_section_text_size</item>
     </style>
 
-    <!-- "Care reminder · 2h ago": the meta line shared with the Places and Money tabs. -->
-    <style name="PetCare.Notifications.Meta" parent="PetCare.Places.Meta" />
+    <!-- An alert's sentence. The Money tab's list title, but allowed to wrap to a second line: an
+         expense's title is a noun the user typed and fits, whereas this is a whole sentence built from
+         a pet's name and a task's, and truncating it would cut off the very thing being reported. The
+         line height comes down with the text, so a wrapped sentence stays a tight two-line block
+         rather than opening a gap between its halves. -->
+    <style name="PetCare.Notifications.Title" parent="PetCare.ListTitle">
+        <item name="android:textSize">@dimen/notifications_title_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="lineHeight">@dimen/notifications_title_line_height</item>
+    </style>
+
+    <!-- "Care reminder · 2h ago": the meta line shared with the Places and Money tabs, at this
+         screen's scale. -->
+    <style name="PetCare.Notifications.Meta" parent="PetCare.Places.Meta">
+        <item name="android:textSize">@dimen/notifications_meta_text_size</item>
+    </style>
 
     <!-- ================================ Profile screen ================================
          The screen the header's monogram opens.

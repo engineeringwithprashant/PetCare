@@ -1946,7 +1946,7 @@
     <!-- Why there is no fix. Each is written as a condition with a way forward, not as an error: the
          demo location beside them means the screen is never a dead end. -->
     <string name="add_place_gps_denied">Location permission was denied</string>
-    <string name="add_place_gps_failed">Could not get a GPS fix — try again outdoors</string>
+    <string name="add_place_gps_failed">Could not get a GPS fix. Try again outdoors</string>
     <string name="add_place_gps_unsupported">This device has no location support</string>
 
     <!-- The card's buttons. "Refresh location" once there is something to refresh, "Try again" after
@@ -1970,7 +1970,9 @@
     <!-- The summary card: what will be saved on the first line, where its position came from on the
          second. The two lines are joined with a newline by the fragment. -->
     <string name="add_place_summary_untitled">Untitled place</string>
-    <string name="add_place_summary_line">%1$s — %2$s</string>
+    <!-- The middle dot is the separator the rest of the app uses between a name and what it is
+         ("Vet clinic · Pulchowk"), so the summary reads in the same voice as the card it becomes. -->
+    <string name="add_place_summary_line">%1$s · %2$s</string>
     <string name="add_place_summary_geotagged">Geotagged at %1$s</string>
     <string name="add_place_summary_waiting">Waiting for a GPS fix</string>
 
@@ -1978,7 +1980,7 @@
          form: the "saved by you" provenance shown beside its category, and the note that stands in
          when the user left the note box empty. -->
     <string name="add_place_saved_meta">saved by you</string>
-    <string name="add_place_default_note">Saved on site — add hours and a phone number any time.</string>
+    <string name="add_place_default_note">Saved on site. Add hours and a phone number any time.</string>
 
     <!-- The confirmation on the Places tab once the new place is in the list. The quotes are curly on
          purpose: they are the typographic ones the design uses. -->
