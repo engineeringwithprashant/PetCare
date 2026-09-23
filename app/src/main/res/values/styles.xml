@@ -2670,4 +2670,314 @@
         <item name="android:textColor">@color/auth_secondary_button_text</item>
     </style>
 
+    <!--
+        ============================== "Add a place" screen ==============================
+
+        The sub-screen reached from the Places tab, where a place is saved by searching for it, by
+        dropping a pin, or from the device's current position (fragment_add_place.xml).
+
+        **Almost nothing here is new grammar.** The method picker is the profile screen's preference
+        toggle with a third option; the category pills are the Tasks tab's filter chips; the two text
+        boxes and the save button are the sign-in screens' fields and primary button. Each of those
+        already carries the app's rule that "chosen" and "the thing to press" are the strong fill —
+        near-black by day, the accent by night — and that a disabled button is a solid resting slab
+        rather than a faded one. Inheriting them is what keeps this screen part of the same app, and
+        it means the styles below describe only what the design genuinely adds: the map, its marker,
+        and the dark current-location card.
+    -->
+
+    <!-- ~~~~~~~~~~ The entry point in the Places tab ~~~~~~~~~~ -->
+
+    <!--
+        "+ ADD PLACE", right-aligned in the "SAVED PLACES" heading.
+
+        The one accent-filled thing in that part of the page, because it is the one action there. Sized
+        to sit on the heading's own line: short, capsule-shaped and letter-spaced like the heading
+        beside it, so the two read as one row rather than as a label with a button dropped next to it.
+
+        A MaterialButton rather than a TextView with a background, for the ripple, the focus state and
+        the "button" role TalkBack announces. Its insets are zeroed because the pill is already its own
+        touch target and the default insets would only add a gap that pushes the heading taller.
+    -->
+    <style name="PetCare.Places.AddPill" parent="Widget.Material3.Button">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">@dimen/places_add_pill_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/places_add_pill_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/places_add_pill_padding_horizontal</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/places_add_pill_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The screen's header ~~~~~~~~~~ -->
+
+    <!--
+        The round back button beside the heading.
+
+        An *outlined* icon button, unlike the filled disc on a pet's photo (PetCare.PetDetail.BackButton):
+        that one sits on a photograph and needs its own ground to be seen at all, whereas this one sits
+        on the page, where a filled disc would read as a second action competing with "SAVE PLACE". The
+        hairline edge and surface fill are the same treatment as the header's theme toggle, which is
+        the app's existing way of saying "a quiet control on the page".
+
+        The 36dp disc is drawn inside a 48dp view by the inset, so the touch target stays at the
+        minimum even though the circle is smaller than it.
+    -->
+    <style name="PetCare.AddPlace.BackButton" parent="Widget.Material3.Button.IconButton.Outlined">
+        <item name="android:layout_width">@dimen/add_place_back_button_size</item>
+        <item name="android:layout_height">@dimen/add_place_back_button_size</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:padding">8dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Circle</item>
+        <item name="icon">@drawable/ic_arrow_back</item>
+        <item name="iconSize">18dp</item>
+        <item name="iconPadding">0dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconTint">?attr/colorOnSurface</item>
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- "Add a place" — the screen's heading. The app's character face at the design's size, with the
+         letters drawn tighter, which is how heavy type is set large; at default spacing a 26sp
+         Bricolage word looks gappy. Line spacing is pulled to the text's own height (the design's
+         line-height: 1) so a heading that wraps stays a tight two-line block. -->
+    <style name="PetCare.AddPlace.Title" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textSize">@dimen/add_place_title_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:lineSpacingMultiplier">1.0</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- "Save it from anywhere — no need to be standing there." The sign-in screens' helper voice:
+         small muted monospace, which marks it as an annotation on the screen rather than as something
+         to read through. Left-aligned and allowed to wrap, unlike the centred auth subtitle. -->
+    <style name="PetCare.AddPlace.Subtitle" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/add_place_subtitle_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The method picker ~~~~~~~~~~ -->
+
+    <!--
+        The groove the three options sit in, and one option within it.
+
+        The profile screen's two-option toggle, inherited rather than re-described: it already is this
+        control — a capsule groove with a strong-filled pill in the chosen segment, driven entirely by
+        `state_selected` through bg_profile_segment.xml and res/color/profile_segment_text.xml. The
+        only differences the design asks for are the height and the lettering, and the fact that the
+        row holds three peers instead of two, which is a matter of how many are added in the layout
+        rather than of style.
+
+        Schibsted rather than the auth variant's monospace capitals: these are words ("Drop pin",
+        "I'm here"), not unit abbreviations, and sentence case is what the design sets them in.
+    -->
+    <style name="PetCare.AddPlace.MethodTrack" parent="PetCare.Profile.SegmentTrack">
+        <item name="android:layout_height">@dimen/add_place_method_height</item>
+        <item name="android:padding">@dimen/spacing_xs</item>
+    </style>
+
+    <style name="PetCare.AddPlace.Method" parent="PetCare.Profile.Segment">
+        <item name="android:textSize">@dimen/add_place_method_text_size</item>
+        <item name="android:paddingStart">@dimen/spacing_xs</item>
+        <item name="android:paddingEnd">@dimen/spacing_xs</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The search results ~~~~~~~~~~ -->
+
+    <!-- One result card. The outlined card the dashboard's quick actions use, at this screen's small
+         radius: flat with a hairline edge rather than a shadow, because a column of shadowed cards
+         under a text field would read as more important than the field driving them. The chosen card's
+         accent border and tinted fill are applied by PlaceSuggestionAdapter, since they depend on state
+         rather than on anything the layout can know. -->
+    <style name="PetCare.AddPlace.ResultCard" parent="PetCare.Card.Outlined.Clickable">
+        <item name="cardCornerRadius">@dimen/add_place_result_corner_radius</item>
+    </style>
+
+    <!-- A result's category glyph: "Vet", "Grm", "Park", "Shop" in a rounded square. The saved-place
+         badge's treatment (PetCare.Places.Badge) at the design's smaller size. Hidden from TalkBack,
+         because the row's own description already names the category. -->
+    <style name="PetCare.AddPlace.ResultGlyph" parent="">
+        <item name="android:layout_width">@dimen/add_place_result_glyph_size</item>
+        <item name="android:layout_height">@dimen/add_place_result_glyph_size</item>
+        <item name="android:background">@drawable/bg_place_result_glyph</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/add_place_result_glyph_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- A result's name, and the address under it. The saved-place row's pairing — a Schibsted title
+         over a monospace meta line — so a place looks the same before and after it is saved. -->
+    <style name="PetCare.AddPlace.ResultName" parent="PetCare.ListTitle">
+        <item name="android:textSize">@dimen/add_place_result_name_text_size</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="PetCare.AddPlace.ResultAddress" parent="PetCare.Places.Meta">
+        <item name="android:textSize">@dimen/add_place_result_address_text_size</item>
+    </style>
+
+    <!-- The distance on the right of a result. Monospace so a column of them lines up, and held to one
+         line so "8.4 km" never breaks across two. -->
+    <style name="PetCare.AddPlace.ResultDistance" parent="PetCare.Places.Meta">
+        <item name="android:textSize">@dimen/add_place_result_address_text_size</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- "Nothing matched…" inside the dashed card. -->
+    <style name="PetCare.AddPlace.NoResults" parent="PetCare.Auth.Helper">
+        <item name="android:background">@drawable/bg_place_no_results</item>
+        <item name="android:padding">@dimen/add_place_result_padding</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The pin map ~~~~~~~~~~ -->
+
+    <!-- The marker's yellow name label. Upper-case monospace, like every other tag in the app, and
+         held to one line: a map label that wrapped would cover the ground the user is aiming at. -->
+    <style name="PetCare.AddPlace.PinLabel" parent="">
+        <item name="android:background">@drawable/bg_pin_marker_label</item>
+        <item name="android:paddingStart">@dimen/pin_marker_label_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/pin_marker_label_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/pin_marker_label_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/pin_marker_label_padding_vertical</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/pin_marker_label_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:elevation">2dp</item>
+    </style>
+
+    <!-- "TAP OR DRAG TO MOVE" over the map's bottom-left corner. -->
+    <style name="PetCare.AddPlace.PinHint" parent="">
+        <item name="android:background">@drawable/bg_pin_map_hint</item>
+        <item name="android:paddingStart">@dimen/pin_map_hint_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/pin_map_hint_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/pin_map_hint_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/pin_map_hint_padding_vertical</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/pin_map_hint_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/on_pin_map_hint</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- The live coordinates under the map, in the pale capsule the Places tab uses for its GPS tag,
+         and the "1.1 km from home" beside it. Both monospace and both held to one line — a coordinate
+         or a distance that wrapped mid-number would be unreadable. -->
+    <style name="PetCare.AddPlace.Coordinates" parent="PetCare.Places.GpsChip">
+        <item name="android:textSize">@dimen/pin_readout_text_size</item>
+    </style>
+
+    <style name="PetCare.AddPlace.PinDistance" parent="PetCare.Places.Meta">
+        <item name="android:textSize">@dimen/pin_readout_text_size</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The current-location card ~~~~~~~~~~ -->
+
+    <!-- "CURRENT LOCATION", the area name, and the coordinates with their accuracy. All three sit on
+         the dark card, so their colours are the fixed on-card values rather than theme roles, and the
+         muted one is a solid colour rather than the light ink at reduced opacity — the rule this
+         screen follows throughout. -->
+    <style name="PetCare.AddPlace.HereLabel" parent="PetCare.SectionLabel">
+        <item name="android:textSize">@dimen/gps_card_label_text_size</item>
+        <item name="android:textColor">@color/on_gps_card_muted</item>
+        <item name="android:letterSpacing">0.16</item>
+    </style>
+
+    <style name="PetCare.AddPlace.HereArea" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textSize">@dimen/gps_card_area_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/on_gps_card</item>
+    </style>
+
+    <style name="PetCare.AddPlace.HereCoordinates" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/gps_card_coordinates_text_size</item>
+        <item name="android:textColor">@color/on_gps_card_muted</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The shared save fields ~~~~~~~~~~ -->
+
+    <!-- The micro-label over each field — "PLACE NAME", "CATEGORY", "NOTE". The sign-in screens' field
+         label, which is the app's section label with the design's spacing above and below it. -->
+    <style name="PetCare.AddPlace.FieldLabel" parent="PetCare.Auth.FieldLabel">
+        <item name="android:letterSpacing">0.16</item>
+    </style>
+
+    <!-- The name and note boxes. The sign-in screens' field, unchanged in shape — a white, softly
+         rounded outlined box with the label above it rather than floating inside — and differing only
+         in the weight and size of the text typed into it, which the design sets a step apart for the
+         two. -->
+    <style name="PetCare.AddPlace.Field" parent="PetCare.Auth.Field" />
+
+    <style name="PetCare.AddPlace.NameInput" parent="PetCare.Auth.FieldInput">
+        <item name="android:textSize">@dimen/add_place_name_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingTop">@dimen/auth_field_padding_horizontal</item>
+        <item name="android:paddingBottom">@dimen/auth_field_padding_horizontal</item>
+    </style>
+
+    <style name="PetCare.AddPlace.NoteInput" parent="PetCare.Auth.FieldInput">
+        <item name="android:textSize">@dimen/add_place_note_text_size</item>
+        <item name="android:paddingTop">@dimen/auth_field_padding_horizontal</item>
+        <item name="android:paddingBottom">@dimen/auth_field_padding_horizontal</item>
+    </style>
+
+    <!-- The two-line readback above the save button. Monospace, because it is a summary of values
+         rather than prose, and pre-line so the two lines the fragment joins with a newline stay two
+         lines. -->
+    <style name="PetCare.AddPlace.Summary" parent="">
+        <item name="android:background">@drawable/bg_add_place_summary</item>
+        <item name="android:padding">@dimen/add_place_summary_padding</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/add_place_summary_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+
+    <!-- "SAVE PLACE". The sign-in screens' primary button, which already does the one thing that
+         matters here: it is disabled until the form is ready, and its disabled look is a solid resting
+         slab with pale ink rather than Material's faded wash — see attrs.xml, colorDisabledContainer.
+         Only the height changes, since this is the single action on a long form. -->
+    <style name="PetCare.AddPlace.SaveButton" parent="PetCare.Auth.PrimaryButton">
+        <item name="android:minHeight">@dimen/add_place_save_button_height</item>
+    </style>
+
 </resources>

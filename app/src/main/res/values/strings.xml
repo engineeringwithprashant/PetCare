@@ -1904,4 +1904,78 @@
     <string name="change_password_mismatch">The two new passwords do not match.</string>
     <string name="change_password_same">That is the password you already have.</string>
 
+    <!-- ================================ "Add a place" ================================
+         The sub-screen reached from "+ ADD PLACE" in the Places tab's "Saved places" heading. A place
+         can be saved from anywhere: by searching for it, by dropping a pin on the map, or from the
+         device's current position. Standing at the place is a convenience, never a requirement. -->
+
+    <!-- The entry point, and the screen's own header. -->
+    <string name="places_add_place_pill">+ Add place</string>
+    <string name="cd_places_add_place">Add a place</string>
+    <string name="add_place_header_title">Add place</string>
+    <string name="add_place_heading">Add a place</string>
+    <string name="add_place_subheading">Save it from anywhere — no need to be standing there.</string>
+    <string name="cd_add_place_back">Back to places</string>
+
+    <!-- The three ways of fixing a place's position. All three are available at all times. -->
+    <string name="add_place_method_search">Search</string>
+    <string name="add_place_method_pin">Drop pin</string>
+    <string name="add_place_method_here">I\'m here</string>
+
+    <!-- Method 1: search by name or address. -->
+    <string name="add_place_search_label">Name or address</string>
+    <string name="add_place_search_hint">e.g. animal hospital, Jhamsikhel</string>
+    <string name="add_place_no_results">Nothing matched. Try fewer words, or switch to Drop pin and mark the spot by hand.</string>
+    <!-- Spoken for a result row: name, address, distance. -->
+    <string name="cd_add_place_result">%1$s, %2$s, %3$s</string>
+
+    <!-- Method 2: drop or drag a pin. -->
+    <string name="add_place_pin_hint">Tap or drag to move</string>
+    <string name="add_place_pin_new">New place</string>
+    <!-- The live coordinate readout under the map: "27.6714° N, 85.3181° E". -->
+    <string name="add_place_coordinates">%1$s° N, %2$s° E</string>
+    <string name="add_place_pin_distance">%1$s from home</string>
+    <string name="cd_add_place_map">Map. Tap or drag to place the marker.</string>
+
+    <!-- Method 3: the device's current position. The only method that reads the GPS. -->
+    <string name="add_place_here_label">Current location</string>
+    <string name="add_place_here_locating">Finding your location…</string>
+    <string name="add_place_here_unknown">Location unavailable</string>
+    <!-- Shown when there is a fix but the geocoder could put no name to it — off a mapped road, or
+         with no network to ask. The coordinates underneath are still exact. -->
+    <string name="add_place_here_area_unknown">Unnamed area</string>
+    <!-- "27.6743° N, 85.3094° E · ±8 m accuracy". -->
+    <string name="add_place_here_accuracy">%1$s · ±%2$s m accuracy</string>
+    <string name="add_place_here_denied">Location access is off, so this method has nothing to report. Search or drop a pin instead — either saves the place just as well.</string>
+    <string name="add_place_here_failed">Could not get a location fix. Search for the place or drop a pin instead.</string>
+
+    <!-- The save fields, shared by all three methods. -->
+    <string name="add_place_name_label">Place name</string>
+    <string name="add_place_name_hint">e.g. Patan Animal Hospital</string>
+    <string name="add_place_category_label">Category</string>
+    <string name="add_place_note_label">Note</string>
+    <string name="add_place_note_hint">e.g. Ask for Dr. Shrestha</string>
+    <string name="add_place_save">Save place</string>
+
+    <!-- The summary card: what will be saved on the first line, where its position came from on the
+         second. The two lines are joined with a newline by the fragment. -->
+    <string name="add_place_summary_untitled">Untitled place</string>
+    <string name="add_place_summary_line">%1$s — %2$s</string>
+    <string name="add_place_summary_search_pending">Pick a search result or type a name</string>
+    <string name="add_place_summary_search">Found by search</string>
+    <string name="add_place_summary_pin">Pinned at %1$s</string>
+    <string name="add_place_summary_here">Current location · %1$s</string>
+
+    <!-- What a saved place carries when it was saved from this screen rather than typed into the full
+         form: the "saved by you" provenance shown beside its category, and the note that stands in
+         when the user left the note box empty. -->
+    <string name="add_place_saved_meta">saved by you</string>
+    <string name="add_place_default_note">Saved while planning — add hours and a phone number any time.</string>
+
+    <!-- The confirmation on the Places tab once the new place is in the list. The quotes are curly on
+         purpose: they are the typographic ones the design uses. -->
+    <string name="places_saved_snackbar">“%1$s” saved to places</string>
+    <string name="places_saved_undo">Undo</string>
+    <string name="places_saved_undone">“%1$s” was not saved</string>
+
 </resources>

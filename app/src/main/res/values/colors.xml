@@ -571,4 +571,58 @@
          is exactly what they are — text that has not become important yet. -->
     <color name="password_rule_met">@color/open_now_container</color>
 
+    <!-- ============================== "Add a place" screen ==============================
+         The sub-screen reached from the Places tab, where a place is saved by searching for it, by
+         dropping a pin on a map, or from the device's current position.
+
+         Two groups, split by the same rule the rest of this file follows. The first are light/dark
+         *pairs* exposed through theme attributes (see attrs.xml), because they sit on the page and
+         must follow it. The second are single values, because the things they colour are dark panels
+         or universally recognised marks that look the same in either theme — exactly the reasoning
+         behind the Places strip and the bottom bar above. -->
+
+    <!-- The map's ground. A pale sage by day and a deep slate by night: the map is a surface being
+         drawn *on*, so unlike the distance strip it does follow the theme — a bright green panel on
+         the near-black page would be the loudest thing in the app. -->
+    <color name="pin_map_ground_light">#DFE5D8</color>
+    <color name="pin_map_ground_dark">#15191A</color>
+
+    <!-- The 30dp grid ruled over that ground: the app's ink at 6% by day, white at 5% by night. Both
+         are deliberately *almost* invisible — the grid exists to say "this is a map you can move a pin
+         on", not to be read. Written as alpha-on-colour here rather than as an opacity on the view,
+         because the view it is drawn on also carries the marker, which must stay solid. -->
+    <color name="pin_map_grid_light">#0F1F1B13</color>
+    <color name="pin_map_grid_dark">#0DFFFFFF</color>
+
+    <!-- The wash behind the search result the user has chosen. A pale cream by day and a warm
+         near-black by night — a tint of the accent in each case, quiet enough that the accent
+         *border* around the card is still what marks it as chosen. -->
+    <color name="place_result_selected_light">#FFFBDF</color>
+    <color name="place_result_selected_dark">#232320</color>
+
+    <!-- The "you are here" dot on the map and the matching dot on the current-location card.
+
+         Blue in both themes, and the same blue as the Places tab's home dot for the same reason given
+         there: a blue dot in a halo is the universal "you are here" mark, and recognition is worth
+         more than palette purity. A white ring separates it from whichever ground it lands on. -->
+    <color name="here_dot">#2E7DFF</color>
+    <color name="here_dot_ring">#FFFFFF</color>
+    <color name="here_dot_halo">#382E7DFF</color>
+
+    <!-- "TAP OR DRAG TO MOVE", the hint pill in the map's bottom-left corner. A translucent near-black
+         with pale ink, fixed in both themes: it sits on the map, not on the page, and the map's two
+         grounds are far enough apart that a theme-following pill would be unreadable on one of them. -->
+    <color name="pin_map_hint_ground">#B814130F</color>
+    <color name="on_pin_map_hint">#F5F2E8</color>
+
+    <!-- The current-location card. Dark in both themes, like the distance strip it shares the screen's
+         lineage with: it is a single strong statement — "this is where you are" — and a white card
+         would make it one more field in the form. The muted ink is a solid value rather than the light
+         ink at reduced opacity, which is the rule this screen follows throughout. -->
+    <color name="gps_card_ground">#14130F</color>
+    <color name="on_gps_card">#F5F2E8</color>
+    <color name="on_gps_card_muted">#C7F5F2E8</color>
+    <!-- The tinted well the blue dot sits in on that card: the same blue at about a fifth. -->
+    <color name="gps_card_dot_well">#2E2E7DFF</color>
+
 </resources>

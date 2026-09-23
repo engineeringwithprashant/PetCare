@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The small yellow disc at the foot of the map marker — the point the coordinates are actually read
+    from.
+
+    An accent fill with a near-black ring. The ring is what keeps the dot visible: the map's light
+    ground is pale enough that a bare yellow disc on it would all but disappear, and a marker whose
+    tip cannot be seen is a marker the user cannot place accurately.
+
+    Fixed colours in both themes, for the reason given on bg_pin_marker_label.xml.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <solid android:color="@color/accent_yellow" />
+
+    <stroke
+        android:width="@dimen/pin_marker_dot_stroke"
+        android:color="@color/on_accent_yellow" />
+
+</shape>

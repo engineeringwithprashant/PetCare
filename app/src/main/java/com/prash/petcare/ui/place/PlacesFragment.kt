@@ -29,6 +29,7 @@ import com.prash.petcare.data.local.entity.TaskCategory
 import com.prash.petcare.databinding.FragmentPlacesBinding
 import com.prash.petcare.ui.checklist.RoutineOption
 import com.prash.petcare.ui.common.ChipOption
+import com.prash.petcare.ui.common.anchorAboveNavBar
 import com.prash.petcare.ui.common.badgeRes
 import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.bindOptions
@@ -131,6 +132,60 @@ class PlacesFragment : Fragment() {
 
         setUpClickListeners()
         observeViewModel()
+        observeSavedPlaceResult()
+    }
+
+    /**
+     * Watches for a place coming back from the "Add a place" screen, and confirms it.
+     *
+     * **How the result arrives.** That screen writes the new place's id and name into *this*
+     * destination's [androidx.lifecycle.SavedStateHandle] before closing — the Navigation component's
+     * way of returning a value. The handle belongs to this back stack entry, so it survives this
+     * screen being recreated while the other one was open, and it needs neither a shared ViewModel
+     * nor a fragment result listener.
+     *
+     * **Why the id is cleared as it is read.** A [androidx.lifecycle.LiveData] replays its last value
+     * to a new observer, so without removing it the confirmation would appear again every time the
+     * user came back to this tab — announcing a save that happened an hour ago.
+     *
+     * The row itself needs no help to appear: the list observes Room, so it, the distance ruler and
+     * the category filters have already redrawn by the time this runs. All this does is *feature* the
+     * new place and offer the way back out of the decision.
+     */
+    private fun observeSavedPlaceResult() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+
+        handle.getLiveData<Long>(AddPlaceFragment.RESULT_SAVED_PLACE_ID)
+            .observe(viewLifecycleOwner) { placeId ->
+                val name = handle.get<String>(AddPlaceFragment.RESULT_SAVED_PLACE_NAME).orEmpty()
+                handle.remove<Long>(AddPlaceFragment.RESULT_SAVED_PLACE_ID)
+                handle.remove<String>(AddPlaceFragment.RESULT_SAVED_PLACE_NAME)
+
+                viewModel.selectPlace(placeId)
+                showSavedConfirmation(placeId, name)
+            }
+    }
+
+    /**
+     * "'Patan Animal Hospital' saved to places", with an undo.
+     *
+     * Undo rather than a confirmation dialog before saving: the save is one tap and almost always
+     * right, so asking first would tax every correct save to catch the rare wrong one. Taking it back
+     * afterwards costs nothing and only appears when it is wanted. A second, briefer Snackbar
+     * confirms the undo itself, so pressing it is not silence.
+     */
+    private fun showSavedConfirmation(placeId: Long, name: String) {
+        val root = _binding?.root ?: return
+
+        Snackbar.make(root, getString(R.string.places_saved_snackbar, name), Snackbar.LENGTH_LONG)
+            .setAction(R.string.places_saved_undo) {
+                viewModel.undoSave(placeId)
+                showMessage(getString(R.string.places_saved_undone, name))
+            }
+            // Without this the message would appear *behind* the floating navigation bar, which
+            // would leave "Undo" unreadable and untappable — see anchorAboveNavBar.
+            .anchorAboveNavBar(this)
+            .show()
     }
 
     /**
@@ -146,7 +201,10 @@ class PlacesFragment : Fragment() {
     }
 
     private fun setUpClickListeners() {
-        binding.addPlaceButton.setOnClickListener { openPlaceForm(AddEditPlaceViewModel.NO_PLACE_ID) }
+        // Both entry points lead to the same screen: the pill in the saved-places heading, and the
+        // full-width row at the foot of the page, which is the only one showing in the empty state.
+        binding.addPlacePill.setOnClickListener { openAddPlace() }
+        binding.addPlaceButton.setOnClickListener { openAddPlace() }
         binding.allowLocationButton.setOnClickListener { locationPermission.request() }
         binding.pinButton.setOnClickListener { viewModel.togglePinned() }
 
@@ -185,7 +243,9 @@ class PlacesFragment : Fragment() {
         val hasPlaces = state.hasPlaces
         binding.distanceStrip.isVisible = hasPlaces
         binding.categoryChipScroll.isVisible = hasPlaces
-        binding.savedPlacesLabel.isVisible = hasPlaces
+        // The heading row goes with the list it heads. Its "+ ADD PLACE" pill goes with it, which is
+        // why the empty state keeps the full-width add button below — see the layout.
+        binding.savedPlacesHeader.isVisible = hasPlaces
         binding.emptyPlacesContainer.isVisible = !hasPlaces
 
         renderDistanceStrip(state)
@@ -338,7 +398,19 @@ class PlacesFragment : Fragment() {
         binding.placesScroll.smoothScrollTo(0, binding.featuredCard.top - binding.categoryChipScroll.height)
     }
 
-    /** Opens the place form: [AddEditPlaceViewModel.NO_PLACE_ID] to add, a real id to edit. */
+    /**
+     * "+ ADD PLACE": opens the screen where a place is saved from anywhere.
+     *
+     * A separate destination from the edit form below, because the two answer different questions.
+     * Adding is "which place do you mean?", and the answer may come from a search, a pin on a map or
+     * the device — none of which requires the user to be there. Editing is "what has changed about
+     * this one?", which is a form over a place that already exists.
+     */
+    private fun openAddPlace() {
+        findNavController().navigate(R.id.action_places_to_add_place)
+    }
+
+    /** Opens the place form to change or delete a saved place, reached by long-pressing its row. */
     private fun openPlaceForm(placeId: Long) {
         findNavController().navigate(
             R.id.action_places_to_add_edit_place,
@@ -475,7 +547,7 @@ class PlacesFragment : Fragment() {
     /** Shows a brief message. Safe after the view is gone, when it does nothing. */
     private fun showMessage(text: String) {
         val root = _binding?.root ?: return
-        Snackbar.make(root, text, Snackbar.LENGTH_LONG).show()
+        Snackbar.make(root, text, Snackbar.LENGTH_LONG).anchorAboveNavBar(this).show()
     }
 
     override fun onDestroyView() {

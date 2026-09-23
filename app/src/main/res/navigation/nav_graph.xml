@@ -293,10 +293,17 @@
         android:label="@string/nav_places"
         tools:layout="@layout/fragment_places">
 
-        <!-- "+ Add a place" passes placeId = -1; a long press on a saved place passes its real id. -->
+        <!-- A long press on a saved place opens the full form with its real id, to change or delete
+             it. Adding is no longer this route's job — see action_places_to_add_place below. -->
         <action
             android:id="@+id/action_places_to_add_edit_place"
             app:destination="@id/addEditPlaceFragment" />
+
+        <!-- "+ ADD PLACE" in the saved-places heading. Takes no arguments: the screen only ever
+             creates, and the account comes from SessionViewModel like every other screen's. -->
+        <action
+            android:id="@+id/action_places_to_add_place"
+            app:destination="@id/addPlaceFragment" />
 
         <!-- "Book a visit" opens the ordinary task form, prefilled with the place — see the prefill
              arguments on addEditTaskFragment below. -->
@@ -628,7 +635,27 @@
             app:nullable="true" />
     </fragment>
 
-    <!-- Save a new place with its GPS geotag, or change or delete a saved one. -->
+    <!--
+        Save a place from anywhere: by searching for it, by dropping a pin on the map, or from the
+        device's current position.
+
+        **A step deeper into the Places tab rather than a screen of its own.** It is listed among that
+        tab's sub-destinations (see NavTab.PLACES), so the bottom bar keeps Places lit while it is
+        open, and MainActivity hides the shared app bar here because the screen draws the tabs' own
+        header with "Add place" as its title.
+
+        Takes no arguments. It only ever creates a place — changing or deleting one is
+        addEditPlaceFragment's job — and the owner is the signed-in account from SessionViewModel. It
+        hands the new place's id and name back to the Places tab through the previous back stack
+        entry's SavedStateHandle; see AddPlaceFragment.onSaved.
+    -->
+    <fragment
+        android:id="@+id/addPlaceFragment"
+        android:name="com.prash.petcare.ui.place.AddPlaceFragment"
+        android:label="@string/add_place_heading"
+        tools:layout="@layout/fragment_add_place" />
+
+    <!-- Change or delete a saved place, with its GPS geotag. -->
     <fragment
         android:id="@+id/addEditPlaceFragment"
         android:name="com.prash.petcare.ui.place.AddEditPlaceFragment"

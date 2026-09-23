@@ -111,6 +111,13 @@
         <item name="colorNavBadgeActive">@color/nav_badge_active_dark</item>
         <item name="colorOnNavBadgeActive">@color/on_nav_badge_active_dark</item>
 
+        <!-- The "Add a place" screen inverted: the map becomes a deep slate ruled with white rather
+             than a pale sage ruled with ink, and the chosen search result's cream wash becomes a warm
+             near-black — a pale card would glare on the near-black page. See attrs.xml. -->
+        <item name="colorPinMapGround">@color/pin_map_ground_dark</item>
+        <item name="colorPinMapGrid">@color/pin_map_grid_dark</item>
+        <item name="colorPlaceResultSelected">@color/place_result_selected_dark</item>
+
         <!-- The shape scale and the default component styles are identical in both themes: dark
              mode changes what colour a card is, never how round it is. They are repeated rather
              than inherited because this style declares its own Material parent, and an Android

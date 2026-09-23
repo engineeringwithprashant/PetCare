@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The yellow label pill at the top of the draggable map marker — the place's name, or "New place"
+    until one has been typed.
+
+    The accent named directly rather than through colorPrimary, and its content colour with it: the
+    pill sits on the map's own ground rather than on the page, so it must stay the same yellow in
+    both themes for the near-black text on it to stay legible. That is the same reasoning as the
+    pills written across a pet's photo — see colors.xml.
+
+    A small radius rather than a capsule: the design draws this as a map label, and a fully rounded
+    pill would read as a button to press instead of a tag attached to the pin below it.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@color/accent_yellow" />
+
+    <corners android:radius="@dimen/pin_marker_label_corner_radius" />
+
+</shape>

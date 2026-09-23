@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The tinted circle on the left of the "I'm here" card, which the blue location dot sits in the
+    middle of.
+
+    The same blue as the dot at about a fifth strength, so the two read as one mark — a dot inside
+    its own halo, the shape every maps app uses for "you are here". The well is what gives the 14dp
+    dot enough visual weight to anchor the card's left edge, exactly as the tinted circle behind a
+    care-category icon does on a task row (bg_category_badge.xml).
+
+    A fixed colour rather than a theme role: the card it sits on is dark in both themes.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <solid android:color="@color/gps_card_dot_well" />
+
+</shape>

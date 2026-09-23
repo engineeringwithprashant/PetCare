@@ -88,12 +88,19 @@ enum class NavTab(
         R.id.addEditTaskFragment
     ),
 
-    /** Saved vets, groomers, parks and shops, and the form for saving another. */
+    /**
+     * Saved vets, groomers, parks and shops, the screen for saving another, and the form for
+     * changing one.
+     *
+     * Both of those are steps *deeper* into this tab rather than journeys out of it — the user is
+     * still working on their places — so the bar keeps Places lit while either is open.
+     */
     PLACES(
         R.id.placesFragment,
         R.string.nav_places,
         R.drawable.ic_tab_places,
         R.drawable.ic_tab_places_active,
+        R.id.addPlaceFragment,
         R.id.addEditPlaceFragment
     ),
 

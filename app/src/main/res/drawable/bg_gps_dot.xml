@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The blue "current location" dot in the middle of the well on the "I'm here" card.
+
+    The same blue and the same pale ring as the dot painted on the pin map (PinMapView), so the two
+    screens' "you are here" marks are recognisably the same thing. Fixed colours, because the card
+    behind it is dark in both themes.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <solid android:color="@color/here_dot" />
+
+    <stroke
+        android:width="@dimen/pin_map_here_ring_width"
+        android:color="@color/on_gps_card" />
+
+</shape>

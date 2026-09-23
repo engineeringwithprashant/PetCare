@@ -297,6 +297,23 @@ class PlacesViewModel(
         selectedPlaceId.value = placeId
     }
 
+    /**
+     * "Undo" was pressed on the confirmation after a place was saved: remove it again.
+     *
+     * The place is loaded by id rather than taken from the current state, because the undo may be
+     * pressed after a category filter has hidden the row it refers to — and a Snackbar that does
+     * nothing because the list has moved on would be worse than no undo at all.
+     *
+     * An ordinary delete, through the same repository call the edit form uses, so the deletion leaves
+     * its sync tombstone and never reappears from another device. A place that is already gone — the
+     * user deleted it from the form in the meantime — simply does nothing.
+     */
+    fun undoSave(placeId: Long) {
+        viewModelScope.launch {
+            placeRepository.getPlace(placeId)?.let { placeRepository.deletePlace(it) }
+        }
+    }
+
     /** The PINNED button was pressed on the featured place. */
     fun togglePinned() {
         val featured = uiState.value.featured?.place ?: return

@@ -21,6 +21,11 @@
 
     **Why a CoordinatorLayout at the root:** so Snackbars ("No maps app is installed…") attach here and
     appear above the bottom navigation bar rather than on top of it — see fragment_checklist.xml.
+
+    **Why the page's bottom inset is so deep.** The floating navigation bar is drawn *over* the
+    scrolling content, so without it the page's last rows — the "+ ADD PLACE" pill in the saved-places
+    heading, and the "+ ADD A PLACE" row at the foot — can come to rest underneath the bar, where they
+    cannot be read or tapped. The same figure and the same reason as the dashboard's.
 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -46,7 +51,7 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingBottom="@dimen/list_padding_bottom">
+            android:paddingBottom="@dimen/add_place_scroll_padding_bottom">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -339,18 +344,47 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ============================ Saved places ============================ -->
-                <TextView
-                    android:id="@+id/savedPlacesLabel"
-                    style="@style/PetCare.SectionLabel"
+                <!-- ============================ Saved places ============================
+                     The heading and the way to add another, on one line. The label takes the leftover
+                     width (weight 1 on a zero width), which is what keeps the pill flush right
+                     whatever the heading says — the same construction as the distance strip's label
+                     and range above. baselineAligned="false" stops LinearLayout nudging the pill to
+                     line its label up with the heading's baseline, which would sit it low. -->
+                <LinearLayout
+                    android:id="@+id/savedPlacesHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/screen_padding"
                     android:layout_marginTop="@dimen/spacing_lg"
                     android:layout_marginEnd="@dimen/screen_padding"
-                    android:accessibilityHeading="true"
-                    android:text="@string/places_saved_label"
-                    tools:targetApi="p" />
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/savedPlacesLabel"
+                        style="@style/PetCare.SectionLabel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:accessibilityHeading="true"
+                        android:text="@string/places_saved_label"
+                        tools:targetApi="p" />
+
+                    <!-- "+ ADD PLACE" — the way in to the add-a-place screen, where a place can be
+                         saved by searching, by dropping a pin, or from where the phone is. Here
+                         rather than only at the foot of the page because this is the heading of the
+                         list it adds to, which is where the user is looking when they want another. -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/addPlacePill"
+                        style="@style/PetCare.Places.AddPill"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:contentDescription="@string/cd_places_add_place"
+                        android:text="@string/places_add_place_pill" />
+
+                </LinearLayout>
 
                 <!-- Shown instead of the list when a category chip matches no saved place. -->
                 <TextView

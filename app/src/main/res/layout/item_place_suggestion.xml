@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One search result on the Add a place screen: a category glyph, the place's name over its address,
+    and how far away it is.
+
+    Deliberately the saved-place row (item_place_row.xml) in miniature — the same three-part
+    arrangement, the same typographic pairing of a Schibsted name over a monospace meta line, the same
+    right-aligned monospace distance. A result and the row it becomes once saved should look like the
+    same object at two moments in its life, so that tapping one and finding it in the list below is
+    obviously the same place rather than two similar-looking ones.
+
+    A clickable outlined MaterialCardView, so the whole row is one touch target with a ripple that
+    follows its rounded corners. The chosen card's accent border and tinted fill are applied in code
+    (PlaceSuggestionAdapter) because they depend on state, not on anything this layout can know.
+
+    A horizontal LinearLayout inside: three things in a row where the middle one takes the leftover
+    width, which is one weight attribute here and a chain in a ConstraintLayout. The bottom margin
+    spaces the rows, since a RecyclerView has no gap attribute of its own.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PetCare.AddPlace.ResultCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/add_place_result_spacing">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/add_place_result_padding">
+
+        <!-- "Vet", "Grm", "Park", "Shop". Its fill is set per row by the adapter: the accent once the
+             result has been chosen, the quiet surface otherwise. -->
+        <TextView
+            android:id="@+id/suggestionGlyph"
+            style="@style/PetCare.AddPlace.ResultGlyph"
+            tools:backgroundTint="@color/accent_yellow"
+            tools:text="Vet" />
+
+        <!-- Name over address. Width 0 + weight 1 makes this column absorb whatever the glyph and the
+             distance leave, so a long clinic name ellipsises instead of pushing the distance off the
+             row. -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/suggestionNameText"
+                style="@style/PetCare.AddPlace.ResultName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Patan Animal Hospital" />
+
+            <TextView
+                android:id="@+id/suggestionAddressText"
+                style="@style/PetCare.AddPlace.ResultAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                tools:text="Pulchowk Rd, Lalitpur" />
+
+        </LinearLayout>
+
+        <!-- The distance. maxLines 1 on the style keeps "8.4 km" from ever breaking across two lines. -->
+        <TextView
+            android:id="@+id/suggestionDistanceText"
+            style="@style/PetCare.AddPlace.ResultDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
+            tools:text="1.2 km" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
