@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    "Record a vaccination": the sub-screen reached from "+ RECORD" on a pet's vaccination card.
+
+    **What the screen is for.** Entering a shot the pet has *already had*, so that the next one can be
+    tracked. That is why the date given defaults to today and the next due date is filled in for the
+    user rather than asked for: by far the commonest entry is "we came back from the vet just now, the
+    booster is in a year", and the form should take one tap to agree with.
+
+    Top to bottom:
+      - **The shared header** (monogram, "Vaccination", theme toggle, pet count), fixed above the page
+        as on the tabs. It is what keeps this screen recognisably part of the Pets tab while the bottom
+        bar keeps that tab lit — the same arrangement as fragment_add_place.xml.
+      - Everything else scrolls as one page:
+          · the **heading block** — a round back button beside "Record a vaccination" and the pet's
+            name;
+          · the **preset chips** — the common vaccines for this animal's species;
+          · **vaccine**, then the two **dates** side by side;
+          · **repeats every** — the control that derives the due date;
+          · **clinic**, the **checklist toggle**, the **summary** and "SAVE RECORD".
+
+    **Why the two dates are read-only boxes that open a picker** rather than typed fields: the same
+    reason the pet, task and expense forms do it — a typed date has to be parsed, and every parse has
+    a locale and a failure mode. It also answers the design's note about forcing the date picker's
+    colour scheme to match the theme: Material's picker is drawn from this app's own theme, so it is
+    already dark on a dark page and there is nothing to override.
+
+    **Why a CoordinatorLayout at the root:** so Snackbars attach here and appear above the floating
+    bottom navigation bar rather than underneath it — see fragment_places.xml.
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.pet.AddVaccinationFragment">
+
+    <!-- The header takes the height it needs; the page takes the rest through height 0 + weight 1. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- The shared header, as a nested binding (`binding.header`). -->
+        <include
+            android:id="@+id/header"
+            layout="@layout/view_tab_header" />
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/record_scroll_padding_bottom">
+
+            <!-- One column, every block the same distance from the last, so the form reads as an even
+                 stack rather than as groups of differing weight. The chip row is the one child that
+                 must reach the screen edges, so the horizontal padding is applied per block rather
+                 than here — see the chip row below. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- ============================== Heading ==============================
+                     gravity top rather than centre, so the back button lines up with the *first* line
+                     of a heading that wraps rather than drifting down beside a two-line block. -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:baselineAligned="false"
+                    android:gravity="top"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/screen_padding"
+                    android:paddingEnd="@dimen/screen_padding">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/backButton"
+                        style="@style/PetCare.Record.BackButton"
+                        android:contentDescription="@string/cd_record_vaccination_back" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_md"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <!-- accessibilityHeading marks this as the page's heading, so TalkBack users
+                             can jump straight to it with heading navigation. -->
+                        <TextView
+                            style="@style/PetCare.Record.Title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:accessibilityHeading="true"
+                            android:text="@string/record_vaccination_heading"
+                            tools:targetApi="p" />
+
+                        <!-- "for Krishala Pant Thapa Baby" — filled in by the fragment once the pet
+                             loads, so the screen names the animal being recorded against rather than
+                             leaving the user to remember which one they tapped. -->
+                        <TextView
+                            android:id="@+id/petNameText"
+                            style="@style/PetCare.Record.Subtitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_xs"
+                            tools:text="for Krishala Pant Thapa Baby" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- ============================ Preset chips ============================
+                     The common vaccines for this pet's species, as a scrolling row. Tapping one fills
+                     the vaccine field below.
+
+                     A ChipGroup inside a HorizontalScrollView, exactly as on the Tasks tab: singleLine
+                     keeps the row one chip tall however many options there are, and clipToPadding
+                     ="false" lets the first chip sit in the screen gutter while the row still scrolls
+                     past the edge. scrollbars="none" hides the bar, as the design has it.
+
+                     **No selectionRequired here**, unlike the filter rows this borrows from. A filter
+                     must always have something chosen; these chips are shortcuts, and "none of these,
+                     I typed my own" is a perfectly ordinary state for the row to be in. The fragment
+                     hides the whole row for a species the app has no presets for. -->
+                <HorizontalScrollView
+                    android:id="@+id/presetChipScroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/record_block_gap"
+                    android:clipToPadding="false"
+                    android:paddingStart="@dimen/screen_padding"
+                    android:paddingEnd="@dimen/screen_padding"
+                    android:scrollbars="none">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/presetChipGroup"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipSpacingHorizontal="@dimen/record_chip_gap"
+                        app:singleLine="true"
+                        app:singleSelection="true" />
+
+                </HorizontalScrollView>
+
+                <!-- ========================== The rest of the form ==========================
+                     One wrapper carrying the screen gutter, so the blocks below share it and only the
+                     chip row above escapes it. -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="@dimen/screen_padding"
+                    android:paddingEnd="@dimen/screen_padding">
+
+                    <!-- ~~~~~~~~~~ Vaccine ~~~~~~~~~~
+                         The label sits above the box rather than floating inside it, which is why the
+                         field style switches Material's floating hint off — see PetCare.Auth.Field. -->
+                    <TextView
+                        style="@style/PetCare.Record.FieldLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/record_block_gap"
+                        android:text="@string/record_vaccine_label" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/vaccineInputLayout"
+                        style="@style/PetCare.Record.Field"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/vaccineInput"
+                            style="@style/PetCare.Record.VaccineInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/record_vaccine_hint"
+                            android:imeOptions="actionNext"
+                            android:inputType="textCapWords" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- ~~~~~~~~~~ The two dates ~~~~~~~~~~
+                         Equal columns (0dp + weight 1 each), so neither grows with the length of the
+                         date in it and the pair stays symmetrical whatever month it is. -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/record_block_gap"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/PetCare.Record.FieldLabel"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/record_date_given_label" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/PetCare.Record.DateField"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <!-- focusable and clickable but not editable: it can be reached by
+                                     keyboard, D-pad or switch access, and focusing it opens the
+                                     picker rather than a keyboard nobody types a date into. The same
+                                     treatment the pet and expense forms give their date fields. -->
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/dateGivenInput"
+                                    style="@style/PetCare.Record.DateInput"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:clickable="true"
+                                    android:cursorVisible="false"
+                                    android:focusable="true"
+                                    android:inputType="none"
+                                    tools:text="23 Sep 2026" />
+
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/record_date_column_gap"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/PetCare.Record.FieldLabel"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/record_next_due_label" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/PetCare.Record.DateField"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/dateDueInput"
+                                    style="@style/PetCare.Record.DateInput"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:clickable="true"
+                                    android:cursorVisible="false"
+                                    android:focusable="true"
+                                    android:inputType="none"
+                                    tools:text="23 Sep 2027" />
+
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- ~~~~~~~~~~ Repeats every ~~~~~~~~~~
+                         Four options in one groove, the profile screen's preference toggle widened.
+                         Each takes an equal share by weight (0dp + weight 1) rather than its own
+                         width, so "Leptospirosis"-length labels cannot make one option wider than the
+                         rest — see PetCare.Record.RepeatSegment for why their padding is zeroed.
+
+                         Choosing one sets the next due date above; "Once" clears it. The user can
+                         still pick a due date by hand afterwards — see AddVaccinationViewModel. -->
+                    <TextView
+                        style="@style/PetCare.Record.FieldLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/record_block_gap"
+                        android:text="@string/record_repeat_label" />
+
+                    <LinearLayout
+                        android:id="@+id/repeatTrack"
+                        style="@style/PetCare.Record.RepeatTrack"
+                        android:layout_width="match_parent">
+
+                        <TextView
+                            android:id="@+id/repeatSixMonths"
+                            style="@style/PetCare.Record.RepeatSegment"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@string/record_repeat_6_months" />
+
+                        <TextView
+                            android:id="@+id/repeatOneYear"
+                            style="@style/PetCare.Record.RepeatSegment"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@string/record_repeat_1_year" />
+
+                        <TextView
+                            android:id="@+id/repeatThreeYears"
+                            style="@style/PetCare.Record.RepeatSegment"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@string/record_repeat_3_years" />
+
+                        <TextView
+                            android:id="@+id/repeatOnce"
+                            style="@style/PetCare.Record.RepeatSegment"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@string/record_repeat_once" />
+
+                    </LinearLayout>
+
+                    <!-- ~~~~~~~~~~ Clinic ~~~~~~~~~~ -->
+                    <TextView
+                        style="@style/PetCare.Record.FieldLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/record_block_gap"
+                        android:text="@string/record_clinic_label" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/PetCare.Record.Field"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/clinicInput"
+                            style="@style/PetCare.Record.ClinicInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/record_clinic_hint"
+                            android:imeOptions="actionDone"
+                            android:inputType="textCapWords" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- ~~~~~~~~~~ The checklist toggle ~~~~~~~~~~
+                         **The whole row is the control**, not just the switch. A 46dp switch is a
+                         small target for a choice this consequential, and a row whose text is inert
+                         while the thing at its end is not invites taps that do nothing. So the
+                         LinearLayout is clickable and focusable (see PetCare.Record.ToggleRow) and the
+                         switch is neither — it is a *display* of the row's state.
+
+                         That is also why the switch is neither clickable nor important for
+                         accessibility: left as they come, the row would hold two focus stops and
+                         TalkBack would announce the control twice. The row carries the spoken name,
+                         and the fragment puts the checked state on it. -->
+                    <LinearLayout
+                        android:id="@+id/checklistToggleRow"
+                        style="@style/PetCare.Record.ToggleRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/record_block_gap"
+                        android:baselineAligned="false"
+                        android:contentDescription="@string/cd_record_checklist_toggle">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/record_toggle_gap"
+                            android:layout_weight="1"
+                            android:importantForAccessibility="noHideDescendants"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/PetCare.Record.ToggleTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/record_checklist_title" />
+
+                            <TextView
+                                style="@style/PetCare.Record.ToggleMeta"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/spacing_xs"
+                                android:text="@string/record_checklist_meta" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/checklistSwitch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no"
+                            app:thumbTint="@color/record_switch_thumb"
+                            app:trackTint="@color/record_switch_track" />
+
+                    </LinearLayout>
+
+                    <!-- ~~~~~~~~~~ Summary ~~~~~~~~~~
+                         A readback of what is about to be saved, in the app's meta voice. Two or three
+                         lines joined with newlines by the fragment; the style keeps them as written
+                         rather than reflowing them. -->
+                    <TextView
+                        android:id="@+id/summaryText"
+                        style="@style/PetCare.Record.Summary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/record_block_gap"
+                        tools:text="Rabies — Krishala\nGiven 23 Sep 2026 · next due 23 Sep 2027" />
+
+                    <!-- ~~~~~~~~~~ Save ~~~~~~~~~~
+                         Disabled until there is a vaccine name. Its disabled look is a solid resting
+                         slab with pale ink rather than Material's faded wash — see attrs.xml,
+                         colorDisabledContainer — so a button that cannot be pressed yet reads as
+                         waiting rather than as broken. -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/saveRecordButton"
+                        style="@style/PetCare.Record.SaveButton"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/record_block_gap"
+                        android:text="@string/record_save" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

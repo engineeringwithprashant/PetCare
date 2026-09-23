@@ -500,6 +500,111 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- ====================== Vaccination history ======================
+                 What the pet has already been given, and when the next dose of each falls due.
+
+                 **Why it sits here**, between the facts about the animal and the care set up for it:
+                 a vaccination is a fact of the same kind as a date of birth or an allergy — something
+                 true about this pet that a vet or sitter would want — but unlike those it carries a
+                 deadline, so it reads as the bridge between the "About" card above and the routines
+                 below.
+
+                 **The corner is applied as a shape overlay**, not as a bare cardCornerRadius. Every
+                 MaterialCardView in this app already picks up PetCare.Card from the theme, and that
+                 style names a shapeAppearance of its own — so setting only a radius would leave two
+                 attributes describing the same corner and the component free to resolve either. An
+                 overlay is applied *on top of* the style's shape, which settles it. The radius is the
+                 dashboard's largest, which is the design's 28dp. MaterialCardView clips its content
+                 to that outline, so the rows' edge-to-edge hairlines stop at the curve rather than
+                 running out through it.
+
+                 The status pill and the coloured bar on each row are *derived from the due date every
+                 time the row is drawn*, never stored — see ui/pet/VaccinationStatus.kt. -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.NextUp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- The header row: the label takes all the leftover width (0dp + weight), which
+                         pushes the accent pill to the far end. center_vertical centres the two
+                         against each other, since the pill is taller than the label. -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/vaccination_card_gutter"
+                        android:paddingTop="@dimen/vaccination_header_padding_top"
+                        android:paddingEnd="@dimen/vaccination_card_gutter"
+                        android:paddingBottom="@dimen/vaccination_header_padding_bottom">
+
+                        <TextView
+                            style="@style/PetCare.Vaccination.CardLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/spacing_sm"
+                            android:layout_weight="1"
+                            android:accessibilityHeading="true"
+                            android:text="@string/vaccination_card_title"
+                            tools:targetApi="p" />
+
+                        <!-- Opens the record screen for this pet. -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/addVaccinationButton"
+                            style="@style/PetCare.Vaccination.AddPill"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/cd_add_vaccination"
+                            android:text="@string/vaccination_add_record" />
+
+                    </LinearLayout>
+
+                    <!-- One row per record (item_vaccination.xml), newest given first. Hidden by the
+                         fragment when the pet has none. nestedScrollingEnabled="false" hands
+                         scrolling to the page, for the reason given at the top of this file. -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/vaccinationsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        tools:itemCount="2"
+                        tools:listitem="@layout/item_vaccination" />
+
+                    <!-- Shown in the list's place when there are no records. It carries the same
+                         hairline the first row would, so the card keeps its shape either way, and it
+                         says what to add and why rather than only "none yet". -->
+                    <LinearLayout
+                        android:id="@+id/emptyVaccinationsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <View style="@style/PetCare.Vaccination.Divider" />
+
+                        <TextView
+                            style="@style/PetCare.Vaccination.Empty"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="@dimen/vaccination_card_gutter"
+                            android:paddingTop="@dimen/vaccination_empty_padding_vertical"
+                            android:paddingEnd="@dimen/vaccination_card_gutter"
+                            android:paddingBottom="@dimen/vaccination_empty_padding_vertical"
+                            android:text="@string/vaccination_empty" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- ========================== Care routines ==========================
                  The heading on the left takes all the leftover width (0dp + weight), which pushes the
                  small "+" to the far end. gravity="center_vertical" centres the two against each

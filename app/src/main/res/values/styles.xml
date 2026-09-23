@@ -3028,4 +3028,232 @@
         <item name="android:minHeight">@dimen/add_place_save_button_height</item>
     </style>
 
+    <!--
+        ============================= Vaccination history =============================
+
+        Two places: the card on a pet's detail screen listing the shots it has had, and the "Record a
+        vaccination" screen that adds to it.
+
+        **Almost every style below inherits from one the app already had**, and the few that do not
+        are the ones the design genuinely introduces — the row's date column, its status pill, and the
+        four-option repeat control. That is not economy for its own sake: the record screen is the
+        same *kind* of object as "Add a place" (a sub-screen with the shared header, a round back
+        button, a stack of labelled fields, a readback and one full-width action), and inheriting its
+        styles is what makes the two read as the same app rather than as two forms that happen to
+        resemble each other.
+    -->
+
+    <!-- ~~~~~~~~~~ The card on the pet detail screen ~~~~~~~~~~ -->
+
+    <!-- "VACCINATION HISTORY". The app's section label a step smaller, because it labels a card
+         rather than a region of the page and shares its line with the "+ RECORD" pill. The wider
+         spacing is what keeps upper-case text legible once it is this small — see PetCare.SectionLabel. -->
+    <style name="PetCare.Vaccination.CardLabel" parent="PetCare.SectionLabel">
+        <item name="android:textSize">@dimen/vaccination_label_text_size</item>
+        <item name="android:letterSpacing">0.16</item>
+    </style>
+
+    <!-- "+ RECORD", right-aligned on that line.
+
+         The Places tab's "+ ADD PLACE" pill, unchanged. Both are the single accent-filled action
+         sitting on a quiet heading, and the app deliberately has one object for that rather than two
+         that drift apart; this style exists only so the layout can name the pill by what it is here. -->
+    <style name="PetCare.Vaccination.AddPill" parent="PetCare.Places.AddPill" />
+
+    <!-- The hairline above each row. The pet detail card's own divider, so the vaccination card is
+         ruled exactly like the "About" card above it. -->
+    <style name="PetCare.Vaccination.Divider" parent="PetCare.PetDetail.AboutDivider" />
+
+    <!-- The day number in the date column — "22". Bricolage, the app's character face, at the size it
+         is used for a figure being read rather than a heading. includeFontPadding is off so the number
+         sits tight to the month label beneath it instead of floating above it. -->
+    <style name="PetCare.Vaccination.Day" parent="">
+        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:textSize">@dimen/vaccination_day_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "SEP 25" beneath it. The app's monospace micro-label at its smallest, which is what lets a
+         month and a two-digit year fit a 40dp column on one line. singleLine rather than maxLines,
+         because a label that wrapped would push every row below it out of alignment. -->
+    <style name="PetCare.Vaccination.Month" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/vaccination_month_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <!-- The vaccine's name — the one thing on the row set in the app's body face. It is the *subject*
+         of the row; everything either side of it is a reading about that subject, which is why they
+         are all monospace and this is not. -->
+    <style name="PetCare.Vaccination.Name" parent="">
+        <item name="android:fontFamily">@font/schibsted_grotesk_ui</item>
+        <item name="fontFamily">@font/schibsted_grotesk_ui</item>
+        <item name="android:textSize">@dimen/vaccination_name_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:lineSpacingMultiplier">1.25</item>
+    </style>
+
+    <!-- "Next due 4 Oct 2026 · Patan Animal Hospital". The app's meta voice, allowed to wrap onto a
+         second line: a clinic name is long, and truncating it would hide the very thing the line is
+         for. -->
+    <style name="PetCare.Vaccination.Meta" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/vaccination_meta_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <!--
+        The status pill — "OVERDUE", "DUE IN 11D", "UP TO DATE".
+
+        No colours here, deliberately: the fill and the ink are the pair for whichever state the row is
+        in, resolved by the adapter from ui/pet/VaccinationStatus.kt. Putting a default colour in this
+        style would mean every pill flashed that state's colour for one frame before being corrected.
+
+        A plain TextView on the shared capsule drawable rather than a Chip, for the reason given on
+        PetCare.Pill: it is read, never pressed. singleLine because "DUE IN 11D" wrapping mid-phrase
+        would be unreadable at 8.5sp.
+    -->
+    <style name="PetCare.Vaccination.StatusPill" parent="">
+        <item name="android:background">@drawable/bg_pill</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/vaccination_pill_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:paddingStart">@dimen/vaccination_pill_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/vaccination_pill_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/vaccination_pill_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/vaccination_pill_padding_vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <!-- "No vaccinations recorded yet…", shown in the list's place. The meta voice one step larger,
+         so it reads as an explanation rather than as a row with its values missing. -->
+    <style name="PetCare.Vaccination.Empty" parent="PetCare.Vaccination.Meta">
+        <item name="android:textSize">@dimen/vaccination_empty_text_size</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ "Record a vaccination" ~~~~~~~~~~ -->
+
+    <!-- The heading block, borrowed whole from "Add a place": the same outlined round back button, the
+         same Bricolage title at the same tight spacing, the same monospace line beneath it. The
+         subtitle is a half-step smaller, as the design has it — it names the pet rather than
+         explaining the screen. -->
+    <style name="PetCare.Record.BackButton" parent="PetCare.AddPlace.BackButton" />
+
+    <style name="PetCare.Record.Title" parent="PetCare.AddPlace.Title" />
+
+    <style name="PetCare.Record.Subtitle" parent="PetCare.AddPlace.Subtitle">
+        <item name="android:textSize">@dimen/record_subtitle_text_size</item>
+    </style>
+
+    <!-- A preset chip — "FVRCP", "Rabies", "DHPP". The Tasks tab's filter chip at a smaller size:
+         mechanically it is the same control (one of a row, checkable, the chosen one filled with the
+         app's "chosen" colour), and it is smaller because these are shortcuts beside a field rather
+         than the filter a whole screen is read through. -->
+    <style name="PetCare.Record.PresetChip" parent="PetCare.FilterChip">
+        <item name="android:textSize">@dimen/record_chip_text_size</item>
+    </style>
+
+    <!-- The micro-label over each field — "VACCINE", "DATE GIVEN", "CLINIC / VET". The Add a place
+         label at the design's slightly smaller size. -->
+    <style name="PetCare.Record.FieldLabel" parent="PetCare.AddPlace.FieldLabel">
+        <item name="android:textSize">@dimen/record_field_label_text_size</item>
+    </style>
+
+    <!-- The vaccine and clinic boxes: the app's standard outlined field, unchanged in shape. -->
+    <style name="PetCare.Record.Field" parent="PetCare.AddPlace.Field" />
+
+    <style name="PetCare.Record.VaccineInput" parent="PetCare.AddPlace.NameInput" />
+
+    <style name="PetCare.Record.ClinicInput" parent="PetCare.AddPlace.NoteInput">
+        <item name="android:textSize">@dimen/record_clinic_text_size</item>
+    </style>
+
+    <!--
+        The two date boxes. The same field with a tighter corner, which is the design's way of marking
+        them as a pair of *values* rather than two more things to type into.
+
+        They are read-only boxes that open the app's Material date picker, not typed fields — the same
+        arrangement the expense and pet forms use. That is also the answer to the design's note about
+        forcing the native picker's colour scheme to match the theme: Material's picker is drawn from
+        this app's own theme, so it is already dark on a dark page and there is nothing to override.
+    -->
+    <style name="PetCare.Record.DateField" parent="PetCare.Record.Field">
+        <item name="boxCornerRadiusTopStart">@dimen/record_date_field_corner_radius</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/record_date_field_corner_radius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/record_date_field_corner_radius</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/record_date_field_corner_radius</item>
+    </style>
+
+    <!-- The date itself. Monospace, so the two dates sit as a matched pair of readings side by side
+         and neither shifts width as the month changes. -->
+    <style name="PetCare.Record.DateInput" parent="PetCare.Auth.FieldInput">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/record_date_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:padding">@dimen/record_date_field_padding</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <!-- The "repeats every" control: the profile screen's preference toggle widened from two options
+         to four. Same groove, same "chosen = strong fill" grammar, taller because four labels in one
+         row need the height to stay tappable. -->
+    <style name="PetCare.Record.RepeatTrack" parent="PetCare.Profile.SegmentTrack">
+        <item name="android:layout_height">@dimen/record_repeat_height</item>
+        <item name="android:padding">@dimen/record_repeat_inset</item>
+    </style>
+
+    <!-- One of its four options. The horizontal padding is dropped to zero because the four share the
+         row by weight rather than by their own width; a minimum padding would make the control wider
+         than the screen on a narrow device. -->
+    <style name="PetCare.Record.RepeatSegment" parent="PetCare.Profile.Segment">
+        <item name="android:textSize">@dimen/record_repeat_text_size</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+    </style>
+
+    <!-- The checklist toggle. The whole row is the control — see fragment_add_vaccination.xml — so it
+         is drawn as an outlined panel rather than as a bare row with a switch at the end. -->
+    <style name="PetCare.Record.ToggleRow" parent="">
+        <item name="android:background">@drawable/bg_record_toggle_row</item>
+        <item name="android:padding">@dimen/record_toggle_padding</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="PetCare.Record.ToggleTitle" parent="PetCare.Vaccination.Name">
+        <item name="android:textSize">@dimen/record_toggle_title_text_size</item>
+    </style>
+
+    <style name="PetCare.Record.ToggleMeta" parent="PetCare.Vaccination.Meta">
+        <item name="android:textSize">@dimen/record_toggle_meta_text_size</item>
+    </style>
+
+    <!-- The readback above the save button, and the button itself: the Add a place screen's, which
+         already are exactly what this design asks for — a sunk monospace panel at the same radius, and
+         a full-width pill whose disabled state is a solid resting slab rather than a faded one. -->
+    <style name="PetCare.Record.Summary" parent="PetCare.AddPlace.Summary" />
+
+    <style name="PetCare.Record.SaveButton" parent="PetCare.AddPlace.SaveButton" />
+
 </resources>

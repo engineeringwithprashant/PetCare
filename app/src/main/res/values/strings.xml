@@ -1988,4 +1988,102 @@
     <string name="places_saved_undo">Undo</string>
     <string name="places_saved_undone">“%1$s” was not saved</string>
 
+    <!-- ============================== Vaccination history ==============================
+         The card on a pet's detail screen, and the screen that adds a record to it. -->
+
+    <string name="vaccination_card_title">Vaccination history</string>
+    <string name="vaccination_add_record">+ Record</string>
+    <string name="cd_add_vaccination">Record a vaccination</string>
+
+    <!-- The status pill. Five states worked out from the due date every time the card is drawn — see
+         ui/pet/VaccinationStatus.kt. Upper-cased by the pill's own style rather than being written in
+         capitals here, so a translation is not forced into a case its language may not have. -->
+    <string name="vaccination_status_done">Done</string>
+    <string name="vaccination_status_overdue">Overdue</string>
+    <string name="vaccination_status_due_today">Due today</string>
+    <!-- "Due in 11d". The day count is abbreviated because the pill is the narrowest element in the
+         row and "Due in 11 days" would either wrap or push the pet's vaccine name out of the way. -->
+    <string name="vaccination_status_due_in">Due in %1$dd</string>
+    <string name="vaccination_status_up_to_date">Up to date</string>
+
+    <!-- A row's second line. The middle dot is the separator the app uses throughout between a fact
+         and where it came from ("Vet clinic · Pulchowk"). The second form covers a one-off dose, which
+         has no next date to name. -->
+    <string name="vaccination_meta_next_due">Next due %1$s · %2$s</string>
+    <string name="vaccination_meta_one_off">One-off dose · %1$s</string>
+    <!-- The same two lines when no clinic was recorded: the dot would otherwise dangle with nothing
+         after it. -->
+    <string name="vaccination_meta_next_due_no_clinic">Next due %1$s</string>
+    <string name="vaccination_meta_one_off_no_clinic">One-off dose</string>
+
+    <!-- Shown in the list's place when a pet has no records. It says what to do and why, rather than
+         only "none yet" — the same reasoning as the empty routines message above. -->
+    <string name="vaccination_empty">No vaccinations recorded yet. Add past shots so the next due date is tracked.</string>
+
+    <!-- How TalkBack reads one row. The four views that make up a row are hidden from it individually
+         (see item_vaccination.xml) and replaced by this one sentence, because "22", "SEP 25",
+         "FVRCP (core)" and "Overdue" read out separately say much less than the three facts joined
+         up. -->
+    <string name="vaccination_row_description">%1$s, given %2$s, %3$s</string>
+
+    <!-- ~~~~~~~~~~ "Record a vaccination" ~~~~~~~~~~ -->
+
+    <!-- The shared header's title. One word, because the header has room for one beside its two
+         controls — the same treatment the pet detail screen gives a pet's name. -->
+    <string name="vaccination_header_title">Vaccination</string>
+    <string name="record_vaccination_heading">Record a vaccination</string>
+    <string name="record_vaccination_for_pet">for %1$s</string>
+    <string name="cd_record_vaccination_back">Back to pet</string>
+
+    <!-- The preset chips. Species-aware: a cat is never offered DHPP and a dog is never offered
+         FVRCP, because a shortcut that fills in the wrong vaccine is worse than no shortcut. -->
+    <string name="record_preset_fvrcp">FVRCP</string>
+    <string name="record_preset_rabies">Rabies</string>
+    <string name="record_preset_felv">FeLV</string>
+    <string name="record_preset_deworming">Deworming</string>
+    <string name="record_preset_dhpp">DHPP</string>
+    <string name="record_preset_leptospirosis">Leptospirosis</string>
+    <string name="record_preset_bordetella">Bordetella</string>
+
+    <string name="record_vaccine_label">Vaccine</string>
+    <string name="record_vaccine_hint">e.g. Rabies</string>
+    <string name="record_date_given_label">Date given</string>
+    <string name="record_next_due_label">Next due</string>
+    <!-- Shown in the "next due" field when the interval is "Once": the field is empty because there is
+         no next dose, which is a different thing from the user not having filled it in yet. -->
+    <string name="record_next_due_none">No repeat</string>
+    <string name="record_date_given_picker_title">Date given</string>
+    <string name="record_next_due_picker_title">Next due</string>
+
+    <string name="record_repeat_label">Repeats every</string>
+    <string name="record_repeat_6_months">6 mo</string>
+    <string name="record_repeat_1_year">1 yr</string>
+    <string name="record_repeat_3_years">3 yr</string>
+    <string name="record_repeat_once">Once</string>
+
+    <string name="record_clinic_label">Clinic / vet</string>
+    <string name="record_clinic_hint">e.g. Patan Animal Hospital</string>
+
+    <string name="record_checklist_title">Add next dose to the checklist</string>
+    <string name="record_checklist_meta">Creates a vet-visit task on the due date</string>
+    <string name="cd_record_checklist_toggle">Add the next dose to the checklist</string>
+
+    <!-- The readback above the save button, as three lines joined with newlines by the fragment. The
+         third appears only when a clinic was typed. -->
+    <string name="record_summary_untitled">Unnamed vaccine</string>
+    <string name="record_summary_name">%1$s — %2$s</string>
+    <string name="record_summary_dates">Given %1$s · next due %2$s</string>
+    <string name="record_summary_dates_no_repeat">Given %1$s · no repeat</string>
+
+    <string name="record_save">Save record</string>
+
+    <!-- The task created for the due date when the checklist toggle is on. "Vaccine card" is what the
+         owner has to bring to the appointment, which is exactly what the supplies field is for. -->
+    <string name="record_task_title">%1$s due</string>
+    <string name="record_task_supplies">Vaccine card</string>
+
+    <!-- The confirmation on the pet detail screen once the record is in the history. -->
+    <string name="record_saved_snackbar">%1$s recorded for %2$s</string>
+    <string name="record_saved_undone">%1$s was not recorded</string>
+
 </resources>

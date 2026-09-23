@@ -128,6 +128,15 @@
              sage, which is the colour map paper reads as before any tiles are on it. -->
         <item name="colorMapGround">@color/map_ground_light</item>
 
+        <!-- The vaccination status pills — see attrs.xml. Pale washes with dark ink in this theme;
+             the night theme inverts that relationship for the first two. -->
+        <item name="colorVaccinationClear">@color/vaccination_clear_light</item>
+        <item name="colorOnVaccinationClear">@color/on_vaccination_clear_light</item>
+        <item name="colorVaccinationOverdue">@color/vaccination_overdue_light</item>
+        <item name="colorOnVaccinationOverdue">@color/on_vaccination_overdue_light</item>
+        <item name="colorVaccinationDue">@color/vaccination_due</item>
+        <item name="colorOnVaccinationDue">@color/on_vaccination_due</item>
+
         <!-- ============================== Shape scale ==============================
              Material components read their corner radius from these three attributes. Overriding
              them here rounds *everything* — dialogs, menus, text fields, bottom sheets — in one

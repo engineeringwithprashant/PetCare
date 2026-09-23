@@ -67,7 +67,10 @@ enum class NavTab(
         R.drawable.ic_tab_home_active
     ),
 
-    /** The pet list, and everything about one pet: its page, the add/edit form, its routines. */
+    /**
+     * The pet list, and everything about one pet: its page, the add/edit form, its routines and the
+     * screen that records a vaccination.
+     */
     PETS(
         R.id.petsFragment,
         R.string.nav_pets,
@@ -76,7 +79,8 @@ enum class NavTab(
         R.id.petDetailFragment,
         R.id.addEditPetFragment,
         R.id.addRoutineFragment,
-        R.id.routineDetailFragment
+        R.id.routineDetailFragment,
+        R.id.addVaccinationFragment
     ),
 
     /** Today's care checklist, and the form for adding or editing a task on it. */

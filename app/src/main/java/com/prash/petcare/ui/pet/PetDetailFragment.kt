@@ -19,12 +19,14 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.CareRoutine
 import com.prash.petcare.data.local.entity.Pet
 import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.databinding.FragmentPetDetailBinding
 import com.prash.petcare.ui.checklist.ChecklistFragment
+import com.prash.petcare.ui.common.anchorAboveNavBar
 import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.formatAge
 import com.prash.petcare.ui.common.formatStoredDate
@@ -47,8 +49,13 @@ import kotlinx.coroutines.launch
  * it — built to match design/pet-detail-mockup.png.
  *
  * This is the hub for everything to do with a single animal. From here the user can open the pet's
- * checklist or spending, edit the pet, create a routine, and open, edit, pause or delete an existing
- * routine.
+ * checklist or spending, edit the pet, record a vaccination, create a routine, and open, edit, pause
+ * or delete an existing routine.
+ *
+ * The vaccination card between the two is read-only here: it lists what the pet has had and how
+ * urgent each next dose is, and its "+ RECORD" button opens [AddVaccinationFragment]. The urgency is
+ * derived from each record's due date rather than stored — see [VaccinationStatus] — which is why a
+ * screen left open overnight is correct in the morning without anything being written.
  *
  * As the **View** in MVVM it holds no business logic. It renders whatever [PetDetailViewModel]
  * publishes, and forwards taps: navigation it performs itself (that needs a NavController, which a
@@ -96,6 +103,13 @@ class PetDetailFragment : Fragment() {
         onDeleteClick = { routine -> confirmDeleteRoutine(routine) }
     )
 
+    /**
+     * The vaccination card's rows. Takes no callbacks: the history is read-only in this pass, so
+     * there is nothing for a row to report. Like the routine adapter it holds no view or scope of
+     * its own, so it can safely outlive each view and be re-attached to the next.
+     */
+    private val vaccinationAdapter = VaccinationAdapter()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -125,6 +139,79 @@ class PetDetailFragment : Fragment() {
         setUpRecyclerView()
         setUpClickListeners()
         observeViewModel()
+        observeSavedVaccinationResult()
+    }
+
+    /**
+     * Confirms a vaccination recorded on the screen above this one, and offers the undo.
+     *
+     * The values arrive through this destination's own [androidx.lifecycle.SavedStateHandle], which
+     * is the Navigation component's way of returning a result — see
+     * [AddVaccinationFragment.handleEvent] for the other end of it.
+     *
+     * **Why the values are cleared as they are read.** A [androidx.lifecycle.LiveData] replays its
+     * last value to a new observer, so without removing them the confirmation would appear again
+     * every time the user came back to this pet — announcing a record saved an hour ago.
+     *
+     * The row itself needs no help to appear: the card observes Room, so the history has already
+     * redrawn by the time this runs. All this does is confirm what happened and offer the way back
+     * out of it.
+     */
+    private fun observeSavedVaccinationResult() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+
+        handle.getLiveData<Long>(AddVaccinationFragment.RESULT_RECORD_ID)
+            .observe(viewLifecycleOwner) { recordId ->
+                val vaccineName =
+                    handle.get<String>(AddVaccinationFragment.RESULT_VACCINE_NAME).orEmpty()
+                val petName = handle.get<String>(AddVaccinationFragment.RESULT_PET_NAME).orEmpty()
+                val taskId = handle.get<Long>(AddVaccinationFragment.RESULT_TASK_ID)
+                    ?: AddVaccinationViewModel.NO_TASK_ID
+
+                handle.remove<Long>(AddVaccinationFragment.RESULT_RECORD_ID)
+                handle.remove<String>(AddVaccinationFragment.RESULT_VACCINE_NAME)
+                handle.remove<String>(AddVaccinationFragment.RESULT_PET_NAME)
+                handle.remove<Long>(AddVaccinationFragment.RESULT_TASK_ID)
+
+                showRecordedConfirmation(recordId, taskId, vaccineName, petName)
+            }
+    }
+
+    /**
+     * "Rabies recorded for Krishala", with an undo.
+     *
+     * Undo rather than a confirmation before saving, the same choice the Places tab makes: the save
+     * is deliberate and almost always right, so asking first would tax every correct save to catch
+     * the rare wrong one. Taking it back afterwards costs nothing and only appears when it is
+     * wanted. A second, briefer message confirms the undo itself, so pressing it is not silence.
+     */
+    private fun showRecordedConfirmation(
+        recordId: Long,
+        taskId: Long,
+        vaccineName: String,
+        petName: String
+    ) {
+        val root = _binding?.root ?: return
+
+        Snackbar.make(
+            root,
+            getString(R.string.record_saved_snackbar, vaccineName, petName),
+            Snackbar.LENGTH_LONG
+        )
+            .setAction(R.string.action_undo) {
+                viewModel.undoVaccinationRecord(recordId, taskId)
+                showMessage(getString(R.string.record_saved_undone, vaccineName))
+            }
+            // Without this the message would appear *behind* the floating navigation bar, leaving
+            // "Undo" unreadable and untappable — see anchorAboveNavBar.
+            .anchorAboveNavBar(this)
+            .show()
+    }
+
+    /** Shows a brief message. Safe after the view is gone, when it does nothing. */
+    private fun showMessage(text: String) {
+        val root = _binding?.root ?: return
+        Snackbar.make(root, text, Snackbar.LENGTH_SHORT).anchorAboveNavBar(this).show()
     }
 
     private fun setUpRecyclerView() {
@@ -134,6 +221,13 @@ class PetDetailFragment : Fragment() {
             // Deliberately not setHasFixedSize(true): this list sits inside a NestedScrollView with
             // wrap_content height, so it must be allowed to re-measure as routines come and go.
         }
+
+        // The vaccination card's rows, set up the same way and for the same reasons — it is the
+        // second list inside the one scrolling page.
+        binding.vaccinationsRecyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = vaccinationAdapter
+        }
     }
 
     private fun setUpClickListeners() {
@@ -142,6 +236,15 @@ class PetDetailFragment : Fragment() {
         binding.backButton.setOnClickListener { findNavController().navigateUp() }
 
         binding.addRoutineButton.setOnClickListener { openRoutineForm(routineId = null) }
+
+        // "+ RECORD" on the vaccination card. Only the pet travels: the record screen always creates
+        // a new record, so unlike the routine form there is no "which one am I editing?" to pass.
+        binding.addVaccinationButton.setOnClickListener {
+            findNavController().navigate(
+                R.id.action_pet_detail_to_add_vaccination,
+                bundleOf(AddVaccinationFragment.ARG_PET_ID to petId)
+            )
+        }
 
         binding.checklistButton.setOnClickListener {
             findNavController().navigate(
@@ -249,6 +352,12 @@ class PetDetailFragment : Fragment() {
         // while loading, which stops "No care routines yet" flashing up before the first result.
         binding.routinesRecyclerView.isVisible = state.routines.isNotEmpty()
         binding.emptyRoutinesContainer.isVisible = state.hasNoRoutines
+
+        // The vaccination card, on exactly the same footing: the rows and the "nothing recorded yet"
+        // message share one slot, and neither shows until the first result is in.
+        vaccinationAdapter.submitList(state.vaccinations)
+        binding.vaccinationsRecyclerView.isVisible = state.vaccinations.isNotEmpty()
+        binding.emptyVaccinationsContainer.isVisible = state.hasNoVaccinations
     }
 
     /** Fills the photo card: the photo, species chip, gender symbol, full name and three pills. */
@@ -367,6 +476,7 @@ class PetDetailFragment : Fragment() {
         // Detach the adapter from the dying RecyclerView: the adapter outlives the view, and the
         // RecyclerView would otherwise be kept alive through the adapter's observer list.
         binding.routinesRecyclerView.adapter = null
+        binding.vaccinationsRecyclerView.adapter = null
         renderedPhotoPath = null
         _binding = null
     }

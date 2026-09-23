@@ -157,4 +157,32 @@
     -->
     <attr name="colorMapGround" format="color" />
 
+    <!--
+        ====================== The vaccination status pills ======================
+
+        Three pairs, one per state of a pet's next due date: clear (green), overdue (red) and due
+        soon (the accent). Each is a fill with the ink guaranteed legible on it, and the two are
+        always used together — ink that is not the partner of its fill is not guaranteed to be
+        readable on it.
+
+        The first two are here for the reason every role in this file is: each is a light/dark pair
+        that is not a lighter and darker version of the other — a pale wash with dark ink becomes a
+        deep ground with pale ink — so a layout cannot name a colour and has to ask for a role. No
+        Material role fits, either: colorError is a validation red tuned for a line of text, and there
+        is no role at all meaning "this appointment has been missed".
+
+        **The third pair does not change between the themes, and is still declared here.** By the rule
+        the rest of this file follows it could be named as a colour directly. It is a role anyway so
+        that a status is *one kind of lookup*: ui/pet/VaccinationStatus.kt stores an attribute per
+        state and the adapter resolves it the same way for all three, rather than branching on which
+        states happen to be themed — a branch that would have to be revisited the moment a fourth
+        state were added. See the vaccination section of colors.xml for the values.
+    -->
+    <attr name="colorVaccinationClear" format="color" />
+    <attr name="colorOnVaccinationClear" format="color" />
+    <attr name="colorVaccinationOverdue" format="color" />
+    <attr name="colorOnVaccinationOverdue" format="color" />
+    <attr name="colorVaccinationDue" format="color" />
+    <attr name="colorOnVaccinationDue" format="color" />
+
 </resources>

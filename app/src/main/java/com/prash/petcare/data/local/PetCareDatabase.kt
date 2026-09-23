@@ -17,6 +17,7 @@ import com.prash.petcare.data.local.dao.PlaceDao
 import com.prash.petcare.data.local.dao.RecoveryCodeDao
 import com.prash.petcare.data.local.dao.SyncDeletionDao
 import com.prash.petcare.data.local.dao.UserDao
+import com.prash.petcare.data.local.dao.VaccinationRecordDao
 import com.prash.petcare.data.local.entity.CareCompletion
 import com.prash.petcare.data.local.entity.CareRoutine
 import com.prash.petcare.data.local.entity.CareTask
@@ -26,6 +27,7 @@ import com.prash.petcare.data.local.entity.Place
 import com.prash.petcare.data.local.entity.RecoveryCode
 import com.prash.petcare.data.local.entity.SyncDeletion
 import com.prash.petcare.data.local.entity.User
+import com.prash.petcare.data.local.entity.VaccinationRecord
 
 /**
  * The app's Room database — the single SQLite file holding every record.
@@ -47,9 +49,10 @@ import com.prash.petcare.data.local.entity.User
         SyncDeletion::class,
         Place::class,
         CareCompletion::class,
-        RecoveryCode::class
+        RecoveryCode::class,
+        VaccinationRecord::class
     ],
-    version = 11,
+    version = 12,
     // Schema export writes a JSON description of the database to disk for migration testing.
     // Disabled here because this coursework app ships at version 1 with no migrations; leaving
     // it on without configuring an output directory produces a build warning.
@@ -69,6 +72,7 @@ abstract class PetCareDatabase : RoomDatabase() {
     abstract fun placeDao(): PlaceDao
     abstract fun careCompletionDao(): CareCompletionDao
     abstract fun recoveryCodeDao(): RecoveryCodeDao
+    abstract fun vaccinationRecordDao(): VaccinationRecordDao
 
     companion object {
 
@@ -484,6 +488,139 @@ abstract class PetCareDatabase : RoomDatabase() {
         }
 
         /**
+         * Version 11 to 12: adds the `vaccination_records` table behind the pet detail screen's
+         * vaccination history card, and seeds it from the pets already on the device.
+         *
+         * **Nothing existing is touched.** One CREATE TABLE and a handful of INSERTs into it: every
+         * pet, task, expense, place and account survives untouched, exactly as in [MIGRATION_10_11].
+         *
+         * As on [MIGRATION_5_6] and [MIGRATION_7_8], the CREATE reproduces precisely what Room
+         * generates from [VaccinationRecord] — the same column types, `NOT NULL` on exactly the
+         * non-nullable properties, the foreign key with its CASCADE rule, and the index under the
+         * name Room gives it (`index_<table>_<columns>`). Room compares the file against the
+         * entities every time it opens the database and refuses to start on any difference, so
+         * "close enough" here is a crash on launch rather than a cosmetic mismatch.
+         *
+         * **Why the table is seeded at all.** An empty history is a truthful but useless first
+         * impression: the card's whole point is the *range* of states a due date can be in, and
+         * with no rows neither the colours nor the status rule can be seen working. The seeds below
+         * are real, plausible Nepali-clinic records that between them land on overdue, due within
+         * the month and comfortably up to date — see
+         * [com.prash.petcare.ui.pet.VaccinationStatus] for the rule they exercise.
+         *
+         * **Why they are attached by species rather than to every pet.** A dog has no business
+         * carrying an FVRCP record and a cat none carrying DHPP, so each INSERT selects only the
+         * pets it makes sense for. `SELECT id … FROM pets WHERE species = 'CAT'` also means a
+         * household with three cats gets the history on all three, and one with none gets nothing
+         * rather than a row pointing at no pet. The species is matched against the enum constant's
+         * *name*, because that is the text [converter.Converters] writes into the column.
+         *
+         * **A device with no pets yet is seeded with nothing, and that is correct.** A fresh install
+         * creates this table through Room rather than through this migration, and has no pets for a
+         * record to belong to; the card shows its empty state until the owner records a shot. There
+         * is no way to seed history for an animal that does not exist.
+         *
+         * The dates are written as ISO days and converted in SQL: `strftime('%s', '2025-09-22')`
+         * gives the seconds at **midnight UTC** on that day, which is the convention every calendar
+         * date in this app is stored in (see [VaccinationRecord]), and the `* 1000` makes it the
+         * milliseconds Room reads back into a `Long`. Writing the raw epoch numbers instead would
+         * work identically and be impossible to check by eye.
+         */
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `vaccination_records` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `petId` INTEGER NOT NULL,
+                        `vaccineName` TEXT NOT NULL,
+                        `dateGiven` INTEGER NOT NULL,
+                        `dateDue` INTEGER,
+                        `clinic` TEXT,
+                        FOREIGN KEY(`petId`) REFERENCES `pets`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS `index_vaccination_records_petId`
+                    ON `vaccination_records` (`petId`)
+                    """.trimIndent()
+                )
+
+                seedRecords(db, "CAT", CAT_SEED_RECORDS)
+                seedRecords(db, "DOG", DOG_SEED_RECORDS)
+            }
+        }
+
+        /**
+         * One seeded vaccination, as the dates read on a vet's card.
+         *
+         * A tiny private holder rather than four positional values in a list, so the seed table
+         * below can be read as a record of what was given and when, and a typo in it is visible
+         * rather than hidden in argument order.
+         */
+        private data class SeedRecord(
+            val vaccineName: String,
+            val givenOn: String,
+            val dueOn: String?,
+            val clinic: String
+        )
+
+        /** The starter history for a cat: its core vaccine, and rabies a fortnight later. */
+        private val CAT_SEED_RECORDS = listOf(
+            SeedRecord("FVRCP (core)", "2025-09-22", "2026-09-22", "Patan Animal Hospital"),
+            SeedRecord("Rabies", "2025-10-04", "2026-10-04", "Patan Animal Hospital")
+        )
+
+        /** The starter history for a dog: the annual booster, DHPP, and leptospirosis. */
+        private val DOG_SEED_RECORDS = listOf(
+            SeedRecord("Rabies booster", "2025-09-24", "2026-09-24", "Patan Animal Hospital"),
+            SeedRecord("DHPP", "2026-03-12", "2027-03-12", "Bhaisepati Vet Clinic"),
+            SeedRecord("Leptospirosis", "2025-06-02", "2026-06-02", "Bhaisepati Vet Clinic")
+        )
+
+        /**
+         * Writes one species' seed records against every pet of that species.
+         *
+         * The INSERT … SELECT does the join in SQLite rather than reading the pets into Kotlin
+         * first: it is one statement per record whatever the household holds, and it cannot leave a
+         * row pointing at a pet id that was not actually there.
+         *
+         * Values are bound as `?` parameters rather than concatenated into the SQL. Nothing here is
+         * user input, so this is not about injection — it is that a clinic name containing an
+         * apostrophe ("Bhat-Bhateni's") would otherwise end the string literal early and make the
+         * statement fail to parse.
+         */
+        private fun seedRecords(
+            db: SupportSQLiteDatabase,
+            species: String,
+            records: List<SeedRecord>
+        ) {
+            records.forEach { record ->
+                db.execSQL(
+                    """
+                    INSERT INTO `vaccination_records`
+                        (`petId`, `vaccineName`, `dateGiven`, `dateDue`, `clinic`)
+                    SELECT `id`, ?,
+                        CAST(strftime('%s', ?) AS INTEGER) * 1000,
+                        CAST(strftime('%s', ?) AS INTEGER) * 1000,
+                        ?
+                    FROM `pets` WHERE `species` = ?
+                    """.trimIndent(),
+                    arrayOf(
+                        record.vaccineName,
+                        record.givenOn,
+                        record.dueOn,
+                        record.clinic,
+                        species
+                    )
+                )
+            }
+        }
+
+        /**
          * The one shared instance.
          *
          * `@Volatile` means a write here is immediately visible to every thread, which stops one
@@ -523,7 +660,8 @@ abstract class PetCareDatabase : RoomDatabase() {
                         MIGRATION_7_8,
                         MIGRATION_8_9,
                         MIGRATION_9_10,
-                        MIGRATION_10_11
+                        MIGRATION_10_11,
+                        MIGRATION_11_12
                     )
                     .build()
                     .also { INSTANCE = it }

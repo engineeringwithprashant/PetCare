@@ -9,11 +9,14 @@ import com.prash.petcare.PetCareApplication
 import com.prash.petcare.data.local.entity.CareRoutine
 import com.prash.petcare.data.local.SettingsStore
 import com.prash.petcare.data.local.WeightUnit
+import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.entity.Pet
+import com.prash.petcare.data.local.entity.VaccinationRecord
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.data.repository.VaccinationRepository
 import com.prash.petcare.util.CareSchedule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -43,12 +46,40 @@ data class PetRoutine(
 )
 
 /**
+ * One vaccination as its row on the pet detail screen draws it: the stored record, and how urgent it
+ * is today.
+ *
+ * **The status travels with the record rather than being worked out by the adapter**, for two
+ * reasons. It keeps the View layer free of the rule — the adapter draws what it is given, which is
+ * what the MVVM split is for — and it means the status and the day count come from a single
+ * evaluation, so a pill can never show one state's colour with another state's wording.
+ *
+ * It is also what lets DiffUtil notice a record whose *status* has changed while the record itself
+ * has not: a booster that crossed its due date overnight produces a different [VaccinationRow] from
+ * the same database row, and the list redraws. See [VaccinationAdapter].
+ *
+ * @property record The stored vaccination — what was given, when, where, and when it is next due.
+ * @property status How that due date reads against today. Derived, never stored; see
+ *   [VaccinationStatus].
+ * @property daysUntilDue Whole days until the next dose, negative when it has passed. Carried
+ *   alongside the status because the "DUE IN 11D" pill needs the number, and recomputing it in the
+ *   adapter would risk the two disagreeing.
+ */
+data class VaccinationRow(
+    val record: VaccinationRecord,
+    val status: VaccinationStatus,
+    val daysUntilDue: Int
+)
+
+/**
  * Everything the pet detail screen displays.
  *
  * @property pet The animal being viewed, or null while loading or if it has been deleted.
  * @property ownerName Who cares for the pet, for the "Cared for by" row. Empty until loaded.
  * @property petCount How many pets the owner has, for the header's count badge.
  * @property routines That pet's care routines, active ones first, each with its task count.
+ * @property vaccinations That pet's vaccination history, most recently given first, each with the
+ *   status derived from its due date — see [VaccinationRow].
  * @property tasksDueToday How many tasks fall due for this pet today, across all its routines.
  * @property tasksDoneToday How many of those have been ticked off today.
  * @property isLoading True until the first database results arrive, so the screen can tell
@@ -59,6 +90,7 @@ data class PetDetailUiState(
     val ownerName: String = "",
     val petCount: Int = 0,
     val routines: List<PetRoutine> = emptyList(),
+    val vaccinations: List<VaccinationRow> = emptyList(),
     val tasksDueToday: Int = 0,
     val tasksDoneToday: Int = 0,
     /** Which unit the weight pill is written in, from the profile screen's preference. */
@@ -67,6 +99,15 @@ data class PetDetailUiState(
 ) {
     /** True when the "no routines yet" message should replace the list. */
     val hasNoRoutines: Boolean get() = !isLoading && routines.isEmpty()
+
+    /**
+     * True when the vaccination card's "nothing recorded yet" row should replace its list.
+     *
+     * Gated on [isLoading] for the same reason [hasNoRoutines] is: without it the empty message
+     * would flash up for one frame before the first database result arrives, telling the user they
+     * have no records a moment before their records appear.
+     */
+    val hasNoVaccinations: Boolean get() = !isLoading && vaccinations.isEmpty()
 
     /** Today's tasks still to do — what the yellow status pill on the photo reports. */
     val tasksOutstanding: Int get() = tasksDueToday - tasksDoneToday
@@ -96,6 +137,10 @@ data class PetDetailUiState(
  * @param petRepository Source of the pet itself and the owner's pet count.
  * @param careRoutineRepository Source of the pet's routines, and where pause and delete are written.
  * @param careTaskRepository Source of the pet's tasks, for per-routine counts and today's progress.
+ * @param vaccinationRepository Source of the pet's vaccination history. Records are written by
+ *   [AddVaccinationViewModel] on the screen the "+ RECORD" button opens and arrive here by
+ *   themselves, because the query below is a Flow; the only write this class makes to it is
+ *   [undoVaccinationRecord].
  * @param petId Which pet to show, passed in as a navigation argument.
  */
 class PetDetailViewModel(
@@ -103,6 +148,7 @@ class PetDetailViewModel(
     petRepository: PetRepository,
     private val careRoutineRepository: CareRoutineRepository,
     private val careTaskRepository: CareTaskRepository,
+    private val vaccinationRepository: VaccinationRepository,
     settingsStore: SettingsStore,
     petId: Long
 ) : ViewModel() {
@@ -138,12 +184,29 @@ class PetDetailViewModel(
         }
 
     /**
+     * The three lists this pet owns — its routines, its tasks and its vaccination history — combined
+     * into one stream before they reach the state below.
+     *
+     * Grouped for a plain mechanical reason: Kotlin's [combine] is only typed up to five flows, and
+     * the state needs six inputs. Rather than fall back to the untyped vararg version and lose the
+     * compiler's help, the three that belong together are combined first. They genuinely do belong
+     * together — all three are "what is recorded against this pet" — so the grouping reads as
+     * structure rather than as a workaround.
+     */
+    private val petRecords: Flow<Triple<List<CareRoutine>, List<CareTask>, List<VaccinationRecord>>> =
+        combine(
+            careRoutineRepository.observeRoutinesForPet(petId),
+            careTaskRepository.observeTasksForPet(petId),
+            vaccinationRepository.observeRecordsForPet(petId)
+        ) { routines, tasks, vaccinations -> Triple(routines, tasks, vaccinations) }
+
+    /**
      * The full state of the screen.
      *
-     * [combine] means any of the four streams updating — renaming the pet, adding a routine, ticking a
-     * task on the Tasks tab — refreshes the screen, and all the values always describe the same
-     * moment. [stateIn] caches the latest value so a rotation re-attaches instead of re-querying and
-     * flashing empty.
+     * [combine] means any of the streams updating — renaming the pet, adding a routine, ticking a
+     * task on the Tasks tab, recording a vaccination — refreshes the screen, and all the values
+     * always describe the same moment. [stateIn] caches the latest value so a rotation re-attaches
+     * instead of re-querying and flashing empty.
      *
      * The task counts are derived from the pet's task list rather than queried separately:
      *  - **per routine**, by grouping tasks on their routine id;
@@ -151,16 +214,19 @@ class PetDetailViewModel(
      *    this pill can never disagree with the figure on the card the user tapped to get here;
      *  - **done today**, with [CareSchedule.isDoneOn], which tests the completion *date* so
      *    yesterday's ticks do not count.
+     *
+     * Each vaccination's status is derived here for the same reason and in the same place: it is a
+     * reading of today's date, so it is worked out on every emission rather than stored — see
+     * [VaccinationStatus].
      */
     val uiState: StateFlow<PetDetailUiState> = combine(
         pet,
-        careRoutineRepository.observeRoutinesForPet(petId),
-        careTaskRepository.observeTasksForPet(petId),
+        petRecords,
         ownerDetails,
         // One more input, so switching units on the profile screen redraws the weight pill by the
         // same path an edit to the pet does.
         settingsStore.weightUnit
-    ) { pet, routines, tasks, (ownerName, petCount), weightUnit ->
+    ) { pet, (routines, tasks, vaccinations), (ownerName, petCount), weightUnit ->
         // Tasks whose routine was deleted have a null routine id and belong to no card, so they
         // simply drop out of the counts.
         val countsByRoutine = tasks.groupingBy { it.routineId }.eachCount()
@@ -177,6 +243,13 @@ class PetDetailViewModel(
             petCount = petCount,
             routines = routines.map { routine ->
                 PetRoutine(routine = routine, taskCount = countsByRoutine[routine.id] ?: 0)
+            },
+            // The DAO already returns these newest-given-first, so the order is the query's rather
+            // than being re-sorted here — one place decides it, which is what stops the card and the
+            // database disagreeing about what "most recent" means.
+            vaccinations = vaccinations.map { record ->
+                val (status, days) = VaccinationStatus.of(record.dateDue)
+                VaccinationRow(record = record, status = status, daysUntilDue = days)
             },
             tasksDueToday = dueToday.size,
             tasksDoneToday = dueToday.count { CareSchedule.isDoneOn(it, dayStart, dayEnd) },
@@ -224,6 +297,31 @@ class PetDetailViewModel(
         }
     }
 
+    /**
+     * Takes back a vaccination just recorded — the undo on the confirmation Snackbar.
+     *
+     * **Both halves go, not just the record.** Saving optionally creates a vet-visit task on the due
+     * date, and an undo that removed the record but left "Rabies due" sitting on the checklist would
+     * be a half undo: the task would outlive the only thing that explained where it came from.
+     * [AddVaccinationViewModel.NO_TASK_ID] means no task was created, so there is nothing to remove.
+     *
+     * The task is fetched before being deleted because the repository deletes by entity — it also
+     * writes a sync tombstone, which needs the row. A task that has somehow gone already simply
+     * leaves nothing to do.
+     *
+     * No event is sent afterwards. Both queries re-emit without the deleted rows and the card and the
+     * checklist redraw themselves.
+     */
+    fun undoVaccinationRecord(recordId: Long, taskId: Long) {
+        viewModelScope.launch {
+            vaccinationRepository.deleteRecord(recordId)
+
+            if (taskId != AddVaccinationViewModel.NO_TASK_ID) {
+                careTaskRepository.getTask(taskId)?.let { careTaskRepository.deleteTask(it) }
+            }
+        }
+    }
+
     companion object {
 
         /**
@@ -240,6 +338,7 @@ class PetDetailViewModel(
                     petRepository = application.petRepository,
                     careRoutineRepository = application.careRoutineRepository,
                     careTaskRepository = application.careTaskRepository,
+                    vaccinationRepository = application.vaccinationRepository,
                     settingsStore = application.settingsStore,
                     petId = petId
                 )

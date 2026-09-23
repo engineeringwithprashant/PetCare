@@ -964,4 +964,97 @@
     <dimen name="places_add_pill_padding_horizontal">13dp</dimen>
     <dimen name="places_add_pill_text_size">9.5sp</dimen>
 
+    <!-- ============================ Vaccination history ============================
+         The card on a pet's detail screen listing the shots it has had, and the "Record a
+         vaccination" screen that adds to it.
+
+         The card is built to a tighter grid than the rest of the pet page: an 18dp gutter rather than
+         the app's usual 16dp card_padding, and rows only 14dp deep. That is deliberate — a history is
+         a *list of facts being scanned*, not a set of panels being read one at a time, and the closer
+         spacing is what lets four shots be taken in at a glance. The same reasoning as the
+         notification cards' 13dp padding further up this file. -->
+
+    <!-- ~~~~~~~~~~ The card and its header row ~~~~~~~~~~ -->
+    <dimen name="vaccination_card_gutter">18dp</dimen>
+    <dimen name="vaccination_header_padding_top">16dp</dimen>
+    <dimen name="vaccination_header_padding_bottom">13dp</dimen>
+    <!-- A step smaller than the app's general section label, because it labels a card rather than a
+         region of the page and the "+ RECORD" pill shares its line. -->
+    <dimen name="vaccination_label_text_size">10sp</dimen>
+
+    <!-- ~~~~~~~~~~ One row ~~~~~~~~~~ -->
+    <dimen name="vaccination_row_padding_vertical">14dp</dimen>
+    <!-- The gap between the row's four parts: date column, bar, text, pill. -->
+    <dimen name="vaccination_row_gap">13dp</dimen>
+    <!-- Wide enough for a two-digit day over "SEP 25" without either wrapping, and fixed so the bars
+         line up in a column down the card whatever the dates are — see item_vaccination.xml. -->
+    <dimen name="vaccination_date_width">40dp</dimen>
+    <dimen name="vaccination_day_text_size">16sp</dimen>
+    <dimen name="vaccination_month_text_size">8sp</dimen>
+    <!-- The status bar. Narrower than the dashboard's category bars and stretched to the row's full
+         height rather than given a fixed one, so it reads as an edge marking the row rather than as a
+         tick beside it. -->
+    <dimen name="vaccination_bar_width">3dp</dimen>
+    <dimen name="vaccination_name_text_size">13.5sp</dimen>
+    <dimen name="vaccination_meta_text_size">10sp</dimen>
+    <dimen name="vaccination_meta_gap">4dp</dimen>
+
+    <!-- The status pill. Smaller than every other pill in the app: it carries one upper-case word at
+         the end of a dense row, and at the pastel pills' size it would be the loudest thing on the
+         card. -->
+    <dimen name="vaccination_pill_padding_horizontal">9dp</dimen>
+    <dimen name="vaccination_pill_padding_vertical">6dp</dimen>
+    <dimen name="vaccination_pill_text_size">8.5sp</dimen>
+
+    <!-- The "nothing recorded yet" row, which occupies the same slot as the list. -->
+    <dimen name="vaccination_empty_padding_vertical">16dp</dimen>
+    <dimen name="vaccination_empty_text_size">11sp</dimen>
+
+    <!-- ~~~~~~~~~~ "Record a vaccination" ~~~~~~~~~~ -->
+
+    <!-- The gap between the screen's eight blocks. One figure for all of them, so the form reads as an
+         even column rather than as groups of differing weight. -->
+    <dimen name="record_block_gap">18dp</dimen>
+
+    <!-- "for Krishala Pant Thapa Baby", under the heading. A half-step smaller than the Add a place
+         subtitle it inherits from: it names the pet rather than explaining the screen. -->
+    <dimen name="record_subtitle_text_size">10.5sp</dimen>
+    <!-- The micro-label over each field. -->
+    <dimen name="record_field_label_text_size">9.5sp</dimen>
+
+    <!-- The species-aware preset chips. A step smaller than the Tasks tab's filter chips: these are
+         shortcuts that fill a field, not a filter the screen is read through. -->
+    <dimen name="record_chip_text_size">11sp</dimen>
+    <dimen name="record_chip_gap">7dp</dimen>
+
+    <!-- The two date fields. A slightly tighter corner and padding than the text fields above them
+         (14dp against 16dp), which is the design's way of marking them as a pair of values rather than
+         two more boxes to type in. -->
+    <dimen name="record_date_field_corner_radius">14dp</dimen>
+    <dimen name="record_date_field_padding">12dp</dimen>
+    <dimen name="record_date_text_size">12sp</dimen>
+    <dimen name="record_date_column_gap">10dp</dimen>
+
+    <!-- The "repeats every" segmented control: four options in one groove. Taller than the profile
+         screen's two-option toggle, because four labels in the same width need the extra height to
+         stay comfortably tappable. -->
+    <dimen name="record_repeat_height">44dp</dimen>
+    <dimen name="record_repeat_inset">4dp</dimen>
+    <dimen name="record_repeat_text_size">10.5sp</dimen>
+
+    <!-- The checklist toggle row: the whole row is one button, so it takes a card's padding rather
+         than a list row's. -->
+    <dimen name="record_toggle_corner_radius">20dp</dimen>
+    <dimen name="record_toggle_padding">15dp</dimen>
+    <dimen name="record_toggle_gap">13dp</dimen>
+    <dimen name="record_toggle_title_text_size">13.5sp</dimen>
+    <dimen name="record_toggle_meta_text_size">10.5sp</dimen>
+
+    <dimen name="record_clinic_text_size">13sp</dimen>
+
+    <!-- The page's own bottom inset, for the reason given on add_place_scroll_padding_bottom: the
+         floating navigation bar is drawn over the scrolling content, and without this "SAVE RECORD"
+         comes to rest underneath it. -->
+    <dimen name="record_scroll_padding_bottom">130dp</dimen>
+
 </resources>

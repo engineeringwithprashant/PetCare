@@ -116,6 +116,17 @@
              attrs.xml. -->
         <item name="colorMapGround">@color/map_ground_dark</item>
 
+        <!-- The vaccination status pills, inverted: a deep ground with pale ink, so a pill on the
+             charcoal card reads as quietly as its pale-wash twin does on the white one. The "due
+             soon" pair is the same in both themes — it is the accent used as the accent always is,
+             see attrs.xml. -->
+        <item name="colorVaccinationClear">@color/vaccination_clear_dark</item>
+        <item name="colorOnVaccinationClear">@color/on_vaccination_clear_dark</item>
+        <item name="colorVaccinationOverdue">@color/vaccination_overdue_dark</item>
+        <item name="colorOnVaccinationOverdue">@color/on_vaccination_overdue_dark</item>
+        <item name="colorVaccinationDue">@color/vaccination_due</item>
+        <item name="colorOnVaccinationDue">@color/on_vaccination_due</item>
+
         <!-- The shape scale and the default component styles are identical in both themes: dark
              mode changes what colour a card is, never how round it is. They are repeated rather
              than inherited because this style declares its own Material parent, and an Android

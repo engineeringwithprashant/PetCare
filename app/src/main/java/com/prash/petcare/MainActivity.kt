@@ -285,6 +285,10 @@ class MainActivity : AppCompatActivity() {
             // the same header with "Add place" as its title and its own round back button, and the
             // bottom bar keeps Places lit behind it.
             destinationId == R.id.addPlaceFragment ||
+            // "Record a vaccination" stands in the same relation to the Pets tab: a step deeper into
+            // it rather than a screen of its own, drawing the shared header with "Vaccination" as its
+            // title and its own round back button, with Pets still lit below.
+            destinationId == R.id.addVaccinationFragment ||
             // The assistant is not a tab, but it draws the same header — its own title, the theme
             // toggle and the pet badge — so the shared bar above it would show the name twice.
             destinationId == R.id.assistantFragment ||

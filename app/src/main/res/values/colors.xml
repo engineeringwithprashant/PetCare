@@ -617,4 +617,54 @@
          at a little under a fifth. -->
     <color name="gps_card_dot_well">#2E2E7DFF</color>
 
+    <!-- ========================= Vaccination history =========================
+         The status pill at the end of each row on a pet's vaccination card, and the thin bar down its
+         left-hand edge. Three states — clear (green), overdue (red), due soon (the accent) — worked
+         out from the due date every time the card is drawn; see ui/pet/VaccinationStatus.kt.
+
+         The split between what is a light/dark *pair* and what is a single value is the same rule the
+         rest of this file follows, and it falls differently for the two marks:
+
+          - **The pills are pairs.** A pill is a filled panel with text on it, sitting on a white card
+            by day and a charcoal one at night. A pale mint wash with dark green text is right on the
+            first and glaring on the second, so each state has a wash-with-dark-ink value for the light
+            theme and a deep-ground-with-pale-ink value for the dark one — exactly the relationship the
+            pastel stat pills above use. The hue is held constant across both, which is what makes
+            "the red one needs attention" stay true in either theme.
+          - **The bars are single values.** A 3dp capsule carries no text and is read purely as a
+            colour, so it needs a saturated mid-light value that shows against the cream page and the
+            near-black one alike — the same reasoning as the care-category bars above. -->
+
+    <!-- Clear: a one-off dose that never repeats, and a booster comfortably in the future. Green,
+         because the app already has one green that means "all good" (the OPEN NOW pill, the
+         "All synced" dot, a satisfied password rule) and this is another reading of it. -->
+    <color name="vaccination_clear_light">#E4F5EA</color>
+    <color name="on_vaccination_clear_light">#0B5133</color>
+    <color name="vaccination_clear_dark">#1E2B23</color>
+    <color name="on_vaccination_clear_dark">#8FE3B8</color>
+
+    <!-- Overdue: the due date has passed. Red, and the only red on the card — which is the point. It
+         is deliberately not colorError: that red is tuned for a line of validation text on the page,
+         and this is a filled pill saying a real-world appointment has been missed. -->
+    <color name="vaccination_overdue_light">#FDEAE5</color>
+    <color name="on_vaccination_overdue_light">#B7301A</color>
+    <color name="vaccination_overdue_dark">#2B1E1A</color>
+    <color name="on_vaccination_overdue_dark">#FF8A6B</color>
+
+    <!-- Due today, or due inside the next month.
+
+         **The one pair here that is identical in both themes**, and for the reason given for the
+         accent itself at the top of this file: it is the app's accent used exactly as the accent is
+         always used — a bright fill with near-black content on it — and that relationship does not
+         change with the page behind it. The ink is a touch deeper than on_accent_yellow, matching the
+         near-black the design uses wherever the accent fills a small control. -->
+    <color name="vaccination_due">@color/accent_yellow</color>
+    <color name="on_vaccination_due">#14130F</color>
+
+    <!-- The bars. Brighter and more saturated than the pills they sit opposite, because a 3dp sliver
+         needs more colour than a filled panel to register at all. -->
+    <color name="vaccination_bar_clear">#2BD98A</color>
+    <color name="vaccination_bar_overdue">#FF6B4A</color>
+    <color name="vaccination_bar_due">@color/accent_yellow</color>
+
 </resources>

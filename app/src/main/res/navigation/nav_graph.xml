@@ -531,6 +531,31 @@
         <action
             android:id="@+id/action_pet_detail_to_expenses"
             app:destination="@id/expensesFragment" />
+
+        <!-- "+ RECORD" on the vaccination card. One-way: the record screen always creates, so unlike
+             the routine action there is no second id to tell "add" from "edit". -->
+        <action
+            android:id="@+id/action_pet_detail_to_add_vaccination"
+            app:destination="@id/addVaccinationFragment" />
+    </fragment>
+
+    <!-- Record a vaccination the pet has already had, and track when the next one falls due.
+
+         A step *deeper* into the Pets tab rather than a screen of its own: it draws the shared header
+         with "Vaccination" as its title and its own round back button, and the bottom bar keeps Pets
+         lit behind it — see NavTab.PETS and MainActivity.updateChromeFor. The same arrangement as
+         "Add a place" under the Places tab. -->
+    <fragment
+        android:id="@+id/addVaccinationFragment"
+        android:name="com.prash.petcare.ui.pet.AddVaccinationFragment"
+        android:label="@string/record_vaccination_heading"
+        tools:layout="@layout/fragment_add_vaccination">
+
+        <!-- Required, with no default: a vaccination record with no pet would violate the foreign key
+             on the vaccination_records table. -->
+        <argument
+            android:name="petId"
+            app:argType="long" />
     </fragment>
 
     <!-- Record a new expense against a pet, or change an existing one. -->

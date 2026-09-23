@@ -26,6 +26,7 @@ import com.prash.petcare.data.repository.PlaceRepository
 import com.prash.petcare.data.repository.SyncDeletionRepository
 import com.prash.petcare.data.repository.TwoFactorRepository
 import com.prash.petcare.data.repository.UserRepository
+import com.prash.petcare.data.repository.VaccinationRepository
 import com.prash.petcare.data.repository.WeatherRepository
 import com.prash.petcare.data.sync.NetworkMonitor
 import com.prash.petcare.data.sync.SyncManager
@@ -130,6 +131,18 @@ class PetCareApplication : Application() {
 
     val expenseRepository: ExpenseRepository by lazy {
         ExpenseRepository(database.expenseDao(), database.syncDeletionDao())
+    }
+
+    /**
+     * Each pet's vaccination history, for the card on its detail screen and the screen that adds to
+     * it.
+     *
+     * Takes no deletion DAO, unlike the five repositories above: this table is not part of the
+     * Firestore sync, so a deleted record has no tombstone to record. See
+     * [com.prash.petcare.data.local.entity.VaccinationRecord] for why.
+     */
+    val vaccinationRepository: VaccinationRepository by lazy {
+        VaccinationRepository(database.vaccinationRecordDao())
     }
 
     /** The user's saved vets, groomers, parks and shops, for the Places tab. */
