@@ -143,24 +143,18 @@
     <attr name="colorOnNavBadgeActive" format="color" />
 
     <!--
-        ========================= The "Add a place" screen =========================
+        ============================= The map cards =============================
 
-        Three roles for the pin map and the search results. They are here rather than named as colours
-        in the layouts for the reason this file exists at all: each is a light/dark *pair* that is not
-        a lighter and darker version of the other (a pale sage map becomes a deep slate one; a cream
-        wash becomes a warm near-black), so a layout has to reach them through a role.
+        One role, shared by the Places tab's map card and the Add a place screen's.
 
-        The map's two are read by a custom view (PinMapView) that paints them itself, which is the
-        other half of the argument — a view resolving `?attr/` gets the right value after a theme
-        change with no second copy of anything.
+        It is here rather than named as a colour in the two layouts for the reason this file exists at
+        all: it is a light/dark *pair* that is not a lighter and darker version of the other — a pale
+        sage ground becomes a deep slate one — so a layout has to reach it through a role.
+
+        What it colours is the ground a map card shows *while the map loads*: the WebView inside is
+        transparent and stays invisible until its first page has been drawn and tinted, so for the
+        second or two before tiles arrive this is the whole card. See MapEmbedView.
     -->
-
-    <!-- The map's ground, and the faint grid ruled over it. -->
-    <attr name="colorPinMapGround" format="color" />
-    <attr name="colorPinMapGrid" format="color" />
-
-    <!-- The wash behind the chosen search result. Its accent border is the same in both themes, so
-         only the fill needs a role. -->
-    <attr name="colorPlaceResultSelected" format="color" />
+    <attr name="colorMapGround" format="color" />
 
 </resources>

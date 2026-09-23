@@ -31,8 +31,8 @@ import java.util.Calendar
  * One saved place as the Places tab draws it: the record plus the facts worked out about it.
  *
  * @property distanceKm Straight-line distance from the phone, or null when its position is unknown.
- * @property isFeatured True for the place shown in the large card, which the list and the distance
- *   axis also highlight.
+ * @property isFeatured True for the **selected** place — the one the map is centred on and the large
+ *   card describes, which the list also highlights.
  * @property isOpenNow True when the current time falls inside the place's opening hours.
  */
 data class PlaceRow(
@@ -43,39 +43,6 @@ data class PlaceRow(
 )
 
 /**
- * One chip on the distance axis.
- *
- * Carries the place's name and distance as well as its position, even though the chip only shows the
- * category: the axis sits above the filter chips and shows *every* place, so the fragment cannot look
- * these up in the (filtered) list when it writes the axis's spoken description.
- *
- * @property fraction How far along the axis the place sits, from 0 (home) to 1 (the axis end).
- *   Worked out here rather than in the view so the view only draws — it never needs to know what a
- *   kilometre is.
- */
-data class AxisMarker(
-    val placeId: Long,
-    val name: String,
-    val category: PlaceCategory,
-    val distanceKm: Double,
-    val fraction: Float,
-    val isFeatured: Boolean
-)
-
-/**
- * Everything the distance strip needs.
- *
- * @property maxKm Where the axis ends — the "within 2 km" figure.
- * @property stepKm The spacing of its labelled ticks.
- * @property markers One per saved place, in distance order.
- */
-data class DistanceAxis(
-    val maxKm: Double,
-    val stepKm: Double,
-    val markers: List<AxisMarker>
-)
-
-/**
  * Everything the Places tab displays.
  *
  * @property isLoading True until the first results arrive from Room.
@@ -83,9 +50,10 @@ data class DistanceAxis(
  * @property hasPlaces Whether the account has saved any place at all — separate from [rows] being
  *   empty, which also happens when a category filter matches nothing.
  * @property selectedCategory The chosen filter chip, or null for "All".
- * @property axis The distance strip's contents, or null when the phone's position is unknown (no
- *   permission, or no fix yet) — there is nothing to measure from.
- * @property featured The place in the large card, or null when the filter matches nothing.
+ * @property featured The **selected place**: the one the map is centred on, the one the overlay pill
+ *   names, the one Directions navigates to, and the one the large card describes. Null only when the
+ *   filter matches nothing. One value for all four, because a map showing one place while the card
+ *   below described another would be worse than either alone.
  * @property rows The saved-places list, already filtered and sorted.
  * @property routineOptions The account's active care routines, for "Book a visit" — a care task
  *   always belongs to a routine, so booking has to put the visit into one.
@@ -95,7 +63,6 @@ data class PlacesUiState(
     val petCount: Int = 0,
     val hasPlaces: Boolean = false,
     val selectedCategory: PlaceCategory? = null,
-    val axis: DistanceAxis? = null,
     val featured: PlaceRow? = null,
     val rows: List<PlaceRow> = emptyList(),
     val routineOptions: List<RoutineOption> = emptyList()
@@ -109,16 +76,17 @@ data class PlacesUiState(
  * of day into one [PlacesUiState], and the fragment draws that state without deciding anything.
  *
  * **Everything is derived from one `combine`.** Distances depend on the phone's position; which place
- * is featured depends on the filter and on distance; the axis highlight depends on which place is
- * featured; "open now" depends on the clock. Computing all of it in one pass from the same inputs is
- * what guarantees the card, the list and the axis can never disagree — a separate flow per section
- * could briefly show one place featured in the card and another highlighted on the axis.
+ * is selected depends on the filter and on distance; the map, the overlay pill and both map links
+ * depend on which place is selected; "open now" depends on the clock. Computing all of it in one pass
+ * from the same inputs is what guarantees the map and the card below it can never disagree — a
+ * separate flow per section could briefly centre the map on one place while the card described
+ * another, and the Directions button would then navigate somewhere the user never chose.
  *
- * **What the distances are measured from.** The design labels the axis origin "home". The app has no
- * stored home address, so distances are measured from the phone's current position, which for the
- * place-planning this screen is for is almost always where the user is setting out from. When that
- * position is unknown — location access not granted, or no fix — the distances are simply left out
- * rather than guessed.
+ * **What the distances are measured from.** The phone's current position, which for the place-planning
+ * this tab is for is almost always where the user is setting out from. The app has no stored home
+ * address to use instead. When that position is unknown — location access not granted, or no fix —
+ * the distances are simply left out rather than guessed, and the overlay pill shows the place's name
+ * alone.
  *
  * No Android types appear here: coordinates are the app's own [Coordinates], and the location client
  * lives behind [LocationRepository].
@@ -242,44 +210,8 @@ class PlacesViewModel(
             isLoading = false,
             hasPlaces = places.isNotEmpty(),
             selectedCategory = category,
-            axis = buildAxis(places, distances, featuredId),
             featured = rows.firstOrNull { it.isFeatured },
             rows = rows
-        )
-    }
-
-    /**
-     * Lays out the distance strip: every saved place, whatever the filter says.
-     *
-     * The strip sits *above* the category chips on screen, so it describes all saved places rather
-     * than the filtered selection — the chips filter what comes after them.
-     */
-    private fun buildAxis(
-        places: List<Place>,
-        distances: Map<Long, Double?>,
-        featuredId: Long?
-    ): DistanceAxis? {
-        val measured = places.mapNotNull { place -> distances[place.id]?.let { place to it } }
-        if (measured.isEmpty()) return null
-
-        val step = GeoDistance.tickStepKm(measured.maxOf { it.second })
-        val max = GeoDistance.axisMaxKm(measured.maxOf { it.second }, step)
-
-        return DistanceAxis(
-            maxKm = max,
-            stepKm = step,
-            markers = measured
-                .sortedBy { it.second }
-                .map { (place, km) ->
-                    AxisMarker(
-                        placeId = place.id,
-                        name = place.name,
-                        category = place.category,
-                        distanceKm = km,
-                        fraction = (km / max).toFloat().coerceIn(0f, 1f),
-                        isFeatured = place.id == featuredId
-                    )
-                }
         )
     }
 

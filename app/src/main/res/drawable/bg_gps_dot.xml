@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The blue "current location" dot in the middle of the well on the "I'm here" card.
+    The "current location" dot in the middle of its tinted well — on the Add a place screen's
+    current-location card, and in the placeholder shown before the live map has a fix to draw.
 
-    The same blue and the same pale ring as the dot painted on the pin map (PinMapView), so the two
-    screens' "you are here" marks are recognisably the same thing. Fixed colours, because the card
-    behind it is dark in both themes.
+    A white ring around the disc rather than none, because this mark lands on two different grounds
+    (the dark card, and the map card's pale or slate loading ground) and the ring is what separates
+    it from either. Both colours are fixed rather than themed, for the same reason: the mark means
+    "you are here" wherever it appears, and it is the shape every maps app uses for it.
+
+    The fill is tinted from code on the card, where the colour carries the GPS status — blue for a
+    fix, accent while looking, coral when there is none. See AddPlaceFragment.renderGpsCard.
 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
@@ -12,7 +17,7 @@
     <solid android:color="@color/here_dot" />
 
     <stroke
-        android:width="@dimen/pin_map_here_ring_width"
-        android:color="@color/on_gps_card" />
+        android:width="@dimen/gps_dot_ring_width"
+        android:color="@color/here_dot_ring" />
 
 </shape>

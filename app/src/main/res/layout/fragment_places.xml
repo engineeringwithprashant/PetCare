@@ -6,8 +6,8 @@
       - **The header** (monogram, "Places", theme toggle, pet count), shared with the other tabs. Fixed
         above the scrolling page: it is identity and controls, not content.
       - Everything else scrolls as one page:
-          · the **distance strip** — a dark card with an axis from home to the furthest place, a chip
-            per place along it, and a line of helper text;
+          · the **map card** — a real, interactive Google map centred on the selected place, with its
+            name and distance on a pill over the top and "Directions" / "Google maps" over the foot;
           · the **category chips** — All, Vet, Grooming, Park, Store;
           · the **featured place** card — name and "open now", hours and phone, notes, the GPS tag and
             "open in maps", then "book a visit" and "pinned";
@@ -15,7 +15,7 @@
           · "+ Add a place".
 
     **Why one NestedScrollView with the list inside it,** rather than a RecyclerView for the whole page:
-    the same reasoning as fragment_checklist.xml. The strip, chips and card are a handful of stateful
+    the same reasoning as fragment_checklist.xml. The map, chips and card are a handful of stateful
     views, not rows, and the list of places a household saves is short and bounded, so the list is
     wrap_content with nestedScrollingEnabled="false" and the page does all the scrolling.
 
@@ -58,82 +58,87 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- ============================ Distance strip ============================
-                     A dark card in both themes — see the Places section of colors.xml for why. Given
-                     an explicit ground and no elevation: a shadow under a near-black card on a
-                     near-black page (dark mode) is invisible, and on the cream page (light mode) the
-                     dark fill already separates it more strongly than any shadow could. -->
+                <!-- ============================== Map card ==============================
+                     A real Google map, centred on whichever place is selected. See MapEmbedView for
+                     why it is a WebView over the keyless embed URL rather than the Maps SDK, and how
+                     the tiles are tinted to match the app's theme.
+
+                     The card's own background is the map's *loading ground*: the WebView is
+                     transparent and stays invisible until its first page has been drawn and tinted,
+                     so this colour is what the user sees for the second or two before the tiles
+                     arrive. A theme role rather than a fixed colour, because a map is a surface being
+                     drawn on and so follows the page — pale sage by day, deep slate by night.
+
+                     clipToOutline (via the card's shape) is what keeps the square WebView inside the
+                     28dp corners; without it the map's corners would poke out past the card's. -->
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/distanceStrip"
+                    android:id="@+id/mapCard"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/places_map_height"
                     android:layout_marginStart="@dimen/screen_padding"
                     android:layout_marginTop="@dimen/spacing_xs"
                     android:layout_marginEnd="@dimen/screen_padding"
-                    app:cardBackgroundColor="@color/places_strip_ground"
-                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="?attr/colorMapGround"
+                    app:cardElevation="@dimen/card_elevation"
                     app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
 
-                    <LinearLayout
+                    <!-- The map fills the card; the two overlays are laid over it, which is what the
+                         FrameLayout is for — they are *on* the map, not above or below it. -->
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="@dimen/card_padding">
+                        android:layout_height="match_parent">
 
-                        <!-- The label on the left and the range on the right, on one line. The label
-                             takes the leftover width (weight 1) so the range is always flush right. -->
+                        <com.prash.petcare.ui.place.MapEmbedView
+                            android:id="@+id/placesMap"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@string/cd_places_map" />
+
+                        <!-- "PATAN ANIMAL HOSPITAL · 1.2 KM". wrap_content inside a full-width parent,
+                             so it hugs a short name but is measured against the card's width and
+                             ellipsizes a long one rather than running off the edge.
+
+                             Hidden from TalkBack: the name and distance are both already announced by
+                             the featured card below, and a screen reader should not read them twice. -->
+                        <TextView
+                            android:id="@+id/mapPlacePill"
+                            style="@style/PetCare.Places.MapPill"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top|start"
+                            android:layout_margin="@dimen/places_map_overlay_inset"
+                            android:importantForAccessibility="no"
+                            tools:text="Patan Animal Hospital · 1.2 km" />
+
+                        <!-- The two ways out to Google Maps. "Directions" takes the leftover width
+                             (weight 1 on a zero width) because it is the action the screen exists to
+                             offer; "Google maps" takes only what its label needs. -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:baselineAligned="true"
+                            android:layout_gravity="bottom"
+                            android:layout_margin="@dimen/places_map_overlay_inset"
                             android:orientation="horizontal">
 
-                            <TextView
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/directionsButton"
+                                style="@style/PetCare.Places.MapAction.Primary"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="@string/places_strip_label"
-                                style="@style/PetCare.Places.StripLabel" />
+                                android:text="@string/places_map_directions" />
 
-                            <TextView
-                                android:id="@+id/stripRangeText"
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/googleMapsButton"
+                                style="@style/PetCare.Places.MapAction.Secondary"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="@dimen/spacing_sm"
-                                style="@style/PetCare.Places.StripRange"
-                                tools:text="within 2 km" />
+                                android:text="@string/places_map_open" />
 
                         </LinearLayout>
 
-                        <!-- The axis itself: a custom drawing, see DistanceAxisView. Its height is fixed
-                             in dimens so the strip does not jump as places are added. -->
-                        <com.prash.petcare.ui.place.DistanceAxisView
-                            android:id="@+id/distanceAxis"
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/places_axis_height"
-                            android:layout_marginTop="@dimen/spacing_md" />
-
-                        <TextView
-                            android:id="@+id/stripHelpText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/spacing_md"
-                            android:text="@string/places_strip_help"
-                            style="@style/PetCare.Places.StripHelp" />
-
-                        <!-- Only when location access has not been granted: the way to grant it. Placed
-                             beside the sentence that explains why, rather than prompting on arrival. -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/allowLocationButton"
-                            style="@style/PetCare.Places.TextLink.OnStrip"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/spacing_xs"
-                            android:text="@string/places_allow_location"
-                            android:visibility="gone"
-                            tools:visibility="visible" />
-
-                    </LinearLayout>
+                    </FrameLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 

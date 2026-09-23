@@ -4,18 +4,16 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Geocoder
+import android.location.Location
+import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.prash.petcare.util.Coordinates
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.Locale
 
 /**
  * A location fix: where the phone is, and how sure the device is about it.
@@ -70,6 +68,22 @@ class LocationRepository(context: Context) {
     fun hasPreciseLocationPermission(): Boolean = isGranted(Manifest.permission.ACCESS_FINE_LOCATION)
 
     /**
+     * True when the device can produce a position at all — as distinct from whether it is allowed to.
+     *
+     * **Why the two questions are separate.** A refused permission is something the user can change,
+     * and a screen that hits one should offer the way to grant it. A device with no location hardware
+     * and no network positioning — a display unit, a stripped-down emulator image, a tablet with the
+     * feature absent — can never answer, and offering "try again" there would be a button that does
+     * nothing forever. The Add a place screen tells the two apart before it asks; see
+     * [com.prash.petcare.ui.place.AddPlaceViewModel.locate].
+     *
+     * The `location` feature covers any provider the platform recognises, not GPS specifically, which
+     * is the right test: a fix from Wi-Fi is still a fix.
+     */
+    fun hasLocationCapability(): Boolean =
+        appContext.packageManager.hasSystemFeature(PackageManager.FEATURE_LOCATION)
+
+    /**
      * Asks for a fresh location fix, or null when none can be had.
      *
      * Null is an ordinary answer rather than an error, and callers show a sentence rather than crash:
@@ -98,10 +112,24 @@ class LocationRepository(context: Context) {
      * unchanged — [getCurrentLocation] is this method with the accuracy dropped. Two entry points
      * rather than one because only the Add a place screen has any use for the accuracy figure, and
      * every other caller would otherwise have to unwrap a value it does not care about.
+     *
+     * @param timeoutMillis How long to wait for a *fresh* fix before falling back. Defaults to
+     *   [FIX_TIMEOUT_MILLIS], which suits measuring distances; the Add a place screen shortens it,
+     *   because there a spinner is the only thing between the user and a save.
+     * @param maxCacheAgeMillis How old a cached fix may be and still be accepted when [allowCached]
+     *   is true. Unbounded by default, since for a distance on a list any recent position will do.
+     *   A caller about to *store* the position narrows it: the Add a place screen allows thirty
+     *   seconds, which is roughly how long somebody stays put while opening a screen, and refuses
+     *   anything older rather than geotagging a clinic at the bus stop the user walked from.
      */
     // The permission is checked on the first line; lint cannot follow a check made through a helper.
     @SuppressLint("MissingPermission")
-    suspend fun getCurrentFix(highAccuracy: Boolean, allowCached: Boolean): LocationFix? {
+    suspend fun getCurrentFix(
+        highAccuracy: Boolean,
+        allowCached: Boolean,
+        timeoutMillis: Long = FIX_TIMEOUT_MILLIS,
+        maxCacheAgeMillis: Long = Long.MAX_VALUE
+    ): LocationFix? {
         if (!hasLocationPermission()) return null
 
         val priority = if (highAccuracy) {
@@ -113,10 +141,15 @@ class LocationRepository(context: Context) {
         val cancellation = CancellationTokenSource()
 
         return try {
-            val fresh = withTimeoutOrNull(FIX_TIMEOUT_MILLIS) {
+            val fresh = withTimeoutOrNull(timeoutMillis) {
                 fusedClient.getCurrentLocation(priority, cancellation.token).await()
             }
-            val location = fresh ?: if (allowCached) fusedClient.lastLocation.await() else null
+            val location = fresh
+                ?: if (allowCached) fusedClient.lastLocation.await()?.takeIf {
+                    isWithinAge(it, maxCacheAgeMillis)
+                } else {
+                    null
+                }
             location?.let {
                 LocationFix(
                     coordinates = Coordinates(it.latitude, it.longitude),
@@ -169,62 +202,27 @@ class LocationRepository(context: Context) {
         }
     }
 
-    /**
-     * The name of the neighbourhood a point falls in — "Jhamsikhel, Lalitpur" — or null if it cannot
-     * be worked out.
-     *
-     * **Why the Add a place screen needs it.** Its "I'm here" card has to say *where* the user is, and
-     * a pair of coordinates is not an answer a person can check. Reverse geocoding turns the fix into
-     * the words they would use themselves, which is what makes "is this the right place?" a question
-     * they can actually answer before saving.
-     *
-     * Two lines are built from whichever of the address's parts exist, most specific first: the
-     * sub-locality (the neighbourhood) then the locality or, failing that, the administrative area.
-     * Duplicates are dropped, so a point whose locality and sub-locality are the same word does not
-     * come back as "Lalitpur, Lalitpur".
-     *
-     * **Null is an ordinary answer.** Geocoding needs a backend that not every device has
-     * ([Geocoder.isPresent] is false on one without), it needs the network, and a point in open
-     * country may simply have no name. The caller shows the coordinates alone in that case rather
-     * than treating it as a failure.
-     *
-     * Runs on the IO dispatcher because the platform call is blocking and goes to the network. The
-     * deprecated synchronous overload is used deliberately: the callback version it was replaced by
-     * arrived in API 33, and this app supports API 24 upwards, so the old call is still the only one
-     * that exists on most of the range — and wrapping it in a coroutine already gives the caller the
-     * asynchrony the new API was introduced to provide.
-     */
-    @Suppress("DEPRECATION")
-    suspend fun describeArea(at: Coordinates): String? = withContext(Dispatchers.IO) {
-        if (!Geocoder.isPresent()) return@withContext null
-
-        try {
-            val address = Geocoder(appContext, Locale.getDefault())
-                .getFromLocation(at.latitude, at.longitude, 1)
-                ?.firstOrNull()
-                ?: return@withContext null
-
-            listOfNotNull(
-                address.subLocality,
-                address.locality ?: address.adminArea
-            )
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
-                .distinct()
-                .joinToString(", ")
-                .takeIf { it.isNotEmpty() }
-        } catch (e: CancellationException) {
-            // Never swallowed — see SyncManager.runSyncCycle for why.
-            throw e
-        } catch (e: Exception) {
-            // IOException when the geocoding backend cannot be reached, IllegalArgumentException for
-            // a coordinate the platform rejects. Either way there is no name to report.
-            null
-        }
-    }
-
     private fun isGranted(permission: String): Boolean =
         ContextCompat.checkSelfPermission(appContext, permission) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Whether a cached fix is recent enough to stand in for a fresh one.
+     *
+     * Measured with [Location.getElapsedRealtimeNanos] — nanoseconds since the device last booted —
+     * rather than with [Location.getTime], which is wall-clock and therefore moves when the user or
+     * the network changes the clock. A fix "from the future" or one suddenly an hour old because a
+     * time zone changed would be a judgement about the clock, not about the position; the monotonic
+     * counter cannot be adjusted and so answers the question actually being asked.
+     *
+     * An unbounded limit short-circuits, both to skip the arithmetic and to keep the common case —
+     * any recent position will do — obviously free.
+     */
+    private fun isWithinAge(location: Location, maxAgeMillis: Long): Boolean {
+        if (maxAgeMillis == Long.MAX_VALUE) return true
+
+        val ageMillis = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1_000_000
+        return ageMillis <= maxAgeMillis
+    }
 
     private companion object {
         /**

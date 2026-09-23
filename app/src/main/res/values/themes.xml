@@ -124,12 +124,9 @@
         <item name="colorNavBadgeActive">@color/nav_badge_active_light</item>
         <item name="colorOnNavBadgeActive">@color/on_nav_badge_active_light</item>
 
-        <!-- The "Add a place" screen's map and chosen search result — see attrs.xml. In this theme
-             the map is a pale sage with the app's ink ruled faintly over it, and the chosen result
-             takes a cream wash of the accent. -->
-        <item name="colorPinMapGround">@color/pin_map_ground_light</item>
-        <item name="colorPinMapGrid">@color/pin_map_grid_light</item>
-        <item name="colorPlaceResultSelected">@color/place_result_selected_light</item>
+        <!-- The ground a map card shows while its map loads — see attrs.xml. In this theme a pale
+             sage, which is the colour map paper reads as before any tiles are on it. -->
+        <item name="colorMapGround">@color/map_ground_light</item>
 
         <!-- ============================== Shape scale ==============================
              Material components read their corner radius from these three attributes. Overriding

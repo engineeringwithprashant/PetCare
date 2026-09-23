@@ -30,13 +30,12 @@ import com.prash.petcare.databinding.FragmentPlacesBinding
 import com.prash.petcare.ui.checklist.RoutineOption
 import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.anchorAboveNavBar
-import com.prash.petcare.ui.common.badgeRes
 import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.bindOptions
-import com.prash.petcare.ui.common.formatAxisKm
 import com.prash.petcare.ui.common.formatDistanceKm
 import com.prash.petcare.ui.common.formatTimeOfDay
 import com.prash.petcare.ui.common.labelRes
+import com.prash.petcare.ui.common.openExternalLink
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.placeSubtitle
 import com.prash.petcare.ui.common.setUp
@@ -44,24 +43,28 @@ import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.ui.task.AddEditTaskFragment
 import com.prash.petcare.ui.task.CareTaskViewModel
+import com.prash.petcare.util.Coordinates
+import com.prash.petcare.util.MapLinks
 import kotlinx.coroutines.launch
 
 /**
- * The Places tab: the user's saved vets, groomers, parks and shops, laid out by distance.
+ * The Places tab: the user's saved vets, groomers, parks and shops, on a map.
  *
- * Top to bottom: a dark **distance strip** plotting every saved place along an axis from home, a row
- * of **category chips**, a large **featured place** card (hours, phone, notes, directions, booking
- * and pinning), and the **saved places** list, where tapping a row features it.
+ * Top to bottom: a **map card** centred on the selected place, with its name and distance on a pill
+ * over the top and "Directions" / "Google maps" over the foot; a row of **category chips**; a large
+ * **place card** (hours, phone, notes, booking and pinning); and the **saved places** list, where
+ * tapping a row selects it — which re-centres the map and re-points both links.
  *
  * In MVVM this is the **View**. [PlacesViewModel] measures, filters, sorts and decides which place is
- * featured; this class draws that state and forwards taps. It formats text (which needs a Context)
+ * selected; this class draws that state and forwards taps. It formats text (which needs a Context)
  * and it owns the things that genuinely need an Activity: the location permission prompt, the
- * `geo:` hand-off to a maps app, the phone dialler, and navigation.
+ * hand-off to Google Maps, the phone dialler, and navigation.
  *
- * **Directions without the Maps SDK.** "Open in maps" builds a `geo:` URI from the saved coordinates
- * and asks Android for any app that can show it — Google Maps, OsmAnd, Organic Maps, whatever the
- * user has. PetCare draws no map itself, so it needs no API key and no map library; the user gets
- * turn-by-turn directions from an app built for exactly that.
+ * **A real map without an API key.** The card is a `WebView` over Google's keyless embed URL, and
+ * the two links below it are the documented Maps URL scheme, which Android delivers to the Maps app
+ * when it is installed and to the browser when it is not. So the tab shows real tiles and offers real
+ * turn-by-turn directions with no Maps SDK, no key and no billing account — see MapEmbedView and
+ * [com.prash.petcare.util.MapLinks], which also carry the note on what to change for production.
  */
 class PlacesFragment : Fragment() {
 
@@ -82,8 +85,8 @@ class PlacesFragment : Fragment() {
     )
 
     /**
-     * Location access for measuring distances. Asked for only when the user presses "Allow location"
-     * in the strip — never on arrival, since a permission prompt the moment a tab opens, before the
+     * Location access for measuring distances. Asked for only when the user taps the GPS chip on the
+     * place card — never on arrival, since a permission prompt the moment a tab opens, before the
      * user has seen what it is for, is the prompt most likely to be refused.
      */
     private val locationPermission = LocationPermissionRequester(
@@ -91,7 +94,7 @@ class PlacesFragment : Fragment() {
         rationaleMessage = R.string.permission_location_distance_message,
         onGranted = {
             viewModel.refreshOrigin()
-            // Redraw straight away: the strip's wording depends on whether permission is held, and
+            // Redraw straight away: the chip's wording depends on whether permission is held, and
             // the state itself will not change until a fix arrives, which may take several seconds.
             if (_binding != null) render(viewModel.uiState.value)
         },
@@ -205,14 +208,21 @@ class PlacesFragment : Fragment() {
         // full-width row at the foot of the page, which is the only one showing in the empty state.
         binding.addPlacePill.setOnClickListener { openAddPlace() }
         binding.addPlaceButton.setOnClickListener { openAddPlace() }
-        binding.allowLocationButton.setOnClickListener { locationPermission.request() }
         binding.pinButton.setOnClickListener { viewModel.togglePinned() }
 
-        // These act on whichever place is featured *at the moment of the tap*, read from state then,
-        // rather than capturing a place when the listener is attached — the featured place changes
+        // These act on whichever place is selected *at the moment of the tap*, read from state then,
+        // rather than capturing a place when the listener is attached — the selected place changes
         // without the listeners being set again.
+        binding.directionsButton.setOnClickListener {
+            withSelectedCoordinates { openLink(MapLinks.directionsUrl(it)) }
+        }
+        binding.googleMapsButton.setOnClickListener {
+            withSelectedCoordinates { openLink(MapLinks.searchUrl(it)) }
+        }
+        // The same destination as "Google maps" above, because they are the same request made from
+        // two places on the page: show me this place in Google Maps.
         binding.openInMapsButton.setOnClickListener {
-            viewModel.uiState.value.featured?.place?.let { openInMaps(it) }
+            withSelectedCoordinates { openLink(MapLinks.searchUrl(it)) }
         }
         binding.phoneBlock.setOnClickListener {
             viewModel.uiState.value.featured?.place?.phone?.let { dial(it) }
@@ -220,6 +230,22 @@ class PlacesFragment : Fragment() {
         binding.bookVisitButton.setOnClickListener {
             viewModel.uiState.value.featured?.place?.let { bookVisit(it) }
         }
+
+        // A tap on a Google link inside the map (its logo, "Terms") leaves the app rather than
+        // navigating the small card to a full Google page the user could not get back from.
+        binding.placesMap.onExternalLink = { url -> openLink(url) }
+    }
+
+    /**
+     * Runs [action] with the selected place's coordinates, or does nothing when no place is selected.
+     *
+     * The three map links all need exactly this, and all three are attached to buttons that are only
+     * on screen when there *is* a selected place — so the null case is a guard against a race (the
+     * filter changing under a tap) rather than something the screen expects.
+     */
+    private inline fun withSelectedCoordinates(action: (Coordinates) -> Unit) {
+        val place = viewModel.uiState.value.featured?.place ?: return
+        action(Coordinates(place.latitude, place.longitude))
     }
 
     private fun observeViewModel() {
@@ -238,17 +264,22 @@ class PlacesFragment : Fragment() {
         binding.header.showPetCount(state.petCount)
         if (state.isLoading) return
 
-        // With nothing saved, a strip, filters and a featured card for no places would be empty
-        // furniture; the empty state and the add button say what to do instead.
+        // With nothing saved, a map, filters and a card for no places would be empty furniture — and
+        // a map has nowhere to centre itself; the empty state and the add button say what to do
+        // instead.
         val hasPlaces = state.hasPlaces
-        binding.distanceStrip.isVisible = hasPlaces
+        // The map goes with the place it shows. It is hidden when a category filter matches nothing
+        // as well as when nothing is saved: with no selected place there is nothing to centre on,
+        // and leaving the last one up would name a place the chips have just filtered away — with
+        // "Directions" still pointing at it.
+        binding.mapCard.isVisible = hasPlaces && state.featured != null
         binding.categoryChipScroll.isVisible = hasPlaces
         // The heading row goes with the list it heads. Its "+ ADD PLACE" pill goes with it, which is
         // why the empty state keeps the full-width add button below — see the layout.
         binding.savedPlacesHeader.isVisible = hasPlaces
         binding.emptyPlacesContainer.isVisible = !hasPlaces
 
-        renderDistanceStrip(state)
+        renderMap(state.featured)
         renderCategoryChips(state)
         renderFeatured(state.featured)
 
@@ -265,66 +296,32 @@ class PlacesFragment : Fragment() {
     }
 
     /**
-     * Fills the dark strip: the "within n km" range, the axis, and the helper text beneath.
+     * Centres the map on the selected place and writes the pill over it.
      *
-     * Without a position to measure from, the axis cannot be drawn, so it is hidden and the helper
-     * text explains why — offering the permission when that is what is missing, and pointing at the
-     * phone's location setting when permission is held but no fix has arrived.
+     * The map is only reloaded when the coordinates actually change — [MapEmbedView.showLocation]
+     * guards that — which matters because this runs on every state emission, including each tick of
+     * the "open now" clock. Without the guard the map would reload once a minute and never finish.
+     *
+     * **The pill shows a distance only when one is known.** It is measured from the phone, so it is
+     * missing until location access is granted and a fix has arrived; the name alone is shown in the
+     * meantime rather than a figure measured from somewhere the user did not choose. The GPS chip on
+     * the card below is where that access can be granted — see [renderFeatured].
      */
-    private fun renderDistanceStrip(state: PlacesUiState) {
-        val axis = state.axis
-        val hasPermission = locationPermission.hasPermission()
+    private fun renderMap(featured: PlaceRow?) {
+        val place = featured?.place ?: return
 
-        binding.distanceAxis.isVisible = axis != null
-        binding.stripRangeText.isVisible = axis != null
-        binding.allowLocationButton.isVisible = axis == null && !hasPermission
-
-        binding.stripHelpText.setText(
-            when {
-                axis != null -> R.string.places_strip_help
-                hasPermission -> R.string.places_strip_waiting_for_fix
-                else -> R.string.places_strip_no_permission
-            }
+        binding.placesMap.showLocation(
+            Coordinates(place.latitude, place.longitude),
+            zoom = PLACES_MAP_ZOOM
         )
 
-        if (axis == null) return
+        binding.mapPlacePill.text = featured.distanceKm
+            ?.let { getString(R.string.places_map_pill, place.name, formatDistanceKm(requireContext(), it)) }
+            ?: place.name
 
-        binding.stripRangeText.text = getString(R.string.places_strip_within, formatAxisKm(requireContext(), axis.maxKm))
-
-        // One tick per step, starting at the first step rather than at zero — zero is the home dot,
-        // which carries its own label.
-        val tickCount = Math.round(axis.maxKm / axis.stepKm).toInt()
-        val ticks = (1..tickCount).map { index ->
-            val km = axis.stepKm * index
-            DistanceAxisView.Tick(formatAxisKm(requireContext(), km), (km / axis.maxKm).toFloat())
-        }
-
-        val chips = axis.markers.map { marker ->
-            DistanceAxisView.Chip(
-                label = axisChipLabel(marker.category),
-                fraction = marker.fraction,
-                isHighlighted = marker.isFeatured
-            )
-        }
-
-        binding.distanceAxis.setContent(getString(R.string.places_axis_home), ticks, chips)
-
-        // The drawing is invisible to TalkBack, so its content is spelled out: "Distances from home:
-        // Jawalakhel Dog Park, 0.5 km, Patan Animal Hospital, 1.2 km".
-        binding.distanceAxis.contentDescription = getString(
-            R.string.cd_places_axis,
-            axis.markers.joinToString(getString(R.string.list_separator)) { marker ->
-                getString(R.string.cd_places_axis_entry, marker.name, formatDistanceKm(requireContext(), marker.distanceKm))
-            }
-        )
+        // The WebView is opaque to TalkBack, so the card names what it is showing.
+        binding.placesMap.contentDescription = getString(R.string.cd_places_map_at, place.name)
     }
-
-    /**
-     * The chip text on the axis: "PARK", "GRM", "VET", "SHOP". Upper-cased here with the device
-     * locale rather than stored in capitals, so the same strings serve the sentence-case list badges.
-     */
-    private fun axisChipLabel(category: PlaceCategory): String =
-        getString(category.badgeRes()).uppercase(resources.configuration.locales[0])
 
     /** Builds the chip row — "All" then each category — and marks the chosen one. */
     private fun renderCategoryChips(state: PlacesUiState) {
@@ -371,9 +368,26 @@ class PlacesFragment : Fragment() {
         binding.featuredNotesText.isVisible = notes.isNotEmpty()
         binding.featuredNotesText.text = notes
 
-        binding.gpsTagChip.text = featured.distanceKm?.let {
-            getString(R.string.place_gps_tag_with_distance, formatDistanceKm(context, it))
-        } ?: getString(R.string.place_gps_tag)
+        // The GPS chip, and the one place on this tab that can still ask for location access.
+        //
+        // Distances used to be introduced by the distance ruler, which carried its own "Allow
+        // location" button; the map card that replaced it has no room for one. Without this, a user
+        // who never opens "Add a place" — the screen that does ask — would have no way to turn
+        // distances on at all. The chip already says what is missing, so it is the natural thing to
+        // make tappable: "GPS tag saved · tap for distance".
+        val hasLocation = locationPermission.hasPermission()
+        binding.gpsTagChip.text = when {
+            featured.distanceKm != null ->
+                getString(R.string.place_gps_tag_with_distance, formatDistanceKm(context, featured.distanceKm))
+
+            hasLocation -> getString(R.string.place_gps_tag)
+            else -> getString(R.string.place_gps_tag_allow_location)
+        }
+        binding.gpsTagChip.isClickable = !hasLocation
+        binding.gpsTagChip.isFocusable = !hasLocation
+        binding.gpsTagChip.setOnClickListener(
+            if (hasLocation) null else View.OnClickListener { locationPermission.request() }
+        )
 
         // The toggle's label says what *is*, like the theme toggle in the header; the checked state
         // also darkens its outline (see place_pin_stroke.xml) so the difference is not in words alone.
@@ -390,21 +404,23 @@ class PlacesFragment : Fragment() {
     // ---------------------------------------------------------------------------------------
 
     /**
-     * A saved-place row was tapped: feature it, and bring the card into view — on a long list the
-     * card is off the top of the screen, and a change the user cannot see reads as the tap failing.
+     * A saved-place row was tapped: select it, and bring the map into view.
+     *
+     * Scrolling to the *map* rather than to the card below it, because selecting a place now moves
+     * the map — and a change the user cannot see reads as the tap having failed. On a long list both
+     * are off the top of the screen, so without this the tap would appear to do nothing.
      */
     private fun onPlaceTapped(placeId: Long) {
         viewModel.selectPlace(placeId)
-        binding.placesScroll.smoothScrollTo(0, binding.featuredCard.top - binding.categoryChipScroll.height)
+        binding.placesScroll.smoothScrollTo(0, 0)
     }
 
     /**
-     * "+ ADD PLACE": opens the screen where a place is saved from anywhere.
+     * "+ ADD PLACE": opens the screen where the place you are standing in is saved.
      *
      * A separate destination from the edit form below, because the two answer different questions.
-     * Adding is "which place do you mean?", and the answer may come from a search, a pin on a map or
-     * the device — none of which requires the user to be there. Editing is "what has changed about
-     * this one?", which is a form over a place that already exists.
+     * Adding is "save where I am, under this name", which is a GPS fix and two fields. Editing is
+     * "what has changed about this one?", which is a full form over a place that already exists.
      */
     private fun openAddPlace() {
         findNavController().navigate(R.id.action_places_to_add_place)
@@ -419,29 +435,15 @@ class PlacesFragment : Fragment() {
     }
 
     /**
-     * "OPEN IN MAPS ↗": hands the saved coordinates to whichever maps app the user has.
+     * Hands a Google Maps link to the Maps app, or to the browser when it is not installed.
      *
-     * The URI is `geo:lat,lng?q=lat,lng(Name)`. The first pair centres the map; the `q` query drops a
-     * labelled pin there, which is what lets the maps app offer "Directions" to it. The name is
-     * URI-encoded, since a clinic called "Paws & Claws" would otherwise break the query at the `&`.
-     *
-     * The coordinates are written with [Double.toString], never a locale-aware format: in much of
-     * Europe that would write "27,67", and a comma is the separator *between* latitude and longitude.
-     *
-     * Started directly and the failure caught, rather than checked first with `resolveActivity`:
-     * from Android 11 that check only sees apps declared in a `<queries>` block, and would report "no
-     * maps app" on phones that have one.
+     * Used by all three ways out of this screen — "DIRECTIONS ↗" and "GOOGLE MAPS" over the map,
+     * "Open in maps ↗" on the card — and by any Google link the user taps *inside* the embedded map,
+     * which the WebView refuses to navigate to itself. See [openExternalLink] for why an `https` URL
+     * reaches the Maps app, and why the launch is tried rather than checked first.
      */
-    private fun openInMaps(place: Place) {
-        val lat = place.latitude.toString()
-        val lng = place.longitude.toString()
-        val uri = "geo:$lat,$lng?q=$lat,$lng(${Uri.encode(place.name)})".toUri()
-
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW, uri))
-        } catch (e: ActivityNotFoundException) {
-            showMessage(getString(R.string.places_no_maps_app))
-        }
+    private fun openLink(url: String) {
+        if (!openExternalLink(url)) showMessage(getString(R.string.places_no_maps_app))
     }
 
     /**
@@ -525,8 +527,8 @@ class PlacesFragment : Fragment() {
     }
 
     /**
-     * Location access was refused. Distances simply stay hidden — every other part of the tab works
-     * without them — and a permanent refusal gets a route to the settings screen.
+     * Location access was refused. Distances simply stay hidden — the map, the links, the card and
+     * the list all work without them — and a permanent refusal gets a route to the settings screen.
      */
     private fun onLocationDenied(permanently: Boolean) {
         val root = _binding?.root ?: return
@@ -557,11 +559,21 @@ class PlacesFragment : Fragment() {
         // The adapter outlives the view as a fragment property; detaching it stops the destroyed
         // RecyclerView being kept alive through it.
         binding.placesRecyclerView.adapter = null
+        // The WebView keeps a rendering thread and a native page alive until told otherwise, so it is
+        // torn down with the view rather than left to the garbage collector — see MapEmbedView.destroy.
+        binding.placesMap.destroy()
         _binding = null
     }
 
     private companion object {
         /** The chip key for "All" — never a [PlaceCategory] name. */
         const val KEY_ALL = "all"
+
+        /**
+         * Neighbourhood level: close enough to see which street a clinic is on, wide enough to show
+         * what is around it. The Add a place screen uses one step closer, because there the question
+         * is "is this the right doorway?" rather than "where in the city is this?".
+         */
+        const val PLACES_MAP_ZOOM = 16
     }
 }

@@ -14,7 +14,6 @@ import com.prash.petcare.data.local.LoginAttemptStore
 import com.prash.petcare.data.local.PetCareDatabase
 import com.prash.petcare.data.local.SettingsStore
 import com.prash.petcare.data.local.WeatherCache
-import com.prash.petcare.data.places.PlaceSearchRepository
 import com.prash.petcare.data.remote.FirebaseAuthService
 import com.prash.petcare.data.remote.FirestoreSyncService
 import com.prash.petcare.data.remote.weather.WeatherApi
@@ -137,17 +136,6 @@ class PetCareApplication : Application() {
     val placeRepository: PlaceRepository by lazy {
         PlaceRepository(database.placeDao(), database.syncDeletionDao())
     }
-
-    /**
-     * Looks places up by name or address for the "Add a place" screen's search method.
-     *
-     * A second, *read-only* source of places beside [placeRepository], which owns the ones the user
-     * has saved. Kept apart because they answer different questions — "what have I saved?" against
-     * "what exists out there?" — and because this one is the seam where a real geocoding service will
-     * be plugged in; see [PlaceSearchRepository]. Created here like every other repository so the
-     * whole process shares one instance and a ViewModel is handed it rather than building its own.
-     */
-    val placeSearchRepository: PlaceSearchRepository by lazy { PlaceSearchRepository() }
 
     /**
      * Which alerts the user has already read, for the notifications screen.

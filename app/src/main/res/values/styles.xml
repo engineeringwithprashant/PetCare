@@ -1492,31 +1492,79 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- "GEOTAGGED · BY DISTANCE" on the dark strip: small, bold, upper-case and letter-spaced, like the
-         app's section labels but in the strip's fixed muted colour, since the strip is dark in both
-         themes. -->
-    <style name="PetCare.Places.StripLabel" parent="">
+    <!--
+        "PATAN ANIMAL HOSPITAL · 1.2 KM" — the pill naming the place the map is centred on.
+
+        Its colours are fixed rather than themed because it sits on Google's tiles, not on the app's
+        surface: a pill that followed the page would be near-black ink on a pale map by day and pale
+        ink on an inverted-pale map by night, and unreadable in one of the two. A translucent
+        near-black with pale ink works over either.
+
+        singleLine with ellipsize rather than wrapping: the pill is a caption on a map, and a
+        two-line one would cover the streets it is naming. Nothing is lost — the full name is in the
+        featured card immediately below.
+    -->
+    <style name="PetCare.Places.MapPill" parent="">
+        <item name="android:background">@drawable/bg_map_overlay_pill</item>
+        <item name="android:paddingStart">@dimen/places_map_pill_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/places_map_pill_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/places_map_pill_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/places_map_pill_padding_vertical</item>
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
-        <item name="android:textColor">@color/places_strip_muted</item>
+        <item name="android:textSize">@dimen/places_map_pill_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textColor">@color/on_map_overlay</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!--
+        "DIRECTIONS ↗" and "GOOGLE MAPS", the two links laid over the map's foot.
+
+        Both hand off to Google Maps — see MapLinks — so both are shaped as capsules with the same
+        lettering, and only their weight differs: the accent marks the action the screen exists to
+        offer, and the near-black one beside it is the way to the full listing.
+
+        A drop shadow on both, unlike the app's other buttons, because these sit on photography-like
+        ground: a flat capsule on a pale street tile has no edge to be seen against, and the shadow is
+        what lifts it off the map. Schibsted rather than the app's usual monospace for a pill, because
+        these are words being pressed rather than data being read.
+    -->
+    <style name="PetCare.Places.MapAction" parent="Widget.Material3.Button">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingTop">@dimen/places_map_action_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/places_map_action_padding_vertical</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="android:fontFamily">@font/schibsted_grotesk</item>
+        <item name="fontFamily">@font/schibsted_grotesk</item>
+        <item name="android:textSize">@dimen/places_map_action_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
         <item name="android:maxLines">1</item>
+        <item name="android:elevation">@dimen/places_map_action_elevation</item>
     </style>
 
-    <!-- "within 2 km", on the right of the same line — the same voice, not upper-cased. -->
-    <style name="PetCare.Places.StripRange" parent="PetCare.Places.StripLabel">
-        <item name="android:textStyle">normal</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:letterSpacing">0.02</item>
+    <!-- "DIRECTIONS ↗" — the accent one, which takes the leftover width and so gets even padding. -->
+    <style name="PetCare.Places.MapAction.Primary" parent="PetCare.Places.MapAction">
+        <item name="android:paddingStart">@dimen/spacing_sm</item>
+        <item name="android:paddingEnd">@dimen/spacing_sm</item>
+        <item name="backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
     </style>
 
-    <!-- The helper sentence under the axis. -->
-    <style name="PetCare.Places.StripHelp" parent="">
-        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
-        <item name="android:textColor">@color/places_strip_text</item>
+    <!-- "GOOGLE MAPS" — the near-black one, sized to its own label. -->
+    <style name="PetCare.Places.MapAction.Secondary" parent="PetCare.Places.MapAction">
+        <item name="android:paddingStart">@dimen/places_map_action_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/places_map_action_padding_horizontal</item>
+        <item name="backgroundTint">@color/map_action_secondary</item>
+        <item name="android:textColor">@color/on_map_action_secondary</item>
     </style>
 
     <!-- The small field name under an info block's value: "TODAY", "PHONE". -->
@@ -1576,14 +1624,6 @@
         <item name="android:textAllCaps">true</item>
         <item name="android:letterSpacing">0.06</item>
         <item name="rippleColor">?attr/colorPrimary</item>
-    </style>
-
-    <!-- "Allow location" on the dark strip: the same link in the accent. The strip is near-black in
-         both themes, so the theme's text colour — near-black itself in light mode — would vanish into
-         it; the accent is legible on the strip whichever theme is in use. -->
-    <style name="PetCare.Places.TextLink.OnStrip" parent="PetCare.Places.TextLink">
-        <item name="android:textColor">@color/accent_yellow</item>
-        <item name="android:paddingStart">0dp</item>
     </style>
 
     <!-- "BOOK A VISIT": the card's main action, a fully rounded yellow pill. The accent and its
@@ -1650,10 +1690,27 @@
     <!-- ================================= Money tab =================================
          The redesigned Money (Expenses) tab. It shares the Places tab's typographic voice — figures
          and captions in monospace, headings in the normal face — and its dark card uses the same
-         fixed colours as the Places distance strip, since both are dark in either theme. -->
+         fixed colours as the app's other dark panels, since all of them are dark in either theme. -->
 
-    <!-- "TOTAL SPENT · SEPTEMBER" on the dark card: the Places strip label, unchanged. -->
-    <style name="PetCare.Expenses.TotalLabel" parent="PetCare.Places.StripLabel" />
+    <!--
+        "TOTAL SPENT · SEPTEMBER" on the dark card: small, bold, upper-case and letter-spaced, like
+        the app's section labels but in the fixed muted ink that reads on a dark panel in either
+        theme.
+
+        Written out here rather than inherited. It used to extend the Places tab's distance-strip
+        label, but that strip has been replaced by the map card and the style went with it; this tab
+        is now the only thing that draws the label, so its definition lives where it is used.
+    -->
+    <style name="PetCare.Expenses.TotalLabel" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textColor">@color/places_strip_muted</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:maxLines">1</item>
+    </style>
 
     <!-- The month's total. Very large, bold and white on the dark card, with the letters drawn a
          touch closer together: at this size the default spacing reads as gappy, and the design sets
@@ -1671,9 +1728,13 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "3 expenses · 2 pets · +12% vs August": the Places strip's range caption, in the same muted
-         monospace. -->
-    <style name="PetCare.Expenses.TotalCaption" parent="PetCare.Places.StripRange" />
+    <!-- "3 expenses · 2 pets · +12% vs August": the label above in the same muted monospace, but as
+         a sentence rather than a heading — so no capitals and only a trace of letter-spacing. -->
+    <style name="PetCare.Expenses.TotalCaption" parent="PetCare.Expenses.TotalLabel">
+        <item name="android:textStyle">normal</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
 
     <!-- A legend row's category name. On the page rather than on a card, hence colorOnBackground. -->
     <style name="PetCare.Expenses.LegendName" parent="">
@@ -2673,17 +2734,17 @@
     <!--
         ============================== "Add a place" screen ==============================
 
-        The sub-screen reached from the Places tab, where a place is saved by searching for it, by
-        dropping a pin, or from the device's current position (fragment_add_place.xml).
+        The sub-screen reached from the Places tab, where a place is saved from the device's GPS
+        (fragment_add_place.xml).
 
-        **Almost nothing here is new grammar.** The method picker is the profile screen's preference
-        toggle with a third option; the category pills are the Tasks tab's filter chips; the two text
-        boxes and the save button are the sign-in screens' fields and primary button. Each of those
+        **Almost nothing here is new grammar.** The category pills are the Tasks tab's filter chips;
+        the two text boxes and the save button are the sign-in screens' fields and primary button; the
+        chip over the map is the same capsule the Places tab lays over *its* map. Each of those
         already carries the app's rule that "chosen" and "the thing to press" are the strong fill —
         near-black by day, the accent by night — and that a disabled button is a solid resting slab
         rather than a faded one. Inheriting them is what keeps this screen part of the same app, and
-        it means the styles below describe only what the design genuinely adds: the map, its marker,
-        and the dark current-location card.
+        it means the styles below describe only what the design genuinely adds: the live map's status
+        chip and placeholder, and the dark current-location card with its two pills.
     -->
 
     <!-- ~~~~~~~~~~ The entry point in the Places tab ~~~~~~~~~~ -->
@@ -2764,6 +2825,10 @@
         <item name="android:textSize">@dimen/add_place_title_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
+        <!-- The design's -1.1px at 26sp, expressed as the em fraction Android wants (-1.1 ÷ 26).
+             Heavy type set large needs the letters pulled together; at default spacing a 26sp
+             Bricolage word looks gappy. -->
+        <item name="android:letterSpacing">-0.042</item>
         <item name="android:lineSpacingMultiplier">1.0</item>
         <item name="android:includeFontPadding">false</item>
     </style>
@@ -2779,138 +2844,59 @@
         <item name="android:lineSpacingExtra">3dp</item>
     </style>
 
-    <!-- ~~~~~~~~~~ The method picker ~~~~~~~~~~ -->
+    <!-- ~~~~~~~~~~ The live GPS map ~~~~~~~~~~ -->
 
     <!--
-        The groove the three options sit in, and one option within it.
+        The status chip in the map's top-left corner: "● LIVE GPS", "● LOCATING…", "● NO GPS FIX".
 
-        The profile screen's two-option toggle, inherited rather than re-described: it already is this
-        control — a capsule groove with a strong-filled pill in the chosen segment, driven entirely by
-        `state_selected` through bg_profile_segment.xml and res/color/profile_segment_text.xml. The
-        only differences the design asks for are the height and the lettering, and the fact that the
-        row holds three peers instead of two, which is a matter of how many are added in the layout
-        rather than of style.
+        The one-glance answer to "is what I am looking at real?", which is why the dot beside the
+        label is coloured by state (blue for a fix, accent while looking, coral when there is none)
+        rather than being decoration. The chip shares the Places tab's map-overlay capsule, for the
+        reason given there: it sits on Google's tiles rather than on the app's surface, so its
+        colours are fixed in both themes.
 
-        Schibsted rather than the auth variant's monospace capitals: these are words ("Drop pin",
-        "I'm here"), not unit abbreviations, and sentence case is what the design sets them in.
+        The dot is a sibling view in the layout rather than a compound drawable, because its tint
+        changes with state and a drawable start would have to be re-tinted every render.
     -->
-    <style name="PetCare.AddPlace.MethodTrack" parent="PetCare.Profile.SegmentTrack">
-        <item name="android:layout_height">@dimen/add_place_method_height</item>
-        <item name="android:padding">@dimen/spacing_xs</item>
+    <style name="PetCare.AddPlace.GpsChip" parent="">
+        <item name="android:background">@drawable/bg_map_overlay_pill</item>
+        <item name="android:paddingStart">@dimen/gps_map_chip_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/gps_map_chip_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/gps_map_chip_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/gps_map_chip_padding_vertical</item>
+        <item name="android:gravity">center_vertical</item>
     </style>
 
-    <style name="PetCare.AddPlace.Method" parent="PetCare.Profile.Segment">
-        <item name="android:textSize">@dimen/add_place_method_text_size</item>
-        <item name="android:paddingStart">@dimen/spacing_xs</item>
-        <item name="android:paddingEnd">@dimen/spacing_xs</item>
+    <style name="PetCare.AddPlace.GpsChipLabel" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/gps_map_chip_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/on_map_overlay</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:maxLines">1</item>
     </style>
 
-    <!-- ~~~~~~~~~~ The search results ~~~~~~~~~~ -->
-
-    <!-- One result card. The outlined card the dashboard's quick actions use, at this screen's small
-         radius: flat with a hairline edge rather than a shadow, because a column of shadowed cards
-         under a text field would read as more important than the field driving them. The chosen card's
-         accent border and tinted fill are applied by PlaceSuggestionAdapter, since they depend on state
-         rather than on anything the layout can know. -->
-    <style name="PetCare.AddPlace.ResultCard" parent="PetCare.Card.Outlined.Clickable">
-        <item name="cardCornerRadius">@dimen/add_place_result_corner_radius</item>
-    </style>
-
-    <!-- A result's category glyph: "Vet", "Grm", "Park", "Shop" in a rounded square. The saved-place
-         badge's treatment (PetCare.Places.Badge) at the design's smaller size. Hidden from TalkBack,
-         because the row's own description already names the category. -->
-    <style name="PetCare.AddPlace.ResultGlyph" parent="">
-        <item name="android:layout_width">@dimen/add_place_result_glyph_size</item>
-        <item name="android:layout_height">@dimen/add_place_result_glyph_size</item>
-        <item name="android:background">@drawable/bg_place_result_glyph</item>
+    <!-- The line shown in the map's place before there is a fix to draw one at — "Finding your
+         position…", or the sentence naming the way forward when location is off. Schibsted rather
+         than the screen's monospace: it is a sentence being read, not a value being checked. -->
+    <style name="PetCare.AddPlace.MapPlaceholder" parent="">
+        <item name="android:fontFamily">@font/schibsted_grotesk</item>
+        <item name="fontFamily">@font/schibsted_grotesk</item>
+        <item name="android:textSize">@dimen/gps_map_placeholder_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:gravity">center</item>
-        <item name="android:fontFamily">@font/ibm_plex_mono</item>
-        <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textSize">@dimen/add_place_result_glyph_text_size</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:maxLines">1</item>
-        <item name="android:importantForAccessibility">no</item>
-    </style>
-
-    <!-- A result's name, and the address under it. The saved-place row's pairing — a Schibsted title
-         over a monospace meta line — so a place looks the same before and after it is saved. -->
-    <style name="PetCare.AddPlace.ResultName" parent="PetCare.ListTitle">
-        <item name="android:textSize">@dimen/add_place_result_name_text_size</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-
-    <style name="PetCare.AddPlace.ResultAddress" parent="PetCare.Places.Meta">
-        <item name="android:textSize">@dimen/add_place_result_address_text_size</item>
-    </style>
-
-    <!-- The distance on the right of a result. Monospace so a column of them lines up, and held to one
-         line so "8.4 km" never breaks across two. -->
-    <style name="PetCare.AddPlace.ResultDistance" parent="PetCare.Places.Meta">
-        <item name="android:textSize">@dimen/add_place_result_address_text_size</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-
-    <!-- "Nothing matched…" inside the dashed card. -->
-    <style name="PetCare.AddPlace.NoResults" parent="PetCare.Auth.Helper">
-        <item name="android:background">@drawable/bg_place_no_results</item>
-        <item name="android:padding">@dimen/add_place_result_padding</item>
-    </style>
-
-    <!-- ~~~~~~~~~~ The pin map ~~~~~~~~~~ -->
-
-    <!-- The marker's yellow name label. Upper-case monospace, like every other tag in the app, and
-         held to one line: a map label that wrapped would cover the ground the user is aiming at. -->
-    <style name="PetCare.AddPlace.PinLabel" parent="">
-        <item name="android:background">@drawable/bg_pin_marker_label</item>
-        <item name="android:paddingStart">@dimen/pin_marker_label_padding_horizontal</item>
-        <item name="android:paddingEnd">@dimen/pin_marker_label_padding_horizontal</item>
-        <item name="android:paddingTop">@dimen/pin_marker_label_padding_vertical</item>
-        <item name="android:paddingBottom">@dimen/pin_marker_label_padding_vertical</item>
-        <item name="android:fontFamily">@font/ibm_plex_mono</item>
-        <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textSize">@dimen/pin_marker_label_text_size</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">@color/on_accent_yellow</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:ellipsize">end</item>
-        <item name="android:elevation">2dp</item>
-    </style>
-
-    <!-- "TAP OR DRAG TO MOVE" over the map's bottom-left corner. -->
-    <style name="PetCare.AddPlace.PinHint" parent="">
-        <item name="android:background">@drawable/bg_pin_map_hint</item>
-        <item name="android:paddingStart">@dimen/pin_map_hint_padding_horizontal</item>
-        <item name="android:paddingEnd">@dimen/pin_map_hint_padding_horizontal</item>
-        <item name="android:paddingTop">@dimen/pin_map_hint_padding_vertical</item>
-        <item name="android:paddingBottom">@dimen/pin_map_hint_padding_vertical</item>
-        <item name="android:fontFamily">@font/ibm_plex_mono</item>
-        <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textSize">@dimen/pin_map_hint_text_size</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">@color/on_pin_map_hint</item>
-        <item name="android:letterSpacing">0.06</item>
-        <item name="android:maxLines">1</item>
-    </style>
-
-    <!-- The live coordinates under the map, in the pale capsule the Places tab uses for its GPS tag,
-         and the "1.1 km from home" beside it. Both monospace and both held to one line — a coordinate
-         or a distance that wrapped mid-number would be unreadable. -->
-    <style name="PetCare.AddPlace.Coordinates" parent="PetCare.Places.GpsChip">
-        <item name="android:textSize">@dimen/pin_readout_text_size</item>
-    </style>
-
-    <style name="PetCare.AddPlace.PinDistance" parent="PetCare.Places.Meta">
-        <item name="android:textSize">@dimen/pin_readout_text_size</item>
+        <item name="android:lineSpacingExtra">3dp</item>
     </style>
 
     <!-- ~~~~~~~~~~ The current-location card ~~~~~~~~~~ -->
 
-    <!-- "CURRENT LOCATION", the area name, and the coordinates with their accuracy. All three sit on
-         the dark card, so their colours are the fixed on-card values rather than theme roles, and the
-         muted one is a solid colour rather than the light ink at reduced opacity — the rule this
-         screen follows throughout. -->
+    <!-- "CURRENT LOCATION", the title line, and the meta line under it. All three sit on the dark
+         card, so their colours are the fixed on-card values rather than theme roles, and the muted one
+         is a solid colour rather than the light ink at reduced opacity — the rule this screen follows
+         throughout. -->
     <style name="PetCare.AddPlace.HereLabel" parent="PetCare.SectionLabel">
         <item name="android:textSize">@dimen/gps_card_label_text_size</item>
         <item name="android:textColor">@color/on_gps_card_muted</item>
@@ -2924,12 +2910,58 @@
         <item name="android:textColor">@color/on_gps_card</item>
     </style>
 
+    <!-- The coordinates, accuracy and distance from home. Monospace so the figures line up, and held
+         to one line: a coordinate that wrapped mid-number would be unreadable. -->
     <style name="PetCare.AddPlace.HereCoordinates" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textSize">@dimen/gps_card_coordinates_text_size</item>
         <item name="android:textColor">@color/on_gps_card_muted</item>
         <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <!--
+        The card's two pills: the outlined "Refresh location", and the accent "Use demo location" that
+        joins it only when there is no fix to be had.
+
+        Outlined rather than filled for the first, because refreshing is a repeat of what the screen
+        already did on arrival — offering it as a second filled button would make the card look like it
+        had two equal actions. Both are sized from the same base so they sit level when they share the
+        row, and both are held to one line so a long label never turns one pill taller than the other.
+    -->
+    <style name="PetCare.AddPlace.GpsButton" parent="Widget.Material3.Button">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">@dimen/gps_card_button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/gps_card_button_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/gps_card_button_padding_horizontal</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/gps_card_button_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- "REFRESH LOCATION" / "TRY AGAIN" / "LOCATING…" — the quiet one. A transparent fill with the
+         card's own ink softened for the outline, so it reads as secondary *on the dark card* rather
+         than borrowing the page's outline colour, which would be invisible there. -->
+    <style name="PetCare.AddPlace.GpsButton.Outline" parent="PetCare.AddPlace.GpsButton">
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="strokeColor">@color/gps_card_button_stroke</item>
+        <item name="strokeWidth">@dimen/gps_card_button_stroke</item>
+        <item name="android:textColor">@color/on_gps_card</item>
+        <item name="rippleColor">@color/on_gps_card_muted</item>
+    </style>
+
+    <!-- "USE DEMO LOCATION" — the way past a refused permission, in the accent so it reads as the
+         offer it is rather than as an admission of failure. -->
+    <style name="PetCare.AddPlace.GpsButton.Demo" parent="PetCare.AddPlace.GpsButton">
+        <item name="backgroundTint">@color/accent_yellow</item>
+        <item name="android:textColor">@color/on_accent_yellow</item>
     </style>
 
     <!-- ~~~~~~~~~~ The shared save fields ~~~~~~~~~~ -->

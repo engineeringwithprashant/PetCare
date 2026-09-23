@@ -343,35 +343,20 @@
     <color name="on_nav_badge_active_dark">@color/accent_yellow</color>
 
     <!-- ============================== Places tab ==============================
-         The dark distance strip at the top of the Places tab, and the "open now" pill.
+         The app's shared dark-panel pair, and the "open now" pill.
 
          **Single values rather than light/dark pairs,** for the same reason as the pet cards and the
-         bottom bar above: the strip is a dark panel in *both* themes. It is a small chart — a line,
-         ticks and chips — and a chart reads most clearly as light marks on a dark ground; flipping it
-         to dark marks on white in light mode would make it one more white card among several, and the
-         yellow chip for the featured place would lose most of its contrast. -->
+         bottom bar above: these colour panels that are dark in *both* themes. They are named for the
+         Places tab because its distance strip was the first thing to use them; that strip has since
+         been replaced by the map card, but the two values below are now the app's standard dark-card
+         ground and its muted ink on it, borrowed by the Expenses total, the Home "next up" card, the
+         Profile card and the locked-out sign-in screen — which is why they stay. -->
 
-    <!-- The strip's ground — the same near-black as the bottom bar, so the two dark elements on the
-         page read as one family. -->
+    <!-- The dark-panel ground — the same near-black as the bottom bar, so every dark element on a
+         page reads as one family. -->
     <color name="places_strip_ground">#17180F</color>
-    <!-- Small labels on the strip ("GEOTAGGED · BY DISTANCE", tick labels): quiet but legible on the
-         ground, measuring about 6:1. -->
+    <!-- Small labels on that ground: quiet but legible, measuring about 6:1. -->
     <color name="places_strip_muted">#9A998A</color>
-    <!-- The helper sentence under the axis. A step brighter than the labels because it is a sentence
-         to be read, not a caption to be glanced at. -->
-    <color name="places_strip_text">#C9C8B8</color>
-    <!-- The axis line, its ticks, and the stems of chips that are not featured. Deliberately dim: the
-         chips are the content, the line only the scale they sit on. -->
-    <color name="places_strip_axis">#4D4E40</color>
-    <!-- An axis chip for a place that is not featured: a warm off-white, so the one yellow chip is
-         unmistakably the featured place. Its text is on_accent_yellow, which is as legible here. -->
-    <color name="places_axis_chip">#F2EFE3</color>
-    <!-- The "home" dot. Blue, the one non-palette colour on the screen, because a blue dot in a halo
-         is the universal "you are here" mark from every maps app — recognition is worth more here
-         than palette purity. The halo is the same blue at about a third opacity. -->
-    <color name="places_home_dot">#3D8BFF</color>
-    <color name="places_home_dot_halo">#553D8BFF</color>
-
     <!-- The "OPEN NOW" pill on the featured place. Green, because open/closed is a status and green is
          what "open" looks like on every shop door and maps listing. A fill with near-black text, like
          the accent, so it works unchanged on a white card and a charcoal one. -->
@@ -572,57 +557,64 @@
     <color name="password_rule_met">@color/open_now_container</color>
 
     <!-- ============================== "Add a place" screen ==============================
-         The sub-screen reached from the Places tab, where a place is saved by searching for it, by
-         dropping a pin on a map, or from the device's current position.
+         The sub-screen reached from the Places tab, where a place is saved from the device's GPS,
+         and the map card the Places tab itself now leads with.
 
          Two groups, split by the same rule the rest of this file follows. The first are light/dark
          *pairs* exposed through theme attributes (see attrs.xml), because they sit on the page and
-         must follow it. The second are single values, because the things they colour are dark panels
-         or universally recognised marks that look the same in either theme — exactly the reasoning
-         behind the Places strip and the bottom bar above. -->
+         must follow it. The second are single values, because the things they colour sit on a map or
+         on a dark panel and look the same in either theme — exactly the reasoning behind the bottom
+         bar above. -->
 
-    <!-- The map's ground. A pale sage by day and a deep slate by night: the map is a surface being
-         drawn *on*, so unlike the distance strip it does follow the theme — a bright green panel on
-         the near-black page would be the loudest thing in the app. -->
-    <color name="pin_map_ground_light">#DFE5D8</color>
-    <color name="pin_map_ground_dark">#15191A</color>
+    <!-- The ground a map card shows *while it loads*, on both the Places tab and this screen. A pale
+         sage by day and a deep slate by night: the map is a surface being drawn on, so it follows the
+         theme — a bright panel on the near-black page would be the loudest thing in the app, and a
+         white flash before the tiles arrive is exactly what this colour exists to prevent. Used by
+         the same card the WebView sits in; see MapEmbedView. -->
+    <color name="map_ground_light">#DFE5D8</color>
+    <color name="map_ground_dark">#15191A</color>
 
-    <!-- The 30dp grid ruled over that ground: the app's ink at 6% by day, white at 5% by night. Both
-         are deliberately *almost* invisible — the grid exists to say "this is a map you can move a pin
-         on", not to be read. Written as alpha-on-colour here rather than as an opacity on the view,
-         because the view it is drawn on also carries the marker, which must stay solid. -->
-    <color name="pin_map_grid_light">#0F1F1B13</color>
-    <color name="pin_map_grid_dark">#0DFFFFFF</color>
+    <!-- The "you are here" dot: on the map placeholder, on the current-location card, and in the
+         status chip over the live map.
 
-    <!-- The wash behind the search result the user has chosen. A pale cream by day and a warm
-         near-black by night — a tint of the accent in each case, quiet enough that the accent
-         *border* around the card is still what marks it as chosen. -->
-    <color name="place_result_selected_light">#FFFBDF</color>
-    <color name="place_result_selected_dark">#232320</color>
-
-    <!-- The "you are here" dot on the map and the matching dot on the current-location card.
-
-         Blue in both themes, and the same blue as the Places tab's home dot for the same reason given
-         there: a blue dot in a halo is the universal "you are here" mark, and recognition is worth
-         more than palette purity. A white ring separates it from whichever ground it lands on. -->
+         Blue in both themes, and the same blue the Places tab has always used for the same reason: a
+         blue dot in a halo is the universal "you are here" mark, and recognition is worth more than
+         palette purity. A white ring separates it from whichever ground it lands on. -->
     <color name="here_dot">#2E7DFF</color>
     <color name="here_dot_ring">#FFFFFF</color>
-    <color name="here_dot_halo">#382E7DFF</color>
 
-    <!-- "TAP OR DRAG TO MOVE", the hint pill in the map's bottom-left corner. A translucent near-black
-         with pale ink, fixed in both themes: it sits on the map, not on the page, and the map's two
-         grounds are far enough apart that a theme-following pill would be unreadable on one of them. -->
-    <color name="pin_map_hint_ground">#B814130F</color>
-    <color name="on_pin_map_hint">#F5F2E8</color>
+    <!-- The status chip's dot when there is *no* fix — permission refused, or the attempt failed. A
+         warm coral rather than a red: this is a condition to resolve, not an error the user caused,
+         and the screen still works through the demo location beside it. -->
+    <color name="gps_status_unavailable">#FF8A6B</color>
 
-    <!-- The current-location card. Dark in both themes, like the distance strip it shares the screen's
-         lineage with: it is a single strong statement — "this is where you are" — and a white card
-         would make it one more field in the form. The muted ink is a solid value rather than the light
-         ink at reduced opacity, which is the rule this screen follows throughout. -->
+    <!-- The translucent near-black behind anything laid *over* a map — the Places tab's name pill and
+         the Add a place screen's status chip — with its pale ink. Fixed in both themes rather than
+         following the page: these sit on Google's tiles, not on the app's surface, and a light pill
+         would vanish into a map that is pale by day and inverted-pale by night.
+
+         One value for both, at about 80%: translucent enough that the map reads through it as ground,
+         opaque enough that the tiles behind never compete with the text on it. -->
+    <color name="map_overlay_ground">#CC14130F</color>
+    <color name="on_map_overlay">#F5F2E8</color>
+
+    <!-- The map's secondary action ("GOOGLE MAPS"), a solid near-black capsule beside the accent
+         "DIRECTIONS". Fixed in both themes for the same reason as the overlays above. -->
+    <color name="map_action_secondary">#14130F</color>
+    <color name="on_map_action_secondary">#F5F2E8</color>
+
+    <!-- The current-location card. Dark in both themes: it is a single strong statement — "this is
+         where you are" — and a white card would make it one more field in the form. The muted ink is
+         a solid value rather than the light ink at reduced opacity, which is the rule this screen
+         follows throughout. -->
     <color name="gps_card_ground">#14130F</color>
     <color name="on_gps_card">#F5F2E8</color>
     <color name="on_gps_card_muted">#C7F5F2E8</color>
-    <!-- The tinted well the blue dot sits in on that card: the same blue at about a fifth. -->
+    <!-- The outline on the card's "Refresh location" pill — the card's own ink, softened, so the
+         quiet action reads as secondary to the accent "Use demo location" that can sit beside it. -->
+    <color name="gps_card_button_stroke">#66F5F2E8</color>
+    <!-- The tinted well the blue dot sits in, on the card and on the map placeholder: the same blue
+         at a little under a fifth. -->
     <color name="gps_card_dot_well">#2E2E7DFF</color>
 
 </resources>

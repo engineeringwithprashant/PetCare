@@ -343,11 +343,26 @@
     <dimen name="expenses_card_spacing">12dp</dimen>
 
     <!-- ================================= Places tab =================================
-         The distance strip, the featured place card and the saved-place rows. -->
+         The map card, the featured place card and the saved-place rows. -->
 
-    <!-- The distance axis inside the dark strip. Tall enough for two staggered lanes of category chips
-         above the line and a row of tick labels below it — see DistanceAxisView.onMeasure. -->
-    <dimen name="places_axis_height">104dp</dimen>
+    <!-- The map card at the top of the tab. Tall enough that the street the place sits on is legible
+         with the two overlays laid over it, and short enough that the featured card below it is still
+         on screen on a small phone — which is the pairing the tab is read as. -->
+    <dimen name="places_map_height">280dp</dimen>
+    <!-- How far the pill and the two buttons sit in from the map card's edges. One figure for all
+         four sides, so the overlays read as a consistent frame around the map rather than as three
+         separately placed objects. -->
+    <dimen name="places_map_overlay_inset">12dp</dimen>
+    <!-- The overlay pill naming the selected place, and the two map buttons under it. -->
+    <dimen name="places_map_pill_padding_horizontal">11dp</dimen>
+    <dimen name="places_map_pill_padding_vertical">8dp</dimen>
+    <dimen name="places_map_pill_text_size">9.5sp</dimen>
+    <dimen name="places_map_action_padding_horizontal">14dp</dimen>
+    <dimen name="places_map_action_padding_vertical">13dp</dimen>
+    <dimen name="places_map_action_text_size">10.5sp</dimen>
+    <!-- Deeper than the app's usual card lift. These capsules sit on map tiles rather than on a flat
+         surface, and a shallow shadow is lost against street detail. -->
+    <dimen name="places_map_action_elevation">6dp</dimen>
     <!-- The rounded-square category badge on a saved-place row ("Vet", "Grm"). A rounded square
          rather than a circle, so it echoes the header's monogram rather than a pet's round photo. -->
     <dimen name="places_badge_size">40dp</dimen>
@@ -852,10 +867,10 @@
     <dimen name="recovery_code_index_width">22dp</dimen>
 
     <!-- ============================== "Add a place" screen ==============================
-         The sub-screen reached from the Places tab. Its metrics come straight from the design
-         (design/Map 1–3.png): a 36dp back disc, a 240dp map, and the app's usual radius scale —
-         28dp on the large cards, 18–20dp on small ones, 16dp on inputs and a capsule on everything
-         pill-shaped. -->
+         The sub-screen reached from the Places tab, where a place is saved from the device's GPS.
+         Its metrics come straight from the design (design/New Map 2.png): a 36dp back disc, a 250dp
+         live map, and the app's usual radius scale — 28dp on the large cards, 20dp on the summary,
+         16dp on inputs and a capsule on everything pill-shaped. -->
 
     <!-- The header: the round back button, and the heading beside it. -->
     <dimen name="add_place_back_button_size">36dp</dimen>
@@ -864,63 +879,44 @@
     <!-- The gap between the heading and the sentence under it, from the design. -->
     <dimen name="add_place_subtitle_gap">6dp</dimen>
 
-    <!-- The three-way method picker. Taller than the profile screen's two-way toggle because its
-         labels are words rather than single units, and each of the three is a 1/3-width touch
-         target that has to stay above the 44dp minimum in the other direction. -->
-    <dimen name="add_place_method_height">46dp</dimen>
-    <dimen name="add_place_method_text_size">10.5sp</dimen>
+    <!-- ~~~~~~~~~~ The live GPS map ~~~~~~~~~~ -->
 
-    <!-- A search result card: its rounded square category glyph, and the card around it. -->
-    <dimen name="add_place_result_corner_radius">18dp</dimen>
-    <dimen name="add_place_result_padding">14dp</dimen>
-    <dimen name="add_place_result_glyph_size">36dp</dimen>
-    <dimen name="add_place_result_glyph_corner_radius">12dp</dimen>
-    <dimen name="add_place_result_glyph_text_size">8.5sp</dimen>
-    <dimen name="add_place_result_name_text_size">13.5sp</dimen>
-    <dimen name="add_place_result_address_text_size">10sp</dimen>
-    <dimen name="add_place_result_spacing">10dp</dimen>
-    <!-- The dashed "nothing matched" card. A dash long enough to read as a dash at a hairline
-         width, with a gap of the same size so the edge reads as evenly broken. -->
-    <dimen name="add_place_empty_dash_length">6dp</dimen>
-
-    <!-- ~~~~~~~~~~ The pin map ~~~~~~~~~~ -->
-    <dimen name="pin_map_height">240dp</dimen>
-    <dimen name="pin_map_corner_radius">28dp</dimen>
-    <!-- The spacing of the ruled grid. Fixed rather than proportional, so the squares stay square
-         whatever width the phone gives the map. -->
-    <dimen name="pin_map_grid_step">30dp</dimen>
-    <!-- The grid's line weight. A true hairline: the design rules it with a 1px line, and at any
-         heavier weight a 30dp grid stops being texture and starts being graph paper. -->
-    <dimen name="pin_map_grid_hairline">1dp</dimen>
-    <!-- The "you are here" dot: the disc, its white ring and the soft halo outside it. -->
-    <dimen name="pin_map_here_dot_size">13dp</dimen>
-    <dimen name="pin_map_here_ring_width">2.5dp</dimen>
-    <dimen name="pin_map_here_halo_width">6dp</dimen>
-    <!-- The draggable marker: a label pill over a stem over a dot. -->
-    <dimen name="pin_marker_label_corner_radius">11dp</dimen>
-    <dimen name="pin_marker_label_padding_horizontal">10dp</dimen>
-    <dimen name="pin_marker_label_padding_vertical">7dp</dimen>
-    <dimen name="pin_marker_label_text_size">9sp</dimen>
-    <dimen name="pin_marker_stem_width">2dp</dimen>
-    <dimen name="pin_marker_stem_height">12dp</dimen>
-    <dimen name="pin_marker_dot_size">9dp</dimen>
-    <dimen name="pin_marker_dot_stroke">2dp</dimen>
-    <!-- The hint pill over the map's bottom-left corner. -->
-    <dimen name="pin_map_hint_inset">12dp</dimen>
-    <dimen name="pin_map_hint_padding_horizontal">10dp</dimen>
-    <dimen name="pin_map_hint_padding_vertical">6dp</dimen>
-    <dimen name="pin_map_hint_text_size">9sp</dimen>
-    <!-- The coordinate readout under the map. -->
-    <dimen name="pin_readout_text_size">10sp</dimen>
+    <!-- The map showing the current fix. A little shorter than the Places tab's, because this screen
+         has a long form under it and the map is confirmation of one point rather than something to
+         explore. -->
+    <dimen name="gps_map_height">250dp</dimen>
+    <!-- The status chip in the map's top-left corner ("LIVE GPS", "LOCATING…", "NO GPS FIX"): its
+         inset from the corner, its own padding, the coloured dot in front of the label. -->
+    <dimen name="gps_map_chip_inset">12dp</dimen>
+    <dimen name="gps_map_chip_padding_horizontal">10dp</dimen>
+    <dimen name="gps_map_chip_padding_vertical">7dp</dimen>
+    <dimen name="gps_map_chip_text_size">9sp</dimen>
+    <dimen name="gps_map_chip_dot_size">7dp</dimen>
+    <!-- The placeholder shown in the map's place before a fix: a blue dot in a tinted well, over a
+         line of explanation. -->
+    <dimen name="gps_map_placeholder_well_size">52dp</dimen>
+    <dimen name="gps_map_placeholder_dot_size">14dp</dimen>
+    <dimen name="gps_map_placeholder_text_size">12.5sp</dimen>
+    <!-- The white ring around the "you are here" dot, wherever it appears. Thick enough to separate
+         the disc from a pale ground, thin enough to leave most of a 13dp dot blue. -->
+    <dimen name="gps_dot_ring_width">2.5dp</dimen>
 
     <!-- ~~~~~~~~~~ The current-location card ~~~~~~~~~~ -->
     <dimen name="gps_card_corner_radius">28dp</dimen>
     <dimen name="gps_card_padding">18dp</dimen>
-    <dimen name="gps_card_dot_well_size">52dp</dimen>
-    <dimen name="gps_card_dot_size">14dp</dimen>
+    <!-- The dot and the well it sits in. Smaller than the map placeholder's, because on the card it
+         is a status light beside a line of text rather than the only thing on screen. -->
+    <dimen name="gps_card_dot_well_size">46dp</dimen>
+    <dimen name="gps_card_dot_size">13dp</dimen>
     <dimen name="gps_card_label_text_size">9.5sp</dimen>
     <dimen name="gps_card_area_text_size">14sp</dimen>
     <dimen name="gps_card_coordinates_text_size">10sp</dimen>
+    <!-- The pills under the card's text: "Refresh location", and "Use demo location" when there is
+         no fix to be had. Capsules the height of a comfortable touch target. -->
+    <dimen name="gps_card_button_height">38dp</dimen>
+    <dimen name="gps_card_button_padding_horizontal">14dp</dimen>
+    <dimen name="gps_card_button_text_size">9.5sp</dimen>
+    <dimen name="gps_card_button_stroke">1.5dp</dimen>
 
     <!-- ~~~~~~~~~~ The shared save fields ~~~~~~~~~~ -->
     <dimen name="add_place_name_text_size">14sp</dimen>

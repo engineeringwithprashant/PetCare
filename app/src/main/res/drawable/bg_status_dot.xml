@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The small coloured dot in the status chip over the live map ("● LIVE GPS", "● LOCATING…",
+    "● NO GPS FIX").
+
+    Deliberately colourless here: the fill is a placeholder that AddPlaceFragment tints from code,
+    because on this chip the *colour is the status* — blue for a live or demo fix, the accent while a
+    fix is being looked for, coral when there is none. Three static drawables would say the same
+    thing three times and let one of them drift.
+
+    No ring, unlike bg_gps_dot: at 7dp across, a 2.5dp ring would leave almost no colour to see.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <solid android:color="@color/here_dot" />
+
+</shape>

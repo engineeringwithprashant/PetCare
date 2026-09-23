@@ -1293,19 +1293,17 @@
          the note on the other nav_ strings. -->
     <string name="nav_places">Places</string>
 
-    <!-- The dark distance strip. The middle dot is the design's separator, used the same way in the
-         place subtitles below. -->
-    <string name="places_strip_label">Geotagged · by distance</string>
-    <!-- %1$s is a formatted distance such as "2 km". -->
-    <string name="places_strip_within">within %1$s</string>
-    <!-- The label under the blue origin dot on the axis. Lower case, like the tick labels beside it. -->
-    <string name="places_axis_home">home</string>
-    <string name="places_strip_help">Walking distance from home. Each place keeps its GPS geotag. Open it in your maps app for directions.</string>
-    <!-- Shown in place of the axis when location access has not been granted. -->
-    <string name="places_strip_no_permission">Allow location access to see how far each saved place is. Every place still keeps its GPS geotag for directions.</string>
-    <!-- Shown when access is granted but the phone has not produced a location yet. -->
-    <string name="places_strip_waiting_for_fix">Finding your location… If distances do not appear, check that location is switched on.</string>
-    <string name="places_allow_location">Allow location</string>
+    <!-- The map card. The pill over the map names the selected place and, when the phone's position
+         is known, how far away it is. The middle dot is the design's separator, used the same way in
+         the place subtitles below. %1$s is the place name, %2$s a distance such as "1.2 km". -->
+    <string name="places_map_pill">%1$s · %2$s</string>
+    <!-- The two links over the map's foot. The arrow is the conventional "opens outside the app"
+         mark; "Google maps" needs none because its name already says where it goes. -->
+    <string name="places_map_directions">Directions ↗</string>
+    <string name="places_map_open">Google maps</string>
+    <!-- Spoken description of the map itself. %1$s is the selected place's name. -->
+    <string name="cd_places_map">Map</string>
+    <string name="cd_places_map_at">Map showing %1$s</string>
 
     <!-- Category filter chips. -->
     <string name="places_filter_all">All</string>
@@ -1321,9 +1319,12 @@
     <string name="place_hours_unknown">Hours not set</string>
     <string name="place_phone_unknown">Not saved</string>
     <string name="place_gps_tag">GPS tag saved</string>
-    <!-- %1$s is a distance such as "1.2 km". "walk" because the strip measures walking-scale
-         distances from home; the figure is a straight line, and the maps app plans the real route. -->
+    <!-- %1$s is a distance such as "1.2 km". "walk" because these are walking-scale distances; the
+         figure is a straight line, and the maps app plans the real route. -->
     <string name="place_gps_tag_with_distance">GPS tag saved · %1$s walk</string>
+    <!-- The same chip when location access has not been granted, which is the one place on this tab
+         that can still ask for it — see PlacesFragment.renderFeatured. -->
+    <string name="place_gps_tag_allow_location">GPS tag saved · tap for distance</string>
     <!-- The arrow is the conventional "opens outside the app" mark. -->
     <string name="places_open_in_maps">Open in maps ↗</string>
     <string name="places_book_visit">Book a visit</string>
@@ -1339,14 +1340,8 @@
     <string name="places_empty_title">No places saved yet</string>
     <string name="places_empty_message">Save your vet, groomer, favourite park or pet shop with its GPS location, and see how far each one is.</string>
 
-    <!-- The distance axis's spoken description, since TalkBack cannot read a drawing. %1$s is a list
-         of cd_places_axis_entry items. -->
-    <string name="cd_places_axis">Distances from home: %1$s</string>
-    <!-- %1$s is a place name, %2$s its distance. -->
-    <string name="cd_places_axis_entry">%1$s, %2$s</string>
-
     <!-- Handing off to other apps. -->
-    <string name="places_no_maps_app">No maps app is installed to show directions.</string>
+    <string name="places_no_maps_app">No app on this device can open a map link.</string>
     <string name="places_no_dialer">No app on this device can make phone calls.</string>
 
     <!-- "Book a visit" — creating a vet-visit care task prefilled with the place. -->
@@ -1905,72 +1900,85 @@
     <string name="change_password_same">That is the password you already have.</string>
 
     <!-- ================================ "Add a place" ================================
-         The sub-screen reached from "+ ADD PLACE" in the Places tab's "Saved places" heading. A place
-         can be saved from anywhere: by searching for it, by dropping a pin on the map, or from the
-         device's current position. Standing at the place is a convenience, never a requirement. -->
+         The sub-screen reached from "+ ADD PLACE" in the Places tab's "Saved places" heading.
+
+         The device's GPS is the *only* source of a place's position here: the user is standing at the
+         vet, the groomer or the park, and the screen's whole job is to turn that into a saved record
+         in two taps. When there is no fix to be had — permission refused, or no signal — the demo
+         location below lets the flow be walked through anyway. -->
 
     <!-- The entry point, and the screen's own header. -->
     <string name="places_add_place_pill">+ Add place</string>
     <string name="cd_places_add_place">Add a place</string>
     <string name="add_place_header_title">Add place</string>
     <string name="add_place_heading">Add a place</string>
-    <string name="add_place_subheading">Save it from anywhere — no need to be standing there.</string>
+    <string name="add_place_subheading">Standing at the vet, groomer or park? Save it in two taps.</string>
     <string name="cd_add_place_back">Back to places</string>
 
-    <!-- The three ways of fixing a place's position. All three are available at all times. -->
-    <string name="add_place_method_search">Search</string>
-    <string name="add_place_method_pin">Drop pin</string>
-    <string name="add_place_method_here">I\'m here</string>
+    <!-- The live map, and the status chip in its corner. The chip's label is the one-glance answer to
+         "is this position real?", which is why a demo fix says so rather than passing for a live one. -->
+    <string name="cd_add_place_map">Map of your current position</string>
+    <string name="add_place_gps_chip_live">Live GPS</string>
+    <string name="add_place_gps_chip_demo">Demo location</string>
+    <string name="add_place_gps_chip_locating">Locating…</string>
+    <string name="add_place_gps_chip_none">No GPS fix</string>
+    <!-- Shown in the map's place when there is no fix to draw one at. -->
+    <string name="add_place_map_locating">Finding your position…</string>
+    <string name="add_place_map_unavailable">Location is off for this app. Turn it on, or use the demo location to try the flow.</string>
 
-    <!-- Method 1: search by name or address. -->
-    <string name="add_place_search_label">Name or address</string>
-    <string name="add_place_search_hint">e.g. animal hospital, Jhamsikhel</string>
-    <string name="add_place_no_results">Nothing matched. Try fewer words, or switch to Drop pin and mark the spot by hand.</string>
-    <!-- Spoken for a result row: name, address, distance. -->
-    <string name="cd_add_place_result">%1$s, %2$s, %3$s</string>
-
-    <!-- Method 2: drop or drag a pin. -->
-    <string name="add_place_pin_hint">Tap or drag to move</string>
-    <string name="add_place_pin_new">New place</string>
-    <!-- The live coordinate readout under the map: "27.6714° N, 85.3181° E". -->
-    <string name="add_place_coordinates">%1$s° N, %2$s° E</string>
-    <string name="add_place_pin_distance">%1$s from home</string>
-    <string name="cd_add_place_map">Map. Tap or drag to place the marker.</string>
-
-    <!-- Method 3: the device's current position. The only method that reads the GPS. -->
+    <!-- The dark current-location card: its label, the title line, and the meta line under it. -->
     <string name="add_place_here_label">Current location</string>
-    <string name="add_place_here_locating">Finding your location…</string>
+    <string name="add_place_here_found">You are here</string>
+    <string name="add_place_here_demo">Jhamsikhel, Lalitpur (demo)</string>
+    <string name="add_place_here_locating">Finding your position…</string>
     <string name="add_place_here_unknown">Location unavailable</string>
-    <!-- Shown when there is a fix but the geocoder could put no name to it — off a mapped road, or
-         with no network to ask. The coordinates underneath are still exact. -->
-    <string name="add_place_here_area_unknown">Unnamed area</string>
-    <!-- "27.6743° N, 85.3094° E · ±8 m accuracy". -->
-    <string name="add_place_here_accuracy">%1$s · ±%2$s m accuracy</string>
-    <string name="add_place_here_denied">Location access is off, so this method has nothing to report. Search or drop a pin instead — either saves the place just as well.</string>
-    <string name="add_place_here_failed">Could not get a location fix. Search for the place or drop a pin instead.</string>
+    <string name="add_place_here_locating_meta">Asking the device for a GPS fix</string>
+    <!-- The coordinate pair: "27.6743° N, 85.3094° E". -->
+    <string name="add_place_coordinates">%1$s° N, %2$s° E</string>
+    <!-- The full meta line: coordinates, the device's own accuracy estimate, and how far the fix is
+         from the home reference point. %1$s is the coordinates, %2$s the accuracy in whole metres,
+         %3$s a distance such as "0.4 km". -->
+    <string name="add_place_here_meta">%1$s · ±%2$s m · %3$s from home</string>
+    <!-- The same line without the accuracy, for a fix whose provider reported none — see
+         AddPlaceFragment.formatFixDetails for why it is dropped rather than printed as "±0 m". -->
+    <string name="add_place_here_meta_no_accuracy">%1$s · %2$s from home</string>
 
-    <!-- The save fields, shared by all three methods. -->
+    <!-- Why there is no fix. Each is written as a condition with a way forward, not as an error: the
+         demo location beside them means the screen is never a dead end. -->
+    <string name="add_place_gps_denied">Location permission was denied</string>
+    <string name="add_place_gps_failed">Could not get a GPS fix — try again outdoors</string>
+    <string name="add_place_gps_unsupported">This device has no location support</string>
+
+    <!-- The card's buttons. "Refresh location" once there is something to refresh, "Try again" after
+         a failure, "Locating…" while one is in flight — the same button, saying what it will do. -->
+    <string name="add_place_gps_refresh">Refresh location</string>
+    <string name="add_place_gps_retry">Try again</string>
+    <string name="add_place_gps_locating_button">Locating…</string>
+    <string name="add_place_gps_use_demo">Use demo location</string>
+
+    <!-- The save fields. -->
     <string name="add_place_name_label">Place name</string>
     <string name="add_place_name_hint">e.g. Patan Animal Hospital</string>
     <string name="add_place_category_label">Category</string>
     <string name="add_place_note_label">Note</string>
     <string name="add_place_note_hint">e.g. Ask for Dr. Shrestha</string>
+    <!-- The save button says what it is waiting for rather than only being disabled, so a user who
+         cannot press it knows which of the two conditions is missing. -->
     <string name="add_place_save">Save place</string>
+    <string name="add_place_save_waiting">Waiting for location</string>
 
     <!-- The summary card: what will be saved on the first line, where its position came from on the
          second. The two lines are joined with a newline by the fragment. -->
     <string name="add_place_summary_untitled">Untitled place</string>
     <string name="add_place_summary_line">%1$s — %2$s</string>
-    <string name="add_place_summary_search_pending">Pick a search result or type a name</string>
-    <string name="add_place_summary_search">Found by search</string>
-    <string name="add_place_summary_pin">Pinned at %1$s</string>
-    <string name="add_place_summary_here">Current location · %1$s</string>
+    <string name="add_place_summary_geotagged">Geotagged at %1$s</string>
+    <string name="add_place_summary_waiting">Waiting for a GPS fix</string>
 
     <!-- What a saved place carries when it was saved from this screen rather than typed into the full
          form: the "saved by you" provenance shown beside its category, and the note that stands in
          when the user left the note box empty. -->
     <string name="add_place_saved_meta">saved by you</string>
-    <string name="add_place_default_note">Saved while planning — add hours and a phone number any time.</string>
+    <string name="add_place_default_note">Saved on site — add hours and a phone number any time.</string>
 
     <!-- The confirmation on the Places tab once the new place is in the list. The quotes are curly on
          purpose: they are the typographic ones the design uses. -->
