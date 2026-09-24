@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One expense card on the Money tab: a grey category badge ("MED"), the title in bold over
-    "Medication · Sep 12, 2026", and the amount right-aligned.
+    One expense card on the Money tab: a grey category badge holding that category's emoji (💊), the
+    title in bold over "Medication · Sep 12, 2026", and the amount right-aligned.
+
+    The badge is a symbol rather than the "MED" abbreviation it used to show: the subtitle beneath
+    already writes the category out, so the badge earns its space by being recognised instead of
+    read. ExpenseAdapter sets which emoji; see ui/common/ExpenseLabels.kt.
 
     A clickable MaterialCardView, so the whole card is one touch target with a ripple following its
     rounded corners; tapping opens the expense's edit screen, and swiping it left deletes it with an
@@ -31,7 +35,7 @@
         <TextView
             android:id="@+id/expenseBadgeText"
             style="@style/PetCare.Expenses.Badge"
-            tools:text="MED" />
+            tools:text="💊" />
 
         <LinearLayout
             android:layout_width="0dp"

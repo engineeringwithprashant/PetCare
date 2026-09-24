@@ -62,16 +62,32 @@ class ReminderNotifier(private val context: Context) {
     }
 
     /**
-     * Shows the reminder for one task, naming the pet and what needs doing.
+     * Shows the reminder for one task, naming the pet, what needs doing, what to have to hand and
+     * anything the user wrote down about it.
      *
      * The notification's id is the task's own, so a reminder that is somehow posted twice replaces
      * itself rather than leaving the user two identical rows to dismiss.
      *
+     * **Why the supplies and notes are parameters rather than fields of [reminder].** That
+     * projection is read on every re-plan, which happens on any change to the tasks, routines or
+     * pets tables; carrying two free-text columns in it would mean re-registering alarms whenever a
+     * note was edited, for text no alarm depends on. This text is only ever needed at the moment one
+     * actually fires, and by then [com.prash.petcare.reminder.ReminderManager] has re-read the task
+     * row anyway to check it has not already been done. So it hands over what it has already got.
+     *
+     * @param requiredSupplies What the task needs — food brand, brush, medication — or null/blank if
+     *   the user did not say. Listed before the notes because it is the one thing that has to be
+     *   fetched *before* starting.
+     * @param notes Whatever else the user wrote about the task, or null/blank if nothing.
      * @return true if the notification was posted, false if the user has not granted notification
      *   access. The caller is not expected to do anything about a false — a refused permission is
      *   the user's decision, and the checklist inside the app still works exactly as before.
      */
-    fun notifyTaskDue(reminder: TaskReminder): Boolean {
+    fun notifyTaskDue(
+        reminder: TaskReminder,
+        requiredSupplies: String?,
+        notes: String?
+    ): Boolean {
         // From Android 13 posting a notification needs the user's permission, and without it
         // notify() is simply ignored. Checking first makes that explicit rather than silent.
         //
@@ -92,6 +108,8 @@ class ReminderNotifier(private val context: Context) {
 
         if (!isPermitted) return false
 
+        val body = buildBody(reminder, requiredSupplies, notes)
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             // Pet and task together in the title — "Bella: Morning meal". Both belong there rather
@@ -104,12 +122,13 @@ class ReminderNotifier(private val context: Context) {
                     reminder.taskTitle
                 )
             )
-            .setContentText(
-                context.getString(
-                    R.string.reminder_notification_text,
-                    formatTimeOfDay(context, reminder.timeOfDayMinutes)
-                )
-            )
+            // The whole body goes to both. A collapsed notification has room for one line and shows
+            // this one ellipsized; BigTextStyle is what lets the user pull it open and read the
+            // supplies and notes in full, which is the only way more than a line of text can ever be
+            // seen in the shade. Set unconditionally rather than only when there is extra text: with
+            // a single line the expanded form is identical, so the branch would buy nothing.
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setContentIntent(checklistPendingIntent(reminder.petId))
             // Dismisses the notification when it is tapped. Without this it would sit in the
             // shade after the user had already acted on it.
@@ -124,6 +143,41 @@ class ReminderNotifier(private val context: Context) {
 
         notificationManager.notify(notificationId(reminder.taskId), notification)
         return true
+    }
+
+    /**
+     * The notification's text: the time it is due, then what to bring, then the user's own note.
+     *
+     * One line each, in the order they are needed — you check the time, fetch the supplies, then
+     * read the instructions while doing it. The labels are the same "Needs:" and "Note:" the
+     * delegation message uses (see [com.prash.petcare.ui.checklist.buildDelegationMessage]), so the
+     * same task described to the user and described to a sitter reads the same way.
+     *
+     * Both extras are skipped when blank rather than shown empty: the user is not made to expand a
+     * notification to find "Note:" followed by nothing. A blank check, not just a null one, because
+     * a text field the user typed into and cleared stores "" rather than null.
+     */
+    private fun buildBody(
+        reminder: TaskReminder,
+        requiredSupplies: String?,
+        notes: String?
+    ): String = buildString {
+        append(
+            context.getString(
+                R.string.reminder_notification_text,
+                formatTimeOfDay(context, reminder.timeOfDayMinutes)
+            )
+        )
+
+        requiredSupplies?.takeIf { it.isNotBlank() }?.let { supplies ->
+            append("\n")
+            append(context.getString(R.string.reminder_notification_supplies, supplies.trim()))
+        }
+
+        notes?.takeIf { it.isNotBlank() }?.let { note ->
+            append("\n")
+            append(context.getString(R.string.reminder_notification_notes, note.trim()))
+        }
     }
 
     /** Removes a reminder already on screen — used when its task is no longer being reminded about. */

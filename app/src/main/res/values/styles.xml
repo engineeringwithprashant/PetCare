@@ -1671,18 +1671,18 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- The category badge on a saved-place row. The rounded square is bg_place_badge.xml; its fill
-         and text colour are set by SavedPlaceAdapter, since they depend on whether the row is the
-         featured place. Hidden from TalkBack: the row's own description already names the place. -->
+    <!-- The category badge on a saved-place row: the category's emoji in a rounded square
+         (bg_place_badge.xml). Its fill is set by SavedPlaceAdapter, since it depends on whether the
+         row is the featured place. Hidden from TalkBack: the row's own description already names the
+         place.
+
+         Sized like the expense badge, and for the same reason — see the note there. -->
     <style name="PetCare.Places.Badge" parent="">
         <item name="android:layout_width">@dimen/places_badge_size</item>
         <item name="android:layout_height">@dimen/places_badge_size</item>
         <item name="android:background">@drawable/bg_place_badge</item>
         <item name="android:gravity">center</item>
-        <item name="android:fontFamily">@font/ibm_plex_mono</item>
-        <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/category_badge_emoji_size</item>
         <item name="android:maxLines">1</item>
         <item name="android:importantForAccessibility">no</item>
     </style>
@@ -1767,18 +1767,20 @@
     <!-- "Medication · Sep 12, 2026" under an expense's title: the Places tab's meta line. -->
     <style name="PetCare.Expenses.Meta" parent="PetCare.Places.Meta" />
 
-    <!-- The rounded grey square holding a category abbreviation ("MED") on an expense card. Hidden
-         from TalkBack: the card's own description names the category in full. -->
+    <!-- The rounded grey square holding a category's emoji (💊) on an expense card. Hidden from
+         TalkBack: the card's own description names the category in full.
+
+         The text size is set explicitly rather than left to a text appearance, because the content
+         is now a symbol rather than a word: labelSmall is sized for three capitals and leaves an
+         emoji looking lost in a 44dp square. No font family either — an emoji is drawn from the
+         system's colour emoji font whatever face is asked for, so naming the mono face here would
+         only mislead the next reader. -->
     <style name="PetCare.Expenses.Badge" parent="">
         <item name="android:layout_width">@dimen/expenses_badge_size</item>
         <item name="android:layout_height">@dimen/expenses_badge_size</item>
         <item name="android:background">@drawable/bg_expense_badge</item>
         <item name="android:gravity">center</item>
-        <item name="android:fontFamily">@font/ibm_plex_mono</item>
-        <item name="fontFamily">@font/ibm_plex_mono</item>
-        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textSize">@dimen/category_badge_emoji_size</item>
         <item name="android:maxLines">1</item>
         <item name="android:importantForAccessibility">no</item>
     </style>

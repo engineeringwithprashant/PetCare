@@ -41,19 +41,36 @@ fun PlaceCategory.descriptionRes(): Int = when (this) {
 }
 
 /**
- * The three-or-four letter abbreviation in the small category badges and on the distance axis:
- * "Vet", "Grm", "Park", "Shop".
+ * The emoji that stands for a category: 🏥 vet, ✂️ grooming, 🌳 park, 🏪 store.
  *
- * Abbreviated because a badge is 40dp square and an axis chip has to fit between its neighbours —
- * "Grooming" at a legible size is wider than either.
+ * Shown in the small badge on a saved-place row, where it replaces the "Vet" / "Grm" / "Shop"
+ * abbreviations that used to be squeezed in there. A 40dp square has room for one idea, and a symbol
+ * is recognised without being read — see the note in strings.xml.
+ *
+ * The vet and grooming symbols are deliberately the same ones the spending categories use, so a vet
+ * is a 🏥 whether the user is looking at a place or at what they spent there.
  */
 @StringRes
-fun PlaceCategory.badgeRes(): Int = when (this) {
-    PlaceCategory.VET -> R.string.place_badge_vet
-    PlaceCategory.GROOMING -> R.string.place_badge_grooming
-    PlaceCategory.PARK -> R.string.place_badge_park
-    PlaceCategory.STORE -> R.string.place_badge_store
+fun PlaceCategory.emojiRes(): Int = when (this) {
+    PlaceCategory.VET -> R.string.place_emoji_vet
+    PlaceCategory.GROOMING -> R.string.place_emoji_grooming
+    PlaceCategory.PARK -> R.string.place_emoji_park
+    PlaceCategory.STORE -> R.string.place_emoji_store
 }
+
+/**
+ * The category as it appears where it is *chosen* — "🏥  Vet" on the filter and form chips, and in
+ * the dropdown of the edit form.
+ *
+ * The symbol alone would not do here: a chip row is a set of choices and each has to be readable as
+ * a word, so the emoji leads and the name follows. The badge on a row is the opposite case — the
+ * subtitle under the name already says "Vet clinic" — which is why that shows [emojiRes] by itself.
+ */
+fun PlaceCategory.emojiLabel(context: Context): String = context.getString(
+    R.string.category_emoji_label,
+    context.getString(emojiRes()),
+    context.getString(labelRes())
+)
 
 /**
  * "Vet clinic · Pulchowk" — what a place is and where. Falls back to the description alone when no

@@ -16,8 +16,8 @@ import com.prash.petcare.databinding.ItemExpenseBinding
 import com.prash.petcare.databinding.ItemExpenseCategoryTotalBinding
 import com.prash.petcare.databinding.ItemExpenseSectionHeaderBinding
 import com.prash.petcare.databinding.ItemExpenseSummaryBinding
-import com.prash.petcare.ui.common.abbreviationRes
 import com.prash.petcare.ui.common.colorRes
+import com.prash.petcare.ui.common.emojiRes
 import com.prash.petcare.ui.common.formatCurrency
 import com.prash.petcare.ui.common.formatStoredDate
 import com.prash.petcare.ui.common.labelRes
@@ -192,7 +192,9 @@ class ExpenseAdapter(
             // open whichever expense used to occupy this card.
             binding.root.setOnClickListener { onExpenseClick(expense) }
 
-            binding.expenseBadgeText.setText(expense.category.abbreviationRes())
+            // The category's emoji, not its name: the subtitle below already writes the category out
+            // in words, so the badge is free to be the fast-to-scan symbol of the pair.
+            binding.expenseBadgeText.setText(expense.category.emojiRes())
             binding.expenseTitleText.text = expense.title
             // "Medication · Sep 12, 2026". formatStoredDate reads the stored date in UTC and in the
             // locale's own medium style, so it is the day the user picked, written their way.

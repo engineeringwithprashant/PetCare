@@ -38,14 +38,34 @@
     <!-- Breathing room above the first item on a screen, under the app bar. -->
     <dimen name="content_top_padding">12dp</dimen>
 
-    <!-- Bottom padding on a scrolling list that has a floating action button over it, so the last
-         row can scroll clear of the button rather than finishing underneath it. Sized for the
-         button plus its margin — and now also for the bottom navigation bar sitting below that. -->
-    <dimen name="list_padding_bottom_fab">104dp</dimen>
+    <!--
+        The three values below all measure from the same thing: the floating bottom navigation bar's
+        footprint, which is **76dp** — 60dp of bar (46dp of tabs inside 7dp of padding above and
+        below, nav_tab_height + nav_bar_padding) plus the 16dp it floats above the bottom of the
+        window (nav_bar_margin_bottom).
 
-    <!-- Bottom padding for a scrolling list on a screen with no floating action button. Only the
-         navigation bar has to be cleared. -->
-    <dimen name="list_padding_bottom">24dp</dimen>
+        The bar is an overlay, not a row cut out of the screen: no fragment's height is reduced by
+        it, and the page is meant to be seen scrolling behind it — see the note on it in
+        activity_main.xml. So anything that must not come to *rest* underneath it — the last row of
+        a list, a button at the foot of a form, a floating action button — has to keep that 76dp
+        clear itself. These are the values that do it; nothing that has to clear the bar should
+        invent its own number.
+    -->
+
+    <!-- A floating action button's bottom margin. Lifted the bar's full footprint plus a small gap,
+         because the button floats over exactly the corner the bar occupies: at the usual 16dp it
+         sat behind the bar and could not be tapped at all. Its side margin stays screen_padding. -->
+    <dimen name="fab_margin_bottom">84dp</dimen>
+
+    <!-- Bottom padding on a scrolling list that has a floating action button over it, so the last
+         row can scroll clear of the button rather than finishing underneath it: the button's
+         raised margin (84dp) plus the 56dp button itself, plus a gap above it. -->
+    <dimen name="list_padding_bottom_fab">156dp</dimen>
+
+    <!-- Bottom padding for a scrolling list on a screen with no floating action button: only the
+         bar has to be cleared, so the footprint plus a gap. Used with clipToPadding="false", which
+         is what lets content scroll up *through* this space instead of stopping at its edge. -->
+    <dimen name="list_padding_bottom">92dp</dimen>
 
     <!-- ================================ Shape scale ================================
          The redesign's rounded-corner language, in three steps. Everything the user perceives as a
@@ -264,6 +284,10 @@
     <dimen name="task_check_button_size">40dp</dimen>
     <dimen name="task_check_icon_size">20dp</dimen>
     <dimen name="task_check_stroke_width">1.5dp</dimen>
+    <!-- The category emoji in front of a task's title. A shade larger than the title beside it, so it
+         reads as a symbol the eye can aim at rather than a character that wandered into the word. In
+         sp, like the title, so the two grow together when the user enlarges text. -->
+    <dimen name="task_category_emoji_size">18sp</dimen>
     <!-- Gap between task cards; tighter than between pet cards because these are rows of a list
          grouped under headers, and wide gaps would break the groups apart visually. -->
     <dimen name="task_card_spacing">10dp</dimen>
@@ -339,6 +363,11 @@
     <dimen name="expenses_legend_dot_corner_radius">3dp</dimen>
     <!-- The category badge on an expense card, and the gap between cards. -->
     <dimen name="expenses_badge_size">44dp</dimen>
+    <!-- How big the category emoji is drawn inside that badge and inside the saved-place one. In sp
+         rather than dp, like any other text, so it grows with the user's font-size setting instead
+         of staying stubbornly small on a phone set to large text. About half the badge, which leaves
+         the symbol reading as something sitting *in* a tile rather than filling it edge to edge. -->
+    <dimen name="category_badge_emoji_size">20sp</dimen>
     <dimen name="expenses_badge_corner_radius">12dp</dimen>
     <dimen name="expenses_card_spacing">12dp</dimen>
 

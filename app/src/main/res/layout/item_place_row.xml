@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    One row in the Places tab's "SAVED PLACES" list: a category badge, the name over what and where it
-    is, and the distance on the right.
+    One row in the Places tab's "SAVED PLACES" list: a category emoji badge, the name over what and
+    where it is, and the distance on the right.
 
     A clickable MaterialCardView, so the whole row is one touch target with a ripple that follows its
     rounded corners. Tapping features the place; a long press opens it for editing (SavedPlaceAdapter).
@@ -26,12 +26,15 @@
         android:orientation="horizontal"
         android:padding="@dimen/spacing_md">
 
-        <!-- "Vet", "Grm", "Park", "Shop". Colours set per row by the adapter. -->
+        <!-- The category's emoji — 🏥 vet, ✂️ grooming, 🌳 park, 🏪 shop — in place of the "Vet" /
+             "Grm" abbreviations this badge used to hold; the subtitle below already names the
+             category, so the badge is the symbol of the pair. Which emoji, and the tile's colour,
+             are set per row by SavedPlaceAdapter. -->
         <TextView
             android:id="@+id/placeBadge"
             style="@style/PetCare.Places.Badge"
             tools:backgroundTint="@color/accent_yellow"
-            tools:text="Vet" />
+            tools:text="🏥" />
 
         <!-- Name over subtitle. Width 0 + weight 1 makes this column absorb whatever the badge and
              distance leave, so a long name ellipsises instead of pushing the distance off the row. -->

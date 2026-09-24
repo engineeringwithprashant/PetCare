@@ -36,7 +36,7 @@ import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.SwipeActionCallback
 import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.bindOptions
-import com.prash.petcare.ui.common.labelRes
+import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.common.setUp
@@ -645,8 +645,11 @@ class ChecklistFragment : Fragment() {
      * uses a key no category or pet id can produce.
      */
     private fun renderFilters(state: ChecklistUiState) {
+        // Each category chip leads with its emoji — "🍖  Feeding", "🐾  Walk" — so the row is picked
+        // out by symbol rather than read word by word. "All" carries none: it is not a category but
+        // the absence of a filter, and giving it one would make it look like a ninth option.
         val categoryOptions = listOf(ChipOption(KEY_ALL, getString(R.string.tasks_filter_all_categories))) +
-            TaskCategory.entries.map { ChipOption(it.name, getString(it.labelRes())) }
+            TaskCategory.entries.map { ChipOption(it.name, it.emojiLabel(requireContext())) }
 
         binding.categoryChipGroup.bindOptions(
             options = categoryOptions,

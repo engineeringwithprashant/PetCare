@@ -790,6 +790,24 @@
     <string name="category_play">Play</string>
     <string name="category_other">Other</string>
 
+    <!-- The symbol shown in front of a care category's name, on the Tasks tab's filter chips and in
+         the task form's dropdown. The same idea as the spending and place emoji further down this
+         file, and the same two rules: all eight are from the original 2015 emoji set so none can
+         come out as an empty box on an older phone, and a category that exists in more than one of
+         the app's three lists keeps the same symbol in each — grooming is ✂️, medication 💊 and a vet
+         🏥 whether it is care being planned, a place being saved or money being recorded.
+
+         Not translatable: a picture is not language. -->
+    <string name="category_emoji_feeding" translatable="false">🍖</string>
+    <!-- Paw prints rather than a walking figure: the one doing the walking is the pet. -->
+    <string name="category_emoji_walk" translatable="false">🐾</string>
+    <string name="category_emoji_grooming" translatable="false">✂️</string>
+    <string name="category_emoji_medication" translatable="false">💊</string>
+    <string name="category_emoji_vet_visit" translatable="false">🏥</string>
+    <string name="category_emoji_training" translatable="false">🎓</string>
+    <string name="category_emoji_play" translatable="false">🎾</string>
+    <string name="category_emoji_other" translatable="false">📦</string>
+
     <!-- ============================= Routine schedules =============================
          Display names for the RepeatUnit enum, worded as the user would say them. -->
     <string name="schedule_daily">Every day</string>
@@ -1206,17 +1224,29 @@
     <!-- Joins an expense's category and date into one line, e.g. "Medication · Sep 12, 2026". -->
     <string name="expenses_row_subtitle_format">%1$s · %2$s</string>
 
-    <!-- The badge on each expense card. Three or four capitals, so every badge is roughly the same
-         width and the column of them reads as a set. -->
-    <string name="expense_abbr_food">FOOD</string>
-    <string name="expense_abbr_vet">VET</string>
-    <string name="expense_abbr_medication">MED</string>
-    <string name="expense_abbr_grooming">GRM</string>
-    <string name="expense_abbr_toys">TOY</string>
-    <string name="expense_abbr_accessories">ACC</string>
-    <string name="expense_abbr_insurance">INS</string>
-    <string name="expense_abbr_training">TRN</string>
-    <string name="expense_abbr_other">OTH</string>
+    <!-- The badge on each expense card, and the symbol shown beside the category's name wherever one
+         is chosen. A picture rather than the three-letter abbreviations ("MED", "GRM") this badge
+         used to carry: a column of emoji is told apart in one glance, where three capitals have to
+         be read, and the reader no longer has to learn what "ACC" stands for.
+
+         Emoji rather than drawn icons because they arrive in colour, need no artwork per category
+         and no dark-mode variant, and are the same symbol the user already sees everywhere else on
+         their phone. Every one chosen here is from the original 2015 emoji set, so it renders on the
+         oldest device the app supports (minSdk 24) rather than appearing as an empty box.
+
+         Not translatable: a picture is not language, and a translator given these would have nothing
+         to do but risk breaking them. -->
+    <string name="expense_emoji_food" translatable="false">🍖</string>
+    <string name="expense_emoji_vet" translatable="false">🏥</string>
+    <string name="expense_emoji_medication" translatable="false">💊</string>
+    <string name="expense_emoji_grooming" translatable="false">✂️</string>
+    <!-- A ball, not a teddy bear: the teddy is a 2018 emoji and would be a blank box on older
+         devices, and a ball is what most pet toys actually are. -->
+    <string name="expense_emoji_toys" translatable="false">🎾</string>
+    <string name="expense_emoji_accessories" translatable="false">🎒</string>
+    <string name="expense_emoji_insurance" translatable="false">🛡️</string>
+    <string name="expense_emoji_training" translatable="false">🎓</string>
+    <string name="expense_emoji_other" translatable="false">📦</string>
 
     <!-- The currency every amount is recorded and shown in: Nepalese rupees. Not translatable — the
          money is rupees in every language. Kept in step with CURRENCY_PREFIX in ExpenseLabels.kt. -->
@@ -1274,8 +1304,15 @@
          notification may show nothing else, and "Morning meal" alone would not say which animal.
          %1$s is the pet's name, %2$s the task's title. -->
     <string name="reminder_notification_title">%1$s: %2$s</string>
-    <!-- %1$s is the task's time of day, formatted to the device's 12- or 24-hour setting. -->
+    <!-- The body's first line. %1$s is the task's time of day, formatted to the device's 12- or
+         24-hour setting. -->
     <string name="reminder_notification_text">Due at %1$s</string>
+    <!-- The two further lines, each shown only when the task has that text. They are the same
+         labels the delegation message uses, so one task reads the same whether the user sees it in
+         a notification or a sitter reads it in a text message. Only visible once the notification
+         is expanded, which is all the room the shade gives. %1$s is the user's own words. -->
+    <string name="reminder_notification_supplies">Needs: %1$s</string>
+    <string name="reminder_notification_notes">Note: %1$s</string>
 
     <!-- Shown before the Android 13+ notification permission prompt, so the user is asked for
          something they have just been given a reason to want. See ChecklistFragment for why a
@@ -1362,12 +1399,23 @@
     <string name="place_category_grooming_description">Grooming</string>
     <string name="place_category_park_description">Park</string>
     <string name="place_category_store_description">Pet store</string>
-    <!-- Abbreviations on the small row badges and the distance axis chips (upper-cased there). Kept to
-         four letters or fewer so they fit a 40dp badge. -->
-    <string name="place_badge_vet">Vet</string>
-    <string name="place_badge_grooming">Grm</string>
-    <string name="place_badge_park">Park</string>
-    <string name="place_badge_store">Shop</string>
+    <!-- The badge on a saved-place row, and the symbol beside the category's name on the chips and in
+         the form's dropdown. These replace the "Vet" / "Grm" / "Shop" abbreviations the badge used to
+         show, for the reasons given on the expense emoji above — and the same rule applies: all four
+         are from the original emoji set, so none of them can come out as an empty box.
+
+         A hospital for the vet and a shop front for the store, matching the expense categories, so
+         one idea has one symbol across the whole app. -->
+    <string name="place_emoji_vet" translatable="false">🏥</string>
+    <string name="place_emoji_grooming" translatable="false">✂️</string>
+    <string name="place_emoji_park" translatable="false">🌳</string>
+    <string name="place_emoji_store" translatable="false">🏪</string>
+
+    <!-- Puts a category's emoji in front of its name — "💊  Medication" — for a chip or a dropdown
+         row, where the name is needed as well as the symbol. Two spaces, so the pair reads as a
+         symbol *and* a word rather than one run-together token. Not translatable: the emoji leads in
+         every language, and a translator could only reorder or lose it. -->
+    <string name="category_emoji_label" translatable="false">%1$s  %2$s</string>
     <!-- "Vet clinic · Pulchowk". %1$s is the category description, %2$s the area. -->
     <string name="place_subtitle_format">%1$s · %2$s</string>
     <!-- %1$s is a locale-formatted number. -->

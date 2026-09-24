@@ -134,12 +134,20 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Adds a task to this routine.
+
+         The bottom margin is fab_margin_bottom rather than the screen gutter: the button and the
+         floating bottom navigation bar are drawn over the same corner of the screen, and at the
+         usual 16dp the bar covered the button entirely. Only the bottom side is raised — the end
+         margin stays the standard gutter, so the button still lines up with the content beside
+         it. -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addTaskFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/screen_padding"
+        android:layout_marginEnd="@dimen/screen_padding"
+        android:layout_marginBottom="@dimen/fab_margin_bottom"
         android:contentDescription="@string/cd_add_task"
         app:srcCompat="@drawable/ic_add" />
 

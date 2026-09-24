@@ -49,6 +49,46 @@
          light colour and white on it measures around 1.5:1, far below the 4.5:1 text needs. -->
     <color name="on_accent_yellow">#1C1A05</color>
 
+    <!-- The ground the opening animation is played on — see the overlay in activity_main.xml and
+         Theme.PetCare.Splash in themes.xml.
+
+         It is the app's own cream page colour, the same #FFFBF3 as md_theme_light_background below.
+         Written out as its own value rather than pointed at that one because the two answer
+         different questions: that colour is "what is the page behind the app's content", this one is
+         "what is behind the opening animation", and the day the splash artwork changes only one of
+         them should move.
+
+         **It does two jobs, and the first is the one that matters most.** The system paints a
+         placeholder window before a single line of the app has run, and whatever colour that is, is
+         the first thing the user ever sees. Theme.PetCare.Splash pins it to this value, so the window
+         opens in the same cream the overlay then holds: nothing flashes, because nothing changes.
+
+         That holds while the system is in its light theme, which is the case this was asked to fix.
+         In dark mode the device repaints the launch window near-black regardless of what the app
+         asks for, and the app cannot decline it — the measurements and the two things tried are
+         recorded on Theme.PetCare.Splash in themes.xml, so nobody has to rediscover them.
+
+         **The second job is the moment before the first frame.** The overlay holds this colour from
+         the instant it is laid out until the decoder produces a picture, so it is what bridges the
+         launch window and the video. The two being the same colour is what makes that handover
+         nothing to look at.
+
+         It is deliberately *not* the animation's own ground, which is a bright yellow. Matching the
+         artwork would matter if the video were letterboxed, because then this would be the colour of
+         the bands around it — but the clip is scaled to *cover* the screen precisely so that no band
+         exists at any screen shape (see MainActivity.fillVideoToView), which leaves this colour
+         showing only before playback and behind the closing fade. At both of those moments the app's
+         own cream is the right answer and yellow would be a flash of something else.
+
+         Deliberately *not* themed, either. In the dark theme the app underneath is near-black, but
+         the animation is a light one, and opening a light window on a dark theme for two seconds is
+         far less jarring than a near-black frame arriving before a bright yellow video. -->
+
+    <!-- A note on what is *not* here: the animation's own ground, #FDE227. Nothing needs it while the
+         video covers the screen, and a colour nothing reads is a colour that goes stale. If the clip
+         is ever letterboxed again, it belongs back here. -->
+    <color name="splash_ground">#FFFBF3</color>
+
     <!-- ============================== Light scheme ============================== -->
 
     <!-- Primary: the accent. Carries the main actions — the FAB, filled buttons, the selected

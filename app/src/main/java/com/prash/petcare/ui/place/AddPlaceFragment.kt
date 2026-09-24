@@ -25,6 +25,7 @@ import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.anchorAboveNavBar
 import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.bindOptions
+import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.formatDistanceKm
 import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.openExternalLink
@@ -275,11 +276,15 @@ class AddPlaceFragment : Fragment() {
             binding.noteInput.setText(state.note)
         }
 
-        // Vet · Grooming · Park · Store, built from the enum so adding a category needs no layout
-        // change. The chips themselves are only rebuilt when the options differ, so calling this on
-        // every emission costs nothing — see ui/common/FilterChips.kt.
+        // 🏥 Vet · ✂️ Grooming · 🌳 Park · 🏪 Shop, built from the enum so adding a category needs no
+        // layout change. Each chip leads with the emoji that will end up on the saved place's row,
+        // so the symbol is part of the choice rather than a surprise afterwards. The chips are only
+        // rebuilt when the options differ, so calling this on every emission costs nothing — see
+        // ui/common/FilterChips.kt.
         binding.categoryChipGroup.bindOptions(
-            options = PlaceCategory.entries.map { ChipOption(it.name, getString(it.labelRes())) },
+            options = PlaceCategory.entries.map {
+                ChipOption(it.name, it.emojiLabel(requireContext()))
+            },
             selectedKey = state.category.name,
             chipLayout = R.layout.item_category_chip,
             onSelected = { key ->

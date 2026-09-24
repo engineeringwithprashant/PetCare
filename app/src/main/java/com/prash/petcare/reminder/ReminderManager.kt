@@ -2,6 +2,7 @@ package com.prash.petcare.reminder
 
 import android.util.Log
 import com.prash.petcare.data.local.SettingsStore
+import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.relation.TaskReminder
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.util.CareSchedule
@@ -168,8 +169,16 @@ class ReminderManager(
             return
         }
 
-        if (shouldNotify(reminder)) {
-            notifier.notifyTaskDue(reminder)
+        // The task row itself, which is needed twice over: to decide whether to show anything at
+        // all, and — if so — for the supplies and notes the notification spells out. Read once here
+        // rather than once in each place, so the two cannot disagree about what the task says.
+        //
+        // A null row means the task was deleted between the plan being read above and this line. The
+        // reminder is then simply not shown, exactly as an already-done task is not shown.
+        val task = careTaskRepository.getTask(reminder.taskId)
+
+        if (task != null && shouldNotify(reminder, task)) {
+            notifier.notifyTaskDue(reminder, task.requiredSupplies, task.notes)
         }
 
         applyPlan(reminders)
@@ -178,10 +187,10 @@ class ReminderManager(
     /**
      * Whether this reminder still deserves to be shown, now that its moment has arrived.
      *
-     * The task row is re-read rather than carried in the alarm, because what is being asked about —
-     * has it been done yet? — can only be answered at this instant.
+     * The task row is passed in rather than carried in the alarm, because what is being asked about
+     * — has it been done yet? — can only be answered at this instant, from the row as it stands now.
      */
-    private suspend fun shouldNotify(reminder: TaskReminder): Boolean {
+    private fun shouldNotify(reminder: TaskReminder, task: CareTask): Boolean {
         val todayStart = CareSchedule.startOfToday()
         val todayEnd = CareSchedule.endOfToday()
 
@@ -192,8 +201,6 @@ class ReminderManager(
             dayStartMillis = todayStart
         )
         if (!runsToday) return false
-
-        val task = careTaskRepository.getTask(reminder.taskId) ?: return false
 
         // Already ticked off today — the user does not need telling to do something they have done.
         return !CareSchedule.isDoneOn(task, todayStart, todayEnd)

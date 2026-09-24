@@ -30,7 +30,7 @@ import com.prash.petcare.data.local.entity.CareTask
 import com.prash.petcare.data.local.entity.TaskCategory
 import com.prash.petcare.databinding.FragmentAddEditTaskBinding
 import com.prash.petcare.ui.common.formatTimeOfDay
-import com.prash.petcare.ui.common.labelRes
+import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.setToolbarTitle
 import kotlinx.coroutines.launch
 
@@ -133,7 +133,11 @@ class AddEditTaskFragment : Fragment() {
      * displayed text would break the moment the app is translated.
      */
     private fun setUpCategoryDropdown() {
-        val labels = TaskCategory.entries.map { getString(it.labelRes()) }.toTypedArray()
+        // "💊  Medication" — the same emoji the Tasks tab's filter chips carry, so a category is the
+        // same thing to look for whether it is being chosen here or filtered for there.
+        val labels = TaskCategory.entries
+            .map { it.emojiLabel(requireContext()) }
+            .toTypedArray()
         binding.categoryInput.setSimpleItems(labels)
 
         binding.categoryInput.setOnItemClickListener { _, _, position, _ ->
@@ -331,7 +335,7 @@ class AddEditTaskFragment : Fragment() {
         binding.timeInputLayout.error = state.timeError?.let { getString(it) }
 
         // `false` stops the dropdown treating this as typed input and filtering its own list.
-        binding.categoryInput.setText(getString(state.category.labelRes()), false)
+        binding.categoryInput.setText(state.category.emojiLabel(requireContext()), false)
 
         binding.timeInput.setText(
             state.timeOfDayMinutes?.let { formatTimeOfDay(requireContext(), it) }.orEmpty()

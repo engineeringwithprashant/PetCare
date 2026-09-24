@@ -2,8 +2,8 @@
 <!--
     One task card on the Tasks tab.
 
-    Left to right: a rounded time badge ("8:00 AM"), the task's details (title, "pet · category", and a
-    pale supplies tag), and a round check button.
+    Left to right: a rounded time badge ("8:00 AM"), the task's details (its category emoji and title,
+    then "pet · category", then a pale supplies tag), and a round check button.
 
     **Done and not-done are a single state switch.** The adapter calls setActivated(isDone) on the
     card's content row. "Activated" is passed down to every child, and the badge's fill, the badge's
@@ -88,16 +88,49 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/taskTitleText"
+            <!-- The title line: the category's emoji, then the task's name.
+
+                 The emoji sits here, right beside the time badge, rather than down on the subtitle
+                 with the category's name, because this is the line the eye lands on — scanning a day
+                 of care becomes "find the 💊" instead of reading every second line. The symbol is set
+                 by ChecklistAdapter from the task's category; the subtitle still spells that category
+                 out in words, which is what keeps the emoji a shortcut rather than the only clue.
+
+                 A horizontal LinearLayout left baseline-aligned (the default), so the emoji sits on
+                 the title's first baseline however many lines the title runs to. The title takes the
+                 leftover width through weight, so it still ellipsises instead of pushing the emoji
+                 out of the card. -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="@color/task_title_text"
-                android:textStyle="bold"
-                tools:text="Morning meds" />
+                android:orientation="horizontal">
+
+                <!-- Hidden from TalkBack: the subtitle below names the category in words, and an
+                     emoji is read out as its full Unicode name ("pill"), which would only add noise
+                     in front of every task. -->
+                <TextView
+                    android:id="@+id/taskCategoryEmoji"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/spacing_xs"
+                    android:importantForAccessibility="no"
+                    android:maxLines="1"
+                    android:textSize="@dimen/task_category_emoji_size"
+                    tools:text="💊" />
+
+                <TextView
+                    android:id="@+id/taskTitleText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="@color/task_title_text"
+                    android:textStyle="bold"
+                    tools:text="Morning meds" />
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/taskSubtitleText"

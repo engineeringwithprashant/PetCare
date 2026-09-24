@@ -13,6 +13,7 @@ import com.prash.petcare.R
 import com.prash.petcare.databinding.ItemChecklistTaskBinding
 import com.prash.petcare.databinding.ItemTaskSectionHeaderBinding
 import com.prash.petcare.ui.common.formatTimeOfDay
+import com.prash.petcare.ui.common.emojiRes
 import com.prash.petcare.ui.common.labelRes
 import java.text.DateFormatSymbols
 import java.util.Calendar
@@ -118,6 +119,10 @@ class ChecklistAdapter(
 
             bindTime(task.timeOfDayMinutes)
 
+            // The category as a symbol on the title line and as a word on the subtitle. Both, rather
+            // than one or the other: the emoji is what makes a day's list scannable, and the word is
+            // what makes it unambiguous for anyone who does not read the symbol the same way.
+            binding.taskCategoryEmoji.setText(task.category.emojiRes())
             binding.taskTitleText.text = task.title
             binding.taskSubtitleText.text = context.getString(
                 R.string.tasks_card_subtitle,
@@ -157,11 +162,17 @@ class ChecklistAdapter(
          *
          * `isActivated` on the content row does most of it: the badge fill, the badge text and the
          * title colour all switch through their state lists (see item_checklist_task.xml). What XML
-         * cannot do is strike the title through, which is a paint flag, and tint the card's outline,
-         * which MaterialCardView takes as a plain colour.
+         * cannot do is strike the title through, which is a paint flag, tint the card's outline,
+         * which MaterialCardView takes as a plain colour, and fade the category emoji, which is a
+         * colour glyph and so ignores the muted text colour the rest of the row takes.
          */
         private fun bindDoneState(isDone: Boolean) {
             binding.taskContent.isActivated = isDone
+
+            // Faded rather than recoloured: an emoji is drawn from the system's colour emoji font and
+            // pays no attention to textColor, so a finished task's symbol would otherwise stay at
+            // full strength beside its greyed, struck-through title.
+            binding.taskCategoryEmoji.alpha = if (isDone) DONE_EMOJI_ALPHA else 1f
 
             val title = binding.taskTitleText
             title.paintFlags = if (isDone) {
@@ -235,5 +246,13 @@ class ChecklistAdapter(
     companion object {
         private const val VIEW_TYPE_HEADER = 0
         private const val VIEW_TYPE_TASK = 1
+
+        /**
+         * How far the category emoji is faded on a completed task.
+         *
+         * Enough to read as "settled" beside the greyed title, not so far that the row's category
+         * becomes unidentifiable — a finished task is still one the user may want to find again.
+         */
+        private const val DONE_EMOJI_ALPHA = 0.45f
     }
 }

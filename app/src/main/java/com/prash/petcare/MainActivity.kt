@@ -1,13 +1,20 @@
 package com.prash.petcare
 
+import android.graphics.Matrix
+import android.graphics.SurfaceTexture
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.Surface
+import android.view.TextureView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -85,6 +92,14 @@ class MainActivity : AppCompatActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Hands the window back from the launch theme to the real one. The Activity is declared in
+        // the manifest with Theme.PetCare.Splash, whose only job is to make the placeholder window
+        // the system paints *before this line runs* the same cream as the opening animation — see
+        // that style in themes.xml. From here on the app wants its ordinary theme, and this has to
+        // happen before super.onCreate, which is where the window's decor is created from whichever
+        // theme is current.
+        setTheme(R.style.Theme_PetCare)
+
         super.onCreate(savedInstanceState)
 
         // Draws the app behind the status and navigation bars for a modern full-height look. The
@@ -94,11 +109,266 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // The opening video plays only on a genuine cold start. A savedInstanceState means the
+        // Activity is being rebuilt — a rotation, a theme switch, the system reclaiming memory — and
+        // the user is already inside the app; making them sit through the opening again every time
+        // they turned the phone would be an interruption, not a welcome.
+        if (savedInstanceState == null) startIntroVideo() else binding.splashOverlay.isVisible = false
+
         // Order matters: the inset listener decides whether the bottom tabs are shown, which depends
         // on the current destination, so the NavController has to exist before it can first fire.
         setUpNavigation()
         applyWindowInsets()
     }
+
+    /**
+     * Starts the opening animation as soon as there is something to draw it on.
+     *
+     * A [TextureView] has no surface to play into until it has been laid out and attached, so the
+     * player cannot simply be started here — it has to wait to be told the surface exists, which is
+     * what the listener below is for. Everything else about the video is set up in
+     * [playIntroVideo], which that callback leads to.
+     *
+     * The app carries on starting up behind this the whole time. Nothing waits for the video: it is
+     * played *over* an Activity that is already building its screens, so the animation costs the
+     * user nothing — which is the difference between this and a splash screen that simply sleeps.
+     * By the time the overlay fades, navigation has already settled on whichever destination the app
+     * would have opened on anyway, so the animation never decides where the user lands.
+     *
+     * **The budget is started here rather than when playback begins**, and the distinction is the
+     * whole of the promise that this cannot slow a slow device down. Started at playback, a phone
+     * that took a second to lay out the surface and another to open the decoder would spend that
+     * time *before* the clock even began, and the splash would last as long as the device was slow.
+     * Started here, the budget is measured from the app opening, so [INTRO_BUDGET_MILLIS] is the
+     * longest the animation can ever hold anybody — a slower device simply sees less of it.
+     */
+    private fun startIntroVideo() {
+        // Tap anywhere to skip. Somebody opening the app to tick off a task has seen the animation
+        // before and wants the app, not the logo — and a splash that cannot be dismissed is the
+        // difference between a welcome and an obstacle. The overlay is already clickable and
+        // focusable (see activity_main.xml) so that taps cannot fall through to the screen behind;
+        // this is what makes that swallowed tap do something useful instead of nothing.
+        binding.splashOverlay.setOnClickListener { dismissIntro() }
+
+        // The deadline for the whole animation, posted before anything has been prepared so that it
+        // covers every way this can fail to end on its own as well as the clip simply running long:
+        // a surface that never arrives, a decoder that never opens, a player that stalls.
+        binding.root.postDelayed(introTimeout, INTRO_BUDGET_MILLIS)
+
+        // The status and navigation bar icons are drawn over the cream overlay for as long as it is
+        // up, so they have to be dark to be seen. enableEdgeToEdge has just set them to follow the
+        // app's theme, which in the dark theme means light icons — invisible against cream. This
+        // overrides that for the duration; dismissIntro hands them back.
+        WindowInsetsControllerCompat(window, binding.root).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
+
+        binding.splashVideo.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+
+            override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
+                playIntroVideo(Surface(surface))
+            }
+
+            /** The video is scaled to the view, so a size change means re-scaling it. */
+            override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+                introPlayer?.let { fillVideoToView(it.videoWidth, it.videoHeight) }
+            }
+
+            /**
+             * Returning true hands the surface back to the system to release. The player is stopped
+             * first, because a MediaPlayer still holding a destroyed surface is what produces the
+             * "dequeueBuffer: BufferQueue has been abandoned" crashes.
+             */
+            override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
+                releaseIntroPlayer()
+                return true
+            }
+
+            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) = Unit
+        }
+    }
+
+    /**
+     * Plays res/raw/splash_animation.mp4 once, then dissolves the overlay to reveal the app.
+     *
+     * **Every way this can fail ends the same way.** A missing or unplayable file, a codec the
+     * device does not have, a video that never reports finishing — each of them calls
+     * [dismissIntro], so the worst case is that the user sees the app's own cream for a moment
+     * instead of an animation. An opening screen that can trap somebody in it is far worse than one
+     * that does not play, which is why the budget posted in [startIntroVideo] exists as well as the
+     * error handler below.
+     *
+     * **Prepared asynchronously.** `prepare()` reads and decodes the file's headers on the calling
+     * thread, and that thread here is the one drawing the app's first screen. `prepareAsync` moves
+     * it off, and playback starts from the callback.
+     *
+     * **Silent, deliberately.** An app that makes a noise the moment it is opened — in a lecture, on
+     * a bus, at 6am — is a bad citizen, and the system volume is not the app's to read. The
+     * animation has to work without sound, so it is played without it.
+     */
+    private fun playIntroVideo(surface: Surface) {
+        val player = MediaPlayer()
+        introPlayer = player
+
+        try {
+            resources.openRawResourceFd(R.raw.splash_animation).use { descriptor ->
+                player.setDataSource(
+                    descriptor.fileDescriptor,
+                    descriptor.startOffset,
+                    descriptor.length
+                )
+            }
+        } catch (e: Exception) {
+            // Resources.NotFoundException if the file is missing, IOException if it cannot be read.
+            // Either way there is no animation to show, so the app simply opens.
+            Log.w(TAG, "Opening video could not be opened", e)
+            dismissIntro()
+            return
+        }
+
+        player.setSurface(surface)
+        player.setVolume(0f, 0f)
+
+        player.setOnPreparedListener {
+            fillVideoToView(player.videoWidth, player.videoHeight)
+
+            // Played faster than it was authored. The clip runs 3.6 seconds, which is a long time to
+            // hold somebody who opened the app to tick a task off — but simply cutting it at a
+            // deadline means the animation never reaches the logo it is building towards, so the one
+            // thing it exists to show is the thing the user never sees. Speeding it up keeps the
+            // whole animation, beginning to end, and just gets there sooner. See INTRO_SPEED.
+            //
+            // Set here rather than before prepare(): playback parameters can only be applied to a
+            // player that has been prepared, and setting them on one that has not throws.
+            runCatching { player.playbackParams = player.playbackParams.setSpeed(INTRO_SPEED) }
+
+            player.start()
+        }
+        player.setOnCompletionListener { dismissIntro() }
+        player.setOnErrorListener { _, what, extra ->
+            Log.w(TAG, "Opening video failed: what=$what extra=$extra")
+            dismissIntro()
+            // True: the error is handled here, so the player must not also report it as unhandled.
+            true
+        }
+
+        // Not prepare(). That call reads and decodes the file's headers on the calling thread, and
+        // the thread here is the one drawing the app's first screen — on a slow device it is exactly
+        // the stall this whole design exists to avoid. prepareAsync moves it off and calls back above.
+        player.prepareAsync()
+    }
+
+    /**
+     * Scales the video to *cover* the screen, cropping whatever overflows.
+     *
+     * A TextureView stretches whatever is played into it to its own shape, which on a phone means a
+     * distorted video. The transform below undoes that: it scales the stretched picture back to the
+     * clip's real proportions, taking the *larger* of the two ratios so the frame covers the view
+     * completely, and centring it so what is cropped is taken evenly from both sides.
+     *
+     * **Cropped rather than letterboxed, and this was changed after seeing it run.** Fitting the clip
+     * inside the screen is the gentler option in principle — nothing is thrown away — but it leaves a
+     * band above and below, and a band is only invisible if it is the same colour as the video's own
+     * ground. This animation's ground is a bright yellow, and the overlay behind it is the app's
+     * cream, so fitting drew the animation in a plainly visible cream-edged box. Covering removes the
+     * question: there is no band to match, at any screen shape.
+     *
+     * What it costs is the edges of the frame. On a phone the clip's 9:16 is *narrower* than the
+     * screen is tall, so covering crops the left and right — around an eighth from each side on a
+     * 20:9 display — and keeps the full height, including the shape that enters from the top edge.
+     * The animation's subject is centred, so nothing that matters is inside the part that goes.
+     */
+    private fun fillVideoToView(videoWidth: Int, videoHeight: Int) {
+        val view = binding.splashVideo
+        // Guards a division by zero: a player that has not resolved the track yet reports 0 × 0.
+        if (videoWidth <= 0 || videoHeight <= 0 || view.width == 0 || view.height == 0) return
+
+        val viewWidth = view.width.toFloat()
+        val viewHeight = view.height.toFloat()
+        val scale = maxOf(viewWidth / videoWidth, viewHeight / videoHeight)
+
+        Matrix().apply {
+            setScale(
+                videoWidth * scale / viewWidth,
+                videoHeight * scale / viewHeight,
+                viewWidth / 2f,
+                viewHeight / 2f
+            )
+            view.setTransform(this)
+        }
+    }
+
+    /**
+     * Fades the overlay away and lets go of the player.
+     *
+     * Called from five places that can all be right — the video ending, the user tapping to skip, an
+     * error, the budget running out, and the surface being destroyed — so it does nothing after the
+     * first. Without that guard a video that finished just as the budget expired would start the
+     * fade twice and jump.
+     */
+    private fun dismissIntro() {
+        if (isIntroDismissed) return
+        isIntroDismissed = true
+
+        binding.root.removeCallbacks(introTimeout)
+        releaseIntroPlayer()
+
+        // Puts the status and navigation bar icons back under the theme's control. They were forced
+        // dark in startIntroVideo to be legible on the cream overlay; the app underneath is cream in
+        // the light theme and near-black in the dark one, and this recomputes which they need to be.
+        enableEdgeToEdge()
+
+        binding.splashOverlay.animate()
+            .alpha(0f)
+            .setDuration(INTRO_FADE_MILLIS)
+            // Gone rather than left at zero alpha: an invisible full-screen view would still be
+            // measured on every layout pass, and would still be the thing every tap landed on.
+            .withEndAction { binding.splashOverlay.isVisible = false }
+            .start()
+    }
+
+    /**
+     * Stops and frees the player.
+     *
+     * A MediaPlayer holds a decoder, and there are only so many of those on a device: one left
+     * running keeps hardware other apps need. Safe to call more than once, and safe to call before
+     * the player was ever created.
+     */
+    private fun releaseIntroPlayer() {
+        introPlayer?.apply {
+            // The player may still be preparing, where stop() is an illegal state rather than a
+            // no-op. release() is valid from every state, so the stop is attempted and forgiven.
+            runCatching { stop() }
+            release()
+        }
+        introPlayer = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // The Activity can be torn down mid-animation — a back press on the first screen, the system
+        // reclaiming memory — and the player would outlive the window it was drawing into.
+        releaseIntroPlayer()
+    }
+
+    /**
+     * The opening animation's deadline, held as one object rather than written as `::dismissIntro`
+     * at each of the two places it is posted and cancelled.
+     *
+     * A method reference makes a *new* object every time it is evaluated, so posting one and then
+     * cancelling another would cancel nothing: the deadline would still fire, after the video had
+     * already finished and the overlay had gone — dropping the user back through a fade into a
+     * screen they were already using. Keeping the one instance is what makes the cancel in
+     * [dismissIntro] actually cancel it.
+     */
+    private val introTimeout = Runnable { dismissIntro() }
+
+    /** The opening video's player while it is playing, and null at every other moment. */
+    private var introPlayer: MediaPlayer? = null
+
+    /** Whether the overlay has already been dismissed. See [dismissIntro]. */
+    private var isIntroDismissed = false
 
     /** Connects the top app bar and the bottom navigation bar to the navigation graph. */
     private fun setUpNavigation() {
@@ -496,5 +766,45 @@ class MainActivity : AppCompatActivity() {
             R.id.resetRequestFragment,
             R.id.resetSentFragment
         )
+
+        private const val TAG = "MainActivity"
+
+        /**
+         * How much faster than authored the opening animation is played.
+         *
+         * res/raw/splash_animation.mp4 runs 3.6 seconds. At this rate it runs in about 2.4, which is
+         * the length a splash can be without the user starting to wonder — and, unlike simply cutting
+         * it off at a deadline, the animation still *finishes*: the logo it spends its whole length
+         * assembling is actually arrived at.
+         *
+         * 1.5 rather than something larger because the clip has real motion in it, and past roughly
+         * this the movement stops reading as brisk and starts reading as a glitch.
+         *
+         * **To play the animation exactly as authored, set this to 1f** and raise
+         * [INTRO_BUDGET_MILLIS] past its 3,600 ms so the budget does not cut what the speed no longer
+         * shortens.
+         */
+        const val INTRO_SPEED = 1.5f
+
+        /**
+         * The longest the opening animation may ever hold the user, measured from the app opening.
+         *
+         * **A ceiling, not a duration.** At [INTRO_SPEED] the clip finishes by itself in about 2.4
+         * seconds and dismisses itself the moment it does, so in the ordinary case this is never
+         * reached. It is what catches every way the animation can fail to end on its own — a surface
+         * that never arrives, a decoder that never opens, a player that stalls, a replacement clip
+         * that runs longer than the last — with just enough margin over that 2.4 to not clip the end
+         * off a normal playback.
+         *
+         * It doubles as the guarantee that a slow device is not held longer than a fast one: because
+         * [startIntroVideo] starts the clock before the surface, the decoder or the file are touched,
+         * time lost to any of those comes out of the animation rather than out of the user's. A phone
+         * that takes a second to open its decoder sees a second less of the animation, not a second
+         * more of waiting.
+         */
+        const val INTRO_BUDGET_MILLIS = 3_000L
+
+        /** How long the overlay takes to dissolve into the app once the video is over. */
+        const val INTRO_FADE_MILLIS = 220L
     }
 }

@@ -147,9 +147,19 @@
             Removing this line would still break older devices and any future non-edge-to-edge path,
             so both halves are kept.
         -->
+        <!--
+            android:theme overrides the application theme above for this Activity's *launch* only.
+            The system paints a placeholder window from this theme's windowBackground before the app
+            has started running, and Theme.PetCare.Splash makes that first frame the cream the opening
+            animation sits on, in both light and dark — without it the dark theme opens on a
+            near-black window and the animation arrives as a flash. MainActivity.onCreate swaps back
+            to Theme.PetCare immediately; see the note on that style in themes.xml for why the two
+            cannot be one theme.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:theme="@style/Theme.PetCare.Splash"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

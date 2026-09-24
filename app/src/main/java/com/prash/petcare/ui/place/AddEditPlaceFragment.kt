@@ -26,8 +26,8 @@ import com.prash.petcare.data.local.entity.Place
 import com.prash.petcare.data.local.entity.PlaceCategory
 import com.prash.petcare.databinding.FragmentAddEditPlaceBinding
 import com.prash.petcare.ui.common.PhoneNumberInput
+import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.formatTimeOfDay
-import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
@@ -114,7 +114,11 @@ class AddEditPlaceFragment : Fragment() {
      * same order, so a tapped position maps straight back to a constant — see AddEditTaskFragment.
      */
     private fun setUpCategoryDropdown() {
-        val labels = PlaceCategory.entries.map { getString(it.labelRes()) }.toTypedArray()
+        // "🏥  Vet" — the emoji the place's row badge will carry, shown while the choice is being
+        // made rather than only afterwards in the list.
+        val labels = PlaceCategory.entries
+            .map { it.emojiLabel(requireContext()) }
+            .toTypedArray()
         binding.categoryInput.setSimpleItems(labels)
         binding.categoryInput.setOnItemClickListener { _, _, position, _ ->
             viewModel.onCategorySelected(PlaceCategory.entries[position])
@@ -191,8 +195,10 @@ class AddEditPlaceFragment : Fragment() {
         // Under the number rather than the country, because the number is usually the part to change
         // — and the message itself names the country as the other possibility.
         binding.phoneInputLayout.error = state.phoneError?.let { getString(it) }
-        // `false` stops the dropdown filtering its own list as if the label had been typed.
-        binding.categoryInput.setText(getString(state.category.labelRes()), false)
+        // The same emoji-and-name pair the dropdown rows show, so the closed field matches the row
+        // that was picked. `false` stops the dropdown filtering its own list as if the label had
+        // been typed.
+        binding.categoryInput.setText(state.category.emojiLabel(context), false)
 
         binding.openingTimeInput.setText(state.openingMinutes?.let { formatTimeOfDay(context, it) }.orEmpty())
         binding.closingTimeInput.setText(state.closingMinutes?.let { formatTimeOfDay(context, it) }.orEmpty())

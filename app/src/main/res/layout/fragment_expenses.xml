@@ -121,12 +121,18 @@
 
     </LinearLayout>
 
+    <!-- Logs a new expense.
+
+         Raised clear of the floating bottom navigation bar by fab_margin_bottom, for the reason
+         given on that dimension: the button and the bar float over the same corner, so at the
+         standard 16dp gutter the bar sat on top of it. The end margin is unchanged. -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addExpenseFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/screen_padding"
+        android:layout_marginEnd="@dimen/screen_padding"
+        android:layout_marginBottom="@dimen/fab_margin_bottom"
         android:contentDescription="@string/cd_add_expense"
         app:srcCompat="@drawable/ic_add" />
 

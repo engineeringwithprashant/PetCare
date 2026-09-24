@@ -18,9 +18,9 @@ import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Expense
 import com.prash.petcare.data.local.entity.ExpenseCategory
 import com.prash.petcare.databinding.FragmentAddEditExpenseBinding
+import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.formatAmountForInput
 import com.prash.petcare.ui.common.formatStoredDate
-import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.setToolbarTitle
 import kotlinx.coroutines.launch
 
@@ -75,7 +75,12 @@ class AddEditExpenseFragment : Fragment() {
      * the displayed text would break the moment the app is translated.
      */
     private fun setUpCategoryDropdown() {
-        val labels = ExpenseCategory.entries.map { getString(it.labelRes()) }.toTypedArray()
+        // Each row is "💊  Medication": the emoji is what the expense's badge will show once this is
+        // saved, so the user sees the symbol they are choosing at the moment they choose it rather
+        // than meeting it for the first time on the card afterwards.
+        val labels = ExpenseCategory.entries
+            .map { it.emojiLabel(requireContext()) }
+            .toTypedArray()
         binding.categoryInput.setSimpleItems(labels)
 
         binding.categoryInput.setOnItemClickListener { _, _, position, _ ->
@@ -169,8 +174,10 @@ class AddEditExpenseFragment : Fragment() {
         binding.amountInputLayout.error = state.amountError?.let { getString(it) }
         binding.dateInputLayout.error = state.dateError?.let { getString(it) }
 
-        // `false` stops the dropdown treating this as typed input and filtering its own list.
-        binding.categoryInput.setText(getString(state.category.labelRes()), false)
+        // The same "💊  Medication" pair the dropdown rows show, so the closed field reads as the row
+        // that was picked. `false` stops the dropdown treating this as typed input and filtering its
+        // own list.
+        binding.categoryInput.setText(state.category.emojiLabel(requireContext()), false)
 
         binding.dateInput.setText(state.incurredOn?.let { formatStoredDate(it) }.orEmpty())
 

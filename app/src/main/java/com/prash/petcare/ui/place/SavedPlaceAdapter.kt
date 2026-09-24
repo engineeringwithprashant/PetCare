@@ -12,7 +12,7 @@ import com.google.android.material.R as MaterialR
 import com.google.android.material.color.MaterialColors
 import com.prash.petcare.R
 import com.prash.petcare.databinding.ItemPlaceRowBinding
-import com.prash.petcare.ui.common.badgeRes
+import com.prash.petcare.ui.common.emojiRes
 import com.prash.petcare.ui.common.formatDistanceKm
 import com.prash.petcare.ui.common.placeSubtitle
 
@@ -54,7 +54,10 @@ class SavedPlaceAdapter(
             val context = binding.root.context
             val place = row.place
 
-            binding.placeBadge.setText(place.category.badgeRes())
+            // The category's emoji rather than "Vet" / "Grm" / "Shop": the subtitle underneath
+            // already says what the place is, so the badge can be the symbol instead of repeating it
+            // in four cramped letters.
+            binding.placeBadge.setText(place.category.emojiRes())
             binding.placeNameText.text = place.name
             binding.placeSubtitleText.text = placeSubtitle(context, place)
 
@@ -72,16 +75,15 @@ class SavedPlaceAdapter(
             )
             binding.root.setCardBackgroundColor(rowColor)
 
-            if (row.isFeatured) {
-                binding.placeBadge.backgroundTintList =
-                    ContextCompat.getColorStateList(context, R.color.accent_yellow)
-                binding.placeBadge.setTextColor(ContextCompat.getColor(context, R.color.on_accent_yellow))
+            // Only the tile behind the emoji is coloured. A text colour is not set any more because
+            // an emoji is a colour glyph in its own right: the system draws it from the emoji font
+            // and ignores whatever colour the view asks for, so setting one would have looked like
+            // it did something.
+            binding.placeBadge.backgroundTintList = if (row.isFeatured) {
+                ContextCompat.getColorStateList(context, R.color.accent_yellow)
             } else {
-                binding.placeBadge.backgroundTintList = ColorStateList.valueOf(
+                ColorStateList.valueOf(
                     MaterialColors.getColor(binding.root, MaterialR.attr.colorSurfaceVariant)
-                )
-                binding.placeBadge.setTextColor(
-                    MaterialColors.getColor(binding.root, MaterialR.attr.colorOnSurfaceVariant)
                 )
             }
 

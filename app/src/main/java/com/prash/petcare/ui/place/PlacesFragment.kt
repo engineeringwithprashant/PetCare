@@ -32,6 +32,7 @@ import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.anchorAboveNavBar
 import com.prash.petcare.ui.common.bindHeaderProfilePhoto
 import com.prash.petcare.ui.common.bindOptions
+import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.formatDistanceKm
 import com.prash.petcare.ui.common.formatTimeOfDay
 import com.prash.petcare.ui.common.labelRes
@@ -325,8 +326,11 @@ class PlacesFragment : Fragment() {
 
     /** Builds the chip row — "All" then each category — and marks the chosen one. */
     private fun renderCategoryChips(state: PlacesUiState) {
+        // Each category chip leads with its emoji — the same symbol the rows below carry in their
+        // badges — so the filter and the list it filters are read with the same eye. "All" has no
+        // emoji because it is not a category: it is the absence of one.
         val options = listOf(ChipOption(KEY_ALL, getString(R.string.places_filter_all))) +
-            PlaceCategory.entries.map { ChipOption(it.name, getString(it.labelRes())) }
+            PlaceCategory.entries.map { ChipOption(it.name, it.emojiLabel(requireContext())) }
 
         binding.categoryChipGroup.bindOptions(
             options = options,

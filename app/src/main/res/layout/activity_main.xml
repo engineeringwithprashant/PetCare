@@ -21,14 +21,31 @@
     are short forms and lists, and a title that disappears on a flick is more distracting than useful
     at that size.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    The outermost frame exists for one thing: the opening video has to be able to cover *everything*,
+    system bars included.
+
+    The app's screens live in the LinearLayout below, and that is the view the window insets are
+    applied to — it keeps the id `main` for exactly that reason, see MainActivity.applyWindowInsets —
+    so its content stays clear of the status and navigation bars. The video overlay is this frame's
+    second child instead, outside that padding, which is what lets it play corner to corner. Anything
+    else would leave a pale band across the top of the first thing the user ever sees.
+
+    This frame deliberately has no id. Nothing addresses it; it is structure, not a view the code
+    talks to.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+<LinearLayout
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
+    android:orientation="vertical">
 
     <!--
         AppBarLayout provides the elevation and surface treatment Material 3 expects behind a top
@@ -128,3 +145,48 @@
     </FrameLayout>
 
 </LinearLayout>
+
+    <!--
+        The opening animation: res/raw/splash_animation.mp4, played once over the app while it starts.
+
+        **Why the video lives here rather than in a splash theme or an Activity of its own.** A
+        window's splash can only ever be a colour and a still drawable — the system paints it before
+        the app exists, so there is nothing running that could play anything. And a separate
+        SplashActivity, the other usual answer, would put a second Activity in front of the app's
+        single-Activity structure and a second entry in the back stack. Playing it here keeps the
+        whole app one Activity with one navigation graph, exactly as the rest of the project is
+        built, and keeps the video in the only place that can actually run it.
+
+        **Why a TextureView and not a VideoView.** A VideoView is a SurfaceView underneath, and a
+        SurfaceView is a separate window punched through the app's: it cannot be faded, so the video
+        could only ever be cut away rather than dissolved, and it flashes black for a frame as it is
+        created. A TextureView is an ordinary view drawn in the app's own window, so it fades like
+        anything else and the frame before playback is whatever this overlay's background is.
+
+        The background is the app's cream page colour, so there is no black frame before the decoder
+        produces a picture and none behind the closing fade. It is never seen *during* playback: the
+        clip is scaled to cover the view, so no band is left at any screen shape. See splash_ground in
+        colors.xml, and MainActivity.fillVideoToView for what covering costs at the edges.
+
+        clickable and focusable so it swallows anything aimed at the screen beneath while it is up;
+        without them a tap during playback would land on whatever happened to be underneath. The tap
+        is not merely swallowed, though — MainActivity attaches a listener that skips the rest of the
+        animation, so the overlay is dismissed rather than endured.
+    -->
+    <FrameLayout
+        android:id="@+id/splashOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/splash_ground"
+        android:clickable="true"
+        android:focusable="true"
+        android:importantForAccessibility="no">
+
+        <TextureView
+            android:id="@+id/splashVideo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </FrameLayout>
+
+</FrameLayout>

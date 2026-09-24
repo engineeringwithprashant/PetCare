@@ -1,5 +1,6 @@
 package com.prash.petcare.ui.common
 
+import android.content.Context
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -59,23 +60,45 @@ fun ExpenseCategory.iconRes(): Int = when (this) {
 }
 
 /**
- * A spending category's three-or-four letter badge on an expense card: "MED", "FOOD", "GRM".
+ * The emoji that stands for a spending category: 💊 for medication, 🍖 for food, 🎾 for toys.
  *
- * Abbreviated because the badge is a small square, and a column of equal-sized badges scans faster
- * than full names of different lengths would.
+ * What the badge on an expense card shows, in place of the "MED" / "GRM" abbreviations it used to
+ * carry — see the note in strings.xml for why a picture beats three capitals in a 44dp square, and
+ * why these particular emoji were picked.
+ *
+ * A `@StringRes` rather than a Kotlin constant so it is set the same way as any other text — an
+ * emoji is characters, not a drawable, which is exactly what makes it free to place in a badge, a
+ * chip or a dropdown row with no artwork and no dark-mode variant.
+ *
+ * Like the labels, this `when` has no `else`: adding a category will not compile until it has been
+ * given a symbol.
  */
 @StringRes
-fun ExpenseCategory.abbreviationRes(): Int = when (this) {
-    ExpenseCategory.FOOD -> R.string.expense_abbr_food
-    ExpenseCategory.VET -> R.string.expense_abbr_vet
-    ExpenseCategory.MEDICATION -> R.string.expense_abbr_medication
-    ExpenseCategory.GROOMING -> R.string.expense_abbr_grooming
-    ExpenseCategory.TOYS -> R.string.expense_abbr_toys
-    ExpenseCategory.ACCESSORIES -> R.string.expense_abbr_accessories
-    ExpenseCategory.INSURANCE -> R.string.expense_abbr_insurance
-    ExpenseCategory.TRAINING -> R.string.expense_abbr_training
-    ExpenseCategory.OTHER -> R.string.expense_abbr_other
+fun ExpenseCategory.emojiRes(): Int = when (this) {
+    ExpenseCategory.FOOD -> R.string.expense_emoji_food
+    ExpenseCategory.VET -> R.string.expense_emoji_vet
+    ExpenseCategory.MEDICATION -> R.string.expense_emoji_medication
+    ExpenseCategory.GROOMING -> R.string.expense_emoji_grooming
+    ExpenseCategory.TOYS -> R.string.expense_emoji_toys
+    ExpenseCategory.ACCESSORIES -> R.string.expense_emoji_accessories
+    ExpenseCategory.INSURANCE -> R.string.expense_emoji_insurance
+    ExpenseCategory.TRAINING -> R.string.expense_emoji_training
+    ExpenseCategory.OTHER -> R.string.expense_emoji_other
 }
+
+/**
+ * The category as it appears where it is *chosen* — "💊  Medication".
+ *
+ * The emoji alone is enough on a card, where the row beneath already names the category in words.
+ * In the form's dropdown it is not: the user is picking between nine options and must be able to
+ * read what each one is, so the symbol leads and the name follows. Showing the same pair in the
+ * closed field is what makes the chosen category recognisable at a glance afterwards.
+ */
+fun ExpenseCategory.emojiLabel(context: Context): String = context.getString(
+    R.string.category_emoji_label,
+    context.getString(emojiRes()),
+    context.getString(labelRes())
+)
 
 /**
  * The colour that stands for a spending category: its segment in the total card's stacked bar, and

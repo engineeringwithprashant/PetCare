@@ -55,6 +55,44 @@ fun TaskCategory.iconRes(): Int = when (this) {
 }
 
 /**
+ * The emoji that stands for a care category: 🍖 feeding, 🐾 walk, 💊 medication.
+ *
+ * Shown in front of the name wherever a category is *chosen* — the Tasks tab's filter chips and the
+ * task form's dropdown — through [emojiLabel]. See the note in strings.xml for why these particular
+ * symbols, and why a category shared with the spending or place lists keeps the same one there.
+ *
+ * **Why this exists beside [iconRes].** They are for different places. [iconRes] is a drawable, which
+ * is what an ImageView in a laid-out row needs; this is text, which is what can be put *inside* a
+ * chip's label or a dropdown row without adding a view to either. Neither could do the other's job.
+ *
+ * Like the labels, this `when` has no `else`: a new category will not compile until it has a symbol.
+ */
+@StringRes
+fun TaskCategory.emojiRes(): Int = when (this) {
+    TaskCategory.FEEDING -> R.string.category_emoji_feeding
+    TaskCategory.WALK -> R.string.category_emoji_walk
+    TaskCategory.GROOMING -> R.string.category_emoji_grooming
+    TaskCategory.MEDICATION -> R.string.category_emoji_medication
+    TaskCategory.VET_VISIT -> R.string.category_emoji_vet_visit
+    TaskCategory.TRAINING -> R.string.category_emoji_training
+    TaskCategory.PLAY -> R.string.category_emoji_play
+    TaskCategory.OTHER -> R.string.category_emoji_other
+}
+
+/**
+ * The category as it appears where it is chosen — "💊  Medication".
+ *
+ * Both halves, because a chip row and a dropdown are lists of choices: the symbol is what the eye
+ * finds, and the word is what settles which of two similar symbols this one is. The shared format
+ * string is the same one the spending and place categories use, so all three rows are spaced alike.
+ */
+fun TaskCategory.emojiLabel(context: Context): String = context.getString(
+    R.string.category_emoji_label,
+    context.getString(emojiRes()),
+    context.getString(labelRes())
+)
+
+/**
  * Display name for how often a routine repeats.
  *
  * Worded as the user would say it ("Every day") rather than as the enum spells it, since the
