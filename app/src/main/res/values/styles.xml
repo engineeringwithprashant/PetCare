@@ -2134,23 +2134,25 @@
         <item name="android:background">?attr/colorOutlineVariant</item>
     </style>
 
-    <!-- The square code badge on an account row: "NAME", "MAIL", "PHON", "PASS". The notifications
-         screen's badge in the quieter surface, so a small square code is the same object on both. -->
-    <style name="PetCare.Profile.Badge" parent="">
+    <!-- The square glyph badge on an account row: the person, the envelope, the handset, the padlock.
+         The notifications screen's badge in the quieter surface, so a small rounded square in front of a
+         row is the same object on both.
+
+         It replaces a mono four-letter code ("NAME", "MAIL", "PHON", "PASS"). The well, its tint and its
+         size are unchanged — only what sits inside it — so the card's rhythm is exactly as it was; see
+         ic_profile_person.xml for why the glyph is the better mark.
+
+         The padding is what centres a 24dp icon in a 44dp well and keeps it at the weight the codes had:
+         at full size the glyph would fill the square edge to edge and read as a filled tile rather than
+         as a mark on a ground. -->
+    <style name="PetCare.Profile.BadgeIcon" parent="">
         <item name="android:layout_width">@dimen/profile_badge_size</item>
         <item name="android:layout_height">@dimen/profile_badge_size</item>
-        <item name="android:fontFamily">@font/ibm_plex_mono</item>
-        <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:background">@drawable/bg_alert_badge</item>
         <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
-        <item name="android:gravity">center</item>
-        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
-        <item name="android:textSize">@dimen/profile_badge_text_size</item>
-        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
-        <item name="android:textAllCaps">true</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">0.08</item>
-        <item name="android:maxLines">1</item>
+        <item name="android:padding">@dimen/profile_badge_icon_padding</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="tint">?attr/colorOnSurfaceVariant</item>
     </style>
 
     <!-- The circular initial avatar on a delegation-contact row. A circle rather than a square, for
@@ -2907,6 +2909,50 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:gravity">center</item>
         <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+
+    <!-- The "MAP / SATELLITE" pill in the map's top-right corner, on the Places tab and on Add a place.
+
+         Sized and coloured as the status chip that faces it across the map — the same overlay ground,
+         the same mono face at the same size, the same padding — so the two corners of the card read as
+         one pair rather than as a label and a button that happen to share a surface. It is a
+         MaterialButton rather than a TextView so it ripples on press and announces itself as a button.
+
+         stateListAnimator is cleared because Material's filled button lifts on press, and a control
+         *painted on* a map should not rise off it; the flat chip opposite has no elevation either. -->
+    <style name="PetCare.Map.LayerToggle" parent="Widget.Material3.Button">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">@dimen/gps_map_chip_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/gps_map_chip_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/gps_map_chip_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/gps_map_chip_padding_vertical</item>
+        <item name="backgroundTint">@color/map_overlay_ground</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/gps_map_chip_text_size</item>
+        <item name="android:textColor">@color/on_map_overlay</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="rippleColor">@color/on_map_overlay</item>
+    </style>
+
+    <!-- The line under the map: "Drag the map to put the pin on the place…". Deliberately the quietest
+         text on the screen — it is an instruction read once and then never again, so it says its piece
+         at the size of a caption rather than competing with the fields below it. -->
+    <style name="PetCare.AddPlace.MapHint" parent="">
+        <item name="android:fontFamily">@font/schibsted_grotesk</item>
+        <item name="fontFamily">@font/schibsted_grotesk</item>
+        <item name="android:textSize">@dimen/map_drag_hint_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
     <!-- ~~~~~~~~~~ The current-location card ~~~~~~~~~~ -->

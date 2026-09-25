@@ -202,8 +202,9 @@ data class ComingUpItem(
  * @property firstName The first word of the user's name, for the greeting.
  * @property nowMillis The moment this snapshot was computed. The clock and date in the greeting are
  *   drawn from it, and it moves once a minute.
- * @property overdueCount Today's tasks past their time and not yet done — what lights the red dot on
- *   the header's pet badge.
+ * @property overdueCount Today's tasks past their time and not yet done — the figure the insight card
+ *   leads with. It used to light a red dot on the header's badge as well; the badge is a
+ *   notifications bell now and counts the same care through its "missed" alerts instead.
  * @property spending This month's spending across every pet.
  * @property streakFullDays How many of the [streak] boxes are full.
  */

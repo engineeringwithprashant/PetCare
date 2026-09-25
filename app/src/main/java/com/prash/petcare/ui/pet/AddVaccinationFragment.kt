@@ -17,11 +17,10 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentAddVaccinationBinding
 import com.prash.petcare.ui.common.ChipOption
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.bindOptions
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.util.formatDate
 import kotlinx.coroutines.launch
@@ -79,7 +78,7 @@ class AddVaccinationFragment : Fragment() {
             onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
             onMonogramClick = ::openProfile
         )
-        bindHeaderProfilePhoto(binding.header, sessionViewModel)
+        bindHeaderFromSession(binding.header, sessionViewModel)
 
         setUpFields()
         setUpControls()
@@ -237,7 +236,6 @@ class AddVaccinationFragment : Fragment() {
         // The header's pet-count badge, from the session rather than from this form's own state.
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.petCount.collect(binding.header::showPetCount)
             }
         }
     }

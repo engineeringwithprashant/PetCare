@@ -657,6 +657,14 @@
          at a little under a fifth. -->
     <color name="gps_card_dot_well">#2E2E7DFF</color>
 
+    <!-- The pin that hangs over the middle of the map while it is being dragged to choose a point (see
+         ic_map_pin.xml). The accent for the balloon and the app's near-black for its outline and hole,
+         fixed in both themes for the same reason as the overlays above: it sits on Google's tiles
+         rather than on the app's surface, and a pin that followed the page would vanish into a map
+         that is pale by day and inverted-pale by night. -->
+    <color name="map_pin_fill">@color/accent_yellow</color>
+    <color name="map_pin_ink">#14130F</color>
+
     <!-- ========================= Vaccination history =========================
          The status pill at the end of each row on a pet's vaccination card, and the thin bar down its
          left-hand edge. Three states — clear (green), overdue (red), due soon (the accent) — worked

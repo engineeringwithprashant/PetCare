@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
@@ -46,7 +47,6 @@ data class PlaceRow(
  * Everything the Places tab displays.
  *
  * @property isLoading True until the first results arrive from Room.
- * @property petCount For the header badge.
  * @property hasPlaces Whether the account has saved any place at all — separate from [rows] being
  *   empty, which also happens when a category filter matches nothing.
  * @property selectedCategory The chosen filter chip, or null for "All".
@@ -60,7 +60,6 @@ data class PlaceRow(
  */
 data class PlacesUiState(
     val isLoading: Boolean = true,
-    val petCount: Int = 0,
     val hasPlaces: Boolean = false,
     val selectedCategory: PlaceCategory? = null,
     val featured: PlaceRow? = null,
@@ -116,6 +115,26 @@ class PlacesViewModel(
     private val selectedPlaceId = MutableStateFlow<Long?>(null)
 
     /**
+     * Whether the map card shows Google's aerial imagery rather than its drawn map.
+     *
+     * Exposed as its own flow rather than folded into [PlacesUiState], and deliberately *not* added to
+     * the `combine` below. That combine exists to keep the map, the featured card and both Maps links
+     * derived from one pass over the same inputs — which is what guarantees they can never describe
+     * different places. The layer is not one of those inputs: it changes how the tiles are painted and
+     * nothing else, so feeding it in would re-derive every distance, every "open now" pill and the whole
+     * row list each time the user flipped it, to redraw one card.
+     *
+     * In the ViewModel rather than the fragment so the choice survives a rotation.
+     */
+    private val _isSatellite = MutableStateFlow(false)
+    val isSatellite: StateFlow<Boolean> = _isSatellite.asStateFlow()
+
+    /** Flips between the drawn map and the imagery. */
+    fun toggleMapLayer() {
+        _isSatellite.value = !_isSatellite.value
+    }
+
+    /**
      * The current minute of the day, re-emitted every minute.
      *
      * "OPEN NOW" is a statement about the present, so it has to change while the screen is open — a
@@ -133,18 +152,21 @@ class PlacesViewModel(
         }
     }
 
-    /** The account's active routines, each labelled with its pet's name, for "Book a visit". */
-    private val routineOptions: Flow<Pair<Int, List<RoutineOption>>> = combine(
+    /**
+     * The account's active routines, each labelled with its pet's name, for "Book a visit".
+     *
+     * The pets are queried for their *names*. The count used to ride along with them for the header's
+     * badge; the badge is a notifications bell now and takes its number from the session, so the
+     * second half of that pair has gone — see TabHeader.
+     */
+    private val routineOptions: Flow<List<RoutineOption>> = combine(
         petRepository.observePetsForOwner(ownerId),
         careRoutineRepository.observeActiveRoutinesForOwner(ownerId)
     ) { pets, routines ->
         val petNames = pets.associate { it.id to it.name }
-        val options = routines.mapNotNull { routine ->
+        routines.mapNotNull { routine ->
             petNames[routine.petId]?.let { RoutineOption(routine, it) }
         }
-        // The pet count rides along, because the header badge wants it and it comes from the same
-        // query — observing pets twice would be two identical queries for one number.
-        pets.size to options
     }
 
     val uiState: StateFlow<PlacesUiState> = combine(
@@ -158,8 +180,8 @@ class PlacesViewModel(
             buildPlaceState(places, from, category, preferredId, minute)
         },
         routineOptions
-    ) { placeState, (petCount, options) ->
-        placeState.copy(petCount = petCount, routineOptions = options)
+    ) { placeState, options ->
+        placeState.copy(routineOptions = options)
     }.stateIn(
         scope = viewModelScope,
         // Five seconds of grace keeps the Room queries alive across a rotation, when the old view

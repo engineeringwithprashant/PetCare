@@ -6,7 +6,9 @@ import android.content.res.Configuration
 import android.os.Message
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
+import android.view.ViewConfiguration
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -14,6 +16,11 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import com.prash.petcare.util.Coordinates
 import com.prash.petcare.util.MapLinks
+import com.prash.petcare.util.WebMercator
+import kotlin.math.abs
+import kotlin.math.hypot
+import kotlin.math.log2
+import kotlin.math.roundToInt
 
 /**
  * A real, interactive Google map, embedded in a card.
@@ -59,6 +66,37 @@ import com.prash.petcare.util.MapLinks
  * A WebView paints as soon as it has content, so without [webView] starting invisible the user would
  * see a flash of white before the tiles arrived. The card's own background — the loading ground —
  * shows through in the meantime.
+ *
+ * ### Pick mode: choosing a point by dragging the map
+ *
+ * Switched on with [isPickEnabled], and used by [AddPlaceFragment] so a place can be saved somewhere
+ * other than where the phone happens to be standing. Off by default, so the Places tab's map keeps
+ * behaving exactly as Google's own map does.
+ *
+ * The obvious implementation — let the user pan Google's map and then read off where they stopped — is
+ * impossible here: the map is a cross-origin iframe, so the app can tell it where to centre but can
+ * never ask it where it ended up. Reading inside the frame is forbidden by the browser, and the
+ * keyless embed offers no message channel back.
+ *
+ * So in pick mode this view **takes the gesture for itself** rather than passing it to the WebView:
+ *
+ *  1. [onInterceptTouchEvent] claims the whole gesture, so the page inside never sees it;
+ *  2. a drag slides the WebView bodily with the finger ([View.setTranslationX]), which is what makes
+ *     the map feel dragged rather than merely re-centred;
+ *  3. on lift, the pixels the map moved are converted into a new centre by [WebMercator] — the app
+ *     therefore *knows* the coordinate, because the app is what computed it — and the embed is
+ *     re-pointed there through [onPickedCentreChanged] and [recentre].
+ *
+ * A pinch is handled the same way, because Google's own pinch-zoom is inside the frame this view has
+ * just stopped feeding events to. It is answered in two halves: while the fingers are moving the tiles
+ * already on screen are scaled and slid to follow them, and when the hand lifts the embed is asked for
+ * the nearest whole zoom level. The preview half is what matters — `z=` takes a level rather than a
+ * scale, so a map that only redrew on whole levels would sit perfectly still through most of a pinch
+ * and look broken.
+ *
+ * The one thing pick mode gives up is the links inside the map — the Google logo, "View larger map" —
+ * since the page receives no taps at all. On the picker that is the right trade: the screen's job is to
+ * choose a point, and the two buttons over the card already lead out to the full Maps app.
  */
 class MapEmbedView @JvmOverloads constructor(
     context: Context,
@@ -74,9 +112,72 @@ class MapEmbedView @JvmOverloads constructor(
      */
     var onExternalLink: ((String) -> Unit)? = null
 
-    /** What the page currently shows, so re-rendering the same place does not reload it. */
+    /**
+     * Lets the user choose a point by dragging the map, instead of only panning Google's own.
+     *
+     * Off by default: the Places tab shows a map of a place that is already saved, where dragging
+     * should do what dragging a map does. [AddPlaceFragment] turns it on, because there the position
+     * is the thing being decided. See the class comment for why this cannot be read back out of the
+     * embed and has to be measured here.
+     */
+    var isPickEnabled: Boolean = false
+
+    /**
+     * Where the user dropped the pin, reported once per drag or pinch — never per pixel.
+     *
+     * On lift rather than continuously, for two reasons: a place's coordinate is not "wherever the
+     * finger is right now", and the embed has to be re-pointed at each new centre, which is a load.
+     */
+    var onPickedCentreChanged: ((Coordinates) -> Unit)? = null
+
+    /**
+     * True while a drag is actually under way, so the screen can show the centre crosshair only while
+     * it means something — see AddPlaceFragment.renderMap. At rest the embed's own pin marks the spot,
+     * and a second marker over it would read as two different answers.
+     */
+    var onDragStateChanged: ((Boolean) -> Unit)? = null
+
+    /**
+     * Whether the map shows Google's aerial imagery instead of its drawn map.
+     *
+     * A property with a setter rather than a `setSatellite()` call so the screens can simply assign
+     * the state they hold and let this decide whether anything needs doing — the guard is what keeps a
+     * re-render from reloading the frame on every keystroke.
+     *
+     * Imagery is genuinely useful on these two screens rather than decoration: a vet's entrance, a
+     * park's gate and a shop front are all things a person recognises from a photograph of the roof and
+     * the yard around it, where a drawn map shows only a grey block. See [MapLinks.embedUrl] for why the
+     * layer chosen is *hybrid* imagery, with the street names kept.
+     */
+    var isSatellite: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            recentre()
+        }
+
+    /**
+     * What the page currently shows. Drifts away from [requestedAt] / [requestedZoom] as the user pans
+     * and pinches, which is exactly the point: those are what the *screen* asked for, these are where
+     * the user has moved to since.
+     */
     private var shownAt: Coordinates? = null
     private var shownZoom: Int = 0
+
+    /**
+     * The last centre and zoom [showLocation] was called with.
+     *
+     * Kept apart from [shownAt] / [shownZoom] so a re-render cannot undo the user's own panning. Both
+     * screens call `showLocation` on every state emission — a keystroke in the name field is enough —
+     * and comparing against what the page happens to show would snap a map the user had just zoomed in
+     * on straight back to the zoom the fragment asks for.
+     */
+    private var requestedAt: Coordinates? = null
+    private var requestedZoom: Int = 0
+
+    /** True once the wrapper page has finished loading, so [recentre] can move the frame rather than
+     *  reload the document. */
+    private var isPageLoaded = false
 
     private val webView = WebView(context).apply {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -90,6 +191,70 @@ class MapEmbedView @JvmOverloads constructor(
         overScrollMode = View.OVER_SCROLL_NEVER
         visibility = View.INVISIBLE
     }
+
+    /**
+     * How far a finger may travel before the movement counts as a drag rather than a tap.
+     *
+     * The platform's own figure rather than a constant of our own, so the map agrees with every other
+     * scrollable thing on the device about what a deliberate drag feels like.
+     */
+    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+
+    /**
+     * The previous position of the gesture's focus — the average of every finger on the map.
+     *
+     * The focus rather than one finger's coordinate, because fingers arrive and leave mid-gesture.
+     * [MotionEvent.getX] reports whichever pointer happens to be at index 0, and when that is the
+     * finger lifted out of a pinch the index silently moves to a finger somewhere else on the screen;
+     * measured naively that shift is one enormous drag. An average of what is actually down moves
+     * smoothly through the same event, and it is also what makes a two-finger pan work at all.
+     */
+    private var lastFocusX = 0f
+    private var lastFocusY = 0f
+
+    /** How far the map has been dragged in this gesture, in device pixels. */
+    private var dragX = 0f
+    private var dragY = 0f
+
+    /**
+     * How much the fingers have spread since this gesture began, as a running product.
+     *
+     * Accumulated rather than read per event, so a slow pinch of many small steps adds up to the same
+     * thing a single fast one does — `scaleFactor` only ever reports the last increment.
+     */
+    private var pinchScale = 1f
+
+    /** True once this gesture has moved or scaled enough to count as deliberate rather than a tap. */
+    private var isGesturing = false
+
+    /**
+     * Follows the pinch.
+     *
+     * It only *accumulates*; nothing is decided here. The map is redrawn at a new zoom when the
+     * fingers come off — see [commitGesture] — because the embed's `z=` takes a whole level and
+     * reloading the frame on each event of a pinch would give a map that spent the gesture blank.
+     * What the user sees in the meantime is [applyGesturePreview] scaling the tiles already on screen,
+     * which is how a map should answer a pinch: immediately.
+     */
+    private val scaleDetector = ScaleGestureDetector(
+        context,
+        object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+
+            override fun onScaleBegin(detector: ScaleGestureDetector): Boolean = true
+
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                pinchScale *= detector.scaleFactor
+                // Clamped to the span a single gesture may cover, so one violent pinch cannot ask for
+                // a zoom twenty levels away — and so the preview stays a recognisable map rather than
+                // a handful of enormous pixels.
+                pinchScale = pinchScale.coerceIn(MIN_PINCH_SCALE, MAX_PINCH_SCALE)
+
+                if (!isGesturing && abs(log2(pinchScale)) > PINCH_SLOP_LEVELS) markGestureStarted()
+                if (isGesturing) applyGesturePreview()
+                return true
+            }
+        }
+    )
 
     init {
         configureWebView()
@@ -147,8 +312,14 @@ class MapEmbedView @JvmOverloads constructor(
                 return true
             }
 
-            /** The page is up: reveal it. See the class comment for why it was hidden. */
+            /**
+             * The page is up: reveal it. See the class comment for why it was hidden.
+             *
+             * This is also what lets [recentre] stop reloading the whole document and start moving
+             * the frame instead — there is now a frame to move.
+             */
             override fun onPageFinished(view: WebView, url: String) {
+                isPageLoaded = true
                 view.visibility = View.VISIBLE
             }
         }
@@ -205,11 +376,48 @@ class MapEmbedView @JvmOverloads constructor(
      *   which is a point precise enough to show at street level.
      */
     fun showLocation(at: Coordinates, zoom: Int) {
-        if (at == shownAt && zoom == shownZoom) return
+        if (at == requestedAt && zoom == requestedZoom) return
 
+        requestedAt = at
+        requestedZoom = zoom
         shownAt = at
         shownZoom = zoom
-        loadPage()
+        recentre()
+    }
+
+    /**
+     * Points the map at [shownAt] / [shownZoom], the cheapest way available.
+     *
+     * Once the wrapper page is up, only the frame's `src` is rewritten: the document, its stylesheet
+     * and the theme filter all stay, so re-centring after a drag costs one iframe load rather than a
+     * full page load — which the picker does on every drop and would otherwise blink the card empty
+     * each time.
+     *
+     * Before that it falls back to loading the wrapper, which is also the path [showLocation] takes
+     * the first time it is called.
+     *
+     * The URL needs no escaping: [MapLinks.embedUrl] builds it out of digits, dots, commas and the
+     * URL's own punctuation, none of which can close the JavaScript string literal it is placed in.
+     */
+    private fun recentre() {
+        val at = shownAt ?: return
+
+        if (!isPageLoaded) {
+            loadPage()
+            return
+        }
+
+        val url = MapLinks.embedUrl(at, shownZoom, isSatellite)
+        webView.evaluateJavascript(
+            // The class on <html> is what switches the theme tint off over imagery — see buildPage.
+            // Set here rather than in a second call so the layer and its treatment can never be one
+            // frame out of step with each other.
+            """
+            document.documentElement.className = '${if (isSatellite) PLAIN_CLASS else ""}';
+            var f = document.getElementById('$MAP_FRAME_ID'); if (f) f.src = '$url';
+            """.trimIndent(),
+            null
+        )
     }
 
     /**
@@ -223,10 +431,11 @@ class MapEmbedView @JvmOverloads constructor(
     private fun loadPage() {
         val at = shownAt ?: return
 
+        isPageLoaded = false
         webView.visibility = View.INVISIBLE
         webView.loadDataWithBaseURL(
             BASE_URL,
-            buildPage(MapLinks.embedUrl(at, shownZoom)),
+            buildPage(MapLinks.embedUrl(at, shownZoom, isSatellite)),
             "text/html",
             "utf-8",
             null
@@ -247,23 +456,36 @@ class MapEmbedView @JvmOverloads constructor(
      *    older WebViews on the app's minimum API do not understand;
      *  - `filter` is the theme tint, applied to the element this page owns — see the class comment;
      *  - `loading="lazy"` and the referrer policy are what the design asks for, and `title` is what a
-     *    screen reader would announce for the frame.
+     *    screen reader would announce for the frame;
+     *  - the `id` is how [recentre] finds the frame again, so a new centre costs one `src` change
+     *    rather than a fresh document;
+     *  - the `.$PLAIN_CLASS` rule takes the filter *off*, and [recentre] puts that class on `<html>`
+     *    whenever the satellite layer is showing.
+     *
+     * **Why imagery is left untinted.** The filter exists to approximate a dark map by inverting a
+     * light one, and that trick works because a drawn map is flat colour: invert it, rotate the hue
+     * back, and it reads as the same map at night. Aerial photography is not flat colour — inverted,
+     * vegetation goes magenta, water goes orange and rooftops glow. There is no dark version of a
+     * photograph of the ground, so the honest answer in dark mode is to show the photograph.
      */
     private fun buildPage(embedUrl: String): String {
         val filter = if (isNightMode()) DARK_FILTER else LIGHT_FILTER
+        val startingClass = if (isSatellite) PLAIN_CLASS else ""
 
         return """
             <!doctype html>
-            <html>
+            <html class="$startingClass">
             <head>
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
             <style>
               html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: transparent; }
               iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; filter: $filter; }
+              html.$PLAIN_CLASS iframe { filter: none; }
             </style>
             </head>
             <body>
-            <iframe src="$embedUrl" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            <iframe id="$MAP_FRAME_ID" src="$embedUrl" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
                     title="Map of selected place" allowfullscreen></iframe>
             </body>
             </html>
@@ -285,7 +507,191 @@ class MapEmbedView @JvmOverloads constructor(
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
                 parent?.requestDisallowInterceptTouchEvent(false)
         }
+
+        // In pick mode the gesture is this view's own: returning true keeps it out of the WebView
+        // entirely, so the map moves under the app's control and the coordinate it lands on is known.
+        // See the class comment for why the page cannot simply be asked where the user panned to.
+        if (isPickEnabled) return true
+
         return super.onInterceptTouchEvent(event)
+    }
+
+    /**
+     * The picker's gesture: fingers drag the map, two of them also zoom it.
+     *
+     * Only reached in pick mode, because that is the only mode in which [onInterceptTouchEvent] claims
+     * the gesture — otherwise the WebView has it and this is never called.
+     *
+     * Panning is measured from the **focus** — the average of every finger down — for the reason given
+     * on [lastFocusX]. On the two events where the set of fingers changes, the focus is simply re-read
+     * with no movement recorded: the focus genuinely jumps when a finger arrives or leaves, and that
+     * jump is a fact about the hand rather than about the map.
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (!isPickEnabled) return super.onTouchEvent(event)
+
+        scaleDetector.onTouchEvent(event)
+
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                dragX = 0f
+                dragY = 0f
+                pinchScale = 1f
+                readFocus(event)
+            }
+
+            // A finger arriving or leaving moves the focus without the hand having moved the map.
+            MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_POINTER_UP -> readFocus(event)
+
+            MotionEvent.ACTION_MOVE -> onGestureMove(event)
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                parent?.requestDisallowInterceptTouchEvent(false)
+                if (isGesturing) commitGesture()
+            }
+        }
+
+        return true
+    }
+
+    /**
+     * Records where the fingers now are, without counting the move.
+     *
+     * On [MotionEvent.ACTION_POINTER_UP] the lifting pointer is still part of the event but is about to
+     * stop existing, so it is left out: including it would put the focus where the hand no longer is,
+     * and the next move would begin with that error baked in.
+     */
+    private fun readFocus(event: MotionEvent) {
+        val lifting = if (event.actionMasked == MotionEvent.ACTION_POINTER_UP) {
+            event.actionIndex
+        } else {
+            -1
+        }
+
+        var sumX = 0f
+        var sumY = 0f
+        var count = 0
+        for (index in 0 until event.pointerCount) {
+            if (index == lifting) continue
+            sumX += event.getX(index)
+            sumY += event.getY(index)
+            count++
+        }
+
+        if (count == 0) return
+        lastFocusX = sumX / count
+        lastFocusY = sumY / count
+    }
+
+    /**
+     * One step of the gesture: slide the map with the hand.
+     *
+     * The pan is counted whatever the finger count, so a two-finger pinch that also travels moves the
+     * map as well as zooming it — which is what a map does everywhere else, and what makes it possible
+     * to zoom in on something that is not already in the middle.
+     *
+     * The tiles only start moving once the hand has passed [touchSlop], so a tap does not shift the map
+     * by the pixel or two a finger rolls while pressing — but the movement before that point is still
+     * counted, or the map would lag the hand by exactly the slop for the rest of the gesture.
+     */
+    private fun onGestureMove(event: MotionEvent) {
+        val previousX = lastFocusX
+        val previousY = lastFocusY
+        readFocus(event)
+
+        dragX += lastFocusX - previousX
+        dragY += lastFocusY - previousY
+
+        if (!isGesturing && hypot(dragX, dragY) > touchSlop) markGestureStarted()
+        if (isGesturing) applyGesturePreview()
+    }
+
+    /** The gesture has become deliberate: show the crosshair and start moving the tiles. */
+    private fun markGestureStarted() {
+        isGesturing = true
+        onDragStateChanged?.invoke(true)
+    }
+
+    /**
+     * Draws the gesture as it happens, by moving and scaling the tiles already on screen.
+     *
+     * This is a *preview*, not the answer. The embed can only be asked for whole zoom levels, and
+     * reloading the frame on every event of a pinch would leave the map blank for the whole gesture —
+     * so the page is left alone until the fingers lift and what the user sees in the meantime is the
+     * WebView itself being transformed. It is the same trick a photo viewer uses while a pinch is under
+     * way, and the reason the map now answers a pinch at all rather than sitting still until some
+     * threshold was crossed.
+     *
+     * The scale pivots on the view's centre because the centre is the point being chosen: zooming about
+     * anywhere else would move the coordinate under the crosshair while the user was only trying to see
+     * it more closely.
+     */
+    private fun applyGesturePreview() {
+        webView.pivotX = width / 2f
+        webView.pivotY = height / 2f
+        webView.scaleX = pinchScale
+        webView.scaleY = pinchScale
+        webView.translationX = dragX
+        webView.translationY = dragY
+    }
+
+    /**
+     * The hand is off: work out where the map now sits and at what zoom, and make that real.
+     *
+     * **The zoom** is the nearest whole level to the pinch — `log2` of the spread, rounded — because
+     * whole levels are the only thing `z=` can express. A pinch too small to reach the next level
+     * therefore springs back, which is honest: the map cannot draw a half level.
+     *
+     * **The centre** has to account for the scale as well as the drag, because the preview applied both.
+     * A point sits at `centre + scale × (point − centre) + drag` on screen, so the point that ended up
+     * in the middle is `centre − drag / scale` — which is why the drag is divided by [pinchScale] before
+     * being handed to [WebMercator]. Dividing by the display density as well converts device pixels into
+     * the CSS pixels the framed page is laid out in; see [buildPage], which sets `initial-scale=1`.
+     *
+     * The transform is undone and the embed re-pointed in the same pass, so the tiles never appear to
+     * snap back before moving forward again.
+     */
+    private fun commitGesture() {
+        isGesturing = false
+        onDragStateChanged?.invoke(false)
+
+        webView.scaleX = 1f
+        webView.scaleY = 1f
+        webView.translationX = 0f
+        webView.translationY = 0f
+
+        val from = shownAt
+        val movedX = dragX
+        val movedY = dragY
+        val scale = pinchScale
+        dragX = 0f
+        dragY = 0f
+        pinchScale = 1f
+
+        if (from == null) return
+
+        val zoom = (shownZoom + log2(scale).roundToInt()).coerceIn(MIN_ZOOM, MAX_ZOOM)
+        val density = resources.displayMetrics.density
+        val centre = WebMercator.centreAfterDrag(
+            from = from,
+            dragX = (movedX / scale / density).toDouble(),
+            dragY = (movedY / scale / density).toDouble(),
+            zoom = shownZoom
+        )
+
+        if (centre == from && zoom == shownZoom) return
+
+        shownAt = centre
+        shownZoom = zoom
+        // The centre is also recorded as what the screen asked for, so the state change this is about
+        // to cause — the fragment re-rendering with the new coordinate — is recognised as already drawn
+        // and does not reload the map a second time. requestedZoom is deliberately left alone: it is
+        // the zoom the *screen* asked for, and the user has just overridden it.
+        requestedAt = centre
+
+        recentre()
+        onPickedCentreChanged?.invoke(centre)
     }
 
     /**
@@ -318,6 +724,8 @@ class MapEmbedView @JvmOverloads constructor(
      */
     fun destroy() {
         onExternalLink = null
+        onPickedCentreChanged = null
+        onDragStateChanged = null
         removeView(webView)
         webView.destroy()
     }
@@ -330,6 +738,50 @@ class MapEmbedView @JvmOverloads constructor(
          * content and blocking the cookies the embed uses to remember map preferences.
          */
         const val BASE_URL = "https://maps.google.com/"
+
+        /**
+         * The id given to the `<iframe>` in the wrapper page, so [recentre] can find it again and
+         * move it rather than rebuild the document around it. Named once here because the page that
+         * writes it and the script that looks it up must agree.
+         */
+        const val MAP_FRAME_ID = "map"
+
+        /**
+         * How far a pinch in pick mode may zoom.
+         *
+         * 20 is the deepest level Google serves tiles for in most places — beyond it the map stops
+         * getting more detailed and only gets blurrier. 3 shows most of a continent, which is as far
+         * out as a screen for saving "the vet round the corner" has any use for; zooming to the whole
+         * globe would make a one-pixel drag worth tens of kilometres.
+         */
+        const val MIN_ZOOM = 3
+        const val MAX_ZOOM = 20
+
+        /**
+         * How far one pinch may take the map: four levels in, four levels out.
+         *
+         * A ceiling is needed because the preview scales the tiles that are already on screen, and a
+         * gesture allowed to run to thirty-two times would be previewing a map out of a handful of
+         * pixels. Four levels is more than any single comfortable pinch reaches anyway, and a second
+         * pinch carries on from where the first finished.
+         */
+        const val MAX_PINCH_SCALE = 16f
+        const val MIN_PINCH_SCALE = 1f / 16f
+
+        /**
+         * How much of a zoom level a pinch must cover before it counts as deliberate.
+         *
+         * A fifth of a level: small enough that the map starts responding almost at once — which is the
+         * whole point of the preview — and large enough that two fingers resting on the card do not set
+         * it drifting.
+         */
+        const val PINCH_SLOP_LEVELS = 0.2f
+
+        /**
+         * The class put on `<html>` while imagery is showing, which switches the theme's colour filter
+         * off. See [buildPage] for why a photograph must not be inverted.
+         */
+        const val PLAIN_CLASS = "plain"
 
         /**
          * Light mode: the map's colours pulled back a little, so a full-strength Google map does not

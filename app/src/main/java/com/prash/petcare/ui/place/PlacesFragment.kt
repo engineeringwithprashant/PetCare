@@ -30,7 +30,7 @@ import com.prash.petcare.databinding.FragmentPlacesBinding
 import com.prash.petcare.ui.checklist.RoutineOption
 import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.anchorAboveNavBar
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.bindOptions
 import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.formatDistanceKm
@@ -40,7 +40,6 @@ import com.prash.petcare.ui.common.openExternalLink
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.placeSubtitle
 import com.prash.petcare.ui.common.setUp
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.ui.task.AddEditTaskFragment
 import com.prash.petcare.ui.task.CareTaskViewModel
@@ -126,8 +125,8 @@ class PlacesFragment : Fragment() {
         )
 
         // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
-        bindHeaderProfilePhoto(binding.header, sessionViewModel)
+        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        bindHeaderFromSession(binding.header, sessionViewModel)
 
         binding.placesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -235,6 +234,36 @@ class PlacesFragment : Fragment() {
         // A tap on a Google link inside the map (its logo, "Terms") leaves the app rather than
         // navigating the small card to a full Google page the user could not get back from.
         binding.placesMap.onExternalLink = { url -> openLink(url) }
+
+        binding.mapLayerButton.setOnClickListener { viewModel.toggleMapLayer() }
+    }
+
+    /**
+     * Applies the chosen map layer to the card and to the button that chooses it.
+     *
+     * The button's label names where a press *leads* rather than where the map already is, so the two
+     * are deliberately crossed: imagery showing means the button offers the map. The content
+     * description states both halves, because a screen reader user cannot see the tiles under the
+     * button to infer the other half from. The same rendering as AddPlaceFragment's, because it is the
+     * same control.
+     */
+    private fun renderMapLayer(isSatellite: Boolean) {
+        binding.placesMap.isSatellite = isSatellite
+
+        binding.mapLayerButton.setText(
+            if (isSatellite) {
+                R.string.map_layer_switch_to_map
+            } else {
+                R.string.map_layer_switch_to_satellite
+            }
+        )
+        binding.mapLayerButton.contentDescription = getString(
+            if (isSatellite) {
+                R.string.cd_map_layer_showing_satellite
+            } else {
+                R.string.cd_map_layer_showing_map
+            }
+        )
     }
 
     /**
@@ -252,7 +281,11 @@ class PlacesFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state -> render(state) }
+                // Two collectors rather than one combined flow: the map layer changes for reasons the
+                // screen state knows nothing about, and folding it in would redraw the whole tab — see
+                // PlacesViewModel.isSatellite.
+                launch { viewModel.uiState.collect { state -> render(state) } }
+                launch { viewModel.isSatellite.collect { renderMapLayer(it) } }
             }
         }
     }
@@ -262,7 +295,6 @@ class PlacesFragment : Fragment() {
     // ---------------------------------------------------------------------------------------
 
     private fun render(state: PlacesUiState) {
-        binding.header.showPetCount(state.petCount)
         if (state.isLoading) return
 
         // With nothing saved, a map, filters and a card for no places would be empty furniture — and

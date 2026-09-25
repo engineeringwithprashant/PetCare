@@ -34,13 +34,12 @@ import com.prash.petcare.databinding.FragmentChecklistBinding
 import com.prash.petcare.databinding.ItemWeekDayBinding
 import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.SwipeActionCallback
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.bindOptions
 import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.common.setUp
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.ui.task.AddEditTaskFragment
 import com.prash.petcare.ui.task.CareTaskViewModel
@@ -89,11 +88,16 @@ private enum class DelegationChannel(@param:StringRes val labelRes: Int) {
  *  - **shake** the phone, or press "Reset day", to clear the ticks shown — after a confirmation.
  *
  * **The delegation flow**, which is the longest part of this class, starts by asking which channel
- * to use. *Text message*: the app sends it, so every step is explicit and can stop cleanly — a
- * rationale then the contacts permission, the system contact picker, a preview of the exact message
- * and its cost, a rationale then the SMS permission, and only then the send. *Email*: the checklist
- * is handed to the user's own mail app as a draft, which they address and send themselves, so no
- * permission, recipient or preview is involved.
+ * to use. Both channels now show the exact message before anything leaves the app — the user is about
+ * to put this text in front of a real person, and being able to read it first is the point.
+ *
+ * *Text message*: the app sends it itself, so every step is explicit and can stop cleanly — a
+ * rationale then the contacts permission, the system contact picker, a preview of the message and its
+ * cost in messages, a rationale then the SMS permission, and only then the send.
+ *
+ * *Email*: no permission and no recipient, because the checklist is handed to the user's own mail app
+ * as a draft which they address and send themselves — but the preview comes first all the same, since
+ * otherwise the first sight of the message is in another app with a send button beside it.
  */
 class ChecklistFragment : Fragment() {
 
@@ -163,8 +167,9 @@ class ChecklistFragment : Fragment() {
      * Open dialogs, held so they can be dismissed if the view is destroyed — a dialog belongs to the
      * window it was shown in, and one left attached to a destroyed Activity leaks it.
      *
-     *  - [previewDialog] is backed by ViewModel state (the SMS delegation stage), so after a rotation
-     *    it is simply shown again from that state.
+     *  - [previewDialog] holds whichever message confirmation is up. The text branch's is backed by
+     *    ViewModel state (the SMS delegation stage), so after a rotation it is simply shown again from
+     *    that state; the email branch's is not, for the reason given on [startEmailDelegation].
      *  - [channelDialog], [resetDialog] and [routineDialog] are answered in one tap without leaving the
      *    app; a rotation closes them and the user asks again, having lost nothing. [resetDialog] also
      *    stops a continued shake stacking a second confirmation on the first.
@@ -305,8 +310,8 @@ class ChecklistFragment : Fragment() {
             )
 
             // Keeps the header's mark showing the user's profile photo, falling back to the app's
-            // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
-            bindHeaderProfilePhoto(binding.header, sessionViewModel)
+            // monogram when there is none. See TabHeader.bindHeaderFromSession.
+            bindHeaderFromSession(binding.header, sessionViewModel)
         }
 
         dayCells = listOf(
@@ -519,7 +524,6 @@ class ChecklistFragment : Fragment() {
     /** Applies the current state to the views. */
     private fun render(state: ChecklistUiState) {
         if (viewModel.showsPetPicker) {
-            binding.header.showPetCount(state.pets.size)
         } else {
             renderTitle(state)
         }
@@ -769,16 +773,59 @@ class ChecklistFragment : Fragment() {
     }
 
     /**
-     * The email branch, in full — this short because the app does not do the sending. [EmailComposer]
-     * opens a draft in the user's mail app; the compose window is the preview, so none is shown here.
+     * The email branch, step 1: show the exact message for confirmation before leaving the app.
+     *
+     * **This step did not used to exist**, on the reasoning that the mail app's compose window is
+     * itself a preview. It is — but by the time the user reaches it they have been thrown into another
+     * app, holding a draft they did not write with a send button in front of them, and the only way to
+     * read the message *before* committing to that was to go and then come back. The text branch has
+     * always shown its message first ([showPreviewDialog]); this is the same courtesy, and it makes
+     * the two channels behave alike.
+     *
+     * A plain dialog rather than a [DelegationStage], unlike the text branch. That stage exists
+     * because the text flow leaves the app to pick a contact and has to survive coming back; nothing
+     * has been gathered here, so a rotation that closes this dialog costs the user one tap.
      */
     private fun startEmailDelegation() {
         val state = viewModel.uiState.value
+        val subject = buildDelegationSubject(requireContext(), joinNames(state.outstandingPetNames))
+        val message = outstandingMessage(state)
 
+        // "4 remaining tasks for Max" — a sanity check of the scope without reading the whole body.
+        val summary = resources.getQuantityString(
+            R.plurals.delegate_outstanding_summary,
+            state.outstandingCount,
+            state.outstandingCount,
+            joinNames(state.outstandingPetNames)
+        )
+
+        val subjectLine = getString(R.string.delegate_email_preview_subject, subject)
+        val note = getString(R.string.delegate_email_preview_note)
+
+        previewDialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.delegate_email_preview_title)
+            // The subject as well as the body, because the subject is half of what the recipient sees
+            // first and it is the only part the user cannot change once the draft is open.
+            .setMessage("$summary\n\n$subjectLine\n\n$message\n\n$note")
+            .setNegativeButton(R.string.delegate_cancel, null)
+            .setPositiveButton(R.string.delegate_email_continue) { _, _ ->
+                openEmailDraft(subject, message)
+            }
+            .setOnDismissListener { previewDialog = null }
+            .show()
+    }
+
+    /**
+     * The email branch, step 2: hand the draft to the user's mail app.
+     *
+     * Everything past this point is exactly as it was before the preview was added — [EmailComposer]
+     * opens a draft and the user sends it from there. The app never sends an email itself.
+     */
+    private fun openEmailDraft(subject: String, message: String) {
         val wasOpened = EmailComposer.compose(
             context = requireContext(),
-            subject = buildDelegationSubject(requireContext(), joinNames(state.outstandingPetNames)),
-            body = outstandingMessage(state),
+            subject = subject,
+            body = message,
             chooserTitle = getString(R.string.delegate_email_chooser_title)
         )
 

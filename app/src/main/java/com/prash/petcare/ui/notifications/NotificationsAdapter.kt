@@ -1,5 +1,8 @@
 package com.prash.petcare.ui.notifications
 
+import com.prash.petcare.data.alert.Alert
+import com.prash.petcare.data.alert.AlertContent
+import com.prash.petcare.data.alert.TipKind
 import android.content.Context
 import android.content.res.ColorStateList
 import android.text.format.DateFormat

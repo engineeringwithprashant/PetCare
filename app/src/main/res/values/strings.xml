@@ -1014,8 +1014,13 @@
     <string name="reset_dialog_cancel">Cancel</string>
     <string name="reset_done">Today\'s checklist has been reset</string>
     <!-- Joins several pet names in one sentence, e.g. "Krishala, Ddjw". A string resource rather than a
-         hard-coded comma so a language with a different list separator can supply its own. -->
-    <string name="list_separator">, </string>
+         hard-coded comma so a language with a different list separator can supply its own.
+
+         **The quotes are load-bearing.** Android strips leading and trailing whitespace from a string
+         resource unless the value is quoted, so the unquoted version of this was silently delivered as
+         "," — which is why delegated checklists went out reading "Remaining care for Kuchu
+         Puchu,Sisimanu". The space is the whole point of the separator, so it has to be protected. -->
+    <string name="list_separator">", "</string>
 
     <!-- ============================== Care delegation ==============================
          Handing a pet's checklist to someone who is looking after them, either as a text message
@@ -1059,6 +1064,22 @@
     <!-- Email delegation. Nothing is sent by the app here — the checklist is handed to whichever
          mail app the user picks, and they address it and send it themselves. -->
     <string name="delegate_email_chooser_title">Send checklist with</string>
+
+    <!-- The email branch's confirmation, shown before the mail app opens.
+
+         **Why it exists.** The text branch has always shown the exact message before sending, because
+         the app sends that one itself and the user would otherwise never see it. The email branch had
+         no preview at all on the reasoning that the compose window *is* one — but by then the user has
+         already been thrown out of PetCare into another app, with a draft they did not write and a
+         send button in front of them. Reading the message where it was composed, and choosing to go,
+         is the same courtesy the text branch already offered.
+
+         The button says "Open email app" rather than "Send", because that is honestly all it does —
+         nothing is sent until the user presses send in their mail app. -->
+    <string name="delegate_email_preview_title">Send this by email?</string>
+    <string name="delegate_email_preview_subject">Subject: %1$s</string>
+    <string name="delegate_email_preview_note">Your email app will open with this message ready to send. Nothing is sent until you send it there.</string>
+    <string name="delegate_email_continue">Open email app</string>
     <!-- The email's subject line. %1$s is the pet's name, which is what makes the message findable
          in an inbox holding checklists for more than one animal. Worded to match the opening line
          of the body. -->
@@ -1130,29 +1151,28 @@
          state; TalkBack announces the description in place of the label, so it has to carry both. -->
     <string name="cd_switch_to_dark_theme">Switch to dark theme</string>
     <string name="cd_switch_to_light_theme">Switch to light theme</string>
-    <!-- The circular count badge, which opens the account screen. %1$d is the number of pets. -->
-    <!-- The badge counts pets but opens the notifications screen, so its description has to say both:
-         a screen reader announces the description *instead of* the label, so a user who heard only
-         the count would have no idea what pressing it does. -->
-    <plurals name="cd_pets_badge">
-        <item quantity="one">%1$d pet in care. Open notifications.</item>
-        <item quantity="other">%1$d pets in care. Open notifications.</item>
+    <!-- The header's notifications bell. %1$d is how many alerts are unread.
+
+         The description has to carry the action as well as the count, because a screen reader
+         announces it *instead of* the label — a user who heard only "3 unread alerts" would have no
+         idea what pressing it does. The exact number is spoken even when the bubble has given up and
+         drawn "9+", since speech has room for it. -->
+    <plurals name="cd_alerts_bell">
+        <item quantity="one">%1$d unread alert. Open notifications.</item>
+        <item quantity="other">%1$d unread alerts. Open notifications.</item>
     </plurals>
-    <!-- The same badge on the notifications screen itself, where it has been unhooked because it
-         would only reopen the screen already being looked at. It reports the count and promises
-         nothing — see ui/common/TabHeader.kt. -->
-    <plurals name="cd_pets_badge_plain">
-        <item quantity="one">%1$d pet in care</item>
-        <item quantity="other">%1$d pets in care</item>
+    <!-- The same bell on the notifications screen itself, where it has been unhooked because it would
+         only reopen the screen already being looked at. It reports the count and promises nothing —
+         see ui/common/TabHeader.kt. -->
+    <plurals name="cd_alerts_bell_plain">
+        <item quantity="one">%1$d unread alert</item>
+        <item quantity="other">%1$d unread alerts</item>
     </plurals>
-    <!-- Added to the pet badge's description when the red dot is showing, so TalkBack users hear what
-         the dot means. %1$d is how many of today's tasks are past their time. -->
-    <plurals name="cd_overdue_tasks">
-        <item quantity="one">%1$d task is overdue.</item>
-        <item quantity="other">%1$d tasks are overdue.</item>
-    </plurals>
-    <!-- Joins the two sentences above: the badge's own description, then the overdue count. -->
-    <string name="cd_badge_with_overdue">%1$s %2$s</string>
+    <!-- What the bubble draws once the count passes what fits in it: "9+". %1$d is the highest number
+         it will print. Not translatable as a sentence — it is a numeral and a plus sign — but it is a
+         resource rather than a literal so the numeral goes through the same formatting as the counts
+         below it. -->
+    <string name="header_alert_count_overflow">%1$d+</string>
     <!-- The header's AI pill. -->
     <string name="cd_open_assistant">Open the assistant</string>
     <!-- The progress ring. Announced as one sentence rather than leaving TalkBack to read the count
@@ -1700,12 +1720,9 @@
 
     <string name="profile_section_account">Account</string>
 
-    <!-- The four-letter codes in the square badges. Not translatable: they are fixed-width
-         abbreviations chosen to fit a 44dp square, and a translation would almost certainly not. -->
-    <string name="profile_badge_name" translatable="false">NAME</string>
-    <string name="profile_badge_mail" translatable="false">MAIL</string>
-    <string name="profile_badge_phone" translatable="false">PHON</string>
-    <string name="profile_badge_password" translatable="false">PASS</string>
+    <!-- The four rows' badges hold glyphs rather than words — a person, an envelope, a handset, a
+         padlock — so there are no strings for them. They were four-letter codes ("NAME", "MAIL", "PHON",
+         "PASS"); see ic_profile_person.xml for why they are not any more. -->
 
     <string name="profile_row_name_title">Name &amp; details</string>
     <!-- "Prashant Pant · owner account" — the name and the role, so the row summarises what pressing
@@ -1965,14 +1982,38 @@
 
     <!-- The live map, and the status chip in its corner. The chip's label is the one-glance answer to
          "is this position real?", which is why a demo fix says so rather than passing for a live one. -->
-    <string name="cd_add_place_map">Map of your current position</string>
+    <string name="cd_add_place_map">Map of your current position. Drag it to move the pin, pinch to zoom.</string>
     <string name="add_place_gps_chip_live">Live GPS</string>
     <string name="add_place_gps_chip_demo">Demo location</string>
     <string name="add_place_gps_chip_locating">Locating…</string>
     <string name="add_place_gps_chip_none">No GPS fix</string>
+    <!-- The chip once the user has dragged the pin off their own position. It says "chosen", not
+         "GPS", because the point is no longer the device's answer — it is the user's. -->
+    <string name="add_place_gps_chip_picked">Chosen point</string>
     <!-- Shown in the map's place when there is no fix to draw one at. -->
     <string name="add_place_map_locating">Finding your position…</string>
     <string name="add_place_map_unavailable">Location is off for this app. Turn it on, or use the demo location to try the flow.</string>
+    <!-- The line under the map. Present on arrival rather than only after a first drag: a map that can
+         be dragged to choose a point looks exactly like one that cannot, so the screen has to say so. -->
+    <string name="add_place_map_drag_hint">Drag the map to put the pin on the place · pinch to zoom · “Refresh location” snaps back to you</string>
+    <!-- The same line when the device could not produce a fix at all. It stops being a note about what
+         the map can do and becomes the instruction for the only way forward, so it leads with the
+         problem and names the gesture that solves it. -->
+    <string name="add_place_map_drag_hint_no_fix">No GPS fix — drag the map yourself to put the pin on the place, then save. Pinch to zoom.</string>
+
+    <!-- ===================== The map / satellite toggle =====================
+         Shared by the Places tab's map and the Add a place map, because it is the same control on the
+         same object and a layer button that said different things in two corners of the app would be
+         two controls rather than one.
+
+         **The label names where the tap leads, not where the map already is.** "SATELLITE" on a drawn
+         map means "press for satellite" — the reading a two-state toggle gets when its face is an
+         action. The content descriptions below then say both halves out loud, because a screen reader
+         user cannot see which layer is underneath the button to infer the other one from. -->
+    <string name="map_layer_switch_to_satellite">Satellite</string>
+    <string name="map_layer_switch_to_map">Map</string>
+    <string name="cd_map_layer_showing_map">Showing the drawn map. Switch to satellite imagery.</string>
+    <string name="cd_map_layer_showing_satellite">Showing satellite imagery. Switch to the drawn map.</string>
 
     <!-- The dark current-location card: its label, the title line, and the meta line under it. -->
     <string name="add_place_here_label">Current location</string>
@@ -1990,6 +2031,14 @@
     <!-- The same line without the accuracy, for a fix whose provider reported none — see
          AddPlaceFragment.formatFixDetails for why it is dropped rather than printed as "±0 m". -->
     <string name="add_place_here_meta_no_accuracy">%1$s · %2$s from home</string>
+
+    <!-- The card once the pin has been dragged away from the device's own position. The label changes
+         from "Current location" to "Chosen location" because the card is no longer describing the
+         phone — and no accuracy is quoted, because a point somebody put there by hand has none to
+         quote: it is exactly where they put it. %1$s is the coordinates, %2$s a distance from home. -->
+    <string name="add_place_here_label_picked">Chosen location</string>
+    <string name="add_place_here_picked">Pin moved on the map</string>
+    <string name="add_place_here_picked_meta">%1$s · %2$s from home · your own pin</string>
 
     <!-- Why there is no fix. Each is written as a condition with a way forward, not as an error: the
          demo location beside them means the screen is never a dead end. -->
@@ -2014,6 +2063,10 @@
          cannot press it knows which of the two conditions is missing. -->
     <string name="add_place_save">Save place</string>
     <string name="add_place_save_waiting">Waiting for location</string>
+    <!-- Once the device has given up, the user is not waiting for anything — the map below is up and
+         the pin is theirs to place. A button still reading "Waiting for location" at that moment would
+         send them on watching for a fix that is never coming. -->
+    <string name="add_place_save_needs_pin">Drag the map to place the pin</string>
 
     <!-- The summary card: what will be saved on the first line, where its position came from on the
          second. The two lines are joined with a newline by the fragment. -->
@@ -2022,6 +2075,10 @@
          ("Vet clinic · Pulchowk"), so the summary reads in the same voice as the card it becomes. -->
     <string name="add_place_summary_line">%1$s · %2$s</string>
     <string name="add_place_summary_geotagged">Geotagged at %1$s</string>
+    <!-- The same statement for a pin the user placed. Worth its own wording: the coordinates are the
+         same shape either way, and this is the line that tells them which one they are looking at
+         before they commit. -->
+    <string name="add_place_summary_picked">Pin dropped at %1$s</string>
     <string name="add_place_summary_waiting">Waiting for a GPS fix</string>
 
     <!-- What a saved place carries when it was saved from this screen rather than typed into the full

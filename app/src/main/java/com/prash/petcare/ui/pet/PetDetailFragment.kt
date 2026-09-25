@@ -27,7 +27,7 @@ import com.prash.petcare.data.local.entity.PetGender
 import com.prash.petcare.databinding.FragmentPetDetailBinding
 import com.prash.petcare.ui.checklist.ChecklistFragment
 import com.prash.petcare.ui.common.anchorAboveNavBar
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.formatAge
 import com.prash.petcare.ui.common.formatStoredDate
 import com.prash.petcare.ui.common.formatWeightWithUnit
@@ -35,7 +35,6 @@ import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.loadPetPhoto
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.common.showTitle
 import com.prash.petcare.ui.expense.ExpensesFragment
 import com.prash.petcare.ui.routine.AddRoutineFragment
@@ -133,8 +132,8 @@ class PetDetailFragment : Fragment() {
         )
 
         // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
-        bindHeaderProfilePhoto(binding.header, sessionViewModel)
+        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        bindHeaderFromSession(binding.header, sessionViewModel)
 
         setUpRecyclerView()
         setUpClickListeners()
@@ -339,7 +338,6 @@ class PetDetailFragment : Fragment() {
     /** Applies the current state to the views. */
     private fun render(state: PetDetailUiState) {
         binding.header.showTitle(state.petFirstName)
-        binding.header.showPetCount(state.petCount)
 
         state.pet?.let { pet ->
             bindHeroCard(pet, state)

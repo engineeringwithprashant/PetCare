@@ -22,12 +22,11 @@ import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentExpensesBinding
 import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.SwipeActionCallback
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.bindOptions
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.common.setUp
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
@@ -115,8 +114,8 @@ class ExpensesFragment : Fragment() {
             )
 
             // Keeps the header's mark showing the user's profile photo, falling back to the app's
-            // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
-            bindHeaderProfilePhoto(binding.header, sessionViewModel)
+            // monogram when there is none. See TabHeader.bindHeaderFromSession.
+            bindHeaderFromSession(binding.header, sessionViewModel)
         }
     }
 
@@ -170,7 +169,6 @@ class ExpensesFragment : Fragment() {
 
     private fun render(state: ExpensesUiState) {
         if (viewModel.showsPetPicker) {
-            binding.header.showPetCount(state.pets.size)
             renderPetChips(state)
         } else {
             // "Spending on Bella" in the toolbar. Until the pet loads, the destination's own label

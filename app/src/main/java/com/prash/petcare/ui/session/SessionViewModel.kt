@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.prash.petcare.PetCareApplication
+import com.prash.petcare.data.repository.AlertRepository
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.UserRepository
@@ -63,6 +64,8 @@ import kotlinx.coroutines.flow.stateIn
  * @param careTaskRepository Supplies the tasks those schedules are matched against. Together the two
  *   give the count behind the navigation bar's Tasks badge — the second value here that belongs to
  *   the app's chrome rather than to any screen.
+ * @param alertRepository Supplies the alerts behind the number on the header's bell — the third such
+ *   value, and drawn on more screens than either of the others.
  */
 // flatMapLatest is still marked experimental in kotlinx.coroutines but is long-settled API, used
 // here for the reason given on profilePhotoPath: the photo query has to follow the signed-in id.
@@ -71,7 +74,8 @@ class SessionViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val userRepository: UserRepository,
     private val careRoutineRepository: CareRoutineRepository,
-    private val careTaskRepository: CareTaskRepository
+    private val careTaskRepository: CareTaskRepository,
+    private val alertRepository: AlertRepository
 ) : ViewModel() {
 
     /**
@@ -155,6 +159,37 @@ class SessionViewModel(
      * `distinctUntilChanged` means an edit that leaves the total alone — retitling a task, moving one
      * an hour later — does not redraw the badge.
      */
+    /**
+     * How many alerts the user has not read yet — the number on the bell in the shared header.
+     *
+     * **Why this lives here, like the two values above and for the same reason.** It is drawn by the
+     * app's chrome rather than by any one screen: the bell is in the header of a dozen screens, and
+     * the count has to be right on every one of them. The notifications screen counts the same thing
+     * for its own headline, but asking that screen would mean keeping it alive to answer a question
+     * about a screen nobody is on.
+     *
+     * **It cannot drift from the list behind it**, because both come from the single
+     * [AlertRepository] the Application holds: the bell counts the unread items of exactly the list
+     * the notifications screen will show. That was the point of moving the derivation out of that
+     * screen's ViewModel.
+     *
+     * `flatMapLatest` re-subscribes when the account changes, so signing out and in as somebody else
+     * cannot leave the first user's count on the bell. `distinctUntilChanged` means a rebuild that
+     * leaves the total alone — an alert's wording changing as a due date approaches — does not redraw
+     * every header. `WhileSubscribed` stops the queries when no header is on screen, with the same
+     * five-second grace period as the others so a rotation does not re-derive from scratch.
+     */
+    val unreadAlertCount: StateFlow<Int> = userId
+        .flatMapLatest { id ->
+            if (id == NO_USER_ID) {
+                flowOf(0)
+            } else {
+                alertRepository.observeAlerts(id).map { alerts -> alerts.count { !it.isRead } }
+            }
+        }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
     val openTasksToday: StateFlow<Int> = userId
         .flatMapLatest { id ->
             if (id == NO_USER_ID) {
@@ -247,7 +282,8 @@ class SessionViewModel(
                     createSavedStateHandle(),
                     application.userRepository,
                     application.careRoutineRepository,
-                    application.careTaskRepository
+                    application.careTaskRepository,
+                    application.alertRepository
                 )
             }
         }

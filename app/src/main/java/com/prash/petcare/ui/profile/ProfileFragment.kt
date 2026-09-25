@@ -33,10 +33,9 @@ import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.databinding.FragmentProfileBinding
 import com.prash.petcare.databinding.ItemProfileContactBinding
 import com.prash.petcare.ui.common.PhoneNumberInput
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showAssistantPill
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.util.PetPhotoStorage
 import java.text.NumberFormat
@@ -149,8 +148,8 @@ class ProfileFragment : Fragment() {
         )
 
         // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
-        bindHeaderProfilePhoto(binding.header, sessionViewModel)
+        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        bindHeaderFromSession(binding.header, sessionViewModel)
 
         binding.header.showAssistantPill {
             findNavController().navigate(R.id.action_profile_to_assistant)
@@ -338,7 +337,6 @@ class ProfileFragment : Fragment() {
         renderIdentityCard(user, state.petCount)
         renderAccountRows(user)
 
-        binding.header.showPetCount(state.petCount)
     }
 
     /** The dark card: the photo, the name, the two contact lines and the pills. */

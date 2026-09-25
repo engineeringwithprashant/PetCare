@@ -2,7 +2,7 @@
 <!--
     The small red dot in the top corner of an unread alert card.
 
-    The header badge's dot (bg_unread_dot.xml) in the same red, but without its ring. That ring exists
+    The same red as the count bubble on the header's bell, but without its ring. That ring exists
     because the header's dot overlaps the pet-count badge and the two outlines would otherwise blur
     together at that size; this one sits in clear space inside a card, so a ring would only draw a
     pale halo around it.

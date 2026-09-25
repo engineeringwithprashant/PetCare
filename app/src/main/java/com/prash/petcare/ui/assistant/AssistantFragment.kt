@@ -5,7 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -18,10 +21,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.chip.Chip
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentAssistantBinding
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
@@ -85,13 +87,46 @@ class AssistantFragment : Fragment() {
         )
 
         // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
-        bindHeaderProfilePhoto(binding.header, sessionViewModel)
+        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        bindHeaderFromSession(binding.header, sessionViewModel)
 
         setUpList()
         setUpInput()
+        keepInputClearOfNavBar()
         keepNewestMessageVisibleWhenListShrinks()
         observeViewModel()
+    }
+
+    /**
+     * Keeps the question field and the send button out from under the floating navigation bar.
+     *
+     * The bar is a genuine overlay — it is drawn over the screen rather than taking a row of its own,
+     * which is the whole of that design (see activity_main.xml) — and every other screen deals with it
+     * by giving its scrolling content a deep bottom padding so the last card can scroll clear. This
+     * screen cannot: its input row is *pinned* to the bottom and never scrolls, so without a clearance
+     * it simply sat behind the tabs.
+     *
+     * **Why it is not a fixed margin in the layout.** The Activity hides the bar while the keyboard is
+     * up, and reserves the keyboard's height on the root instead — see MainActivity.applyWindowInsets.
+     * A permanent 76dp gap would then leave the input row hovering with a band of empty page beneath
+     * it, exactly where the tabs no longer are. So the clearance is applied only while the bar is
+     * actually on screen, which is precisely "while the keyboard is not".
+     *
+     * **Why the listener is on the row rather than on the fragment's root.** An
+     * `OnApplyWindowInsetsListener` *replaces* the default dispatch for the view it is set on, so one
+     * on the root would stop insets reaching anything inside this screen — the trap noted on
+     * [keepNewestMessageVisibleWhenListShrinks]. On the row itself the only views cut off are the text
+     * field and the send button, neither of which reads an inset. The insets are returned untouched, so
+     * the Activity's own handling is unaffected.
+     */
+    private fun keepInputClearOfNavBar() {
+        val clearance = resources.getDimensionPixelSize(R.dimen.assistant_input_nav_clearance)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.inputRow) { row, windowInsets ->
+            val isKeyboardVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())
+            row.updatePadding(bottom = if (isKeyboardVisible) 0 else clearance)
+            windowInsets
+        }
     }
 
     /**
@@ -196,7 +231,6 @@ class AssistantFragment : Fragment() {
 
     /** Applies one state to the header, the conversation, the chips and the input row. */
     private fun render(state: AssistantUiState) {
-        binding.header.showPetCount(state.petNames.size)
         renderTitle(state.petNames)
         renderMessages(state.messages)
         renderSuggestions(state)

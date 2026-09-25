@@ -225,33 +225,6 @@ class AddVaccinationViewModel(
     val formState: StateFlow<VaccinationFormState> = _formState.asStateFlow()
 
     /**
-     * How many pets the owner has, for the shared header's count badge.
-     *
-     * Separate from [formState] because it is *chrome* rather than part of the form — it belongs to
-     * the header this screen draws in common with every tab, and mixing it into the form's state
-     * would make an unrelated pet being added elsewhere look like a change to the record being
-     * entered.
-     *
-     * The owner comes from the pet rather than from the signed-in session, for the reason given on
-     * [PetDetailViewModel]: the two can then never disagree about whose animal this is. Hence
-     * [flatMapLatest] — the count query can only be opened once the pet has loaded and named an
-     * owner. [distinctUntilChanged] stops that query being torn down and reopened if the pet row
-     * re-emits with the same owner.
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val petCount: StateFlow<Int> = petRepository.observePet(petId)
-        .map { it?.ownerId }
-        .distinctUntilChanged()
-        .flatMapLatest { ownerId ->
-            if (ownerId == null) flowOf(0) else petRepository.observePetCountForOwner(ownerId)
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = 0
-        )
-
-    /**
      * One-shot events, as a [Channel] rather than more state.
      *
      * "The record was saved" happens once and must be acted on once. Published as state it would be

@@ -1,5 +1,7 @@
 package com.prash.petcare.ui.notifications
 
+import com.prash.petcare.data.alert.Alert
+import com.prash.petcare.data.alert.AlertTarget
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,11 +18,10 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentNotificationsBinding
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showAssistantPill
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.pet.PetDetailFragment
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
@@ -96,8 +97,8 @@ class NotificationsFragment : Fragment() {
         )
 
         // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
-        bindHeaderProfilePhoto(binding.header, sessionViewModel)
+        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        bindHeaderFromSession(binding.header, sessionViewModel)
         binding.header.showAssistantPill(::openAssistant)
 
         setUpRecyclerView()
@@ -171,7 +172,6 @@ class NotificationsFragment : Fragment() {
 
     /** Applies the current state to the views. */
     private fun render(state: NotificationsUiState) {
-        binding.header.showPetCount(state.petCount)
 
         binding.alertsHeadlineText.text = headlineFor(state.unreadCount)
 

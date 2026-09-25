@@ -1,22 +1,28 @@
-package com.prash.petcare.ui.notifications
+package com.prash.petcare.data.alert
 
 import com.prash.petcare.data.local.entity.TaskCategory
 
 /**
- * The model behind the notifications screen: one alert, what it says, when it became true, and where
- * tapping it goes.
+ * One alert: what it says, when it became true, and where tapping it goes.
  *
  * **Why these are data classes and not database rows.** Nothing in the app *writes* an alert. Every
  * one of them is a reading of data the user already has — a vet visit coming up, a task whose time
  * passed unticked, an expense added this week, a pet reaching a month old, a record left blank. They
  * are recomputed from those sources whenever the sources change, which is what makes them
  * self-correcting: tick the missed task off and its alert stops existing, with nothing to delete. See
- * [NotificationsViewModel] for the rules behind each one.
+ * [com.prash.petcare.data.repository.AlertRepository] for the rules behind each one.
  *
- * In MVVM terms this file is the boundary between the **ViewModel** and the **View**. Everything here
- * is plain data with no Android types in it, so the ViewModel can build it without a Context; the
- * wording, the badge codes and the dates are added by [NotificationsAdapter], which has string
- * resources and the user's locale to do it with.
+ * **Why this lives in `data` rather than beside the notifications screen, where it started.** Because
+ * that screen stopped being the only thing that needs it. The header on every screen in the app now
+ * carries a bell with the unread count on it, which means the alerts have to be derived once,
+ * centrally, rather than by whichever ViewModel happens to want them — and a repository in `data`
+ * cannot import a model out of `ui` without pointing the app's dependencies backwards. So the model
+ * moved to the layer that produces it, and the notifications screen imports it like any other data.
+ *
+ * Everything here is plain data with no Android types in it, so it can be built without a Context; the
+ * wording, the badge codes and the dates are added by
+ * [com.prash.petcare.ui.notifications.NotificationsAdapter], which has string resources and the user's
+ * locale to do it with.
  */
 
 /**
@@ -77,7 +83,8 @@ sealed interface AlertContent {
      *
      * @property petName Whose birthday it is.
      * @property months The age just reached, in whole months. The adapter turns this into "1 month"
-     *   or "3 years" — see [NotificationsViewModel] for which anniversaries are worth an alert.
+     *   or "3 years" — see [com.prash.petcare.data.repository.AlertRepository] for which anniversaries
+     *   are worth an alert.
      */
     data class Milestone(
         val petName: String,
@@ -120,9 +127,9 @@ enum class TipKind {
 /**
  * Where tapping an alert takes the user.
  *
- * Expressed as *which screen*, not as a navigation id: ids belong to the graph, and a ViewModel that
- * named one would be deciding navigation on the View's behalf. [NotificationsFragment] turns these
- * into `navigate` calls.
+ * Expressed as *which screen*, not as a navigation id: ids belong to the graph, and data that named
+ * one would be deciding navigation on the View's behalf.
+ * [com.prash.petcare.ui.notifications.NotificationsFragment] turns these into `navigate` calls.
  */
 sealed interface AlertTarget {
 
@@ -145,8 +152,8 @@ sealed interface AlertTarget {
  * @property content What it says.
  * @property occurredAt When it became true, as a wall-clock timestamp. This is the card's age
  *   ("2h ago", "Sep 10") and what sorts the list and splits it into TODAY and EARLIER.
- * @property isRead Whether the user has already seen it — the pale fill, the badge colour and the red
- *   dot all follow this.
+ * @property isRead Whether the user has already seen it — the pale fill, the badge colour, the red
+ *   dot, and the number on the header's bell all follow this.
  * @property target Which screen a tap opens.
  */
 data class Alert(
@@ -156,32 +163,3 @@ data class Alert(
     val isRead: Boolean,
     val target: AlertTarget
 )
-
-/** The two groups the list is split into, in the order they are shown. */
-enum class AlertSection {
-    TODAY,
-    EARLIER
-}
-
-/**
- * One row of the list, which is either a section heading or an alert card.
- *
- * The headings are rows of the same RecyclerView rather than separate views above it, so the whole
- * page scrolls as one and the cards still recycle — the same arrangement the Money tab uses for its
- * total card and "ALL EXPENSES" heading.
- */
-sealed interface AlertListItem {
-
-    /** Identity for DiffUtil: what makes this row *this* row between one list and the next. */
-    val itemId: String
-
-    /** "TODAY" or "EARLIER". */
-    data class SectionHeader(val section: AlertSection) : AlertListItem {
-        override val itemId: String get() = "section:${section.name}"
-    }
-
-    /** One alert card. */
-    data class AlertRow(val alert: Alert) : AlertListItem {
-        override val itemId: String get() = alert.id
-    }
-}

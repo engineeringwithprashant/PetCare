@@ -123,8 +123,17 @@
 
     <!-- ============================ The input row ============================
          A wide rounded field with a round send button beside it. gravity="center_vertical" keeps the
-         button centred against the field however tall the field grows. -->
+         button centred against the field however tall the field grows.
+
+         **Why its bottom padding is set from code and not here.** The floating navigation bar is drawn
+         *over* this screen rather than taking a row of its own (see activity_main.xml), so a row pinned
+         to the bottom of the page sits underneath it — the field and the send button were half covered
+         by the tabs. The clearance cannot be a fixed value in this file either, because the bar is
+         hidden while the keyboard is up, and a permanent 76dp gap would leave the input row floating
+         above the keyboard with a band of empty page under it. So AssistantFragment.keepInputClearOfNavBar
+         applies the clearance only while the bar is actually there. -->
     <LinearLayout
+        android:id="@+id/inputRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/home_screen_padding"
@@ -132,6 +141,7 @@
         android:layout_marginEnd="@dimen/home_screen_padding"
         android:layout_marginBottom="@dimen/spacing_md"
         android:baselineAligned="false"
+        android:clipToPadding="false"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 

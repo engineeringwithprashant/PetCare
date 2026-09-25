@@ -3,9 +3,11 @@
     "Add a place": the sub-screen reached from "+ ADD PLACE" in the Places tab's saved-places heading.
 
     **What the screen is for.** Saving the vet, groomer, park or shop the user is *standing in*. The
-    device's GPS is the only source of a place's position here — there is no search box and no pin to
-    drag — which is what reduces the whole task to "type the name, press save". The screen asks for a
-    fix the moment it opens, so by the time the name has been typed the position is usually already in.
+    device's GPS gives the position a starting point — the screen asks for a fix the moment it opens, so
+    by the time the name has been typed it is usually already in — which is what reduces the common case
+    to "type the name, press save". The map underneath is then draggable, so a fix that landed on the
+    wrong side of the road, or a place the user is not standing in at all, can be corrected by moving the
+    pin; see MapEmbedView for how a coordinate is read out of a map the app cannot ask.
 
     Top to bottom:
       - **The shared header** (monogram, "Add place", theme toggle, pet count), fixed above the page as
@@ -180,6 +182,46 @@
 
                         </LinearLayout>
 
+                        <!-- The layer toggle, in the corner opposite the status chip. Shown only
+                             alongside a real map — see AddPlaceFragment.renderMap: there is no layer
+                             to choose when there are no tiles. -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/mapLayerButton"
+                            style="@style/PetCare.Map.LayerToggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top|end"
+                            android:layout_margin="@dimen/gps_map_chip_inset"
+                            android:visibility="gone"
+                            tools:text="@string/map_layer_switch_to_satellite"
+                            tools:visibility="visible" />
+
+                        <!--
+                            The pin that hangs over the middle of the map while it is being dragged.
+
+                            **Why it is only visible during a drag** (AddPlaceFragment toggles it):
+                            at rest, Google's own pin inside the embed already marks the centre, and a
+                            second marker sitting on top of it would read as two different answers to
+                            "where is this place?". While the map is moving that pin slides away with
+                            the tiles, and this one is what shows the point being aimed at.
+
+                            **Why it is translated upwards by half its height.** The coordinate the
+                            screen saves is the centre of the map — the middle of this FrameLayout — and
+                            a pin's *tip* is what marks a point, not the middle of its balloon. Shifting
+                            the whole drawable up by half its own height puts the tip on the centre. See
+                            ic_map_pin.xml.
+                        -->
+                        <ImageView
+                            android:id="@+id/mapCentrePin"
+                            android:layout_width="@dimen/map_centre_pin_size"
+                            android:layout_height="@dimen/map_centre_pin_size"
+                            android:layout_gravity="center"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_map_pin"
+                            android:translationY="@dimen/map_centre_pin_offset"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+
                         <!-- The status chip over the map's top-left corner: a coloured dot and a
                              label. Laid over *both* the map and the placeholder, because it answers
                              the same question in either case. -->
@@ -213,6 +255,19 @@
                     </FrameLayout>
 
                 </com.google.android.material.card.MaterialCardView>
+
+                <!-- The one line that says the map is a control rather than a picture. It has to be
+                     said: a draggable map looks exactly like an undraggable one, and without this the
+                     only position most users would ever save is the one the GPS handed them. Hidden
+                     along with the map whenever there is no position to drag — see
+                     AddPlaceFragment.renderMap. -->
+                <TextView
+                    android:id="@+id/mapDragHintText"
+                    style="@style/PetCare.AddPlace.MapHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="@string/add_place_map_drag_hint" />
 
                 <!-- ======================== The current-location card ========================
                      The fix in words and figures, and the two ways of changing it.
@@ -264,11 +319,16 @@
                                 android:layout_weight="1"
                                 android:orientation="vertical">
 
+                                <!-- "CURRENT LOCATION", or "CHOSEN LOCATION" once the pin has been
+                                     dragged: the card stops describing the phone at that point, and a
+                                     label that went on claiming otherwise would be the one line on the
+                                     screen that was wrong. Set from AddPlaceFragment.renderGpsCard. -->
                                 <TextView
+                                    android:id="@+id/hereLabelText"
                                     style="@style/PetCare.AddPlace.HereLabel"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="@string/add_place_here_label" />
+                                    tools:text="@string/add_place_here_label" />
 
                                 <!-- "You are here", "Finding your position…", "Location unavailable". -->
                                 <TextView

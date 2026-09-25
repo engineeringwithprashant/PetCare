@@ -96,6 +96,11 @@ data class GpsState(
  * consistency rather than necessity.
  *
  * @property gps Where the device is, and how that is going. See [GpsState].
+ * @property pickedCoordinates Where the user dragged the map's pin to, or null while the place is
+ *   still being saved at the device's own position. Held *beside* [gps] rather than written into it:
+ *   [GpsState] answers "where is the phone?", and a pin the user moved two streets over is not an
+ *   answer to that question. Keeping them apart is what lets the card go on reporting the real fix —
+ *   its accuracy, its distance from home — while the place being saved sits somewhere else.
  * @property name What the place will be called.
  * @property category The chosen category pill.
  * @property note The user's own note, or blank.
@@ -103,6 +108,7 @@ data class GpsState(
  */
 data class AddPlaceUiState(
     val gps: GpsState = GpsState(),
+    val pickedCoordinates: Coordinates? = null,
     val name: String = "",
     val category: PlaceCategory = PlaceCategory.VET,
     val note: String = "",
@@ -110,15 +116,56 @@ data class AddPlaceUiState(
 ) {
 
     /**
+     * The coordinates the place will actually be saved at: the dropped pin if there is one, otherwise
+     * the device's own position.
+     *
+     * One property that every part of the screen reads — the map's centre, the summary line, the save
+     * button's enabled state and [AddPlaceViewModel.save] — so none of them can disagree about where
+     * the place is. A saved place whose map card showed one point while its geotag carried another
+     * would be the worst kind of bug here, because nothing about it would look wrong.
+     */
+    val coordinates: Coordinates? get() = pickedCoordinates ?: gps.coordinates
+
+    /** True when the pin has been moved off the device's position, so the screen can say so. */
+    val isPositionPicked: Boolean get() = pickedCoordinates != null
+
+    /**
+     * Where the map card is centred, which is **not** the same question as where the place is.
+     *
+     * Usually it is [coordinates] and the two agree. The case they part company is the one this
+     * property exists for: the device has given up — permission refused, no hardware, or the fix
+     * timed out — and there is no position at all. The screen used to answer that by hiding the map,
+     * on the sound reasoning that a map of nowhere in particular looks like an answer when it is not.
+     *
+     * That reasoning expired when the map became draggable. The user can now place the pin themselves,
+     * so taking the map away leaves them holding the one tool that would have solved their problem;
+     * a phone that cannot see the sky is precisely when somebody needs to point at the place by hand.
+     * So the map is shown from a neutral starting point instead, and they drag from there.
+     *
+     * **It stays honest** because it is kept apart from [coordinates]. The starting point is somewhere
+     * to look from, never something to save: [canSave] reads `coordinates`, which is still null, so the
+     * button stays disabled until the user actually drops the pin. Nothing is ever written that the
+     * user did not choose.
+     *
+     * Null while a fix may still arrive, where the placeholder's "Finding your position…" is the more
+     * useful thing to show than a map about to be replaced.
+     */
+    val mapCentre: Coordinates? get() = coordinates ?: HomeReference.COORDINATES.takeIf { gps.canUseDemo }
+
+    /** True when the map is up as a *starting point* and the user has yet to choose anything on it. */
+    val isAwaitingPin: Boolean get() = coordinates == null && mapCentre != null
+
+    /**
      * Whether "SAVE PLACE" can be pressed.
      *
      * Both conditions, not either: a place needs a name its owner will recognise in the list, and it
      * needs coordinates, because the whole Places tab is built on them — the map centres on them and
-     * Directions navigates to them. Saving without a fix would mean inventing a position, and an
-     * invented geotag is worse than an unsaved place because it looks exactly like a real one.
+     * Directions navigates to them. Saving without either a fix or a dropped pin would mean inventing
+     * a position, and an invented geotag is worse than an unsaved place because it looks exactly like
+     * a real one.
      */
     val canSave: Boolean
-        get() = name.isNotBlank() && gps.isFound && !isSaving
+        get() = name.isNotBlank() && coordinates != null && !isSaving
 }
 
 /** A one-off occurrence the Add a place screen reacts to exactly once. */
@@ -141,13 +188,20 @@ sealed interface AddPlaceEvent {
  * and writes the finished place through [PlaceRepository]. It holds no Context, no View and no DAO;
  * the fragment supplies the permission prompt, formats the text and draws the result.
  *
- * ### The screen has exactly one source of position
+ * ### Where a place's position comes from
  *
- * The device's GPS, through [locate]. There is no search, no map pin and no typed coordinate — which
- * is the point of the redesign: the user is standing at the vet, so the phone already knows where
- * the place is and the only thing it cannot know is what to call it. [useDemoLocation] is the single
- * exception, and it is honest about itself: the position it sets is marked [GpsState.isDemo] and the
- * screen says "demo" wherever it says anything about the fix.
+ * The device's GPS starts it, through [locate]: the user is usually standing at the vet, so the phone
+ * already knows roughly where the place is and the fastest possible save is "type the name, press
+ * save".
+ *
+ * From there the pin can be **moved**, through [onCentrePicked]. That is not a second source competing
+ * with the first — it is the fix being corrected by the one party who can: the phone reports where the
+ * *phone* is, to within a few metres at best, and the user is the only one who knows whether the place
+ * is this doorway or the one across the road. It also covers the case the GPS cannot: saving the park
+ * you are going to visit rather than the room you are sitting in.
+ *
+ * [useDemoLocation] is the third and last way, and it is honest about itself: the position it sets is
+ * marked [GpsState.isDemo] and the screen says "demo" wherever it says anything about the fix.
  *
  * ### Why the fix is asked for on arrival, unlike everywhere else in the app
  *
@@ -173,23 +227,24 @@ class AddPlaceViewModel(
     val events = _events.receiveAsFlow()
 
     /**
-     * How many pets the account has, for the shared header's badge.
+     * Whether the map card is showing Google's aerial imagery rather than its drawn map.
      *
-     * Kept apart from [uiState] rather than folded into it: it is the one value on this screen that
-     * belongs to the *header* rather than to the form, it changes for reasons nothing here controls,
-     * and combining it in would rebuild the whole form state every time a pet was added elsewhere.
-     * Every screen drawing the shared header supplies this count from its own ViewModel — see
-     * TabHeader.showPetCount.
+     * Kept apart from [uiState] rather than folded into it: it is a fact about *how the map is drawn*
+     * and about nothing else on the screen. Nothing in the form
+     * depends on it, the place saved is identical either way, and putting it in the state would rebuild
+     * the whole form — re-running the summary line, the chip row and the save button's label — every
+     * time the user flipped the layer.
+     *
+     * It lives here rather than in the fragment so the choice survives a rotation. A user who switched
+     * to imagery to find a rooftop, then turned the phone, should not be handed the drawn map back.
      */
-    val petCount: StateFlow<Int> = petRepository.observePetsForOwner(ownerId)
-        .map { it.size }
-        .stateIn(
-            scope = viewModelScope,
-            // Five seconds of grace keeps the Room query alive across a rotation, when the old view
-            // stops collecting a moment before the new one starts.
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = 0
-        )
+    private val _isSatellite = MutableStateFlow(false)
+    val isSatellite: StateFlow<Boolean> = _isSatellite.asStateFlow()
+
+    /** Flips between the drawn map and the imagery. */
+    fun toggleMapLayer() {
+        _isSatellite.value = !_isSatellite.value
+    }
 
     // ---------------------------------------------------------------------------------------
     // Finding the device
@@ -255,16 +310,36 @@ class AddPlaceViewModel(
                 return@launch
             }
 
-            updateGps {
-                GpsState(
+            // A new fix drops any pin the user had dragged: "Refresh location" means "put the map back
+            // on me", and leaving the pin where it was would make the button appear to do nothing.
+            // A *failed* refresh above leaves the pin alone, because losing a point the user chose on
+            // purpose because the GPS could not see the sky would be the wrong way round.
+            _uiState.value = _uiState.value.copy(
+                pickedCoordinates = null,
+                gps = GpsState(
                     status = GpsStatus.FOUND,
                     coordinates = fix.coordinates,
                     accuracyMetres = fix.accuracyMetres,
                     isDemo = false,
                     message = null
                 )
-            }
+            )
         }
+    }
+
+    /**
+     * The user dragged the map, and this is the point now under its centre.
+     *
+     * Reported by the fragment, which owns the gesture — see MapEmbedView for why a coordinate panned
+     * to inside Google's embedded map has to be measured by the app rather than read back out of it.
+     *
+     * Stored as the *picked* position rather than written over [GpsState.coordinates], for the reason
+     * given on [AddPlaceUiState.pickedCoordinates]: the fix is a fact about the phone and stays true
+     * however far the pin travels.
+     */
+    fun onCentrePicked(coordinates: Coordinates) {
+        if (_uiState.value.pickedCoordinates == coordinates) return
+        _uiState.value = _uiState.value.copy(pickedCoordinates = coordinates)
     }
 
     /**
@@ -291,15 +366,18 @@ class AddPlaceViewModel(
      * title carries "(demo)". Nothing pretends this is where the phone is.
      */
     fun useDemoLocation() {
-        updateGps {
-            GpsState(
+        // Clears the pin for the same reason a fresh fix does: this is the map being put somewhere
+        // definite, and the pin can be dragged from there.
+        _uiState.value = _uiState.value.copy(
+            pickedCoordinates = null,
+            gps = GpsState(
                 status = GpsStatus.FOUND,
                 coordinates = DEMO_COORDINATES,
                 accuracyMetres = DEMO_ACCURACY_METRES,
                 isDemo = true,
                 message = null
             )
-        }
+        )
     }
 
     /** Replaces the GPS state wholesale — see [GpsState] for why it is never edited in pieces. */
@@ -343,9 +421,11 @@ class AddPlaceViewModel(
      * its category on the Places tab. Hours and a number can be filled in later from the full place
      * form; demanding them here would turn a two-tap save into a form.
      *
-     * The coordinates are read from state rather than passed in, and [AddPlaceUiState.canSave]
-     * guarantees they exist — which is why the `?: return` below is a guard against a race (a state
-     * change between the tap and this line) rather than a case the screen expects.
+     * The coordinates are [AddPlaceUiState.coordinates] — the dropped pin if the user moved one, and
+     * the device's own fix otherwise, decided in one place so the geotag written here is the same point
+     * the map card was showing. [AddPlaceUiState.canSave] guarantees they exist, which is why the
+     * `?: return` below is a guard against a race (a state change between the tap and this line)
+     * rather than a case the screen expects.
      *
      * Once the row is in, the Places tab redraws by itself — it observes Room — so the saved place
      * appears in the list and under the category filters with nothing else to do. The event carries
@@ -355,7 +435,7 @@ class AddPlaceViewModel(
         val state = _uiState.value
         if (!state.canSave) return
 
-        val coordinates = state.gps.coordinates ?: return
+        val coordinates = state.coordinates ?: return
         val trimmedName = state.name.trim()
 
         viewModelScope.launch {

@@ -221,49 +221,68 @@
         tools:visibility="visible" />
 
     <!--
-        The pet-count badge, with room for the unread dot on its corner.
+        The notifications bell, with the number of unread alerts on its corner.
 
-        A FrameLayout because the dot is genuinely *stacked* on the badge rather than placed beside
+        **It used to be a number, and the number was the wrong one.** The badge showed how many pets
+        the account had while tapping it opened the notifications screen — a control labelled with one
+        thing and leading to another, which only worked because a count with a dot beside it is a
+        natural thing to press. A bell says what it opens without being explained, and it lets the
+        figure on its corner mean what a figure on a bell always means: how many are waiting. The pet
+        count left the header with it; it is on the profile screen's stat row, where it is a fact
+        about the account rather than a control.
+
+        A FrameLayout because the bubble is genuinely *stacked* on the bell rather than placed beside
         it, which is the one arrangement a FrameLayout expresses in a single attribute
-        (layout_gravity="top|end"). The badge is a circle drawn in a square box, so the dot in the
-        box's top-right corner lands just outside the circle's curve, where notification dots
-        conventionally sit.
+        (layout_gravity="top|end"). The bubble sits inside the well's top-right corner rather than
+        outside it, so nothing has to escape the frame's bounds and no ancestor needs clipChildren
+        turned off to draw it.
+
+        Both children are filled in by TabHeader.showAlertCount, which is driven from
+        SessionViewModel.unreadAlertCount — one figure, derived once, so the bell and the list behind
+        it can never disagree.
     -->
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_sm">
 
-        <!-- How many pets are in care, and the way in to the notifications screen.
-
-             It carries two jobs because these screens hide the shared toolbar and with it any other
-             way in — see the note at the top of this file. A count with a dot on its corner is a
-             natural thing to press to find out what the dot is about, so the double duty is not the
-             stretch it might look. The count is a number, so Bricolage Grotesque. -->
-        <TextView
-            android:id="@+id/petCountBadge"
+        <!-- The bell itself, in the same rounded well and at the same height as the theme toggle and
+             the AI pill, so the header's right-hand controls stay one family. The glyph is inset by
+             padding rather than drawn small, which keeps the whole well as the touch target. -->
+        <ImageView
+            android:id="@+id/notificationsBell"
             android:layout_width="@dimen/header_badge_size"
             android:layout_height="@dimen/header_badge_size"
             android:background="@drawable/bg_header_control"
             android:clickable="true"
             android:focusable="true"
-            android:fontFamily="@font/bricolage_grotesque"
-            android:gravity="center"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="?attr/colorOnSurface"
-            android:textStyle="bold"
-            tools:text="2" />
+            android:padding="@dimen/header_bell_padding"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_bell"
+            app:tint="?attr/colorOnSurface" />
 
-        <!-- The red dot, Home only: some of today's care is past its time. Purely visual — its meaning
-             is added to the badge's own description, so TalkBack does not stop on an unlabelled dot. -->
-        <View
-            android:id="@+id/unreadDot"
-            android:layout_width="@dimen/header_unread_dot_size"
-            android:layout_height="@dimen/header_unread_dot_size"
+        <!-- How many alerts are unread: "3", or "9+" past that. Hidden entirely at zero rather than
+             drawn as a "0", because a bell with nothing waiting should look quiet.
+
+             Hidden from TalkBack because the bell's own description already states the count in
+             words — a screen reader would otherwise announce the bare digit a second time. -->
+        <TextView
+            android:id="@+id/alertCountBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/header_alert_count_size"
             android:layout_gravity="top|end"
-            android:background="@drawable/bg_unread_dot"
+            android:background="@drawable/bg_alert_count"
+            android:fontFamily="@font/ibm_plex_mono"
+            android:gravity="center"
             android:importantForAccessibility="no"
+            android:minWidth="@dimen/header_alert_count_size"
+            android:paddingStart="@dimen/header_alert_count_padding_horizontal"
+            android:paddingEnd="@dimen/header_alert_count_padding_horizontal"
+            android:textColor="@color/on_nav_badge"
+            android:textSize="@dimen/header_alert_count_text_size"
+            android:textStyle="bold"
             android:visibility="gone"
+            tools:text="3"
             tools:visibility="visible" />
 
     </FrameLayout>

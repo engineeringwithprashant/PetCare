@@ -23,7 +23,7 @@ import com.prash.petcare.data.local.entity.PlaceCategory
 import com.prash.petcare.databinding.FragmentAddPlaceBinding
 import com.prash.petcare.ui.common.ChipOption
 import com.prash.petcare.ui.common.anchorAboveNavBar
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.bindOptions
 import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.formatDistanceKm
@@ -31,9 +31,9 @@ import com.prash.petcare.ui.common.labelRes
 import com.prash.petcare.ui.common.openExternalLink
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.util.Coordinates
+import com.prash.petcare.util.HomeReference
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -45,10 +45,13 @@ import kotlin.math.roundToInt
  * place; this class draws that state, formats its text (which needs a Context) and owns the two
  * things that genuinely need an Activity — the location permission prompt and navigation.
  *
- * **One source of position, and it is the device.** There is no search box and no pin to drag: the
- * user is at the place, so the phone already knows where it is and the only thing it cannot know is
- * what to call it. The fix is requested the moment the screen opens, so by the time a name has been
- * typed the position is usually already in — which is what makes this a two-tap save.
+ * **The position starts with the device and can then be corrected by hand.** The fix is requested the
+ * moment the screen opens, so by the time a name has been typed the position is usually already in —
+ * which is what makes the common case a two-tap save. The map under it is then draggable: the phone
+ * can say where the *phone* is, to within a few metres at best, and only the user knows whether the
+ * place is this doorway or the one across the road — or whether it is the park they are walking to
+ * rather than the room they are sitting in. See [MapEmbedView] for why a coordinate panned to inside
+ * Google's embedded map has to be measured by the app rather than read back out of it.
  *
  * **What happens when there is no fix.** The screen says which of the three reasons applies, offers
  * to try again, and — when trying again cannot help, because access was refused or the device has no
@@ -108,10 +111,11 @@ class AddPlaceFragment : Fragment() {
             onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
             onMonogramClick = ::openProfile
         )
-        bindHeaderProfilePhoto(binding.header, sessionViewModel)
+        bindHeaderFromSession(binding.header, sessionViewModel)
 
         setUpFields()
         setUpButtons()
+        setUpMapPicker()
         observeViewModel()
 
         // Ask for the position straight away — see the class comment for why this screen breaks the
@@ -152,8 +156,59 @@ class AddPlaceFragment : Fragment() {
         binding.savePlaceButton.setOnClickListener { save() }
 
         // A tap on a Google link inside the map (its logo, "Terms") leaves the app rather than
-        // navigating this small card to a full Google page the user could not get back from.
+        // navigating this small card to a full Google page the user could not get back from. Only
+        // reached before the picker takes the gestures over — see setUpMapPicker — but kept wired so
+        // the two screens' maps are set up the same way.
         binding.gpsMap.onExternalLink = { url -> openLink(url) }
+    }
+
+    /**
+     * Turns the map into the screen's position control.
+     *
+     * The three lines each hand one thing to a layer that can do it:
+     *
+     *  - **the flag** tells the map to keep the gestures for itself rather than passing them to
+     *    Google's page, which is the only way the app can know where the user panned to;
+     *  - **the coordinate** goes straight to the ViewModel, which owns it — this fragment never stores
+     *    a position of its own, or the map and the summary line could come to disagree;
+     *  - **the drag flag** stays here, because whether a pin is drawn over a card is a question about
+     *    views and nothing else. It is not part of [AddPlaceUiState] for that reason: a ViewModel that
+     *    knew a finger was down would be holding a fact about the screen rather than about the place.
+     */
+    private fun setUpMapPicker() {
+        binding.gpsMap.isPickEnabled = true
+        binding.gpsMap.onPickedCentreChanged = { viewModel.onCentrePicked(it) }
+        binding.gpsMap.onDragStateChanged = { isDragging ->
+            _binding?.mapCentrePin?.isVisible = isDragging
+        }
+        binding.mapLayerButton.setOnClickListener { viewModel.toggleMapLayer() }
+    }
+
+    /**
+     * Applies the chosen map layer to the card and to the button that chooses it.
+     *
+     * The button's label names where a press *leads* rather than where the map already is — see the
+     * note on these strings — so the two are deliberately crossed: imagery showing means the button
+     * offers the map. The content description says both halves out loud, because a screen reader user
+     * cannot see the tiles under the button to infer the other half from.
+     */
+    private fun renderMapLayer(isSatellite: Boolean) {
+        binding.gpsMap.isSatellite = isSatellite
+
+        binding.mapLayerButton.setText(
+            if (isSatellite) {
+                R.string.map_layer_switch_to_map
+            } else {
+                R.string.map_layer_switch_to_satellite
+            }
+        )
+        binding.mapLayerButton.contentDescription = getString(
+            if (isSatellite) {
+                R.string.cd_map_layer_showing_satellite
+            } else {
+                R.string.cd_map_layer_showing_map
+            }
+        )
     }
 
     /**
@@ -175,7 +230,7 @@ class AddPlaceFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.uiState.collect { render(it) } }
-                launch { viewModel.petCount.collect { binding.header.showPetCount(it) } }
+                launch { viewModel.isSatellite.collect { renderMapLayer(it) } }
                 launch { viewModel.events.collect { handleEvent(it) } }
             }
         }
@@ -186,8 +241,8 @@ class AddPlaceFragment : Fragment() {
     // ---------------------------------------------------------------------------------------
 
     private fun render(state: AddPlaceUiState) {
-        renderMap(state.gps)
-        renderGpsCard(state.gps)
+        renderMap(state)
+        renderGpsCard(state)
         renderForm(state)
     }
 
@@ -198,24 +253,56 @@ class AddPlaceFragment : Fragment() {
      * would be worse than a line saying what is being waited for, because it would look like an
      * answer. Zoom 17 rather than the Places tab's 16 — a GPS fix is a point precise enough to show
      * at street level, and the user is checking "is this the right doorway?".
+     *
+     * **Shown for a dropped pin as well as for a fix**, which is why the test is against
+     * [AddPlaceUiState.coordinates] rather than the GPS status: a refresh that fails after the user has
+     * placed a pin leaves the place perfectly saveable, and taking its map away at that moment would
+     * hide the one thing they had already got right.
+     *
+     * The map is *told* the centre on every emission and decides for itself whether that is news —
+     * see [MapEmbedView.showLocation], which is also what stops a re-render undoing the user's own
+     * panning.
      */
-    private fun renderMap(gps: GpsState) {
-        binding.gpsMap.isVisible = gps.isFound
-        binding.mapPlaceholder.isVisible = !gps.isFound
+    private fun renderMap(state: AddPlaceUiState) {
+        val centre = state.mapCentre
 
-        gps.coordinates?.let { binding.gpsMap.showLocation(it, zoom = GPS_MAP_ZOOM) }
+        binding.gpsMap.isVisible = centre != null
+        binding.mapPlaceholder.isVisible = centre == null
+        // The hint and the layer toggle only make sense beside a map: one describes a gesture there is
+        // nothing to perform on, and the other offers a choice between two ways of drawing nothing.
+        binding.mapDragHintText.isVisible = centre != null
+        binding.mapLayerButton.isVisible = centre != null
+
+        // Wider when the map is only a starting point: there is no fix to inspect at street level, and
+        // the user is looking for their own neighbourhood before they look for the doorway in it.
+        centre?.let {
+            binding.gpsMap.showLocation(
+                at = it,
+                zoom = if (state.isAwaitingPin) NO_FIX_MAP_ZOOM else GPS_MAP_ZOOM
+            )
+        }
+
+        // The hint has a different job in each case: normally it points out that the map *can* be
+        // dragged, but with no fix it is the instruction for the only way forward on the screen.
+        binding.mapDragHintText.setText(
+            if (state.isAwaitingPin) {
+                R.string.add_place_map_drag_hint_no_fix
+            } else {
+                R.string.add_place_map_drag_hint
+            }
+        )
 
         binding.mapPlaceholderText.setText(
-            if (gps.status == GpsStatus.LOCATING) {
+            if (state.gps.status == GpsStatus.LOCATING) {
                 R.string.add_place_map_locating
             } else {
                 R.string.add_place_map_unavailable
             }
         )
 
-        // The chip's dot and label are one statement about the fix, so they are decided together.
-        binding.gpsStatusChipLabel.setText(statusChipLabel(gps))
-        tintDot(binding.gpsStatusDot, statusColour(gps))
+        // The chip's dot and label are one statement about the position, so they are decided together.
+        binding.gpsStatusChipLabel.setText(statusChipLabel(state))
+        tintDot(binding.gpsStatusDot, statusColour(state))
     }
 
     /**
@@ -225,11 +312,23 @@ class AddPlaceFragment : Fragment() {
      * and names the two ways on — because the user has done nothing wrong by being indoors or by
      * refusing a permission the first time it was asked for.
      */
-    private fun renderGpsCard(gps: GpsState) {
-        tintDot(binding.gpsCardDot, statusColour(gps))
+    private fun renderGpsCard(state: AddPlaceUiState) {
+        val gps = state.gps
+        tintDot(binding.gpsCardDot, statusColour(state))
+
+        // Once the pin has been moved the card is describing the chosen point rather than the phone,
+        // and its label says so — see the note in the layout.
+        binding.hereLabelText.setText(
+            if (state.isPositionPicked) {
+                R.string.add_place_here_label_picked
+            } else {
+                R.string.add_place_here_label
+            }
+        )
 
         binding.hereTitleText.setText(
             when {
+                state.isPositionPicked -> R.string.add_place_here_picked
                 gps.isDemo -> R.string.add_place_here_demo
                 gps.isFound -> R.string.add_place_here_found
                 gps.status == GpsStatus.LOCATING -> R.string.add_place_here_locating
@@ -238,6 +337,7 @@ class AddPlaceFragment : Fragment() {
         )
 
         binding.hereMetaText.text = when {
+            state.pickedCoordinates != null -> formatPickedDetails(state.pickedCoordinates)
             gps.isFound -> formatFixDetails(gps)
             gps.status == GpsStatus.LOCATING -> getString(R.string.add_place_here_locating_meta)
             // Falls back to the refusal wording when the user dismissed the rationale dialog without
@@ -297,8 +397,16 @@ class AddPlaceFragment : Fragment() {
 
         // The label names the missing condition rather than only greying out, so a user who cannot
         // press the button knows whether to keep typing or to wait for the fix.
+        // Three labels, because there are three different things standing in the way. "Waiting for
+        // location" is only true while a fix may still arrive; once the device has given up, the user
+        // is not waiting for anything — they are being asked to point at the place themselves, and a
+        // button that still said "waiting" would send them on looking at the sky.
         binding.savePlaceButton.setText(
-            if (state.gps.isFound) R.string.add_place_save else R.string.add_place_save_waiting
+            when {
+                state.coordinates != null -> R.string.add_place_save
+                state.isAwaitingPin -> R.string.add_place_save_needs_pin
+                else -> R.string.add_place_save_waiting
+            }
         )
         binding.savePlaceButton.isEnabled = state.canSave
     }
@@ -309,10 +417,13 @@ class AddPlaceFragment : Fragment() {
 
     /** The status chip's label: what kind of position, in two words. */
     @StringRes
-    private fun statusChipLabel(gps: GpsState): Int = when {
-        gps.isDemo -> R.string.add_place_gps_chip_demo
-        gps.isFound -> R.string.add_place_gps_chip_live
-        gps.status == GpsStatus.LOCATING -> R.string.add_place_gps_chip_locating
+    private fun statusChipLabel(state: AddPlaceUiState): Int = when {
+        // Checked first, and ahead of the demo: once the user has dragged the pin, *who chose this
+        // point* is the fact that has changed, and it outranks where the map started from.
+        state.isPositionPicked -> R.string.add_place_gps_chip_picked
+        state.gps.isDemo -> R.string.add_place_gps_chip_demo
+        state.gps.isFound -> R.string.add_place_gps_chip_live
+        state.gps.status == GpsStatus.LOCATING -> R.string.add_place_gps_chip_locating
         else -> R.string.add_place_gps_chip_none
     }
 
@@ -321,14 +432,15 @@ class AddPlaceFragment : Fragment() {
      * below it can never disagree.
      *
      * Blue for a position — the universal "you are here" colour, and the same blue whether the fix is
-     * live or the demo, because in both cases there *is* one and the chip's label carries the
-     * difference. The accent while looking, since waiting is the app's "in progress" everywhere else.
-     * Coral when there is none: a condition to resolve, not a failure, which is why it is not red.
+     * live, the demo or a pin the user dropped, because in all three cases there *is* one and the
+     * chip's label carries the difference. The accent while looking, since waiting is the app's "in
+     * progress" everywhere else. Coral when there is none: a condition to resolve, not a failure,
+     * which is why it is not red.
      */
     @ColorRes
-    private fun statusColour(gps: GpsState): Int = when {
-        gps.isFound -> R.color.here_dot
-        gps.status == GpsStatus.LOCATING -> R.color.accent_yellow
+    private fun statusColour(state: AddPlaceUiState): Int = when {
+        state.coordinates != null -> R.color.here_dot
+        state.gps.status == GpsStatus.LOCATING -> R.color.accent_yellow
         else -> R.color.gps_status_unavailable
     }
 
@@ -372,6 +484,20 @@ class AddPlaceFragment : Fragment() {
     }
 
     /**
+     * "27.6801° N, 85.3150° E · 0.4 km from home · your own pin" — the same line for a dropped pin.
+     *
+     * No accuracy figure, and that is the point rather than an omission: a ± radius describes how sure
+     * a *device* is of a reading, and a point somebody put there by hand has no such uncertainty to
+     * report. Printing "±8 m" beside it would be borrowing the GPS's doubt for a coordinate the GPS had
+     * nothing to do with.
+     */
+    private fun formatPickedDetails(at: Coordinates): String = getString(
+        R.string.add_place_here_picked_meta,
+        formatCoordinates(at),
+        formatDistanceKm(requireContext(), HomeReference.distanceKmFrom(at))
+    )
+
+    /**
      * The two-line readback above the save button: what will be saved, then the position it will
      * carry.
      *
@@ -389,9 +515,13 @@ class AddPlaceFragment : Fragment() {
             getString(state.category.labelRes())
         )
 
-        val position = state.gps.coordinates
-            ?.let { getString(R.string.add_place_summary_geotagged, formatCoordinates(it)) }
-            ?: getString(R.string.add_place_summary_waiting)
+        val coordinates = state.coordinates
+        val position = when {
+            coordinates == null -> getString(R.string.add_place_summary_waiting)
+            state.isPositionPicked ->
+                getString(R.string.add_place_summary_picked, formatCoordinates(coordinates))
+            else -> getString(R.string.add_place_summary_geotagged, formatCoordinates(coordinates))
+        }
 
         return "$headline\n$position"
     }
@@ -489,5 +619,16 @@ class AddPlaceFragment : Fragment() {
          * this the right doorway?" rather than "where is this place in the city?".
          */
         private const val GPS_MAP_ZOOM = 17
+
+        /**
+         * Neighbourhood level, used when the map is only a starting point to drag from because the
+         * device could not produce a fix.
+         *
+         * Wider than [GPS_MAP_ZOOM] because the question has changed. With a fix the user is checking
+         * "is this the right doorway?" and wants the street; with none they are hunting for their own
+         * part of the city first, and a street-level map of somewhere they are not is a map they would
+         * have to drag a very long way.
+         */
+        private const val NO_FIX_MAP_ZOOM = 14
     }
 }

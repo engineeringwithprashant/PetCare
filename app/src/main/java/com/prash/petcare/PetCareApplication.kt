@@ -17,6 +17,7 @@ import com.prash.petcare.data.local.WeatherCache
 import com.prash.petcare.data.remote.FirebaseAuthService
 import com.prash.petcare.data.remote.FirestoreSyncService
 import com.prash.petcare.data.remote.weather.WeatherApi
+import com.prash.petcare.data.repository.AlertRepository
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
@@ -159,6 +160,26 @@ class PetCareApplication : Application() {
      * SharedPreferences rather than in the database the alerts are derived from.
      */
     val alertReadStore: AlertReadStore by lazy { AlertReadStore(this) }
+
+    /**
+     * What the user should be told about, derived from the pets, tasks, expenses and routines they
+     * already have — see [AlertRepository].
+     *
+     * One instance for the whole process, and for a stronger reason than convenience. Two things read
+     * it at once: the notifications screen, and the bell in the header of every other screen in the
+     * app. A per-ViewModel instance would open the same per-pet Room queries over and over, and —
+     * worse — would leave the number on the bell and the list behind it as two separate derivations
+     * that could drift apart.
+     */
+    val alertRepository: AlertRepository by lazy {
+        AlertRepository(
+            petRepository = petRepository,
+            careRoutineRepository = careRoutineRepository,
+            careTaskRepository = careTaskRepository,
+            expenseRepository = expenseRepository,
+            alertReadStore = alertReadStore
+        )
+    }
 
     /**
      * How many wrong passwords each email address has collected on this device, and whether one of

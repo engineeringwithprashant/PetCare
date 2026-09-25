@@ -309,9 +309,15 @@
                  ACCOUNT
 
                  Four rows: the name and details, the email, the phone number and the password. Each is
-                 a square code badge, two lines of text, and a pill on the right saying what pressing
-                 it would do — or, for the two "VERIFIED" pills, that it is a status and nothing will
-                 happen. See the note on profile_status_verified in strings.xml.
+                 a square glyph badge — a person, an envelope, a handset, a padlock — two lines of text,
+                 and a pill on the right saying what pressing it would do, or, for the two "VERIFIED"
+                 pills, that it is a status and nothing will happen. See the note on
+                 profile_status_verified in strings.xml.
+
+                 The badges hold icons rather than the mono four-letter codes they used to ("NAME",
+                 "MAIL", "PHON", "PASS"): the well, its tint and its size are unchanged, so the card's
+                 rhythm is the same, but a glyph is recognised where a code has to be decoded. See
+                 ic_profile_person.xml for the whole of that argument.
                  ================================================================================== -->
 
             <com.google.android.material.card.MaterialCardView
@@ -345,10 +351,13 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
-                        <TextView
-                            style="@style/PetCare.Profile.Badge"
+                        <!-- The row's glyph badge. Decorative: the row already announces its own title
+                             ("Name & details") to a screen reader, and an icon described after it would
+                             only repeat the word it illustrates. -->
+                        <ImageView
+                            style="@style/PetCare.Profile.BadgeIcon"
                             android:importantForAccessibility="no"
-                            android:text="@string/profile_badge_name" />
+                            android:src="@drawable/ic_profile_person" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -392,10 +401,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
-                        <TextView
-                            style="@style/PetCare.Profile.Badge"
+                        <ImageView
+                            style="@style/PetCare.Profile.BadgeIcon"
                             android:importantForAccessibility="no"
-                            android:text="@string/profile_badge_mail" />
+                            android:src="@drawable/ic_profile_mail" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -438,10 +447,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
-                        <TextView
-                            style="@style/PetCare.Profile.Badge"
+                        <ImageView
+                            style="@style/PetCare.Profile.BadgeIcon"
                             android:importantForAccessibility="no"
-                            android:text="@string/profile_badge_phone" />
+                            android:src="@drawable/ic_profile_phone" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -488,10 +497,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
-                        <TextView
-                            style="@style/PetCare.Profile.Badge"
+                        <ImageView
+                            style="@style/PetCare.Profile.BadgeIcon"
                             android:importantForAccessibility="no"
-                            android:text="@string/profile_badge_password" />
+                            android:src="@drawable/ic_profile_lock" />
 
                         <LinearLayout
                             android:layout_width="0dp"

@@ -17,10 +17,9 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.prash.petcare.R
 import com.prash.petcare.databinding.FragmentPetsBinding
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.session.SessionViewModel
 import java.text.NumberFormat
 import kotlinx.coroutines.launch
@@ -101,8 +100,8 @@ class PetsFragment : Fragment() {
         )
 
         // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
-        bindHeaderProfilePhoto(binding.header, sessionViewModel)
+        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        bindHeaderFromSession(binding.header, sessionViewModel)
 
         setUpRecyclerView()
         binding.emptyAddPetButton.setOnClickListener { openNewPetForm() }
@@ -196,7 +195,6 @@ class PetsFragment : Fragment() {
         val count = state.pets.size
         val hasPets = count > 0
 
-        binding.header.showPetCount(count)
 
         // The headline and add row only join the list once there are cards for them to frame. While
         // loading they would sit alone on an otherwise blank screen; with no pets, the empty state

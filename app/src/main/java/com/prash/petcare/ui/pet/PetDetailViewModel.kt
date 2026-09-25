@@ -76,7 +76,6 @@ data class VaccinationRow(
  *
  * @property pet The animal being viewed, or null while loading or if it has been deleted.
  * @property ownerName Who cares for the pet, for the "Cared for by" row. Empty until loaded.
- * @property petCount How many pets the owner has, for the header's count badge.
  * @property routines That pet's care routines, active ones first, each with its task count.
  * @property vaccinations That pet's vaccination history, most recently given first, each with the
  *   status derived from its due date — see [VaccinationRow].
@@ -88,7 +87,6 @@ data class VaccinationRow(
 data class PetDetailUiState(
     val pet: Pet? = null,
     val ownerName: String = "",
-    val petCount: Int = 0,
     val routines: List<PetRoutine> = emptyList(),
     val vaccinations: List<VaccinationRow> = emptyList(),
     val tasksDueToday: Int = 0,
@@ -157,29 +155,29 @@ class PetDetailViewModel(
     private val pet: Flow<Pet?> = petRepository.observePet(petId)
 
     /**
-     * The owner's name and how many pets they have, as one pair.
+     * The owner's name, for the "Cared for by" row.
      *
-     * Both are keyed on the pet's *owner*, which is only known once the pet has loaded — hence
-     * [flatMapLatest]: each time the owner id arrives (in practice, once) the queries for that owner
-     * are opened, and any previous ones are cancelled. [distinctUntilChanged] stops an ordinary edit
-     * to the pet, which re-emits the row with the same owner, from tearing those queries down and
-     * reopening them for nothing.
+     * Keyed on the pet's *owner*, which is only known once the pet has loaded — hence [flatMapLatest]:
+     * each time the owner id arrives (in practice, once) the query for that owner is opened, and any
+     * previous one is cancelled. [distinctUntilChanged] stops an ordinary edit to the pet, which
+     * re-emits the row with the same owner, from tearing that query down and reopening it for nothing.
      *
-     * The owner comes from the pet rather than from the signed-in session so the "Cared for by" row
-     * can never name somebody other than the account the pet actually belongs to.
+     * The owner comes from the pet rather than from the signed-in session so the row can never name
+     * somebody other than the account the pet actually belongs to.
+     *
+     * It used to carry the owner's pet count alongside the name, for the header's badge. That badge is
+     * a notifications bell now and takes its number from the session, so the second query has gone —
+     * see TabHeader.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val ownerDetails: Flow<Pair<String, Int>> = pet
+    private val ownerName: Flow<String> = pet
         .map { it?.ownerId }
         .distinctUntilChanged()
         .flatMapLatest { ownerId ->
             if (ownerId == null) {
-                flowOf("" to 0)
+                flowOf("")
             } else {
-                combine(
-                    userRepository.observeUser(ownerId),
-                    petRepository.observePetCountForOwner(ownerId)
-                ) { user, count -> user?.fullName.orEmpty() to count }
+                userRepository.observeUser(ownerId).map { it?.fullName.orEmpty() }
             }
         }
 
@@ -222,11 +220,11 @@ class PetDetailViewModel(
     val uiState: StateFlow<PetDetailUiState> = combine(
         pet,
         petRecords,
-        ownerDetails,
+        ownerName,
         // One more input, so switching units on the profile screen redraws the weight pill by the
         // same path an edit to the pet does.
         settingsStore.weightUnit
-    ) { pet, (routines, tasks, vaccinations), (ownerName, petCount), weightUnit ->
+    ) { pet, (routines, tasks, vaccinations), ownerName, weightUnit ->
         // Tasks whose routine was deleted have a null routine id and belong to no card, so they
         // simply drop out of the counts.
         val countsByRoutine = tasks.groupingBy { it.routineId }.eachCount()
@@ -240,7 +238,6 @@ class PetDetailViewModel(
         PetDetailUiState(
             pet = pet,
             ownerName = ownerName,
-            petCount = petCount,
             routines = routines.map { routine ->
                 PetRoutine(routine = routine, taskCount = countsByRoutine[routine.id] ?: 0)
             },

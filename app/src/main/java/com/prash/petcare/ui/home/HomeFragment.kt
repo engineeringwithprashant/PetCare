@@ -33,13 +33,12 @@ import com.prash.petcare.data.sync.SyncStatus
 import com.prash.petcare.databinding.FragmentHomeBinding
 import com.prash.petcare.databinding.ItemHomeStatBinding
 import com.prash.petcare.databinding.ItemStreakDayBinding
-import com.prash.petcare.ui.common.bindHeaderProfilePhoto
+import com.prash.petcare.ui.common.bindHeaderFromSession
 import com.prash.petcare.ui.common.formatCurrency
 import com.prash.petcare.ui.common.formatTimeOfDay
 import com.prash.petcare.ui.common.openProfile
 import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.common.showAssistantPill
-import com.prash.petcare.ui.common.showPetCount
 import com.prash.petcare.ui.pet.AddEditPetFragment
 import com.prash.petcare.ui.pet.PetDetailFragment
 import com.prash.petcare.ui.pet.PetViewModel
@@ -223,8 +222,8 @@ class HomeFragment : Fragment() {
         )
 
         // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderProfilePhoto.
-        bindHeaderProfilePhoto(binding.header, sessionViewModel)
+        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        bindHeaderFromSession(binding.header, sessionViewModel)
         binding.header.showAssistantPill(::openAssistant)
 
         streakCells = listOf(
@@ -336,7 +335,6 @@ class HomeFragment : Fragment() {
         latestNowMillis = state.nowMillis
 
         renderGreeting(state)
-        binding.header.showPetCount(state.pets.size, state.overdueCount)
 
         // The dashboard and the empty state swap as a unit. Both stay hidden while loading, which stops
         // "No pets yet" flashing up before the first query returns.

@@ -110,6 +110,20 @@
                             android:importantForAccessibility="no"
                             tools:text="Patan Animal Hospital · 1.2 km" />
 
+                        <!-- "MAP / SATELLITE", in the corner opposite the name pill. Aerial imagery
+                             earns its place on this card: a saved vet or park is recognised from the
+                             look of its yard and its roof long before its name is read off a drawn
+                             map. See PetCare.Map.LayerToggle, and MapLinks.embedUrl for how a keyless
+                             embed is asked for imagery at all. -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/mapLayerButton"
+                            style="@style/PetCare.Map.LayerToggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top|end"
+                            android:layout_margin="@dimen/places_map_overlay_inset"
+                            tools:text="@string/map_layer_switch_to_satellite" />
+
                         <!-- The two ways out to Google Maps. "Directions" takes the leftover width
                              (weight 1 on a zero width) because it is the action the screen exists to
                              offer; "Google maps" takes only what its label needs. -->

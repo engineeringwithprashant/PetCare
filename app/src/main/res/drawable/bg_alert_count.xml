@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The red bubble on the top corner of the header's bell, carrying how many alerts are unread.
+
+    It replaces bg_unread_dot.xml, which said only *that* something needed attention. A bell can say
+    how many, so it does.
+
+    A rectangle with a fully-rounded radius rather than an oval: at one digit it draws as a circle, and
+    at "9+" it stretches into a capsule instead of squashing the text into an ellipse. The radius is
+    larger than the bubble can ever be tall, which is what keeps the ends perfectly round at any width.
+
+    The ring around it is the page colour, for the same reason the dot had one: without it the red
+    touches the bell's own well and the two edges blur into a smudge at this size. The ring cuts a
+    clean gap between them in either theme, which is how notification badges are conventionally drawn.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@color/nav_badge_ground" />
+
+    <corners android:radius="@dimen/header_alert_count_corner_radius" />
+
+    <stroke
+        android:width="1.5dp"
+        android:color="?android:attr/colorBackground" />
+
+</shape>

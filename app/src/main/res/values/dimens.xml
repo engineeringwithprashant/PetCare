@@ -410,7 +410,21 @@
     <!-- The header's "AI" pill: the theme toggle's height, with a little horizontal room. -->
     <dimen name="header_ai_pill_padding_horizontal">10dp</dimen>
     <!-- The red dot on the pet badge's corner, including its page-coloured ring. -->
-    <dimen name="header_unread_dot_size">9dp</dimen>
+    <!-- The bell in the header, and the unread-count bubble on its corner.
+
+         The glyph is inset inside the 32dp well rather than drawn at 32dp: 7dp a side leaves an 18dp
+         bell, which matches the weight of the 16dp sun beside it in the theme toggle while the whole
+         well stays the touch target.
+
+         The bubble is 16dp tall — half the well, which is the proportion that reads as "a badge on a
+         control" rather than as a second control — and grows sideways for "9+" through minWidth plus
+         horizontal padding. Its corner radius is deliberately larger than it can ever be tall, so the
+         ends stay perfectly round at any width instead of turning into an ellipse. -->
+    <dimen name="header_bell_padding">7dp</dimen>
+    <dimen name="header_alert_count_size">16dp</dimen>
+    <dimen name="header_alert_count_corner_radius">10dp</dimen>
+    <dimen name="header_alert_count_padding_horizontal">3dp</dimen>
+    <dimen name="header_alert_count_text_size">9sp</dimen>
 
     <!-- The coloured dot before "All synced". -->
     <dimen name="sync_dot_size">6dp</dimen>
@@ -662,6 +676,17 @@
     <!-- The round send button. 48dp is the smallest comfortable touch target, and the button is
          square so its fully-rounded corner makes it a circle. -->
     <dimen name="assistant_send_button_size">48dp</dimen>
+    <!-- How far the input row has to be lifted to clear the floating navigation bar, which is drawn
+         over the page rather than beside it.
+
+         Arithmetic, like the bar's own height: 7 + 46 + 7 = 60dp of slab (nav_bar_padding twice plus
+         nav_tab_height) and 16dp of nav_bar_margin_bottom under it. Changing any of those three without
+         changing this is what would put the send button back underneath the tabs.
+
+         Applied only while the bar is on screen — AssistantFragment.keepInputClearOfNavBar — because the
+         bar is hidden while the keyboard is up, and the row's own 16dp bottom margin is the right gap
+         above a keyboard. -->
+    <dimen name="assistant_input_nav_clearance">76dp</dimen>
     <!-- The loading bar standing in for a reply: about the width of a short sentence, so the bubble
          it sits in is the size the answer will roughly be. -->
     <dimen name="assistant_thinking_width">72dp</dimen>
@@ -734,17 +759,18 @@
          edge, which is the convention that makes a list read as grouped rows — see the layout. -->
     <dimen name="profile_row_divider_height">1dp</dimen>
 
-    <!-- The square code badge on an account row ("NAME", "MAIL", "PHON", "PASS"). Only the size is
-         declared: the badge takes its shape from bg_alert_badge.xml, which already carries the
-         notifications screen's corner radius — so a small square code is literally the same object on
-         both screens rather than two that happen to match. -->
+    <!-- The square glyph badge on an account row — the person, the envelope, the handset, the padlock.
+         Only the size is declared: the badge takes its shape from bg_alert_badge.xml, which already
+         carries the notifications screen's corner radius — so a small rounded square in front of a row is
+         literally the same object on both screens rather than two that happen to match. -->
     <dimen name="profile_badge_size">44dp</dimen>
-    <!-- The badge's four-letter code. Smaller than the notification badge's three-letter one, so
-         "NAME" still fits on one line inside the same square. -->
-    <dimen name="profile_badge_text_size">9sp</dimen>
+    <!-- The inset around the glyph. 11dp on each side of a 44dp well leaves the icon 22dp across, which
+         is the weight the four-letter codes it replaced had: filling the square would make the badge read
+         as a solid tile rather than as a mark on a ground. -->
+    <dimen name="profile_badge_icon_padding">11dp</dimen>
 
-    <!-- The circular initial avatar on a delegation-contact row. A touch smaller than the square code
-         badge: a single letter needs less room than a four-letter code, and the smaller circle keeps
+    <!-- The circular initial avatar on a delegation-contact row. A touch smaller than the square glyph
+         badge: a single letter needs less room than an icon in its inset, and the smaller circle keeps
          the contact rows visibly lighter than the account rows above them. -->
     <dimen name="profile_avatar_size">40dp</dimen>
 
@@ -954,6 +980,17 @@
          the disc from a pale ground, thin enough to leave most of a 13dp dot blue. -->
     <dimen name="gps_dot_ring_width">2.5dp</dimen>
 
+    <!-- The pin shown over the middle of the map while it is being dragged to choose a point.
+
+         The offset is deliberately *half the size, negative*: a pin marks a point with its tip, and
+         the view is centred by its own middle, so it has to be lifted by half its height for the tip
+         to land on the map's centre — which is the coordinate the screen saves. Changing the size
+         without changing the offset is what would quietly move the saved point half a pin north. -->
+    <dimen name="map_centre_pin_size">40dp</dimen>
+    <dimen name="map_centre_pin_offset">-20dp</dimen>
+    <!-- The line under the map explaining that it can be dragged. -->
+    <dimen name="map_drag_hint_text_size">11sp</dimen>
+
     <!-- ~~~~~~~~~~ The current-location card ~~~~~~~~~~ -->
     <dimen name="gps_card_corner_radius">28dp</dimen>
     <dimen name="gps_card_padding">18dp</dimen>
@@ -986,6 +1023,18 @@
          scrolling content: without it "SAVE PLACE" — the single action on the screen — comes to rest
          underneath the bar. The same figure and the same reason as home_scroll_padding_bottom. -->
     <dimen name="add_place_scroll_padding_bottom">130dp</dimen>
+
+    <!-- The same inset for the four add/edit forms — pet, task, expense and place.
+
+         They needed it just as badly and did not have it: each ends in its buttons, and on the place
+         form in edit mode the last of them is "Delete place", which came to rest entirely behind the
+         navigation bar. A button under the bar is not merely hard to read — the bar takes the tap, so
+         pressing it navigated to another tab instead, and the action could not be reached at all
+         except with the keyboard open (which hides the bar).
+
+         Applied as the scrolling column's own bottom padding rather than the scroller's, so the
+         content simply grows by this much and the last button can scroll up clear of the bar. -->
+    <dimen name="form_scroll_padding_bottom">130dp</dimen>
 
     <!-- "+ ADD PLACE" in the Places tab's "Saved places" heading. A compact accent capsule, sized to
          sit on the heading's line without pushing it taller. -->
