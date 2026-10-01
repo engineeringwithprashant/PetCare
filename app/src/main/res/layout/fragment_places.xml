@@ -59,18 +59,17 @@
                 android:orientation="vertical">
 
                 <!-- ============================== Map card ==============================
-                     A real Google map, centred on whichever place is selected. See MapEmbedView for
-                     why it is a WebView over the keyless embed URL rather than the Maps SDK, and how
-                     the tiles are tinted to match the app's theme.
+                     A real interactive map, centred on whichever place is selected and with a dot
+                     marking it. See PlaceMapView for why it is MapLibre rather than the Google Maps
+                     SDK, and MapStyles for where its tiles and cartography come from.
 
-                     The card's own background is the map's *loading ground*: the WebView is
-                     transparent and stays invisible until its first page has been drawn and tinted,
-                     so this colour is what the user sees for the second or two before the tiles
-                     arrive. A theme role rather than a fixed colour, because a map is a surface being
-                     drawn on and so follows the page — pale sage by day, deep slate by night.
+                     The card's own background is the map's *loading ground*: it is what the user sees
+                     for the second or two before the first tiles arrive. A theme role rather than a
+                     fixed colour, because a map is a surface being drawn on and so follows the page —
+                     pale sage by day, deep slate by night.
 
-                     clipToOutline (via the card's shape) is what keeps the square WebView inside the
-                     28dp corners; without it the map's corners would poke out past the card's. -->
+                     clipToOutline (via the card's shape) is what keeps the square map surface inside
+                     the 28dp corners; without it the map's corners would poke out past the card's. -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/mapCard"
                     android:layout_width="match_parent"
@@ -88,11 +87,15 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
 
-                        <com.prash.petcare.ui.place.MapEmbedView
+                        <!-- attributionBottomInset lifts the map's credit line above the two buttons
+                             along the foot of this card, which would otherwise be drawn over it. See
+                             the styleable in attrs.xml. -->
+                        <com.prash.petcare.ui.place.PlaceMapView
                             android:id="@+id/placesMap"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:contentDescription="@string/cd_places_map" />
+                            android:contentDescription="@string/cd_places_map"
+                            app:attributionBottomInset="@dimen/places_map_attribution_inset" />
 
                         <!-- "PATAN ANIMAL HOSPITAL · 1.2 KM". wrap_content inside a full-width parent,
                              so it hugs a short name but is measured against the card's width and
@@ -113,8 +116,10 @@
                         <!-- "MAP / SATELLITE", in the corner opposite the name pill. Aerial imagery
                              earns its place on this card: a saved vet or park is recognised from the
                              look of its yard and its roof long before its name is read off a drawn
-                             map. See PetCare.Map.LayerToggle, and MapLinks.embedUrl for how a keyless
-                             embed is asked for imagery at all. -->
+                             map. A two-state toggle here rather than the Add a place picker's
+                             three-way menu: this card shows a place, and the extra choice between
+                             photography with and without labels is one for somebody choosing a point,
+                             not for somebody looking at one. See PetCare.Map.LayerToggle. -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/mapLayerButton"
                             style="@style/PetCare.Map.LayerToggle"

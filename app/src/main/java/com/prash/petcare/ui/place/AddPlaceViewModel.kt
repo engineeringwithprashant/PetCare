@@ -10,162 +10,86 @@ import com.prash.petcare.PetCareApplication
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Place
 import com.prash.petcare.data.local.entity.PlaceCategory
+import com.prash.petcare.data.location.GeocodingRepository
 import com.prash.petcare.data.location.LocationRepository
-import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.data.repository.PlaceRepository
-import com.prash.petcare.util.Coordinates
-import com.prash.petcare.util.HomeReference
+import com.prash.petcare.ui.common.messageRes
+import com.prash.petcare.util.PhoneCheck
+import com.prash.petcare.util.PhoneNumbers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * How the hunt for the device's position is going.
+ * The part of the Add a place form this ViewModel types into, as distinct from where the place *is*.
  *
- * Five states rather than a nullable fix plus a boolean, because the screen says something different
- * in each and the four "no position" cases are not interchangeable — "still looking" invites waiting,
- * "permission denied" invites granting it, and "no location hardware" invites neither.
+ * **Why the typed text lives here**, when the app's other forms leave it in the EditTexts and let them
+ * restore themselves: the name is not only typed, it is read back by the summary card and it decides
+ * whether the save button can be pressed, so two things outside the box depend on its value and the box
+ * cannot be the only one who knows it. The rest is held alongside it for consistency.
  *
- *  - [IDLE] — nothing asked for yet. Only ever the state of a freshly built ViewModel: the screen
- *    asks for a fix the moment it opens, so the user never sees it.
- *  - [LOCATING] — a request is in flight.
- *  - [FOUND] — there is a position. The *only* state in which a place can be saved.
- *  - [DENIED] — there is no position and asking again might help: access was refused, or the fix
- *    failed. The two are told apart by [GpsState.message], not by a separate state, because the
- *    screen offers the same two buttons for either.
- *  - [UNSUPPORTED] — there is no position and asking again cannot help, because the device has no
- *    location capability at all.
- */
-enum class GpsStatus { IDLE, LOCATING, FOUND, DENIED, UNSUPPORTED }
-
-/**
- * Everything known about where the device is.
+ * The phone number is the one exception and stays in its two views, because deciding whether a number
+ * is real is a job for `PhoneNumbers` at save time rather than on every keystroke — the same
+ * arrangement the full place form uses.
  *
- * **Why the coordinates live inside this object rather than beside it.** A latitude with no status,
- * or a status with no latitude, are both states the screen must never be able to draw — "found" with
- * nothing to show, or a stale position under a "permission denied" message. Keeping them in one value
- * that is replaced whole makes those unrepresentable: every state change writes both at once.
- *
- * @property status Which of the five conditions above holds.
- * @property coordinates Where the device is, set only when [status] is [GpsStatus.FOUND].
- * @property accuracyMetres The radius the device believes the true position lies within — the figure
- *   shown as "±8 m". Null when the platform reported none, which is possible for a fix derived from
- *   cell towers alone. Only meaningful alongside [coordinates].
- * @property isDemo True when [coordinates] is the stand-in position rather than a real fix. Carried
- *   so the screen can *say so* — a demo position that passed for a live one would let a user save a
- *   place geotagged somewhere they have never been.
- * @property message Why there is no position, as a string resource. Null whenever there is one.
- */
-data class GpsState(
-    val status: GpsStatus = GpsStatus.IDLE,
-    val coordinates: Coordinates? = null,
-    val accuracyMetres: Float? = null,
-    val isDemo: Boolean = false,
-    @param:StringRes val message: Int? = null
-) {
-
-    /** True when there is a position to save — the one thing the rest of the screen asks of this. */
-    val isFound: Boolean get() = status == GpsStatus.FOUND && coordinates != null
-
-    /**
-     * True when the demo position should be offered: there is no fix, and no amount of retrying will
-     * produce one that the user has not already refused. Never while a request is still in flight,
-     * where offering a way around it would pre-empt an answer that may still arrive.
-     */
-    val canUseDemo: Boolean
-        get() = status == GpsStatus.DENIED || status == GpsStatus.UNSUPPORTED
-
-    /** How far the fix is from the app's home reference point, or null when there is no fix. */
-    val distanceFromHomeKm: Double?
-        get() = coordinates?.let { HomeReference.distanceKmFrom(it) }
-}
-
-/**
- * Everything the Add a place screen shows.
- *
- * **Why the typed text lives here**, when the app's other forms leave it in the EditTexts and let
- * them restore themselves. On this screen the name is not only typed: the summary card reads it back
- * and the save button is enabled or disabled by it, so two things outside the box depend on its
- * value and the box cannot be the only one who knows it. The note is held alongside it for
- * consistency rather than necessity.
- *
- * @property gps Where the device is, and how that is going. See [GpsState].
- * @property pickedCoordinates Where the user dragged the map's pin to, or null while the place is
- *   still being saved at the device's own position. Held *beside* [gps] rather than written into it:
- *   [GpsState] answers "where is the phone?", and a pin the user moved two streets over is not an
- *   answer to that question. Keeping them apart is what lets the card go on reporting the real fix —
- *   its accuracy, its distance from home — while the place being saved sits somewhere else.
- * @property name What the place will be called.
+ * @property name What the place will be called. Suggested from the map when the pin lands on a named
+ *   business — see [observeResolvedPlace] — and editable at all times.
+ * @property isNameEdited True once the user has typed in the name box themselves, after which the
+ *   map's suggestions stop arriving in it.
  * @property category The chosen category pill.
+ * @property area The neighbourhood or address. Filled in from the map's own address lookup, and
+ *   editable afterwards — see [onAreaChanged] for how the two are kept from fighting.
+ * @property isAreaEdited True once the user has typed in the address box themselves, after which the
+ *   lookup stops writing into it.
  * @property note The user's own note, or blank.
+ * @property openingMinutes Chosen opening time, minutes since midnight, or null if not set.
+ * @property closingMinutes Chosen closing time, minutes since midnight, or null if not set.
  * @property isSaving True while the write is in flight, so the button cannot be pressed twice.
  */
-data class AddPlaceUiState(
-    val gps: GpsState = GpsState(),
-    val pickedCoordinates: Coordinates? = null,
+data class AddPlaceFormState(
     val name: String = "",
+    val isNameEdited: Boolean = false,
     val category: PlaceCategory = PlaceCategory.VET,
+    val area: String = "",
+    val isAreaEdited: Boolean = false,
     val note: String = "",
-    val isSaving: Boolean = false
+    val openingMinutes: Int? = null,
+    val closingMinutes: Int? = null,
+    val isSaving: Boolean = false,
+    @param:StringRes val hoursError: Int? = null,
+    @param:StringRes val phoneError: Int? = null
+)
+
+/**
+ * Everything the Add a place screen shows: the form, and the location picked on the map above it.
+ *
+ * **Why the two halves are combined here rather than collected separately by the fragment.** Whether
+ * the place can be saved depends on both of them — a name *and* a location — and that decision belongs
+ * on this side of the boundary. A fragment that worked it out for itself would be holding a rule about
+ * what makes a valid place, which is the ViewModel's job, and the full place form would then need its
+ * own copy of the same rule.
+ */
+data class AddPlaceUiState(
+    val form: AddPlaceFormState = AddPlaceFormState(),
+    val location: LocationPickerState = LocationPickerState()
 ) {
-
-    /**
-     * The coordinates the place will actually be saved at: the dropped pin if there is one, otherwise
-     * the device's own position.
-     *
-     * One property that every part of the screen reads — the map's centre, the summary line, the save
-     * button's enabled state and [AddPlaceViewModel.save] — so none of them can disagree about where
-     * the place is. A saved place whose map card showed one point while its geotag carried another
-     * would be the worst kind of bug here, because nothing about it would look wrong.
-     */
-    val coordinates: Coordinates? get() = pickedCoordinates ?: gps.coordinates
-
-    /** True when the pin has been moved off the device's position, so the screen can say so. */
-    val isPositionPicked: Boolean get() = pickedCoordinates != null
-
-    /**
-     * Where the map card is centred, which is **not** the same question as where the place is.
-     *
-     * Usually it is [coordinates] and the two agree. The case they part company is the one this
-     * property exists for: the device has given up — permission refused, no hardware, or the fix
-     * timed out — and there is no position at all. The screen used to answer that by hiding the map,
-     * on the sound reasoning that a map of nowhere in particular looks like an answer when it is not.
-     *
-     * That reasoning expired when the map became draggable. The user can now place the pin themselves,
-     * so taking the map away leaves them holding the one tool that would have solved their problem;
-     * a phone that cannot see the sky is precisely when somebody needs to point at the place by hand.
-     * So the map is shown from a neutral starting point instead, and they drag from there.
-     *
-     * **It stays honest** because it is kept apart from [coordinates]. The starting point is somewhere
-     * to look from, never something to save: [canSave] reads `coordinates`, which is still null, so the
-     * button stays disabled until the user actually drops the pin. Nothing is ever written that the
-     * user did not choose.
-     *
-     * Null while a fix may still arrive, where the placeholder's "Finding your position…" is the more
-     * useful thing to show than a map about to be replaced.
-     */
-    val mapCentre: Coordinates? get() = coordinates ?: HomeReference.COORDINATES.takeIf { gps.canUseDemo }
-
-    /** True when the map is up as a *starting point* and the user has yet to choose anything on it. */
-    val isAwaitingPin: Boolean get() = coordinates == null && mapCentre != null
 
     /**
      * Whether "SAVE PLACE" can be pressed.
      *
      * Both conditions, not either: a place needs a name its owner will recognise in the list, and it
      * needs coordinates, because the whole Places tab is built on them — the map centres on them and
-     * Directions navigates to them. Saving without either a fix or a dropped pin would mean inventing
-     * a position, and an invented geotag is worse than an unsaved place because it looks exactly like
-     * a real one.
+     * Directions navigates to them. There is no third way to produce a position any more; the demo
+     * fallback is gone, because an invented geotag is worse than an unsaved place, given that it looks
+     * exactly like a real one.
      */
     val canSave: Boolean
-        get() = name.isNotBlank() && coordinates != null && !isSaving
+        get() = form.name.isNotBlank() && location.selected != null && !form.isSaving
 }
 
 /** A one-off occurrence the Add a place screen reacts to exactly once. */
@@ -184,228 +108,178 @@ sealed interface AddPlaceEvent {
 /**
  * Backs the Add a place screen.
  *
- * In MVVM this is the **ViewModel**. It asks [LocationRepository] for a fix, holds the form's values
- * and writes the finished place through [PlaceRepository]. It holds no Context, no View and no DAO;
- * the fragment supplies the permission prompt, formats the text and draws the result.
+ * In MVVM this is the **ViewModel**. It holds the form's values and writes the finished place through
+ * [PlaceRepository]; everything to do with *where* the place is belongs to [picker], which it owns and
+ * exposes. It holds no Context, no View and no DAO; the fragment supplies the permission prompt and the
+ * time pickers, formats the text and draws the result.
  *
  * ### Where a place's position comes from
  *
- * The device's GPS starts it, through [locate]: the user is usually standing at the vet, so the phone
- * already knows roughly where the place is and the fastest possible save is "type the name, press
- * save".
+ * Two ways, either of which may be used at any moment, and the later one always wins — see
+ * [PlaceLocationPicker], which is where that rule lives and which the full place form shares. This
+ * class adds nothing to it: it simply passes the chosen coordinates through to the saved row.
  *
- * From there the pin can be **moved**, through [onCentrePicked]. That is not a second source competing
- * with the first — it is the fix being corrected by the one party who can: the phone reports where the
- * *phone* is, to within a few metres at best, and the user is the only one who knows whether the place
- * is this doorway or the one across the road. It also covers the case the GPS cannot: saving the park
- * you are going to visit rather than the room you are sitting in.
+ * ### Why the name and address boxes fill themselves in
  *
- * [useDemoLocation] is the third and last way, and it is honest about itself: the position it sets is
- * marked [GpsState.isDemo] and the screen says "demo" wherever it says anything about the fix.
+ * The map already looks up what is under its pin, to put a line above the coordinates. Having found
+ * it, leaving the user to retype it into the form would be asking them for something the screen
+ * already knows. So both halves of that answer are copied across — until the moment the user edits
+ * the box in question, after which it is theirs and the lookup stops touching it.
  *
- * ### Why the fix is asked for on arrival, unlike everywhere else in the app
- *
- * The app's rule elsewhere is never to prompt for a permission as a screen opens, because a prompt
- * the user has not yet seen a reason for is the one most likely to be refused. This screen is the
- * exception that proves it: its heading, its subtitle and its map all say "we are about to save
- * where you are", so by the time the system dialog appears the reason is already on screen — and
- * waiting for a second tap would make a two-tap flow a four-tap one.
+ * The two halves go to different boxes, which is the part worth being careful about: a matched
+ * business name ("Patan Hospital") is a candidate for the **place name**, while the address under it
+ * ("Lagankhel, Lalitpur") belongs in the **area** box. An area name is never offered as a place name —
+ * see [SelectedLocation.suggestedName] — because "Lalitpur" is a city, not the name of a vet.
  *
  * @param ownerId The signed-in account the new place is saved under.
  */
 class AddPlaceViewModel(
     private val placeRepository: PlaceRepository,
-    private val locationRepository: LocationRepository,
-    petRepository: PetRepository,
+    locationRepository: LocationRepository,
+    geocodingRepository: GeocodingRepository,
     private val ownerId: Long
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AddPlaceUiState())
-    val uiState: StateFlow<AddPlaceUiState> = _uiState.asStateFlow()
+    /**
+     * The map, the chosen point and its address — the half of this screen that the full place form
+     * needs too, so it is written once and owned rather than reimplemented. Exposed for the fragment
+     * to forward gestures to and for [uiState] to fold into the screen's state.
+     */
+    val picker = PlaceLocationPicker(
+        locationRepository = locationRepository,
+        geocodingRepository = geocodingRepository,
+        scope = viewModelScope
+    )
+
+    private val _formState = MutableStateFlow(AddPlaceFormState())
+
+    /**
+     * The whole screen, as one value.
+     *
+     * `Eagerly` rather than `WhileSubscribed`: the picker starts asking the device where it is the
+     * moment the screen opens, and a state flow that only began combining once something subscribed
+     * could miss the first answer.
+     */
+    val uiState: StateFlow<AddPlaceUiState> =
+        combine(_formState, picker.state) { form, location -> AddPlaceUiState(form, location) }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, AddPlaceUiState())
 
     private val _events = Channel<AddPlaceEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    /**
-     * Whether the map card is showing Google's aerial imagery rather than its drawn map.
-     *
-     * Kept apart from [uiState] rather than folded into it: it is a fact about *how the map is drawn*
-     * and about nothing else on the screen. Nothing in the form
-     * depends on it, the place saved is identical either way, and putting it in the state would rebuild
-     * the whole form — re-running the summary line, the chip row and the save button's label — every
-     * time the user flipped the layer.
-     *
-     * It lives here rather than in the fragment so the choice survives a rotation. A user who switched
-     * to imagery to find a rooftop, then turned the phone, should not be handed the drawn map back.
-     */
-    private val _isSatellite = MutableStateFlow(false)
-    val isSatellite: StateFlow<Boolean> = _isSatellite.asStateFlow()
-
-    /** Flips between the drawn map and the imagery. */
-    fun toggleMapLayer() {
-        _isSatellite.value = !_isSatellite.value
+    init {
+        // Opens the map, and takes a fix if — and only if — access is already held. See
+        // PlaceLocationPicker.start for why no permission is requested from here.
+        picker.start(savedAt = null)
+        observeResolvedPlace()
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Finding the device
-    // ---------------------------------------------------------------------------------------
-
     /**
-     * Asks the device where it is, and publishes whichever of the four answers comes back.
+     * Copies what the map found into the two boxes it can speak for, while they are still the
+     * screen's to write in.
      *
-     * Called when the screen opens and again whenever "Refresh location" or "Try again" is pressed —
-     * the same function for both, because they are the same request; only the button's label differs,
-     * and that is the fragment's business.
+     * Collected rather than pushed from the picker, because the picker must not know that a form
+     * exists above it — it is shared with a screen whose fields are different views entirely.
+     * Listening here keeps the dependency pointing one way.
      *
-     * **The four outcomes**, in the order they are decided:
+     * **Each box is filled independently of the other**, so a user who names the place themselves
+     * still gets the address filled in, and a user who corrects the address still gets the business
+     * name offered. Writing both from one `if` would have tied the two together for no reason.
      *
-     *  1. The device has no location capability at all → [GpsStatus.UNSUPPORTED]. Checked first
-     *     because it makes the other three impossible, and because it is the one case where asking
-     *     again is pointless.
-     *  2. The permission is not held → [GpsStatus.DENIED], "Location permission was denied". Tested
-     *     here as well as by the fragment's prompt, because access can be revoked from system
-     *     settings while the app sits in the background.
-     *  3. No fix arrived within the timeout → [GpsStatus.DENIED], "try again outdoors". The same
-     *     state as a refusal, because the screen offers the same two ways forward for either.
-     *  4. A fix arrived → [GpsStatus.FOUND], with the coordinates and the device's own accuracy.
-     *
-     * **The request's shape** mirrors the design's `getCurrentPosition` options exactly: high
-     * accuracy, a ten-second ceiling, and a cached fix accepted only if it is less than thirty
-     * seconds old. High accuracy because this position is about to be stored as a place's permanent
-     * geotag, and a neighbourhood-level estimate would mark the wrong street; the narrow cache window
-     * because a fix from a minute ago may be from the bus stop the user walked from, while one from
-     * twenty seconds ago is where they are standing.
-     *
-     * **A failure clears any previous fix**, rather than leaving the old position under the new
-     * message. That is the invariant [GpsState] exists to keep: "denied" with a latitude still
-     * showing would let a user save a geotag the screen has just said it cannot vouch for. The cost
-     * is that refreshing indoors loses a good fix taken by a window a moment earlier — which the
-     * button's "Try again" label then invites them to retake.
+     * The equality checks are not an optimisation: this state is re-emitted on every keystroke, and
+     * writing a value that is already there would mark the box as edited by the user — see
+     * [onNameChanged].
      */
-    fun locate() {
-        if (_uiState.value.gps.status == GpsStatus.LOCATING) return
-
-        if (!locationRepository.hasLocationCapability()) {
-            setGps(GpsStatus.UNSUPPORTED, R.string.add_place_gps_unsupported)
-            return
-        }
-
-        if (!locationRepository.hasLocationPermission()) {
-            setGps(GpsStatus.DENIED, R.string.add_place_gps_denied)
-            return
-        }
-
-        updateGps { it.copy(status = GpsStatus.LOCATING, message = null) }
-
+    private fun observeResolvedPlace() {
         viewModelScope.launch {
-            val fix = locationRepository.getCurrentFix(
-                highAccuracy = true,
-                allowCached = true,
-                timeoutMillis = FIX_TIMEOUT_MILLIS,
-                maxCacheAgeMillis = MAX_CACHE_AGE_MILLIS
-            )
+            picker.state.collect { location ->
+                val selected = location.selected ?: return@collect
+                var form = _formState.value
 
-            if (fix == null) {
-                setGps(GpsStatus.DENIED, R.string.add_place_gps_failed)
-                return@launch
+                // Only ever a POI name, and only while the box is untouched — in which case whatever
+                // is in it was written by this method, so it tracks the pin in both directions. That
+                // includes *emptying* as the pin leaves the hospital's grounds, which is the point:
+                // the alternative leaves "Patan Hospital" sitting in the name box over a card reading
+                // "Dropped pin", and a save then files a field under the hospital's name. Nothing a
+                // person typed can be lost this way, since a single keystroke ends the arrangement.
+                val suggestedName = selected.suggestedName.orEmpty()
+                if (!form.isNameEdited && form.name != suggestedName) {
+                    form = form.copy(name = suggestedName)
+                }
+
+                val area = selected.areaText
+                if (area != null && !form.isAreaEdited && form.area != area) {
+                    form = form.copy(area = area)
+                }
+
+                if (form != _formState.value) _formState.value = form
             }
-
-            // A new fix drops any pin the user had dragged: "Refresh location" means "put the map back
-            // on me", and leaving the pin where it was would make the button appear to do nothing.
-            // A *failed* refresh above leaves the pin alone, because losing a point the user chose on
-            // purpose because the GPS could not see the sky would be the wrong way round.
-            _uiState.value = _uiState.value.copy(
-                pickedCoordinates = null,
-                gps = GpsState(
-                    status = GpsStatus.FOUND,
-                    coordinates = fix.coordinates,
-                    accuracyMetres = fix.accuracyMetres,
-                    isDemo = false,
-                    message = null
-                )
-            )
         }
-    }
-
-    /**
-     * The user dragged the map, and this is the point now under its centre.
-     *
-     * Reported by the fragment, which owns the gesture — see MapEmbedView for why a coordinate panned
-     * to inside Google's embedded map has to be measured by the app rather than read back out of it.
-     *
-     * Stored as the *picked* position rather than written over [GpsState.coordinates], for the reason
-     * given on [AddPlaceUiState.pickedCoordinates]: the fix is a fact about the phone and stays true
-     * however far the pin travels.
-     */
-    fun onCentrePicked(coordinates: Coordinates) {
-        if (_uiState.value.pickedCoordinates == coordinates) return
-        _uiState.value = _uiState.value.copy(pickedCoordinates = coordinates)
-    }
-
-    /**
-     * The user refused the system permission prompt.
-     *
-     * Reported by the fragment, which is the only part of the app that can see the dialog's answer.
-     * Recorded as a state rather than treated as a failure of the screen: the demo position below
-     * appears beside it, so the form can still be filled in and saved.
-     */
-    fun onLocationDenied() {
-        setGps(GpsStatus.DENIED, R.string.add_place_gps_denied)
-    }
-
-    /**
-     * Falls back to a fixed stand-in position — "Jhamsikhel, Lalitpur (demo)".
-     *
-     * **Why this exists at all.** Without it, a user who refuses the location permission, or whose
-     * phone cannot get a fix indoors, reaches a screen where the save button can never be pressed —
-     * a dead end with no way out but leaving. It also makes the feature demonstrable on an emulator
-     * with no location configured, which for coursework being marked is not a small thing.
-     *
-     * **Why it is safe.** The position is flagged [GpsState.isDemo] and every line that mentions the
-     * fix says so: the map's status chip reads "DEMO LOCATION" rather than "LIVE GPS", and the card's
-     * title carries "(demo)". Nothing pretends this is where the phone is.
-     */
-    fun useDemoLocation() {
-        // Clears the pin for the same reason a fresh fix does: this is the map being put somewhere
-        // definite, and the pin can be dragged from there.
-        _uiState.value = _uiState.value.copy(
-            pickedCoordinates = null,
-            gps = GpsState(
-                status = GpsStatus.FOUND,
-                coordinates = DEMO_COORDINATES,
-                accuracyMetres = DEMO_ACCURACY_METRES,
-                isDemo = true,
-                message = null
-            )
-        )
-    }
-
-    /** Replaces the GPS state wholesale — see [GpsState] for why it is never edited in pieces. */
-    private fun setGps(status: GpsStatus, @StringRes message: Int) {
-        updateGps { GpsState(status = status, message = message) }
-    }
-
-    /** Applies [transform] to the current GPS state and republishes the screen. */
-    private fun updateGps(transform: (GpsState) -> GpsState) {
-        _uiState.value = _uiState.value.copy(gps = transform(_uiState.value.gps))
     }
 
     // ---------------------------------------------------------------------------------------
     // The form
     // ---------------------------------------------------------------------------------------
 
+    /**
+     * The name box changed.
+     *
+     * **The equality guard is what tells a person from the screen**, exactly as on [onAreaChanged]:
+     * the fragment writes the state back into the box whenever the two differ, and that write returns
+     * here as if it were an edit. A value identical to the one already held cannot have come from a
+     * keystroke, so it is ignored; anything else did, and the box is the user's from then on — the map
+     * never overwrites a name a person has typed, however good a POI match it finds afterwards.
+     */
     fun onNameChanged(name: String) {
-        if (_uiState.value.name == name) return
-        _uiState.value = _uiState.value.copy(name = name)
+        val form = _formState.value
+        if (form.name == name) return
+        _formState.value = form.copy(name = name, isNameEdited = true)
     }
 
     fun onCategorySelected(category: PlaceCategory) {
-        _uiState.value = _uiState.value.copy(category = category)
+        _formState.value = _formState.value.copy(category = category)
+    }
+
+    /**
+     * The address box changed.
+     *
+     * **The equality guard is what tells a person from the screen.** The fragment writes the state back
+     * into the box whenever the two differ, and that write comes back through here as an edit — so
+     * without the guard, the lookup filling the box in would immediately mark it "edited by the user"
+     * and never fill it in again. A value identical to the one already held cannot have come from a
+     * keystroke, so it is ignored; anything else did, and the box becomes the user's from then on.
+     */
+    fun onAreaChanged(area: String) {
+        val form = _formState.value
+        if (form.area == area) return
+        _formState.value = form.copy(area = area, isAreaEdited = true)
     }
 
     fun onNoteChanged(note: String) {
-        if (_uiState.value.note == note) return
-        _uiState.value = _uiState.value.copy(note = note)
+        if (_formState.value.note == note) return
+        _formState.value = _formState.value.copy(note = note)
+    }
+
+    fun onOpeningTimeSelected(hour: Int, minute: Int) {
+        _formState.value =
+            _formState.value.copy(openingMinutes = hour * 60 + minute, hoursError = null)
+    }
+
+    fun onClosingTimeSelected(hour: Int, minute: Int) {
+        _formState.value =
+            _formState.value.copy(closingMinutes = hour * 60 + minute, hoursError = null)
+    }
+
+    /** "Clear hours" — for a park or anywhere without opening times. */
+    fun clearHours() {
+        _formState.value =
+            _formState.value.copy(openingMinutes = null, closingMinutes = null, hoursError = null)
+    }
+
+    /** Called as the number or its country is edited, so a corrected field stops complaining. */
+    fun clearPhoneError() {
+        if (_formState.value.phoneError == null) return
+        _formState.value = _formState.value.copy(phoneError = null)
     }
 
     // ---------------------------------------------------------------------------------------
@@ -413,56 +287,86 @@ class AddPlaceViewModel(
     // ---------------------------------------------------------------------------------------
 
     /**
-     * Writes the place and reports its new id.
+     * Validates and writes the place, then reports its new id.
      *
-     * The record is assembled from the three sources the screen has: the name, category and note the
-     * user gave; the coordinates the GPS produced; and the fixed values a place saved this way starts
-     * life with — no opening hours, no phone number, and the "saved by you" provenance shown beside
-     * its category on the Places tab. Hours and a number can be filled in later from the full place
-     * form; demanding them here would turn a two-tap save into a form.
+     * **The coordinates are whatever the picker holds at this instant**, which is the latest point
+     * chosen by either route — the device's position if that was the last thing asked for, the map's
+     * centre if the user has moved it since. There is exactly one place that question is answered, so
+     * the geotag written here is always the point the card above the button was showing.
      *
-     * The coordinates are [AddPlaceUiState.coordinates] — the dropped pin if the user moved one, and
-     * the device's own fix otherwise, decided in one place so the geotag written here is the same point
-     * the map card was showing. [AddPlaceUiState.canSave] guarantees they exist, which is why the
-     * `?: return` below is a guard against a race (a state change between the tap and this line)
-     * rather than a case the screen expects.
+     * The two validations are the full place form's, unchanged, because they are the same fields: a
+     * phone number that is given has to be a real one for its country, since the saved place's row
+     * offers to dial it; and opening hours are both or neither, because half a pair cannot answer "is
+     * it open?".
      *
      * Once the row is in, the Places tab redraws by itself — it observes Room — so the saved place
-     * appears in the list and under the category filters with nothing else to do. The event carries
-     * the id only so that tab can *select* the new place, which is what re-centres its map.
+     * appears in the list and under the category filters with nothing else to do. The event carries the
+     * id only so that tab can *select* the new place, which is what re-centres its map.
+     *
+     * @param phoneRegion The country chosen beside the number box, and [phone] the local number typed
+     *   next to it. Passed in rather than held in state for the reason given on [AddPlaceFormState].
+     * @param defaultNote What to store when the note box was left empty — a string, so it is resolved
+     *   by the fragment: a ViewModel holds no Context to look one up with.
      */
-    fun save(savedByMeta: String, defaultNote: String) {
-        val state = _uiState.value
+    fun save(phoneRegion: String, phone: String, defaultNote: String) {
+        val state = uiState.value
         if (!state.canSave) return
 
-        val coordinates = state.coordinates ?: return
-        val trimmedName = state.name.trim()
+        val selected = state.location.selected ?: return
+        val form = state.form
+        val trimmedPhone = phone.trim()
+
+        val hoursError = if ((form.openingMinutes == null) != (form.closingMinutes == null)) {
+            R.string.error_place_hours_incomplete
+        } else {
+            null
+        }
+        val phoneCheck = PhoneNumbers.check(phoneRegion, trimmedPhone)
+        // requireNumber = false: an empty box is fine here — plenty of parks have no number.
+        val phoneError = phoneCheck.messageRes(requireNumber = false)
+
+        if (hoursError != null || phoneError != null) {
+            _formState.value = form.copy(hoursError = hoursError, phoneError = phoneError)
+            return
+        }
+
+        val trimmedName = form.name.trim()
 
         viewModelScope.launch {
-            _uiState.value = state.copy(isSaving = true)
+            _formState.value = form.copy(isSaving = true)
 
             val placeId = placeRepository.addPlace(
                 Place(
                     ownerId = ownerId,
                     name = trimmedName,
-                    category = state.category,
-                    // Renders as "Vet clinic · saved by you" under the name, which is what marks a
-                    // place added from this screen apart from one entered through the full form.
-                    area = savedByMeta,
-                    latitude = coordinates.latitude,
-                    longitude = coordinates.longitude,
-                    // Left unset rather than guessed. The Places tab already draws "Hours not set"
-                    // and an unsaved phone number as plain text rather than as broken controls.
-                    phone = null,
-                    openingMinutes = null,
-                    closingMinutes = null,
-                    notes = state.note.trim().takeIf { it.isNotEmpty() } ?: defaultNote
+                    category = form.category,
+                    // The typed address if there is one, otherwise whatever the map resolved — its
+                    // *address*, not its headline, so a place saved on top of a hospital does not end
+                    // up with "Patan Hospital" as both its name and its area. Null rather than a
+                    // placeholder when neither exists: the Places tab already draws a place with no
+                    // area, and inventing text for it would put a guess in the database.
+                    area = form.area.trimToNull() ?: selected.areaText?.trimToNull(),
+                    latitude = selected.coordinates.latitude,
+                    longitude = selected.coordinates.longitude,
+                    // Stored in international form, so a saved place's number dials the same whether
+                    // the user is standing in Kathmandu or abroad.
+                    phone = if (phoneCheck == PhoneCheck.EMPTY) {
+                        null
+                    } else {
+                        PhoneNumbers.toE164(phoneRegion, trimmedPhone) ?: trimmedPhone
+                    },
+                    openingMinutes = form.openingMinutes,
+                    closingMinutes = form.closingMinutes,
+                    notes = form.note.trimToNull() ?: defaultNote
                 )
             )
 
             _events.send(AddPlaceEvent.Saved(placeId = placeId, name = trimmedName))
         }
     }
+
+    /** Blank input and "not provided" mean the same thing, so both are stored as null. */
+    private fun String.trimToNull(): String? = trim().takeIf { it.isNotEmpty() }
 
     companion object {
 
@@ -473,30 +377,10 @@ class AddPlaceViewModel(
                 AddPlaceViewModel(
                     placeRepository = application.placeRepository,
                     locationRepository = application.locationRepository,
-                    petRepository = application.petRepository,
+                    geocodingRepository = application.geocodingRepository,
                     ownerId = ownerId
                 )
             }
         }
-
-        /**
-         * How long to wait for a fix before giving up, and how old a cached one may be to stand in
-         * for it. Both come straight from the design's `getCurrentPosition` options.
-         *
-         * Ten seconds is long enough for a warm GPS lock outdoors and short enough that a user
-         * indoors gets an answer rather than a spinner. Thirty seconds of cache is roughly how long
-         * somebody stays in one place while opening a screen and reading its heading.
-         */
-        private const val FIX_TIMEOUT_MILLIS = 10_000L
-        private const val MAX_CACHE_AGE_MILLIS = 30_000L
-
-        /**
-         * The stand-in position: Jhamsikhel, Lalitpur, a few hundred metres from the home reference
-         * point so the "0.4 km from home" line has something to say. Its accuracy is stated as 8 m,
-         * the figure a good urban GPS fix reports, so the card looks the way a real one would — the
-         * point of the demo being to show the flow, not to imitate a failure.
-         */
-        private val DEMO_COORDINATES = Coordinates(latitude = 27.6743, longitude = 85.3094)
-        private const val DEMO_ACCURACY_METRES = 8f
     }
 }

@@ -60,11 +60,12 @@ import kotlinx.coroutines.launch
  * and it owns the things that genuinely need an Activity: the location permission prompt, the
  * hand-off to Google Maps, the phone dialler, and navigation.
  *
- * **A real map without an API key.** The card is a `WebView` over Google's keyless embed URL, and
- * the two links below it are the documented Maps URL scheme, which Android delivers to the Maps app
- * when it is installed and to the browser when it is not. So the tab shows real tiles and offers real
- * turn-by-turn directions with no Maps SDK, no key and no billing account — see MapEmbedView and
- * [com.prash.petcare.util.MapLinks], which also carry the note on what to change for production.
+ * **Where the map and the links come from.** The card is a MapLibre map drawing MapTiler's vector
+ * tiles — see [PlaceMapView] and [MapStyles] — and the two links below it are the documented Google
+ * Maps URL scheme, which Android delivers to the Maps app when it is installed and to the browser
+ * when it is not. So the tab draws its own map and still hands turn-by-turn directions to the app the
+ * user already navigates with, with no Google Maps SDK and no billing account. See
+ * [com.prash.petcare.util.MapLinks].
  */
 class PlacesFragment : Fragment() {
 
@@ -331,7 +332,7 @@ class PlacesFragment : Fragment() {
     /**
      * Centres the map on the selected place and writes the pill over it.
      *
-     * The map is only reloaded when the coordinates actually change — [MapEmbedView.showLocation]
+     * The map is only reloaded when the coordinates actually change — [PlaceMapView.showLocation]
      * guards that — which matters because this runs on every state emission, including each tick of
      * the "open now" clock. Without the guard the map would reload once a minute and never finish.
      *
@@ -343,16 +344,18 @@ class PlacesFragment : Fragment() {
     private fun renderMap(featured: PlaceRow?) {
         val place = featured?.place ?: return
 
-        binding.placesMap.showLocation(
-            Coordinates(place.latitude, place.longitude),
-            zoom = PLACES_MAP_ZOOM
-        )
+        val at = Coordinates(place.latitude, place.longitude)
+        binding.placesMap.showLocation(at, zoom = PLACES_MAP_ZOOM)
+        // The dot marking the place itself. It stays on the place when the map is panned, which is the
+        // difference between a map *of* somewhere and a map that happens to be centred there — and it
+        // replaces the pin the old Google embed drew from the coordinates in its URL.
+        binding.placesMap.markerAt = at
 
         binding.mapPlacePill.text = featured.distanceKm
             ?.let { getString(R.string.places_map_pill, place.name, formatDistanceKm(requireContext(), it)) }
             ?: place.name
 
-        // The WebView is opaque to TalkBack, so the card names what it is showing.
+        // The map surface is opaque to TalkBack, so the card names what it is showing.
         binding.placesMap.contentDescription = getString(R.string.cd_places_map_at, place.name)
     }
 
@@ -474,9 +477,9 @@ class PlacesFragment : Fragment() {
      * Hands a Google Maps link to the Maps app, or to the browser when it is not installed.
      *
      * Used by all three ways out of this screen — "DIRECTIONS ↗" and "GOOGLE MAPS" over the map,
-     * "Open in maps ↗" on the card — and by any Google link the user taps *inside* the embedded map,
-     * which the WebView refuses to navigate to itself. See [openExternalLink] for why an `https` URL
-     * reaches the Maps app, and why the launch is tried rather than checked first.
+     * "Open in maps ↗" on the card — and by the credit line under the map, which leads to the tile
+     * providers' copyright page. See [openExternalLink] for why an `https` URL reaches the Maps app,
+     * and why the launch is tried rather than checked first.
      */
     private fun openLink(url: String) {
         if (!openExternalLink(url)) showMessage(getString(R.string.places_no_maps_app))
@@ -595,8 +598,8 @@ class PlacesFragment : Fragment() {
         // The adapter outlives the view as a fragment property; detaching it stops the destroyed
         // RecyclerView being kept alive through it.
         binding.placesRecyclerView.adapter = null
-        // The WebView keeps a rendering thread and a native page alive until told otherwise, so it is
-        // torn down with the view rather than left to the garbage collector — see MapEmbedView.destroy.
+        // The map holds a GPU surface and a native renderer until told otherwise, so it is
+        // torn down with the view rather than left to the garbage collector — see PlaceMapView.destroy.
         binding.placesMap.destroy()
         _binding = null
     }

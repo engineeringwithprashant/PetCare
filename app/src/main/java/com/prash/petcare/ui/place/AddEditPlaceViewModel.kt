@@ -10,6 +10,7 @@ import com.prash.petcare.PetCareApplication
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Place
 import com.prash.petcare.data.local.entity.PlaceCategory
+import com.prash.petcare.data.location.GeocodingRepository
 import com.prash.petcare.data.location.LocationRepository
 import com.prash.petcare.data.repository.PlaceRepository
 import com.prash.petcare.ui.common.messageRes
@@ -34,20 +35,17 @@ import kotlinx.coroutines.launch
  * @property category The chosen category.
  * @property openingMinutes Chosen opening time, minutes since midnight, or null if not set.
  * @property closingMinutes Chosen closing time, minutes since midnight, or null if not set.
- * @property coordinates The captured GPS geotag, or null until one has been taken.
- * @property isLocating True while waiting for a GPS fix, so the button can show progress and not be
- *   pressed twice.
- * @property isApproximate True when only approximate location was granted, so the form can say the
- *   geotag may be a few hundred metres out.
+ *
+ * The place's position is **not** here any more. It lives in [AddEditPlaceViewModel.picker], which is
+ * shared with the Add a place screen so that the two forms choose a location in exactly the same way —
+ * see [PlaceLocationPicker]. Keeping a second copy of the coordinates here is precisely the drift that
+ * change was made to remove.
  */
 data class PlaceFormState(
     val isEditMode: Boolean = false,
     val category: PlaceCategory = PlaceCategory.VET,
     val openingMinutes: Int? = null,
     val closingMinutes: Int? = null,
-    val coordinates: Coordinates? = null,
-    val isLocating: Boolean = false,
-    val isApproximate: Boolean = false,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     @param:StringRes val nameError: Int? = null,
@@ -61,6 +59,23 @@ sealed interface PlaceFormEvent {
 
     /** A saved place was loaded; fill the text fields once. See CareTaskEvent.PrefillForm for why. */
     data class PrefillForm(val place: Place) : PlaceFormEvent
+
+    /**
+     * The map worked out what the pin is standing on, and these are the two strings the form could
+     * use for it — a business name for the name box, an address for the area box. Either may be null:
+     * because the lookup found only the other, or because the pin has moved off the place it was on
+     * and there is no longer a name to offer. The second case is sent rather than swallowed, so a
+     * suggestion the form accepted earlier can be taken back once it stops being true.
+     *
+     * **An offer, not an instruction**, and sent as an event rather than held in state for that
+     * reason: the fields on this form keep their own text (they restore themselves after a rotation,
+     * which is why this screen has no `name` in its state at all), so a *state* carrying a suggested
+     * name would have to be reconciled against whatever the box already held on every emission. As a
+     * one-off occurrence it is simply ignored by a box that is already filled in — see
+     * AddEditPlaceFragment.applySuggestions, which is where that rule is applied and why it can never
+     * overwrite a saved place's own name.
+     */
+    data class SuggestPlaceDetails(val name: String?, val area: String?) : PlaceFormEvent
 
     /** The place was created or updated; close the form. */
     data object Saved : PlaceFormEvent
@@ -79,22 +94,48 @@ sealed interface PlaceFormEvent {
  * and writes through [PlaceRepository]. The fragment handles what needs an Activity — the permission
  * prompt and the time pickers — and forwards the results here.
  *
- * **The geotag is captured, never typed.** The spec for this feature is that every saved place keeps
- * the GPS position of where it really is, so there are no latitude/longitude fields: the user stands
- * at (or near) the place and presses "Capture location". That also sidesteps a whole class of input
- * errors — a transposed digit in a typed longitude moves a clinic hundreds of kilometres.
+ * **The geotag is chosen on a map, never typed.** There are no latitude/longitude fields: the user
+ * either presses "I'm here" or moves the map until the place sits under its centre pin. That sidesteps
+ * a whole class of input errors — a transposed digit in a typed longitude moves a clinic hundreds of
+ * kilometres — and it is the same picker the Add a place screen uses, so correcting a saved place's
+ * position feels identical to setting it in the first place.
+ *
+ * **Opening an existing place puts the map on it.** [load] hands the stored coordinates to the picker,
+ * which centres the map there with the pin on the point, so "keep this location" costs no taps at all
+ * and changing it is one drag.
+ *
+ * **The map offers names, and only ever offers them.** When the pin lands on a named business the
+ * lookup can say so — "Patan Hospital" rather than "Lalitpur" — and that is passed to the form as
+ * [PlaceFormEvent.SuggestPlaceDetails] so a blank name box can fill itself in. An existing place's own
+ * name is never touched by it, which matters more here than on the Add screen: the user came to this
+ * form to change something about a place they have already named, and finding that name replaced by
+ * whatever the map thinks of the coordinates would be the screen overruling them.
  *
  * @param ownerId The signed-in account a new place is saved under.
  * @param placeId Which place to edit, or [NO_PLACE_ID] to create one.
  */
 class AddEditPlaceViewModel(
     private val placeRepository: PlaceRepository,
-    private val locationRepository: LocationRepository,
+    locationRepository: LocationRepository,
+    geocodingRepository: GeocodingRepository,
     private val ownerId: Long,
     private val placeId: Long
 ) : ViewModel() {
 
     private val isEditMode = placeId != NO_PLACE_ID
+
+    /**
+     * The map, the chosen point and its address.
+     *
+     * The same class the Add a place screen owns, which is what requirement 15 asks for: one location
+     * picker behind both forms rather than two implementations that start out alike. Exposed for the
+     * fragment to draw and to forward the map's gestures to.
+     */
+    val picker = PlaceLocationPicker(
+        locationRepository = locationRepository,
+        geocodingRepository = geocodingRepository,
+        scope = viewModelScope
+    )
 
     /** The place as loaded, kept so a save preserves what the form does not show (pinned, createdAt). */
     private var loadedPlace: Place? = null
@@ -107,8 +148,59 @@ class AddEditPlaceViewModel(
     private val _events = Channel<PlaceFormEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
+    /**
+     * The last pair offered through [PlaceFormEvent.SuggestPlaceDetails].
+     *
+     * Kept so the same suggestion is not sent twice. The picker's state is re-emitted for reasons that
+     * have nothing to do with the address — the map type changing, a fix arriving — and each emission
+     * would otherwise be another event queued behind the last.
+     */
+    private var lastSuggestion: Pair<String?, String?>? = null
+
     init {
-        if (isEditMode) load()
+        if (isEditMode) {
+            // The map waits for the row: its opening position is the place's own, and putting it
+            // anywhere else first would show the user a location that is not theirs.
+            load()
+        } else {
+            picker.start(savedAt = null)
+        }
+        observeResolvedPlace()
+    }
+
+    /**
+     * Offers the form what the map found under its pin.
+     *
+     * Collected here rather than pushed from the picker, for the reason given on
+     * [AddPlaceViewModel.observeResolvedPlace]: the picker is shared between two screens and must not
+     * know that either of them has a form above it.
+     *
+     * Nothing is decided about the *fields* here — this only forwards. Whether a box is empty enough
+     * to accept a suggestion is a question only the fragment can answer on this screen, because this
+     * form keeps its typed text in its views rather than in state.
+     */
+    private fun observeResolvedPlace() {
+        viewModelScope.launch {
+            picker.state.collect { location ->
+                val selected = location.selected ?: return@collect
+                val suggestion = selected.suggestedName to selected.areaText
+
+                if (suggestion == lastSuggestion) return@collect
+                // "Nothing to offer" is only worth sending once something *was* offered, so opening
+                // the screen over an unnamed point does not queue an event saying so.
+                val hasNothingToSay =
+                    lastSuggestion == null && suggestion.first == null && suggestion.second == null
+                if (hasNothingToSay) return@collect
+
+                lastSuggestion = suggestion
+                _events.send(
+                    PlaceFormEvent.SuggestPlaceDetails(
+                        name = suggestion.first,
+                        area = suggestion.second
+                    )
+                )
+            }
+        }
     }
 
     private fun load() {
@@ -125,9 +217,12 @@ class AddEditPlaceViewModel(
                 isLoading = false,
                 category = place.category,
                 openingMinutes = place.openingMinutes,
-                closingMinutes = place.closingMinutes,
-                coordinates = Coordinates(place.latitude, place.longitude)
+                closingMinutes = place.closingMinutes
             )
+            // Centres the map on exactly the coordinates the place was saved at, pin on the point —
+            // requirement 17. Nothing is changed by opening the form: the selection starts as what is
+            // already stored, and only a drag or "I'm here" replaces it.
+            picker.start(savedAt = Coordinates(place.latitude, place.longitude))
             _events.send(PlaceFormEvent.PrefillForm(place))
         }
     }
@@ -158,33 +253,10 @@ class AddEditPlaceViewModel(
         _formState.value = _formState.value.copy(phoneError = null)
     }
 
-    /**
-     * Takes a GPS fix and stores it as this place's geotag.
-     *
-     * Called by the fragment only once location permission is held. High accuracy is asked for when
-     * precise location was granted, and a cached fix is refused: a geotag is saved for good, and "where
-     * the phone was twenty minutes ago" is not where the clinic is.
-     *
-     * A failed fix leaves any previous geotag in place and explains itself rather than clearing the
-     * field — pressing "Recapture" indoors should not throw away a good position taken outside.
-     */
-    fun captureLocation() {
-        if (_formState.value.isLocating) return
-
-        val precise = locationRepository.hasPreciseLocationPermission()
-        _formState.value = _formState.value.copy(isLocating = true, locationError = null)
-
-        viewModelScope.launch {
-            val fix = locationRepository.getCurrentLocation(highAccuracy = precise, allowCached = false)
-
-            _formState.value = if (fix != null) {
-                _formState.value.copy(isLocating = false, coordinates = fix, isApproximate = !precise)
-            } else {
-                _formState.value.copy(isLocating = false)
-            }
-
-            if (fix == null) _events.send(PlaceFormEvent.Message(R.string.place_location_failed))
-        }
+    /** Called as the map is moved, so a form that complained about a missing location stops. */
+    fun clearLocationError() {
+        if (_formState.value.locationError == null) return
+        _formState.value = _formState.value.copy(locationError = null)
     }
 
     /**
@@ -207,7 +279,11 @@ class AddEditPlaceViewModel(
         } else {
             null
         }
-        val locationError = if (state.coordinates == null) R.string.error_place_location_required else null
+        // The position comes from the picker rather than from this state — one answer to "where is
+        // this place?", held in one object, so the row written below cannot disagree with the map the
+        // user was just looking at.
+        val selected = picker.state.value.selected
+        val locationError = if (selected == null) R.string.error_place_location_required else null
         val phoneCheck = PhoneNumbers.check(phoneRegion, trimmedPhone)
         // requireNumber = false: an empty box is fine here, unlike on the register form.
         val phoneError = phoneCheck.messageRes(requireNumber = false)
@@ -222,7 +298,7 @@ class AddEditPlaceViewModel(
             return
         }
 
-        val coordinates = state.coordinates ?: return
+        val coordinates = selected?.coordinates ?: return
 
         viewModelScope.launch {
             _formState.value = state.copy(isSaving = true)
@@ -284,6 +360,7 @@ class AddEditPlaceViewModel(
                 AddEditPlaceViewModel(
                     placeRepository = application.placeRepository,
                     locationRepository = application.locationRepository,
+                    geocodingRepository = application.geocodingRepository,
                     ownerId = ownerId,
                     placeId = placeId
                 )

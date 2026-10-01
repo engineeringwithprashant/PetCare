@@ -1,0 +1,298 @@
+<mxfile host="app.diagrams.net" agent="PetCare coursework" type="device">
+  <diagram id="petcare-app-navigation-map" name="App navigation map">
+    <mxGraphModel dx="1400" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="2336" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="PetCare — App navigation map" style="text;html=1;align=left;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="800" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Launch → sign-in → the Home hub → the feature areas and their detail screens. Screen names are the fragment ids in app/src/main/res/navigation/nav_graph.xml." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="42" y="42" width="1100" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="bgAuth" value="01   AUTHENTICATION LAYER — reachable before login. The graph's startDestination is authFragment." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#d5d5d5;verticalAlign=top;align=left;spacingLeft=16;spacingTop=10;fontSize=12;fontColor=#555555;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="1760" height="390" as="geometry" />
+        </mxCell>
+        <mxCell id="bgHub" value="02   HUB LAYER — one dashboard every feature area hangs off." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#d5d5d5;verticalAlign=top;align=left;spacingLeft=16;spacingTop=10;fontSize=12;fontColor=#555555;" vertex="1" parent="1">
+          <mxGeometry x="40" y="500" width="1760" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="bgFeat" value="03   FEATURE LAYER — two ways in: the five nav-bar tabs, and the three controls in the shared header (avatar, bell, AI pill). Profile, Notifications and the Assistant are header destinations, not tabs." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#d5d5d5;verticalAlign=top;align=left;spacingLeft=16;spacingTop=10;fontSize=12;fontColor=#555555;" vertex="1" parent="1">
+          <mxGeometry x="40" y="770" width="1760" height="820" as="geometry" />
+        </mxCell>
+
+        <mxCell id="launch" value="App launch" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#1a1a1a;strokeColor=none;fontColor=#ffffff;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="215" width="130" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="auth" value="Sign in / Register&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;AuthFragment · email+password or Google&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="250" y="203" width="210" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="dec2fa" value="2FA enabled&lt;br&gt;on this account?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="520" y="198" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="tfscreen" value="Two-factor code&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;TwoFactorFragment · 6-digit TOTP&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="750" y="203" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="recscreen" value="Recovery code&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;RecoveryCodeFragment · single-use&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="203" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="reset" value="Reset password&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;ResetRequestFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="250" y="350" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="resetsent" value="Reset email sent&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;ResetSentFragment · end of flow&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="350" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend" value="&lt;b&gt;LEGEND&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#6c8ebf&quot;&gt;■&lt;/font&gt;  Screen (a Fragment in the nav graph)&lt;br&gt;&lt;font color=&quot;#82b366&quot;&gt;■&lt;/font&gt;  Screen using device location&lt;br&gt;&lt;font color=&quot;#d79b00&quot;&gt;■&lt;/font&gt;  Enhancement beyond the brief&lt;br&gt;&lt;font color=&quot;#999999&quot;&gt;■&lt;/font&gt;  Navigation component / entry point&lt;br&gt;&lt;font color=&quot;#d6b656&quot;&gt;◆&lt;/font&gt;  Decision&lt;br&gt;&lt;br&gt;──►  Navigation action in the nav graph&lt;br&gt;- - ►  Cross-link, shortcut or external app&lt;br&gt;&lt;br&gt;&lt;i&gt;Dashed-outline box = another app, not ours.&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cccccc;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="120" width="310" height="240" as="geometry" />
+        </mxCell>
+
+        <mxCell id="home" value="Home dashboard&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;HomeFragment&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;pet cards · stats · coming-up tasks · streaks&lt;br&gt;walk-window temperature · reads Room, works offline&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="558" width="290" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="noteHome" value="&lt;b&gt;Home's own shortcuts&lt;/b&gt;&lt;br&gt;Tapping a card jumps straight to Pet detail, Add/Edit pet, Routine detail or the Assistant — without walking down through the Pets tab first." style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fffbe6;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="560" width="290" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="noteBack" value="&lt;b&gt;Back stack is cleared here&lt;/b&gt;&lt;br&gt;All three actions into Home use popUpTo=&quot;@id/nav_graph&quot; with popUpToInclusive, so Back from Home never returns to a sign-in screen." style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fffbe6;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="560" width="300" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="navbar" value="Floating nav bar  —  FIVE tabs&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;ui/common/FloatingNavBar.kt · each tab stays lit while its own sub-screens are open&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#999999;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="830" width="970" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="headerStrip" value="Shared header  —  THREE right-hand controls, side by side&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;ui/common/TabHeader.kt + res/layout/view_tab_header.xml · the header sits on top of most screens, so these three are reachable without going through a tab&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#999999;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="830" width="660" height="56" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tHome" value="1 · Home&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;homeFragment&lt;br&gt;the tab you land on&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="940" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tPets" value="2 · Pets&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;petsFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="940" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tChk" value="3 · Checklist&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;checklistFragment&lt;br&gt;today's tasks · streaks&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="940" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tPlc" value="4 · Places&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;placesFragment&lt;br&gt;distance from the phone&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="940" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tExp" value="5 · Expenses&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;expensesFragment&lt;br&gt;category bars · monthly totals&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="940" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tProfile" value="Profile&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;profileFragment · not a tab&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="940" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tNotif" value="Notifications&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;notificationsFragment · not a tab&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="940" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tAssistant" value="AI Assistant&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;assistantFragment · pet-care Q&amp;amp;A (OpenAI) · not a tab&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1560" y="940" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="petDetail" value="Pet detail&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;petDetailFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1060" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pdEdit" value="Add / edit pet&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;addEditPetFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1160" width="170" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="pdAddRoutine" value="Add routine&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;addRoutineFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1227" width="170" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="pdRoutineDetail" value="Routine detail&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;routineDetailFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1294" width="170" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="pdVacc" value="Add vaccination&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;addVaccinationFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1361" width="170" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="pdToChk" value="→ Checklist&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;the shared checklist screen, not a copy&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;dashed=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1428" width="170" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="pdToExp" value="→ Expenses&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;the shared expenses screen, filtered&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;dashed=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1495" width="170" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="addTask" value="Add / edit task&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;addEditTaskFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="480" y="1060" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="delegation" value="Delegation&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;hand today's list over by SMS or email&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="480" y="1160" width="170" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="addPlace" value="Add place&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;addPlaceFragment · search or geotag&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="680" y="1060" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="editPlace" value="Edit place&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;addEditPlaceFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="680" y="1160" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="maps" value="External maps app&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;directions via a geo: intent&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;dashed=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="680" y="1260" width="170" height="56" as="geometry" />
+        </mxCell>
+
+        <mxCell id="addExpense" value="Add / edit expense&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;addEditExpenseFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="880" y="1060" width="170" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="acct" value="Account details&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;accountDetailsFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="1060" width="200" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="chgpw" value="Change password&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;changePasswordFragment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="1127" width="200" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="tfsetup" value="Two-factor setup&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;twoFactorSetupFragment · QR + secret&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="1194" width="200" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="reccodes" value="Recovery codes&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666666&quot;&gt;recoveryCodesFragment · shown once&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="1261" width="200" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="notifNote" value="&lt;b&gt;Notifications is a junction&lt;/b&gt;&lt;br&gt;&lt;br&gt;Tapping an alert opens whichever screen the alert is about — and there are exactly two targets (AlertTarget):&lt;br&gt;· &lt;b&gt;Pet detail&lt;/b&gt; — a vaccination due&lt;br&gt;· &lt;b&gt;Checklist&lt;/b&gt; — a task due&lt;br&gt;&lt;br&gt;Alerts are built from Room, not pushed from a server.&lt;br&gt;&lt;br&gt;The bell is unhooked on this screen itself: it keeps its count but stops being a control." style="shape=note;whiteSpace=wrap;html=1;size=12;fillColor=#fffbe6;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="1060" width="200" height="235" as="geometry" />
+        </mxCell>
+        <mxCell id="assistantNote" value="&lt;b&gt;The AI pill is a sibling of the bell&lt;/b&gt;&lt;br&gt;&lt;br&gt;Not a Profile screen, and not reached &lt;i&gt;through&lt;/i&gt; Notifications — it is its own control in the same header cluster.&lt;br&gt;&lt;br&gt;showAssistantPill() is called by exactly three screens:&lt;br&gt;· Home&lt;br&gt;· Notifications&lt;br&gt;· Profile&lt;br&gt;&lt;br&gt;Each fires its own action to the one destination: action_home_to_assistant, action_notifications_to_assistant, action_profile_to_assistant.&lt;br&gt;&lt;br&gt;Home has a second way in as well — a button on the dashboard, same destination." style="shape=note;whiteSpace=wrap;html=1;size=12;fillColor=#fffbe6;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1560" y="1060" width="200" height="330" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="launch" target="auth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="Signed in" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="auth" target="dec2fa">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="dec2fa" target="tfscreen">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="dec2fa" target="home">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="Lost device" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="tfscreen" target="recscreen">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="Code valid" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.6;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="tfscreen" target="home">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="Code valid" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.9;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="recscreen" target="home">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="Forgot password" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="auth" target="reset">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="reset" target="resetsent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="home" target="navbar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="navbar" target="tHome">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="navbar" target="tPets">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="navbar" target="tChk">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="navbar" target="tPlc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="navbar" target="tExp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" value="Avatar&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;action_global_to_profile&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="headerStrip" target="tProfile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" value="Bell + unread badge&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;onBadgeClick&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="headerStrip" target="tNotif">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17b" value="&quot;AI&quot; pill&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;showAssistantPill()&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="headerStrip" target="tAssistant">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="tPets" target="petDetail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="petDetail" target="pdEdit">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="258" y="1186" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="petDetail" target="pdAddRoutine">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="258" y="1253" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="petDetail" target="pdRoutineDetail">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="258" y="1320" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="petDetail" target="pdVacc">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="258" y="1387" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#888888;dashed=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="petDetail" target="pdToChk">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="258" y="1454" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#888888;dashed=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="petDetail" target="pdToExp">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="258" y="1521" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e25" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="tChk" target="addTask">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e26" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tChk" target="delegation">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="462" y="1190" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e27" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="tPlc" target="addPlace">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e28" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tPlc" target="editPlace">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="662" y="1190" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e29" value="Directions" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#888888;dashed=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tPlc" target="maps">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="662" y="1288" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e30" value="Create task&lt;br&gt;from a place" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#888888;dashed=1;fontSize=10;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tPlc" target="addTask">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e31" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="tExp" target="addExpense">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e32" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="tProfile" target="acct">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e33" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tProfile" target="chgpw">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1080" y="1153" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e34" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tProfile" target="tfsetup">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1080" y="1220" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e35" value="Generated once" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="tfsetup" target="reccodes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e37" value="action_profile_to_checklist" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#888888;dashed=1;fontSize=10;exitX=0.1;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.85;entryDx=0;entryDy=0;" edge="1" parent="1" source="tProfile" target="tChk">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1120" y="1030" /><mxPoint x="660" y="1030" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -20,6 +20,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.timepicker.TimeFormat
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.Place
@@ -28,27 +29,34 @@ import com.prash.petcare.databinding.FragmentAddEditPlaceBinding
 import com.prash.petcare.ui.common.PhoneNumberInput
 import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.formatTimeOfDay
+import com.prash.petcare.ui.common.openExternalLink
 import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 /**
  * Form for saving a new place, or changing or deleting a saved one.
  *
- * In MVVM this is the **View**: [AddEditPlaceViewModel] validates, captures the geotag and saves.
- * This class owns the three things that need an Activity — the location permission prompt, the two
- * time pickers and the delete confirmation — and forwards their answers.
+ * In MVVM this is the **View**: [AddEditPlaceViewModel] validates and saves, and the
+ * [PlaceLocationPicker] it owns holds where the place is. This class owns the three things that need
+ * an Activity — the location permission prompt, the two time pickers and the delete confirmation — and
+ * forwards their answers.
  *
- * **The location permission flow**, which is the heart of this screen:
- *  1. The user presses "Capture current location".
- *  2. If location access is already granted, the fix starts immediately.
- *  3. Otherwise a dialog explains why the app wants it — to geotag this place so distances and
- *     directions work — and only then does the system prompt appear.
- *  4. **Refused:** nothing breaks. A Snackbar explains that a place cannot be saved without its
- *     location, and if the refusal is permanent it offers the settings screen. Everything typed so far
- *     stays in the form, so granting access later and coming back loses nothing.
- *  5. **Approximate only:** accepted, with a note under the coordinates that the geotag may be off.
+ * **The map is the same one the Add a place screen uses**, which is the point: a place created there
+ * and corrected here is worked with in exactly the same way. Opening an existing place centres it on
+ * that place's own saved coordinates with the pin on the point, so the three things a person wants to
+ * do to a saved position are all one gesture — keep it, drag the map to move it, or press "I'm here"
+ * to replace it with where they are standing now.
+ *
+ * **The location permission flow**, which only runs when one of the two current-location controls is
+ * pressed:
+ *  1. The picker finds that access is not held and asks this class for it.
+ *  2. A dialog explains why the app wants it — to geotag this place so distances and directions
+ *     work — and only then does the system prompt appear.
+ *  3. **Refused:** nothing breaks. A line says what was lost, and if the refusal is permanent the
+ *     Snackbar offers the settings screen. Everything typed stays in the form, and the map is still
+ *     there to be moved by hand — a refused permission costs the shortcut, not the screen.
+ *  4. **Approximate only:** accepted, with a note under the coordinates that the position may be off.
  */
 class AddEditPlaceFragment : Fragment() {
 
@@ -74,11 +82,23 @@ class AddEditPlaceFragment : Fragment() {
      */
     private var phoneInput: PhoneNumberInput? = null
 
+    /**
+     * The text this screen last wrote into the name and area boxes on the map's behalf.
+     *
+     * The record that keeps a suggestion from overwriting something a person typed — see
+     * [applySuggestion] for how it is read. Dropped in [onDestroyView] along with the boxes they
+     * describe, so a recreated view starts with both null and therefore treats whatever text the
+     * fields restored as the user's — the safe end of the trade, since a filled box is then left
+     * alone rather than overwritten.
+     */
+    private var lastSuggestedName: String? = null
+    private var lastSuggestedArea: String? = null
+
     /** See the class comment for the flow this drives. A property so it registers during creation. */
     private val locationPermission = LocationPermissionRequester(
         fragment = this,
         rationaleMessage = R.string.permission_location_capture_message,
-        onGranted = { viewModel.captureLocation() },
+        onGranted = { viewModel.picker.useCurrentLocation() },
         onDenied = { permanently -> onLocationDenied(permanently) }
     )
 
@@ -106,7 +126,39 @@ class AddEditPlaceFragment : Fragment() {
 
         setUpCategoryDropdown()
         setUpClickListeners()
+        setUpLocationPicker()
         observeViewModel()
+    }
+
+    /**
+     * Hands every gesture on the map straight to the picker that owns the decision.
+     *
+     * Line for line the same wiring as AddPlaceFragment, because it is the same control doing the same
+     * job — the behaviour behind it lives in [PlaceLocationPicker] rather than being written twice.
+     * Moving the map also clears a "location required" complaint left by an earlier save attempt,
+     * which is what every other field on this form does when it is edited.
+     */
+    private fun setUpLocationPicker() {
+        val picker = viewModel.picker
+
+        binding.locationPicker.onUseCurrentLocation = { picker.useCurrentLocation() }
+        binding.locationPicker.onCentreChangedByUser = {
+            picker.onMapCentreChanged(it)
+            viewModel.clearLocationError()
+        }
+        binding.locationPicker.onSearchQueryChanged = { picker.onSearchQueryChanged(it) }
+        // Choosing a searched place is choosing a location, so it clears a "location required"
+        // complaint from an earlier save attempt exactly as moving the map does.
+        binding.locationPicker.onSearchResultSelected = {
+            picker.onSearchResultSelected(it)
+            viewModel.clearLocationError()
+        }
+        binding.locationPicker.onSearchFocusChanged = { hasFocus ->
+            if (hasFocus) picker.onSearchFocused() else picker.onSearchDismissed()
+        }
+        binding.locationPicker.onMapTypeSelected = { picker.onMapTypeSelected(it) }
+        binding.locationPicker.onMapAvailabilityChanged = { picker.onMapAvailabilityChanged(it) }
+        binding.locationPicker.onExternalLink = { url -> openLink(url) }
     }
 
     /**
@@ -140,8 +192,6 @@ class AddEditPlaceFragment : Fragment() {
             }
         }
         binding.clearHoursButton.setOnClickListener { viewModel.clearHours() }
-
-        binding.captureLocationButton.setOnClickListener { locationPermission.request() }
 
         binding.savePlaceButton.setOnClickListener {
             val phone = phoneInput ?: return@setOnClickListener
@@ -181,6 +231,8 @@ class AddEditPlaceFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.formState.collect { render(it) } }
+                launch { viewModel.picker.state.collect { renderLocation(it) } }
+                launch { viewModel.picker.events.collect { handleLocationEvent(it) } }
                 launch { viewModel.events.collect { handleEvent(it) } }
             }
         }
@@ -206,7 +258,8 @@ class AddEditPlaceFragment : Fragment() {
         binding.hoursErrorText.text = state.hoursError?.let { getString(it) }
         binding.clearHoursButton.isVisible = state.openingMinutes != null || state.closingMinutes != null
 
-        renderLocation(state)
+        binding.locationErrorText.isVisible = state.locationError != null
+        binding.locationErrorText.text = state.locationError?.let { getString(it) }
 
         binding.deletePlaceButton.isVisible = state.isEditMode
         val isBusy = state.isLoading || state.isSaving
@@ -216,49 +269,102 @@ class AddEditPlaceFragment : Fragment() {
     }
 
     /**
-     * The geotag card: what has been captured, the button to capture it, and any warning.
-     *
-     * Coordinates are printed to five decimal places — about a metre, which is already finer than a
-     * phone's GPS can honestly claim — and with [Locale.US] so they always use a decimal point, the way
-     * coordinates are written in every maps app the user might compare them with.
+     * The map and the card under it, drawn by the shared picker's own code so that the two Places
+     * forms describe a selected location identically — see [SelectedLocationCard].
      */
-    private fun renderLocation(state: PlaceFormState) {
-        val coordinates = state.coordinates
+    private fun renderLocation(state: LocationPickerState) {
+        binding.locationPicker.render(state)
+        binding.selectedLocation.render(state)
+    }
 
-        binding.locationValueText.text = if (coordinates != null) {
-            getString(
-                R.string.place_location_coordinates,
-                String.format(Locale.US, "%.5f", coordinates.latitude),
-                String.format(Locale.US, "%.5f", coordinates.longitude)
-            )
-        } else {
-            getString(R.string.place_location_none)
+    /**
+     * The picker needs something only a fragment can do.
+     *
+     * The permission prompt goes through [locationPermission], which is where this screen's extra
+     * behaviour lives: unlike the Add a place screen, a permanent refusal here offers the settings
+     * page — see [onLocationDenied].
+     */
+    private fun handleLocationEvent(event: LocationPickerEvent) {
+        when (event) {
+            is LocationPickerEvent.MoveCamera ->
+                _binding?.locationPicker?.moveCameraTo(event.at, event.zoom, event.animate)
+
+            is LocationPickerEvent.RequestPermission -> locationPermission.request()
+
+            is LocationPickerEvent.Message -> showMessage(getString(event.messageRes))
         }
+    }
 
-        binding.captureLocationButton.isEnabled = !state.isLocating
-        binding.captureLocationButton.setText(
-            when {
-                state.isLocating -> R.string.place_location_capturing
-                coordinates != null -> R.string.place_location_recapture
-                else -> R.string.place_location_capture
-            }
-        )
-        binding.locationProgress.isVisible = state.isLocating
-
-        binding.locationNoteText.isVisible = state.locationError != null || state.isApproximate
-        binding.locationNoteText.text = when {
-            state.locationError != null -> getString(state.locationError)
-            else -> getString(R.string.place_location_approximate)
-        }
+    /** Opens a credit link from inside the map in the browser — see PlacesFragment.openLink. */
+    private fun openLink(url: String) {
+        if (!openExternalLink(url)) showMessage(getString(R.string.places_no_maps_app))
     }
 
     private fun handleEvent(event: PlaceFormEvent) {
         when (event) {
             is PlaceFormEvent.PrefillForm -> prefill(event.place)
+            is PlaceFormEvent.SuggestPlaceDetails -> applySuggestions(event)
             // The Places tab observes Room, so it shows the change by itself once this closes.
             is PlaceFormEvent.Saved, is PlaceFormEvent.Deleted -> findNavController().navigateUp()
             is PlaceFormEvent.Message -> showMessage(getString(event.messageRes))
         }
+    }
+
+    /**
+     * Offers the map's findings to the two boxes that can take them.
+     *
+     * The map now recognises the place under its pin where it can — a pin on a hospital resolves to
+     * "Patan Hospital" rather than to the city — and putting that in an empty name box saves the user
+     * typing what the screen already knows. The address goes to the area box for the same reason.
+     *
+     * Delegated to [applySuggestion] per box, which is where the rule about what may be overwritten
+     * lives, and the two [lastSuggested] fields are what let that rule tell this screen's own writing
+     * from the user's.
+     */
+    private fun applySuggestions(event: PlaceFormEvent.SuggestPlaceDetails) {
+        lastSuggestedName = applySuggestion(binding.nameInput, event.name, lastSuggestedName)
+        lastSuggestedArea = applySuggestion(binding.areaInput, event.area, lastSuggestedArea)
+    }
+
+    /**
+     * Writes a suggestion into one box, if that box is this screen's to write in.
+     *
+     * **Two conditions let it through, and they are the same condition said twice**: the box is empty,
+     * or it still contains exactly the text this method last put there. Either way nothing a person
+     * typed is at stake — and anything else is theirs, so the suggestion is dropped and every later
+     * one with it, because [lastApplied] is returned unchanged and can then never match again.
+     *
+     * **Why the box's text is the record rather than an "edited" flag.** The typed text on this form
+     * lives in its views, which is what lets the fields restore themselves after a rotation — so there
+     * is no state here to carry a flag on. Comparing against what was last written answers the same
+     * question from the only record that exists, and answers it conservatively: after a rotation
+     * [lastApplied] is null again, so a filled box is simply left alone.
+     *
+     * A null suggestion clears a box this method filled, which is the half worth having: without it a
+     * pin dragged off the hospital would leave "Patan Hospital" in the name box above a card reading
+     * "Dropped pin", and saving would file a patch of road under the hospital's name.
+     *
+     * The fields stay ordinary editable inputs throughout — nothing here locks one, and typing over a
+     * suggestion is what hands the box to the user for good.
+     *
+     * @return the suggestion now standing in the box, or [lastApplied] untouched if it was refused.
+     */
+    private fun applySuggestion(
+        input: TextInputEditText,
+        suggestion: String?,
+        lastApplied: String?
+    ): String? {
+        val current = input.text?.toString().orEmpty()
+        if (current.isNotBlank() && current != lastApplied) return lastApplied
+
+        val text = suggestion.orEmpty()
+        if (current != text) {
+            input.setText(text)
+            // Setting the text leaves the cursor at the start, which looks like a half-filled box
+            // when the suggestion is longer than the view; the end is where a person would continue.
+            input.setSelection(text.length)
+        }
+        return suggestion
     }
 
     /** Writes a loaded place into the text fields — once, from an event; see CareTaskEvent.PrefillForm. */
@@ -311,8 +417,13 @@ class AddEditPlaceFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // The map holds a GPU surface and a native renderer until it is told otherwise.
+        binding.locationPicker.destroy()
         // Dropped with the binding: it holds views from this hierarchy.
         phoneInput = null
+        // And these describe the text in two of those views — see the note on them.
+        lastSuggestedName = null
+        lastSuggestedArea = null
         _binding = null
     }
 

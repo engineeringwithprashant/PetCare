@@ -2944,6 +2944,139 @@
         <item name="rippleColor">@color/on_map_overlay</item>
     </style>
 
+    <!--
+        The two pills laid over the map picker: "I'M HERE" at the top-start and "MAP TYPE ▾" at the
+        top-end.
+
+        Built on the layer toggle above rather than beside it, so every control that sits on a map in
+        this app shares one ground, one face and one size — which is what keeps the picker's corners
+        reading as a set rather than as three buttons that happened to land on the same card. Only the
+        icon needs adding; each instance supplies its own and its own gravity.
+    -->
+    <style name="PetCare.Map.ActionPill" parent="PetCare.Map.LayerToggle">
+        <item name="iconSize">@dimen/map_pill_icon_size</item>
+        <item name="iconPadding">@dimen/map_pill_icon_padding</item>
+        <item name="iconTint">@color/on_map_overlay</item>
+    </style>
+
+    <!--
+        The round "back to my position" control in the map's bottom corner.
+
+        Icon only and perfectly circular, which is the shape every map application has settled on for
+        this one action — a label would say nothing the crosshair does not. The same translucent ground
+        as the pills, so it belongs to the same set; `cornerRadius` far larger than the button can be
+        makes the circle, exactly as bg_map_overlay_pill draws its capsule.
+
+        The insets and minimum sizes are zeroed because Material's defaults would add 6dp of dead space
+        above and below, which on a square button shows up as an oval.
+    -->
+    <style name="PetCare.Map.RecentreButton" parent="Widget.Material3.Button">
+        <item name="android:layout_width">@dimen/map_recentre_button_size</item>
+        <item name="android:layout_height">@dimen/map_recentre_button_size</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="backgroundTint">@color/map_overlay_ground</item>
+        <item name="cornerRadius">@dimen/pill_corner_radius</item>
+        <item name="icon">@drawable/ic_my_location</item>
+        <item name="iconSize">@dimen/map_recentre_icon_size</item>
+        <item name="iconPadding">0dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconTint">@color/on_map_overlay</item>
+        <item name="rippleColor">@color/on_map_overlay</item>
+    </style>
+
+    <!--
+        The "© MapTiler © OpenStreetMap" line over the bottom-start of every map.
+
+        Required rather than decorative — see view_place_map.xml — so it is styled to be legible over
+        anything the map might draw underneath it: the same translucent capsule the map's other
+        overlays use, rather than bare text that would disappear against a dark satellite image.
+
+        As small and quiet as a credit can be while staying readable, because it is a legal notice on
+        a control rather than something the user is meant to read.
+    -->
+    <style name="PetCare.Map.Attribution" parent="">
+        <item name="android:background">@drawable/bg_map_overlay_pill</item>
+        <item name="android:paddingStart">@dimen/map_attribution_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/map_attribution_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/map_attribution_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/map_attribution_padding_vertical</item>
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/map_attribution_text_size</item>
+        <item name="android:textColor">@color/on_map_overlay</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!--
+        The three lines of the "Selected location" card.
+
+        A deliberate size ladder rather than three similar sizes: the name is what the user checks at a
+        glance, the address is read only when the name is ambiguous, and the coordinates are the
+        fallback that is always true. Giving them equal weight would make the card a block of text with
+        no obvious answer in it.
+    -->
+    <style name="PetCare.SelectedLocation.Name" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textSize">@dimen/selected_location_name_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="PetCare.SelectedLocation.Address" parent="">
+        <item name="android:fontFamily">@font/schibsted_grotesk</item>
+        <item name="fontFamily">@font/schibsted_grotesk</item>
+        <item name="android:textSize">@dimen/selected_location_address_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <!-- Monospace, so the digits sit under each other as the map moves and the figures change — the
+         same treatment every other number in the Places feature gets. -->
+    <style name="PetCare.SelectedLocation.Coordinates" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/selected_location_coordinates_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- ~~~~~~~~~~ The place-search suggestions ~~~~~~~~~~ -->
+
+    <!-- A suggestion's name: "Patan Hospital". The selected-location card's name treatment a size
+         down, which is deliberate rather than incidental — a row the user is choosing from and the
+         card showing what they chose are the same kind of information at two moments, and typing them
+         alike is what makes the second read as confirmation of the first. -->
+    <style name="PetCare.PlaceSearch.ResultName" parent="">
+        <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
+        <item name="android:textSize">@dimen/place_search_row_name_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- And the locality under it, matching the card's address line for the same reason. -->
+    <style name="PetCare.PlaceSearch.ResultAddress" parent="">
+        <item name="android:fontFamily">@font/schibsted_grotesk</item>
+        <item name="fontFamily">@font/schibsted_grotesk</item>
+        <item name="android:textSize">@dimen/place_search_row_address_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- "Searching…" / "No places found": the panel's one-line states. Monospace and muted, which is
+         how the rest of the app writes a note *about* a list rather than an item in one — so it cannot
+         be mistaken for a result that could be tapped. -->
+    <style name="PetCare.PlaceSearch.Status" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_mono</item>
+        <item name="fontFamily">@font/ibm_plex_mono</item>
+        <item name="android:textSize">@dimen/place_search_row_address_text_size</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
     <!-- The line under the map: "Drag the map to put the pin on the place…". Deliberately the quietest
          text on the screen — it is an instruction read once and then never again, so it says its piece
          at the size of a caption rather than competing with the fields below it. -->

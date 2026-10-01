@@ -8,6 +8,7 @@ import com.prash.petcare.data.assistant.OpenAiAssistantRepository
 import com.prash.petcare.data.auth.FirebasePasswordResetRepository
 import com.prash.petcare.data.auth.PasswordResetRepository
 import com.prash.petcare.data.remote.assistant.OpenAiApi
+import com.prash.petcare.data.remote.geocoding.MapTilerGeocodingApi
 import com.prash.petcare.data.local.AlertReadStore
 import com.prash.petcare.data.local.DelegationContactStore
 import com.prash.petcare.data.local.LoginAttemptStore
@@ -21,6 +22,7 @@ import com.prash.petcare.data.repository.AlertRepository
 import com.prash.petcare.data.repository.CareRoutineRepository
 import com.prash.petcare.data.repository.CareTaskRepository
 import com.prash.petcare.data.repository.ExpenseRepository
+import com.prash.petcare.data.location.GeocodingRepository
 import com.prash.petcare.data.location.LocationRepository
 import com.prash.petcare.data.repository.PetRepository
 import com.prash.petcare.data.repository.PlaceRepository
@@ -224,6 +226,31 @@ class PetCareApplication : Application() {
      * data source like Room rather than as something a screen reads directly.
      */
     val locationRepository: LocationRepository by lazy { LocationRepository(this) }
+
+    /**
+     * The name of the point under the map's pin, for the Places forms.
+     *
+     * Beside [locationRepository] rather than folded into it because the two answer different
+     * questions of different services: one asks the device where *it* is, the other asks what is
+     * *there*. Given the Application for the same reason — it outlives every screen.
+     *
+     * It is handed two things rather than building them. [MapTilerGeocodingApi.create] is called once
+     * here because a Retrofit instance carries an HTTP client with its own connection and thread
+     * pools, which should exist once per process — the same reasoning as [weatherRepository] below.
+     * And the key is passed in rather than read from `BuildConfig` inside the repository, so that the
+     * class holds no build-time global and could be given a test double or a blank key deliberately.
+     *
+     * **The key may be blank**, for anyone who cloned the project without adding one to
+     * local.properties. That is handled rather than prevented: the repository falls back to the
+     * device's own geocoder, which can still name the city — see [GeocodingRepository].
+     */
+    val geocodingRepository: GeocodingRepository by lazy {
+        GeocodingRepository(
+            context = this,
+            api = MapTilerGeocodingApi.create(),
+            apiKey = BuildConfig.MAPTILER_API_KEY
+        )
+    }
 
     /**
      * The live temperature behind the home screen's walk-window card.

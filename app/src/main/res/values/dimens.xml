@@ -382,6 +382,9 @@
          four sides, so the overlays read as a consistent frame around the map rather than as three
          separately placed objects. -->
     <dimen name="places_map_overlay_inset">12dp</dimen>
+    <!-- How far the map's credit line is lifted on this tab, so the two hand-off buttons along the
+         foot of the card cannot be drawn over it. Their height plus their own inset. -->
+    <dimen name="places_map_attribution_inset">54dp</dimen>
     <!-- The overlay pill naming the selected place, and the two map buttons under it. -->
     <dimen name="places_map_pill_padding_horizontal">11dp</dimen>
     <dimen name="places_map_pill_padding_vertical">8dp</dimen>
@@ -990,6 +993,58 @@
     <dimen name="map_centre_pin_offset">-20dp</dimen>
     <!-- The line under the map explaining that it can be dragged. -->
     <dimen name="map_drag_hint_text_size">11sp</dimen>
+
+    <!-- ~~~~~~~~~~ The place-search field and its suggestions ~~~~~~~~~~ -->
+
+    <!-- One suggestion row: a pin, a name, and the locality under it.
+
+         48dp minimum because that is the smallest comfortable touch target, and these rows are tapped
+         rather than read — a mis-tap here does not pick the wrong word, it saves the wrong hospital.
+         The two-line content usually makes a row taller than the minimum anyway; the floor is for the
+         one-line rows, where a result has no address to show. -->
+    <dimen name="place_search_row_min_height">48dp</dimen>
+    <dimen name="place_search_row_padding_horizontal">14dp</dimen>
+    <dimen name="place_search_row_padding_vertical">8dp</dimen>
+    <dimen name="place_search_row_icon_size">18dp</dimen>
+    <dimen name="place_search_row_name_text_size">14sp</dimen>
+    <dimen name="place_search_row_address_text_size">11.5sp</dimen>
+
+    <!-- How much of the map stays uncovered below a full suggestions panel.
+
+         It does two jobs with one number: it keeps a strip of map visible, so the panel reads as a
+         dropdown over the map rather than as a screen that has replaced it, and it is what bounds the
+         list's height — the rows scroll inside the panel once they would need more room than this
+         leaves. Roughly a row's worth, which is also enough to show that there is a map underneath. -->
+    <dimen name="place_search_results_bottom_inset">56dp</dimen>
+
+    <!-- ~~~~~~~~~~ The map's overlaid controls ~~~~~~~~~~ -->
+    <!-- The icon inside the "I'M HERE" and "MAP TYPE" pills. Small enough to sit inside a 9sp mono
+         label without the pill growing taller than the status chips it shares the card with. -->
+    <dimen name="map_pill_icon_size">13dp</dimen>
+    <dimen name="map_pill_icon_padding">5dp</dimen>
+    <!-- The round recentre button in the map's bottom corner. 40dp is the smallest circle that still
+         clears the 40dp minimum touch target once its own inset is counted — anything daintier would
+         look right and be hard to hit. -->
+    <dimen name="map_recentre_button_size">40dp</dimen>
+    <dimen name="map_recentre_icon_size">19dp</dimen>
+    <!-- Where MapLibre's compass sits. Far enough down to clear the "MAP TYPE" pill it would
+         otherwise share the top-end corner with: the pill's own inset plus its height, plus a gap.
+         The compass only appears once the map has been rotated off north, so most of the time this
+         reserves space nothing occupies. -->
+    <dimen name="map_compass_margin_top">58dp</dimen>
+    <!-- The credit line over the bottom-start of every map. -->
+    <dimen name="map_attribution_margin">6dp</dimen>
+    <dimen name="map_attribution_text_size">9sp</dimen>
+    <dimen name="map_attribution_padding_horizontal">6dp</dimen>
+    <dimen name="map_attribution_padding_vertical">2dp</dimen>
+
+    <!-- ~~~~~~~~~~ The "Selected location" card ~~~~~~~~~~ -->
+    <!-- The small pin beside the address. Sized to the cap height of the name line next to it, so the
+         two read as one mark-and-label pair rather than as an icon with text after it. -->
+    <dimen name="selected_location_pin_size">17dp</dimen>
+    <dimen name="selected_location_name_text_size">15sp</dimen>
+    <dimen name="selected_location_address_text_size">12sp</dimen>
+    <dimen name="selected_location_coordinates_text_size">11sp</dimen>
 
     <!-- ~~~~~~~~~~ The current-location card ~~~~~~~~~~ -->
     <dimen name="gps_card_corner_radius">28dp</dimen>

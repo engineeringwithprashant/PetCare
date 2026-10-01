@@ -5,8 +5,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationManager
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
+import androidx.core.location.LocationManagerCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -82,6 +84,26 @@ class LocationRepository(context: Context) {
      */
     fun hasLocationCapability(): Boolean =
         appContext.packageManager.hasSystemFeature(PackageManager.FEATURE_LOCATION)
+
+    /**
+     * True when location is switched on in the device's own settings.
+     *
+     * **The third question, and the one that used to be missed.** Capability asks whether the hardware
+     * exists and the permission asks whether this app may use it; this asks whether the *user* has
+     * turned location on at all. A phone with the master switch off has every capability and may hold
+     * every permission, and will still never produce a fix — so without this test the screen can only
+     * report "couldn't get your location", which invites the user to walk outside and try again when
+     * what they need is one tap in quick settings. See [com.prash.petcare.ui.place.PlaceLocationPicker].
+     *
+     * `LocationManagerCompat` rather than the platform call, because `isLocationEnabled` only exists
+     * from Android 9 and the compatibility version falls back to reading the settings provider below
+     * that — which the app's minimum of API 24 still has to cope with.
+     */
+    fun isLocationEnabled(): Boolean {
+        val manager = appContext.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+            ?: return false
+        return LocationManagerCompat.isLocationEnabled(manager)
+    }
 
     /**
      * Asks for a fresh location fix, or null when none can be had.

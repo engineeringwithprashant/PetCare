@@ -1455,15 +1455,12 @@
     <string name="place_opening_picker_title">Opening time</string>
     <string name="place_closing_picker_title">Closing time</string>
     <string name="place_notes_label">Notes (optional)</string>
-    <string name="place_location_heading">GPS geotag</string>
-    <string name="place_location_none">Not captured yet. Stand at or near the place and capture your current location.</string>
-    <!-- %1$s latitude, %2$s longitude, each to five decimal places. -->
-    <string name="place_location_coordinates">%1$s, %2$s</string>
-    <string name="place_location_capture">Capture current location</string>
-    <string name="place_location_recapture">Recapture location</string>
-    <string name="place_location_capturing">Getting a GPS fix…</string>
-    <string name="place_location_approximate">Only approximate location is allowed, so this geotag may be a few hundred metres out. Allow precise location in settings for an exact position.</string>
-    <string name="place_location_failed">Could not get a location fix. Check location is switched on, move nearer a window or outside, and try again.</string>
+    <!-- The heading over the map picker on the full place form. The wording that used to sit under it
+         — "Not captured yet", "Capture current location", "Getting a GPS fix…" — went with the button
+         it described: the position is now chosen on a map rather than captured from one button, and
+         the selected-location card below it says what has been chosen. -->
+    <string name="place_location_heading">Location</string>
+    <string name="place_location_approximate">Only approximate location is allowed, so this position may be a few hundred metres out. Allow precise location in settings for an exact one.</string>
     <string name="place_save">Save place</string>
     <string name="place_delete">Delete place</string>
     <string name="delete_place_dialog_title">Delete this place?</string>
@@ -1980,26 +1977,67 @@
     <string name="add_place_subheading">Standing at the vet, groomer or park? Save it in two taps.</string>
     <string name="cd_add_place_back">Back to places</string>
 
-    <!-- The live map, and the status chip in its corner. The chip's label is the one-glance answer to
-         "is this position real?", which is why a demo fix says so rather than passing for a live one. -->
-    <string name="cd_add_place_map">Map of your current position. Drag it to move the pin, pinch to zoom.</string>
-    <string name="add_place_gps_chip_live">Live GPS</string>
-    <string name="add_place_gps_chip_demo">Demo location</string>
-    <string name="add_place_gps_chip_locating">Locating…</string>
-    <string name="add_place_gps_chip_none">No GPS fix</string>
-    <!-- The chip once the user has dragged the pin off their own position. It says "chosen", not
-         "GPS", because the point is no longer the device's answer — it is the user's. -->
-    <string name="add_place_gps_chip_picked">Chosen point</string>
-    <!-- Shown in the map's place when there is no fix to draw one at. -->
-    <string name="add_place_map_locating">Finding your position…</string>
-    <string name="add_place_map_unavailable">Location is off for this app. Turn it on, or use the demo location to try the flow.</string>
+    <!-- ========================= The shared map location picker =========================
+         Used by both Places forms, which is why these are not named after either of them: the same
+         card chooses a new place's position and corrects a saved one's, so a string that said "add"
+         would be wrong on half the screens it appears on. -->
+
+    <!-- The credit for the map's tiles and cartography, drawn over the bottom-start of every map.
+         Both MapTiler's terms and OpenStreetMap's licence require it to be visible on the map rather
+         than behind a button, and tapping it opens MapTiler's copyright page — see MapStyles.
+
+         Not translatable: these are the two organisations' names, which do not change by locale. -->
+    <string name="map_attribution" translatable="false">© MapTiler © OpenStreetMap</string>
+    <string name="cd_map_attribution">Map data by MapTiler and OpenStreetMap. Opens the copyright page.</string>
+
+    <!-- The map is opaque to TalkBack, so the card says what it is and which gestures work on it. -->
+    <string name="cd_map_picker">Interactive map. Drag it to move the pin, pinch to zoom.</string>
+    <string name="cd_map_picker_recentre">Use my current location</string>
+
+    <!-- The two current-location controls. Both run the same action; the pill is the discoverable
+         version and the corner crosshair is the shortcut, so only the pill needs a label. Rendered in
+         capitals by the pill's own style, so the string itself stays in ordinary sentence case. -->
+    <string name="map_picker_im_here">I\'m here</string>
+    <string name="map_picker_locating">Locating…</string>
+
+    <!-- Shown over the card when the map itself could not be loaded — no connection, or the tile
+         service unreachable. It names the way forward rather than only stating the problem, because
+         "I'm here" still works with no map on screen. -->
+    <string name="map_picker_unavailable">The map could not be loaded. Check your connection — you can still tap “I\'m here” to save where you are.</string>
+    <!-- The other reason a map can be missing, and the only one the person reading it can do nothing
+         about from inside the app: this build has no MapTiler key. It names the file rather than
+         saying "check your connection", which would send somebody to their Wi-Fi settings over a
+         line missing from local.properties. See app/build.gradle.kts and MapStyles. -->
+    <string name="map_picker_no_key">No map key in this build. Add MAPTILER_API_KEY to local.properties and rebuild — “I\'m here” still works without it.</string>
+
     <!-- The line under the map. Present on arrival rather than only after a first drag: a map that can
-         be dragged to choose a point looks exactly like one that cannot, so the screen has to say so. -->
-    <string name="add_place_map_drag_hint">Drag the map to put the pin on the place · pinch to zoom · “Refresh location” snaps back to you</string>
-    <!-- The same line when the device could not produce a fix at all. It stops being a note about what
-         the map can do and becomes the instruction for the only way forward, so it leads with the
-         problem and names the gesture that solves it. -->
-    <string name="add_place_map_drag_hint_no_fix">No GPS fix — drag the map yourself to put the pin on the place, then save. Pinch to zoom.</string>
+         be moved to choose a point looks exactly like one that cannot, so the screen has to say so.
+         It names all three routes, because each one is the quickest for a different place: a search
+         for anything with a name, the pin for anything without, and "I'm here" for where you stand. -->
+    <string name="map_picker_hint">Search for a place by name, drag the map to put the pin on it, or tap “I\'m here” to use your own position</string>
+
+    <!-- ~~~~~~~~~~ Searching for a place by name ~~~~~~~~~~ -->
+
+    <!-- The search field's placeholder. Examples rather than an instruction: "Search for a place"
+         would not tell the user that a hospital's name works as well as a neighbourhood's, and that
+         is the one thing about this field worth knowing. -->
+    <string name="place_search_hint">Search a hospital, park or area…</string>
+    <!-- The ✕ inside the field. TalkBack announces it as a button, so the label is the action. -->
+    <string name="cd_place_search_clear">Clear the search</string>
+    <!-- While a request is in flight. The panel says this rather than sitting blank, which would read
+         as a rendering fault over the map. -->
+    <string name="place_search_searching">Searching…</string>
+    <!-- And when the search came back with nothing. It names the way forward, because the place may
+         genuinely not be in the map data and the pin is how it gets saved anyway. -->
+    <string name="place_search_empty">No places found. Try fewer words, or drag the map to the spot.</string>
+
+    <!-- The map-type control and its menu. Two named layers, each shown by name rather than as "the
+         other one", so the control says what the map is showing as well as what it can change to.
+         "Satellite" is MapTiler's Satellite Hybrid — imagery with the streets and names still on it,
+         which is what the word turns on in every mainstream maps app. See MapType. -->
+    <string name="map_type_button">Map type</string>
+    <string name="map_type_normal">Normal</string>
+    <string name="map_type_satellite">Satellite</string>
 
     <!-- ===================== The map / satellite toggle =====================
          Shared by the Places tab's map and the Add a place map, because it is the same control on the
@@ -2015,43 +2053,36 @@
     <string name="cd_map_layer_showing_map">Showing the drawn map. Switch to satellite imagery.</string>
     <string name="cd_map_layer_showing_satellite">Showing satellite imagery. Switch to the drawn map.</string>
 
-    <!-- The dark current-location card: its label, the title line, and the meta line under it. -->
-    <string name="add_place_here_label">Current location</string>
-    <string name="add_place_here_found">You are here</string>
-    <string name="add_place_here_demo">Jhamsikhel, Lalitpur (demo)</string>
-    <string name="add_place_here_locating">Finding your position…</string>
-    <string name="add_place_here_unknown">Location unavailable</string>
-    <string name="add_place_here_locating_meta">Asking the device for a GPS fix</string>
-    <!-- The coordinate pair: "27.6743° N, 85.3094° E". -->
-    <string name="add_place_coordinates">%1$s° N, %2$s° E</string>
-    <!-- The full meta line: coordinates, the device's own accuracy estimate, and how far the fix is
-         from the home reference point. %1$s is the coordinates, %2$s the accuracy in whole metres,
-         %3$s a distance such as "0.4 km". -->
-    <string name="add_place_here_meta">%1$s · ±%2$s m · %3$s from home</string>
-    <!-- The same line without the accuracy, for a fix whose provider reported none — see
-         AddPlaceFragment.formatFixDetails for why it is dropped rather than printed as "±0 m". -->
-    <string name="add_place_here_meta_no_accuracy">%1$s · %2$s from home</string>
+    <!-- ===================== The "Selected location" card =====================
+         What the centre pin is pointing at, under the map on both Places forms. -->
+    <string name="selected_location_label">Selected location</string>
+    <!-- Before anything has been chosen. An instruction rather than "None selected", because the user
+         is not being told a value is missing — they are being told what to do next. -->
+    <string name="selected_location_empty">Move the map to put the pin on the place, or tap “I\'m here”.</string>
+    <string name="selected_location_resolving">Finding address…</string>
+    <!-- When the lookup succeeded but this point simply has no name — the middle of a field, a track
+         with no address. Said plainly, because it is an ordinary answer and the place is perfectly
+         saveable: the coordinates under it are the thing actually stored. -->
+    <string name="selected_location_unnamed">Dropped pin</string>
 
-    <!-- The card once the pin has been dragged away from the device's own position. The label changes
-         from "Current location" to "Chosen location" because the card is no longer describing the
-         phone — and no accuracy is quoted, because a point somebody put there by hand has none to
-         quote: it is exactly where they put it. %1$s is the coordinates, %2$s a distance from home. -->
-    <string name="add_place_here_label_picked">Chosen location</string>
-    <string name="add_place_here_picked">Pin moved on the map</string>
-    <string name="add_place_here_picked_meta">%1$s · %2$s from home · your own pin</string>
+    <!-- The coordinate pair: "27.6771° N, 85.3132° E". The hemisphere letters are arguments rather
+         than fixed text, because a place saved south of the equator or west of Greenwich would
+         otherwise be labelled with the wrong one — see SelectedLocationCard.formatCoordinates. -->
+    <string name="map_coordinates_format">%1$s° %2$s, %3$s° %4$s</string>
+    <string name="coordinate_north" translatable="false">N</string>
+    <string name="coordinate_south" translatable="false">S</string>
+    <string name="coordinate_east" translatable="false">E</string>
+    <string name="coordinate_west" translatable="false">W</string>
 
-    <!-- Why there is no fix. Each is written as a condition with a way forward, not as an error: the
-         demo location beside them means the screen is never a dead end. -->
-    <string name="add_place_gps_denied">Location permission was denied</string>
-    <string name="add_place_gps_failed">Could not get a GPS fix. Try again outdoors</string>
-    <string name="add_place_gps_unsupported">This device has no location support</string>
-
-    <!-- The card's buttons. "Refresh location" once there is something to refresh, "Try again" after
-         a failure, "Locating…" while one is in flight — the same button, saying what it will do. -->
-    <string name="add_place_gps_refresh">Refresh location</string>
-    <string name="add_place_gps_retry">Try again</string>
-    <string name="add_place_gps_locating_button">Locating…</string>
-    <string name="add_place_gps_use_demo">Use demo location</string>
+    <!-- ===================== When the current position cannot be used =====================
+         Four separate messages rather than one, because the user can act on three of them and the
+         actions are different: grant the permission, turn the master switch on, or step outside. A
+         single "couldn't get your location" would send somebody to the window when what they needed
+         was one tap in quick settings. None of them is a dead end — the map is still there to move. -->
+    <string name="location_error_permission">Location permission is needed to use your current position. You can still move the map to choose the place.</string>
+    <string name="location_error_services_off">Turn on location services to use “I\'m here”.</string>
+    <string name="location_error_no_fix">Couldn\'t get your current location. Try again near a window or outdoors.</string>
+    <string name="location_error_unsupported">This device can\'t report its own position. Move the map to choose the place instead.</string>
 
     <!-- The save fields. -->
     <string name="add_place_name_label">Place name</string>
@@ -2059,14 +2090,18 @@
     <string name="add_place_category_label">Category</string>
     <string name="add_place_note_label">Note</string>
     <string name="add_place_note_hint">e.g. Ask for Dr. Shrestha</string>
-    <!-- The save button says what it is waiting for rather than only being disabled, so a user who
-         cannot press it knows which of the two conditions is missing. -->
+
+    <!-- The rest of the form, brought over so that everything a saved place can be edited to hold can
+         also be given when it is created — see requirement 15. The labels are the full place form's
+         own, reused rather than reworded, so the same field is called the same thing on both screens. -->
+    <string name="add_place_area_hint">e.g. Pulchowk, Lalitpur</string>
+    <string name="add_place_phone_hint">Phone number</string>
+
+    <!-- The save button says what is missing rather than only greying out, so a user who cannot press
+         it knows whether to keep typing or to choose a point on the map. -->
     <string name="add_place_save">Save place</string>
-    <string name="add_place_save_waiting">Waiting for location</string>
-    <!-- Once the device has given up, the user is not waiting for anything — the map below is up and
-         the pin is theirs to place. A button still reading "Waiting for location" at that moment would
-         send them on watching for a fix that is never coming. -->
-    <string name="add_place_save_needs_pin">Drag the map to place the pin</string>
+    <string name="add_place_save_needs_name">Name this place</string>
+    <string name="add_place_save_needs_location">Choose a location on the map</string>
 
     <!-- The summary card: what will be saved on the first line, where its position came from on the
          second. The two lines are joined with a newline by the fragment. -->
@@ -2075,16 +2110,13 @@
          ("Vet clinic · Pulchowk"), so the summary reads in the same voice as the card it becomes. -->
     <string name="add_place_summary_line">%1$s · %2$s</string>
     <string name="add_place_summary_geotagged">Geotagged at %1$s</string>
-    <!-- The same statement for a pin the user placed. Worth its own wording: the coordinates are the
-         same shape either way, and this is the line that tells them which one they are looking at
-         before they commit. -->
-    <string name="add_place_summary_picked">Pin dropped at %1$s</string>
-    <string name="add_place_summary_waiting">Waiting for a GPS fix</string>
+    <string name="add_place_summary_waiting">No location chosen yet</string>
 
-    <!-- What a saved place carries when it was saved from this screen rather than typed into the full
-         form: the "saved by you" provenance shown beside its category, and the note that stands in
-         when the user left the note box empty. -->
-    <string name="add_place_saved_meta">saved by you</string>
+    <!-- The note that stands in when the user left the note box empty.
+
+         The "saved by you" provenance that used to be written into the place's *area* field alongside
+         it has gone: that field now carries the real address the map resolved, which is both more
+         useful on the saved-place row and no longer a placeholder standing where a value should be. -->
     <string name="add_place_default_note">Saved on site. Add hours and a phone number any time.</string>
 
     <!-- The confirmation on the Places tab once the new place is in the list. The quotes are curly on

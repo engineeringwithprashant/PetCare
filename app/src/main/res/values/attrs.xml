@@ -151,11 +151,27 @@
         all: it is a light/dark *pair* that is not a lighter and darker version of the other — a pale
         sage ground becomes a deep slate one — so a layout has to reach it through a role.
 
-        What it colours is the ground a map card shows *while the map loads*: the WebView inside is
-        transparent and stays invisible until its first page has been drawn and tinted, so for the
-        second or two before tiles arrive this is the whole card. See MapEmbedView.
+        What it colours is the ground a map card shows *while the map loads*: the card is what shows
+        through for the second or two before the style and the first tiles arrive over the network.
+        See PlaceMapView.
     -->
     <attr name="colorMapGround" format="color" />
+
+    <!--
+        PlaceMapView's one configurable dimension.
+
+        The credit line for the map's tiles has to stay *visible* — see view_place_map.xml — and it
+        sits in the bottom-start corner, which is free on the location picker but not on the Places
+        tab, where "DIRECTIONS" and "GOOGLE MAPS" span the foot of the card. Rather than move the
+        credit somewhere it reads as a caption, the screen that covers that corner says how far to
+        lift it clear.
+
+        Declared as a styleable rather than exposed only in Kotlin because it is a layout decision,
+        and it belongs beside the layout that creates the collision.
+    -->
+    <declare-styleable name="PlaceMapView">
+        <attr name="attributionBottomInset" format="dimension" />
+    </declare-styleable>
 
     <!--
         ====================== The vaccination status pills ======================

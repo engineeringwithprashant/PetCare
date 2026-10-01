@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The shared map location picker: a field to search for a place by name, an interactive map, the two
+    ways of choosing a point on it by hand, and the control that changes how it is drawn.
+
+    **What it is for.** Both Places forms — "Add a place" and the full place form — need exactly the
+    same thing: a way to get to the place the user means, and a fixed pin that says which point will be
+    saved. Rather than each screen growing its own copy, this file is the picker and both screens
+    include it through LocationPickerView. That is also what makes the two behave identically, which
+    matters most when editing: a place added one way and corrected the other should not feel like two
+    different features.
+
+    **The three routes, and why they are all here together.** They answer the same question for
+    different users of the same screen, and none of them replaces the others:
+      - **the search field** — fastest when the place has a name. "Patan Hospital" is three words
+        against a great deal of panning.
+      - **"I'M HERE"** — fastest when the user is standing in the place, which is the common case for
+        a vet they have just visited.
+      - **dragging the map** — the only route that works for a place with no name and no GPS fix: the
+        back gate, the spot by the river, the stall on the corner.
+    Whichever was used last is the location that gets saved; see PlaceLocationPicker.
+
+    **Why the pin is in the middle of the map and never moves.** Dragging a small marker with a
+    fingertip means covering the very thing being aimed at, and on a 40dp target most attempts miss.
+    Every modern map app solves it the same way: hold the marker still in the centre and let the user
+    move the world underneath it, so the target is the middle of the screen — the easiest place on a
+    phone to aim at — and the finger is never over it. The coordinate saved is whatever the map's
+    centre reports when it stops moving.
+
+    The four controls over the map, arranged so that neither thumb rests on top of the pin:
+      - **top-start, "I'M HERE"** — take the device's position and select it. Deliberately the loudest
+        control here, because it is the one a first-time user needs and the only one whose purpose is
+        not guessable from an icon.
+      - **top-end, "MAP TYPE"** — normal or satellite. Opens a menu; changes nothing but the tiles.
+      - **centre, the pin** — what is currently selected.
+      - **bottom-end, the crosshair** — the same action as "I'm here", in the shape every map app has
+        trained people to look for. One function behind both; see PlaceLocationPicker.useCurrentLocation.
+
+    **Why the root is a vertical LinearLayout now, where it used to be the map's card.** The search
+    field has to sit above the map and its results have to hang below the field, which is two things
+    stacked — so the picker is a column whose last item is the map. The map keeps a fixed height of its
+    own (the height the whole view used to be given), and the view as a whole is wrap_content: the
+    screens that include it ask for no height at all any more.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!--
+        "Search for a place" — the field, with a magnifier at the start and a clear button at the end.
+
+        endIconMode=clear_text is TextInputLayout's own: it shows an ✕ only while there is text, and
+        tapping it empties the field. That is worth having rather than writing, because clearing the
+        box is how the user abandons a search, and the results list closes with it.
+
+        imeOptions=actionSearch and inputType=text give the keyboard a search key instead of a
+        newline, and singleLine keeps a long query on one line rather than growing the field and
+        pushing the map down as it is typed.
+    -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/searchLayout"
+        style="@style/PetCare.AddPlace.Field"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:endIconContentDescription="@string/cd_place_search_clear"
+        app:endIconMode="clear_text"
+        app:startIconContentDescription="@null"
+        app:startIconDrawable="@drawable/ic_search">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/searchInput"
+            style="@style/PetCare.Auth.FieldInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/place_search_hint"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:singleLine="true" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!--
+        The map, and the search results that hang over the top of it.
+
+        **Why the results overlay the map rather than sitting between it and the field.** A list that
+        pushed the map down would move every control on the screen each time a suggestion arrived —
+        and suggestions arrive while the user is typing, so the map would jump about under the
+        debounce. Laid over the map instead, the field stays where it is, the map stays where it is,
+        and the panel appears and goes away like the dropdown it is.
+
+        The frame's own height is the map's: a fixed height rather than a ratio, so the card is the
+        same size whatever the screen. This is a control on a form, and one that grew with the display
+        would push the fields below it off the bottom on a tall phone.
+    -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/gps_map_height"
+        android:layout_marginTop="@dimen/spacing_sm">
+
+        <!-- The map's card. It gives the rounded corners and the ground the map fades up out of, and
+             the FrameLayout inside is what lets the controls be laid *over* the map by gravity alone
+             rather than positioned against it. -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/mapCard"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardBackgroundColor="?attr/colorMapGround"
+            app:cardElevation="@dimen/card_elevation"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <!-- The map itself, filling the card exactly. Both dimensions are match_parent and
+                     nothing is inset from it: the map must be the whole rectangle. See PlaceMapView. -->
+                <com.prash.petcare.ui.place.PlaceMapView
+                    android:id="@+id/map"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/cd_map_picker" />
+
+                <!-- Shown only when the map could not be loaded at all — offline, or the tile service
+                     unreachable. It says so rather than leaving an empty card that looks like it is
+                     still loading, and it names the way forward, because "I'm here" still works
+                     without a map. -->
+                <TextView
+                    android:id="@+id/mapUnavailableText"
+                    style="@style/PetCare.AddPlace.MapPlaceholder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:paddingStart="@dimen/spacing_lg"
+                    android:paddingEnd="@dimen/spacing_lg"
+                    android:text="@string/map_picker_unavailable"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <!--
+                    The fixed selection pin.
+
+                    **Why it is translated upwards by half its height.** The coordinate saved is the
+                    centre of the map — the middle of this FrameLayout — and a pin's *tip* is what
+                    marks a point, not the middle of its balloon. Shifting the whole drawable up by
+                    half its own height puts the tip exactly on the centre. See ic_map_pin.xml.
+
+                    Hidden from TalkBack: it marks a point that the card below the map states in words.
+                -->
+                <ImageView
+                    android:id="@+id/centrePin"
+                    android:layout_width="@dimen/map_centre_pin_size"
+                    android:layout_height="@dimen/map_centre_pin_size"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_map_pin"
+                    android:translationY="@dimen/map_centre_pin_offset" />
+
+                <!-- "I'M HERE". The crosshair icon rather than a pin, for the reason given in
+                     ic_my_location.xml: a pin means "a saved place", which is what this produces, and
+                     a crosshair means "where I am now", which is what it reads. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/imHereButton"
+                    style="@style/PetCare.Map.ActionPill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|start"
+                    android:layout_margin="@dimen/gps_map_chip_inset"
+                    android:text="@string/map_picker_im_here"
+                    app:icon="@drawable/ic_my_location" />
+
+                <!-- "MAP TYPE ▾". iconGravity textEnd puts the chevron after the label, which is what
+                     says the pill opens a menu rather than performing an action. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/mapTypeButton"
+                    style="@style/PetCare.Map.ActionPill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="@dimen/gps_map_chip_inset"
+                    android:text="@string/map_type_button"
+                    app:icon="@drawable/ic_chevron_down"
+                    app:iconGravity="textEnd" />
+
+                <!-- The familiar corner shortcut back to the user's own position. Icon only: it is the
+                     one control on a map that needs no label anywhere in the world. The bottom-end
+                     corner keeps it clear of the two pills and of the attribution credits the map
+                     draws at bottom-start. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/recentreButton"
+                    style="@style/PetCare.Map.RecentreButton"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="@dimen/gps_map_chip_inset"
+                    android:contentDescription="@string/cd_map_picker_recentre"
+                    app:icon="@drawable/ic_my_location" />
+
+            </FrameLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!--
+            The suggestions panel: an elevated surface pinned to the top of the map, directly under the
+            field, holding either the result rows or one line of status.
+
+            Raised above the map's own elevation so it reads as floating over it rather than drawn into
+            it — which is the difference between a dropdown and a label on the map.
+
+            The bottom margin is what keeps a strip of map visible below a full list. Without it five
+            rows would reach the foot of the frame and the panel would look like a page that had
+            replaced the map, which is exactly the "don't open a new screen" this feature is built to
+            avoid. The margin also bounds the list: the RecyclerView is wrap_content and scrolls only
+            once its rows exceed what is left.
+
+            Gone by default, and the view only shows it while the field has something to offer.
+        -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/searchResultsCard"
+            style="@style/Widget.Material3.CardView.Elevated"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_marginBottom="@dimen/place_search_results_bottom_inset"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="@dimen/card_elevation_raised"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Large"
+            tools:visibility="visible">
+
+            <!-- One of the two children below is shown at a time: the rows, or a single line saying
+                 that the search is running or found nothing. They are siblings rather than one view
+                 with swapped contents so that neither has to be emptied to show the other. -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/searchResultsList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:paddingTop="@dimen/spacing_xs"
+                    android:paddingBottom="@dimen/spacing_xs"
+                    tools:itemCount="3"
+                    tools:listitem="@layout/item_place_search_result" />
+
+                <!-- "Searching…", or "No places found". One line, because there is nothing to choose
+                     from and so nothing to lay out — and it is said rather than left blank, since an
+                     empty panel over the map looks like a rendering fault. -->
+                <TextView
+                    android:id="@+id/searchStatusText"
+                    style="@style/PetCare.PlaceSearch.Status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/place_search_row_min_height"
+                    android:paddingStart="@dimen/place_search_row_padding_horizontal"
+                    android:paddingEnd="@dimen/place_search_row_padding_horizontal"
+                    android:visibility="gone"
+                    tools:text="Searching…"
+                    tools:visibility="visible" />
+
+            </FrameLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </FrameLayout>
+
+</LinearLayout>

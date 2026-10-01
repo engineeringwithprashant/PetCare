@@ -28,10 +28,33 @@ plugins {
  * keep it out of the installed APK, where a determined user can still extract it. For an app that
  * shipped to real users the call would belong behind a server that holds the key instead.
  */
-val openAiApiKey: String = Properties().apply {
+/**
+ * The properties file the per-developer secrets live in.
+ *
+ * Read once rather than per key: it is the same file, and opening it twice would be two chances for
+ * the two reads to disagree about whether it exists.
+ */
+private val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
-}.getProperty("OPENAI_API_KEY", "")
+}
+
+val openAiApiKey: String = localProperties.getProperty("OPENAI_API_KEY", "")
+
+/**
+ * The MapTiler key the Places maps fetch their vector tiles and cartographic style with, read from
+ * `local.properties` for exactly the reasons given above for the OpenAI key: that file is in
+ * .gitignore, so the key is per-developer and never committed.
+ *
+ * Returns an empty string when absent rather than failing the build, so the project still compiles
+ * and runs for anyone who clones it without a key. What they get is a map card that says it could
+ * not be loaded — see ui.place.MapStyles.isConfigured, which tests for exactly this — rather than a
+ * blank grey panel or a crash.
+ *
+ * **To get one:** sign up at maptiler.com (the free tier is ample for this app), copy the key from
+ * the account's API keys page, and add `MAPTILER_API_KEY=...` to local.properties.
+ */
+val mapTilerApiKey: String = localProperties.getProperty("MAPTILER_API_KEY", "")
 
 android {
     namespace = "com.prash.petcare"
@@ -52,6 +75,7 @@ android {
         // buildConfigField writes its third argument into generated Java verbatim — an unquoted
         // string would be emitted as an identifier and fail to compile.
         buildConfigField("String", "OPENAI_API_KEY", "\"$openAiApiKey\"")
+        buildConfigField("String", "MAPTILER_API_KEY", "\"$mapTilerApiKey\"")
     }
 
     buildTypes {
@@ -121,10 +145,15 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
 
     // Fused location provider: captures a GPS fix when a place is saved, and the phone's position
-    // for measuring distances on the Places tab. Only the location API - there is no Maps SDK here.
-    // Distances are computed on the device (util.GeoDistance) and directions are handed off to the
-    // user's own maps app through a geo: intent, so no map ever needs drawing inside PetCare.
+    // for measuring distances on the Places tab. The location half of Play services only — the
+    // Google Maps SDK is deliberately not here; the map is drawn by MapLibre below, and directions
+    // are handed off to the user's own maps app through a Maps URL.
     implementation(libs.play.services.location)
+
+    // MapLibre Native: the interactive map on the Places tab and on both place forms. A real Android
+    // view rendering vector tiles on the GPU — see ui.place.PlaceMapView for what that buys over the
+    // raster web map it replaced, and ui.place.MapStyles for where the tiles come from.
+    implementation(libs.maplibre.android)
 
     // Retrofit: the app's one plain-HTTP data source, used for the Open-Meteo forecast behind the
     // home screen's walk-window temperature. Firestore brings its own transport, so this is not a

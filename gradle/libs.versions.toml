@@ -65,6 +65,16 @@ libphonenumber = "9.0.19"
 # artifact is deliberately excluded where this is declared: it draws through java.awt, which does not
 # exist on Android.
 zxing = "3.5.3"
+# MapLibre Native: the map drawn on the Places screens. A real Android view that renders *vector*
+# tiles on the GPU, which is where the modern feel comes from — zoom is continuous rather than
+# stepped between whole levels, labels stay upright and re-flow as the map moves, and buildings and
+# landmarks are drawn from data rather than baked into a picture.
+#
+# Deliberately this rather than the Google Maps SDK, which needs an API key tied to a billing
+# account, and rather than the raster OpenStreetMap tiles this replaced, which could only ever look
+# like a 2010s printed map. The tiles and the cartographic style come from MapTiler — see
+# ui.place.MapStyles — and the credit both they and OpenStreetMap require is drawn over every map.
+maplibre = "11.11.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -117,6 +127,9 @@ totp = { group = "dev.samstevens.totp", name = "totp", version.ref = "totp" }
 # Phone-number parsing, validation and formatting, per country.
 libphonenumber = { group = "com.googlecode.libphonenumber", name = "libphonenumber", version.ref = "libphonenumber" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+# The MapLibre Native Android SDK: MapView, MapLibreMap, the camera and the style layers. One
+# artifact — the GeoJSON types the marker is built from arrive with it.
+maplibre-android = { group = "org.maplibre.gl", name = "android-sdk", version.ref = "maplibre" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

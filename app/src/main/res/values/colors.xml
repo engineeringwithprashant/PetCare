@@ -610,7 +610,7 @@
          sage by day and a deep slate by night: the map is a surface being drawn on, so it follows the
          theme — a bright panel on the near-black page would be the loudest thing in the app, and a
          white flash before the tiles arrive is exactly what this colour exists to prevent. Used by
-         the same card the WebView sits in; see MapEmbedView. -->
+         the card the map sits in; see PlaceMapView. -->
     <color name="map_ground_light">#DFE5D8</color>
     <color name="map_ground_dark">#15191A</color>
 

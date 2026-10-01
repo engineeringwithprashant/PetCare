@@ -198,8 +198,11 @@
 
     </LinearLayout>
 
-    <!-- The "AI" pill, Home only. The theme toggle's capsule and type, so the header's right-hand
-         controls read as one family. It opens the assistant; the fragment decides what that means. -->
+    <!-- The "AI" pill. Hidden by default and shown by TabHeader.showAssistantPill(), which only Home,
+         Notifications and Profile call — so it is a sibling of the bell in the header's right-hand
+         controls rather than something belonging to any one screen. It borrows the theme toggle's
+         capsule and type so those controls read as one family. It opens the assistant; the fragment
+         decides what that means, since each one navigates with its own action. -->
     <TextView
         android:id="@+id/aiPill"
         android:layout_width="wrap_content"

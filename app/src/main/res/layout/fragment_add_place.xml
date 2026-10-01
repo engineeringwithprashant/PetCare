@@ -2,12 +2,15 @@
 <!--
     "Add a place": the sub-screen reached from "+ ADD PLACE" in the Places tab's saved-places heading.
 
-    **What the screen is for.** Saving the vet, groomer, park or shop the user is *standing in*. The
-    device's GPS gives the position a starting point — the screen asks for a fix the moment it opens, so
-    by the time the name has been typed it is usually already in — which is what reduces the common case
-    to "type the name, press save". The map underneath is then draggable, so a fix that landed on the
-    wrong side of the road, or a place the user is not standing in at all, can be corrected by moving the
-    pin; see MapEmbedView for how a coordinate is read out of a map the app cannot ask.
+    **What the screen is for.** Saving the vet, groomer, park or shop — either the one the user is
+    standing in, or any other point on Earth. Those are the two routes the map above the form offers,
+    and they are equal partners: "I'M HERE" takes the device's position in one tap, and moving the map
+    under its fixed centre pin chooses anywhere else. Whichever was used last is what gets saved; see
+    PlaceLocationPicker.
+
+    **Everything happens here.** There is deliberately no second "choose a location" page to go to and
+    come back from: the map, its controls and the answer they produce all sit in this one scroll, above
+    the fields that describe the place.
 
     Top to bottom:
       - **The shared header** (monogram, "Add place", theme toggle, pet count), fixed above the page as
@@ -15,21 +18,27 @@
         bar keeps that tab lit.
       - Everything else scrolls as one page:
           · the **heading block** — a round back button beside "Add a place" and the sentence naming
-            the moment the screen is for;
-          · the **live map** — a real Google map at the current fix, with a status chip in its corner,
-            or a placeholder saying what is being waited for;
-          · the **current-location card** — the fix in words and figures, and the buttons that take
-            another one or fall back to the demo position;
-          · the **save fields** — name, category, note;
+            what the screen is for;
+          · the **location picker** — the interactive map with "I'M HERE", the map-type menu, the fixed
+            centre pin and the recentre control (see view_location_picker.xml);
+          · the **selected-location card** — the address and coordinates under the pin
+            (see view_selected_location.xml);
+          · the **fields** — name, category, address, phone, opening hours, note. These are the same
+            fields the full place form offers, so a place can be described completely as it is created
+            rather than only afterwards;
           · the **summary** of what will be saved, then "SAVE PLACE".
 
-    **Why the map and its placeholder are both declared here and toggled,** rather than one view that
-    draws whichever it needs: they are genuinely different things — a WebView showing Google's tiles,
-    and a centred column of app views — and a single custom view would have to be both. Two siblings
-    whose visibility follows one piece of state is the plainest way to say "one or the other".
+    **What used to be here and is not.** A dark status card reporting on the GPS, with "Try again" and
+    "Use demo location" beside it, sat between the map and the fields. The demo position is gone
+    outright — a place saved at invented coordinates is indistinguishable from a real one, which makes
+    it the most dangerous kind of placeholder — and the status reporting went with it, because with a
+    movable map there is no longer a state in which the screen is stuck waiting for the sky. What
+    replaced it answers the only question left: which place is about to be saved.
 
     **Why one NestedScrollView** rather than a RecyclerView for the page: the same reasoning as
-    fragment_places.xml. These are a handful of stateful views, not rows.
+    fragment_places.xml. These are a handful of stateful views, not rows. The map inside it keeps its
+    own vertical drags — see PlaceMapView.onInterceptTouchEvent — so panning north does not scroll the
+    form instead.
 
     **Why a CoordinatorLayout at the root:** so Snackbars attach here and appear above the floating
     bottom navigation bar rather than underneath it — see fragment_places.xml.
@@ -113,291 +122,43 @@
 
                 </LinearLayout>
 
-                <!-- ============================= The live map =============================
-                     A real Google map centred on the current fix — see MapEmbedView for why it is a
-                     WebView over the keyless embed URL, and how its tiles are tinted for the app's
-                     theme. The card's own background is the map's loading ground; see the matching
-                     card in fragment_places.xml. -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/gpsMapCard"
+                <!-- ========================== The location picker ==========================
+                     The search field, the map and its four controls, shared with the full place form.
+
+                     wrap_content, where this used to ask for the map's height: the picker is a column
+                     now — a field with its suggestions hanging under it, above the map — and it holds
+                     the map's fixed height internally. Asking for a height here would squash the
+                     field or stretch the map. See view_location_picker.xml. -->
+                <com.prash.petcare.ui.place.LocationPickerView
+                    android:id="@+id/locationPicker"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/gps_map_height"
-                    android:layout_marginTop="@dimen/spacing_md"
-                    app:cardBackgroundColor="?attr/colorMapGround"
-                    app:cardElevation="@dimen/card_elevation"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
-
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-
-                        <!-- Shown only once there is a fix: a map of nowhere in particular would be
-                             worse than saying what is being waited for. -->
-                        <com.prash.petcare.ui.place.MapEmbedView
-                            android:id="@+id/gpsMap"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:contentDescription="@string/cd_add_place_map"
-                            android:visibility="gone"
-                            tools:visibility="visible" />
-
-                        <!-- The placeholder in the map's place: the "you are here" dot in its tinted
-                             well over a line of explanation. The same dot as the card below, so the
-                             two read as one status rather than two.
-
-                             Hidden from TalkBack because the card underneath states the same thing in
-                             full — a screen reader would otherwise hear it twice. -->
-                        <LinearLayout
-                            android:id="@+id/mapPlaceholder"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center"
-                            android:importantForAccessibility="no"
-                            android:orientation="vertical"
-                            android:paddingStart="@dimen/spacing_lg"
-                            android:paddingEnd="@dimen/spacing_lg">
-
-                            <!-- A FrameLayout because the dot is genuinely *centred on* the well
-                                 rather than beside it. -->
-                            <FrameLayout
-                                android:layout_width="@dimen/gps_map_placeholder_well_size"
-                                android:layout_height="@dimen/gps_map_placeholder_well_size"
-                                android:background="@drawable/bg_gps_dot_well">
-
-                                <View
-                                    android:layout_width="@dimen/gps_map_placeholder_dot_size"
-                                    android:layout_height="@dimen/gps_map_placeholder_dot_size"
-                                    android:layout_gravity="center"
-                                    android:background="@drawable/bg_gps_dot" />
-
-                            </FrameLayout>
-
-                            <TextView
-                                android:id="@+id/mapPlaceholderText"
-                                style="@style/PetCare.AddPlace.MapPlaceholder"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/spacing_md"
-                                tools:text="Finding your position…" />
-
-                        </LinearLayout>
-
-                        <!-- The layer toggle, in the corner opposite the status chip. Shown only
-                             alongside a real map — see AddPlaceFragment.renderMap: there is no layer
-                             to choose when there are no tiles. -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/mapLayerButton"
-                            style="@style/PetCare.Map.LayerToggle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="top|end"
-                            android:layout_margin="@dimen/gps_map_chip_inset"
-                            android:visibility="gone"
-                            tools:text="@string/map_layer_switch_to_satellite"
-                            tools:visibility="visible" />
-
-                        <!--
-                            The pin that hangs over the middle of the map while it is being dragged.
-
-                            **Why it is only visible during a drag** (AddPlaceFragment toggles it):
-                            at rest, Google's own pin inside the embed already marks the centre, and a
-                            second marker sitting on top of it would read as two different answers to
-                            "where is this place?". While the map is moving that pin slides away with
-                            the tiles, and this one is what shows the point being aimed at.
-
-                            **Why it is translated upwards by half its height.** The coordinate the
-                            screen saves is the centre of the map — the middle of this FrameLayout — and
-                            a pin's *tip* is what marks a point, not the middle of its balloon. Shifting
-                            the whole drawable up by half its own height puts the tip on the centre. See
-                            ic_map_pin.xml.
-                        -->
-                        <ImageView
-                            android:id="@+id/mapCentrePin"
-                            android:layout_width="@dimen/map_centre_pin_size"
-                            android:layout_height="@dimen/map_centre_pin_size"
-                            android:layout_gravity="center"
-                            android:importantForAccessibility="no"
-                            android:src="@drawable/ic_map_pin"
-                            android:translationY="@dimen/map_centre_pin_offset"
-                            android:visibility="gone"
-                            tools:visibility="visible" />
-
-                        <!-- The status chip over the map's top-left corner: a coloured dot and a
-                             label. Laid over *both* the map and the placeholder, because it answers
-                             the same question in either case. -->
-                        <LinearLayout
-                            android:id="@+id/gpsStatusChip"
-                            style="@style/PetCare.AddPlace.GpsChip"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="top|start"
-                            android:layout_margin="@dimen/gps_map_chip_inset"
-                            android:orientation="horizontal">
-
-                            <!-- Tinted from code, because the colour *is* the status — see
-                                 AddPlaceFragment.renderMap. -->
-                            <View
-                                android:id="@+id/gpsStatusDot"
-                                android:layout_width="@dimen/gps_map_chip_dot_size"
-                                android:layout_height="@dimen/gps_map_chip_dot_size"
-                                android:background="@drawable/bg_status_dot" />
-
-                            <TextView
-                                android:id="@+id/gpsStatusChipLabel"
-                                style="@style/PetCare.AddPlace.GpsChipLabel"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/spacing_xs"
-                                tools:text="Live GPS" />
-
-                        </LinearLayout>
-
-                    </FrameLayout>
-
-                </com.google.android.material.card.MaterialCardView>
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md" />
 
                 <!-- The one line that says the map is a control rather than a picture. It has to be
-                     said: a draggable map looks exactly like an undraggable one, and without this the
-                     only position most users would ever save is the one the GPS handed them. Hidden
-                     along with the map whenever there is no position to drag — see
-                     AddPlaceFragment.renderMap. -->
+                     said: a movable map looks exactly like a fixed one, and without this the only
+                     position most users would ever save is the one the GPS handed them. -->
                 <TextView
-                    android:id="@+id/mapDragHintText"
+                    android:id="@+id/mapHintText"
                     style="@style/PetCare.AddPlace.MapHint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
-                    android:text="@string/add_place_map_drag_hint" />
+                    android:text="@string/map_picker_hint" />
 
-                <!-- ======================== The current-location card ========================
-                     The fix in words and figures, and the two ways of changing it.
-
-                     A dark card in both themes: it is a single strong statement — "this is where you
-                     are" — and a white card would make it one more field in the form. -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/gpsCard"
+                <!-- What the pin is pointing at, in words and figures. -->
+                <include
+                    android:id="@+id/selectedLocation"
+                    layout="@layout/view_selected_location"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_md"
-                    app:cardBackgroundColor="@color/gps_card_ground"
-                    app:cardCornerRadius="@dimen/gps_card_corner_radius"
-                    app:cardElevation="0dp">
+                    android:layout_marginTop="@dimen/spacing_md" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="@dimen/gps_card_padding">
-
-                        <!-- The status dot and the three lines of text beside it. -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:baselineAligned="false"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                            <FrameLayout
-                                android:layout_width="@dimen/gps_card_dot_well_size"
-                                android:layout_height="@dimen/gps_card_dot_well_size"
-                                android:background="@drawable/bg_gps_dot_well">
-
-                                <!-- Tinted from code like the chip's dot, and for the same reason. -->
-                                <View
-                                    android:id="@+id/gpsCardDot"
-                                    android:layout_width="@dimen/gps_card_dot_size"
-                                    android:layout_height="@dimen/gps_card_dot_size"
-                                    android:layout_gravity="center"
-                                    android:background="@drawable/bg_gps_dot" />
-
-                            </FrameLayout>
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/spacing_md"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <!-- "CURRENT LOCATION", or "CHOSEN LOCATION" once the pin has been
-                                     dragged: the card stops describing the phone at that point, and a
-                                     label that went on claiming otherwise would be the one line on the
-                                     screen that was wrong. Set from AddPlaceFragment.renderGpsCard. -->
-                                <TextView
-                                    android:id="@+id/hereLabelText"
-                                    style="@style/PetCare.AddPlace.HereLabel"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    tools:text="@string/add_place_here_label" />
-
-                                <!-- "You are here", "Finding your position…", "Location unavailable". -->
-                                <TextView
-                                    android:id="@+id/hereTitleText"
-                                    style="@style/PetCare.AddPlace.HereArea"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    tools:text="You are here" />
-
-                                <!-- The coordinates, the device's own accuracy estimate and the
-                                     distance from home — or, when there is no fix, why not. The
-                                     accuracy is shown rather than hidden: it is what lets somebody
-                                     decide whether to save this fix or step outside first. -->
-                                <TextView
-                                    android:id="@+id/hereMetaText"
-                                    style="@style/PetCare.AddPlace.HereCoordinates"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="3dp"
-                                    tools:text="27.6743° N, 85.3094° E · ±8 m · 0.1 km from home" />
-
-                            </LinearLayout>
-
-                        </LinearLayout>
-
-                        <!-- The buttons.
-
-                             "Refresh location" is sized to its own label, as the design draws it. The
-                             demo pill — which only appears when location is denied or unsupported —
-                             takes whatever width is left (weight 1 on a zero width) rather than its
-                             own content width, so the pair can never be wider than the card: on a
-                             narrow phone at a large font size two content-sized pills would overflow,
-                             and the one that fell off the edge would be the way *out* of the refused
-                             permission. -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/spacing_md"
-                            android:baselineAligned="false"
-                            android:orientation="horizontal">
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/refreshLocationButton"
-                                style="@style/PetCare.AddPlace.GpsButton.Outline"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                tools:text="@string/add_place_gps_refresh" />
-
-                            <!-- Only when location is denied or unsupported: the way to walk through
-                                 the rest of the screen anyway. -->
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/useDemoLocationButton"
-                                style="@style/PetCare.AddPlace.GpsButton.Demo"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/spacing_sm"
-                                android:layout_weight="1"
-                                android:text="@string/add_place_gps_use_demo"
-                                android:visibility="gone"
-                                tools:visibility="visible" />
-
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- ============================ The save fields ============================ -->
+                <!-- ============================ The save fields ============================
+                     The same set the full place form offers, so that everything a saved place can be
+                     edited to hold can also be given at the moment it is created — see requirement 15.
+                     Only the name and a location are required; the rest can be left for later, which
+                     is what keeps the two-tap save from becoming a form to fill in. -->
 
                 <TextView
                     style="@style/PetCare.AddPlace.FieldLabel"
@@ -441,6 +202,183 @@
                     app:selectionRequired="true"
                     app:singleSelection="true" />
 
+                <!-- The address. Filled in from the map's own lookup and editable afterwards — see
+                     AddPlaceViewModel.onAreaChanged for how a typed answer stops the lookup writing
+                     over it. -->
+                <TextView
+                    style="@style/PetCare.AddPlace.FieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/place_area_label" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/PetCare.AddPlace.Field"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/areaInput"
+                        style="@style/PetCare.AddPlace.NoteInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/add_place_area_hint"
+                        android:imeOptions="actionNext"
+                        android:inputType="textPostalAddress|textCapWords"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!--
+                    The place's number: a country selector and the local number beside it, exactly as
+                    the full place form draws them.
+
+                    Optional — many parks have none — but a number that *is* given is stored in one
+                    international form and checked against the country chosen, because the saved-place
+                    row offers to dial it. The behaviour behind the pair is ui/common/PhoneNumberInput.kt,
+                    shared with the sign-in and profile forms.
+
+                    A horizontal LinearLayout: the selector at a fixed width so the number box always
+                    starts in the same place whatever the dialling code, and the number taking the rest
+                    (width 0 + weight 1).
+                -->
+                <TextView
+                    style="@style/PetCare.AddPlace.FieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/place_phone_label" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it
+                         unfocusable and gives it a spoken description naming the country in full. -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/phoneCountryLayout"
+                        style="@style/PetCare.AddPlace.Field"
+                        android:layout_width="@dimen/phone_country_field_width"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/phoneCountryInput"
+                            style="@style/PetCare.AddPlace.NoteInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:maxLines="1"
+                            tools:text="🇳🇵 +977" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- inputType="phone" brings up the dial pad. How many digits it accepts is capped
+                         per country by PhoneNumberInput, so an over-long number cannot be typed. -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/phoneInputLayout"
+                        style="@style/PetCare.AddPlace.Field"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/phone_country_field_gap"
+                        android:layout_weight="1"
+                        app:errorEnabled="true">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/phoneInput"
+                            style="@style/PetCare.AddPlace.NoteInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/add_place_phone_hint"
+                            android:imeOptions="actionNext"
+                            android:inputType="phone"
+                            android:maxLines="1" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+                <!-- ============================ Opening hours ============================
+                     Opens and Closes side by side, each half the width through layout_weight — they
+                     are one fact ("8:00 to 20:00") and read best on one line. Tapping either opens a
+                     Material time picker; focusable="true" with the soft keyboard suppressed in code
+                     keeps them reachable by keyboard and switch access without popping up a keyboard. -->
+                <TextView
+                    style="@style/PetCare.AddPlace.FieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/place_hours_heading" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/PetCare.AddPlace.Field"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/openingTimeInput"
+                            style="@style/PetCare.AddPlace.NoteInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clickable="true"
+                            android:cursorVisible="false"
+                            android:focusable="true"
+                            android:hint="@string/place_opening_label"
+                            android:inputType="none"
+                            android:maxLines="1" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/PetCare.AddPlace.Field"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:layout_weight="1">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/closingTimeInput"
+                            style="@style/PetCare.AddPlace.NoteInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clickable="true"
+                            android:cursorVisible="false"
+                            android:focusable="true"
+                            android:hint="@string/place_closing_label"
+                            android:inputType="none"
+                            android:maxLines="1" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+                <!-- One error for the pair rather than one per field, because the problem ("only one
+                     of the two is set") belongs to neither field alone. -->
+                <TextView
+                    android:id="@+id/hoursErrorText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorError"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <!-- For places with no opening hours, such as a public park. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/clearHoursButton"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/place_clear_hours"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
                 <TextView
                     style="@style/PetCare.AddPlace.FieldLabel"
                     android:layout_width="match_parent"
@@ -466,7 +404,7 @@
 
                 <!-- ============================ Summary and save ============================
                      Two lines: what is about to be saved, and the position it will carry — the exact
-                     coordinates once there is a fix, and "waiting for a GPS fix" until there is. The
+                     coordinates once a point has been chosen, and a line saying so until then. The
                      second line is the screen's honesty about itself, shown before the user commits.
 
                      accessibilityLiveRegion polite: it changes as the form is filled in, and a screen
@@ -478,10 +416,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_lg"
                     android:accessibilityLiveRegion="polite"
-                    tools:text="Untitled place — Vet\nWaiting for a GPS fix" />
+                    tools:text="Untitled place · Vet\nNo location chosen yet" />
 
-                <!-- Disabled until the place has both a name and a fix. Disabled here means a solid
-                     resting slab with pale ink, not a faded button — see attrs.xml,
+                <!-- Disabled until the place has both a name and a location. Disabled here means a
+                     solid resting slab with pale ink, not a faded button — see attrs.xml,
                      colorDisabledContainer — and the label says which of the two is missing. -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/savePlaceButton"
