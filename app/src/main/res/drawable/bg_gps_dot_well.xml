@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The tinted circle the blue location dot sits in the middle of — on the left of the
-    current-location card, and at the centre of the live map's placeholder.
-
-    The same blue as the dot at about a fifth strength, so the two read as one mark — a dot inside
-    its own halo, the shape every maps app uses for "you are here". The well is what gives a 13dp dot
-    enough visual weight to anchor the card's left edge, exactly as the tinted circle behind a
-    care-category icon does on a task row (bg_category_badge.xml).
-
-    A fixed colour rather than a theme role: it is a tint of the dot's own blue, so it works on the
-    dark card and on either of the map card's two loading grounds without being restated per theme.
--->
+<!-- The tinted circle the blue location dot sits in the middle of — on the left of the current-location card. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 

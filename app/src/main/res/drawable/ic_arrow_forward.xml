@@ -1,13 +1,4 @@
-<!--
-    Right-pointing arrow at the end of each "coming up this week" row on the dashboard, meaning "opens
-    the routine this belongs to".
-
-    An arrow rather than the app's usual chevron (ic_chevron_right) because the design draws one: rows
-    in a card read as a list of *destinations*, and the longer shaft carries that at a glance.
-
-    autoMirrored="true" flips it in right-to-left languages, where "forward" points left. The fill is
-    white so the tint applied in the layout comes through unaltered.
--->
+<!-- Right-pointing arrow at the end of each "coming up this week" row on the dashboard. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

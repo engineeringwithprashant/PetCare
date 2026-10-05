@@ -11,28 +11,7 @@ import com.prash.petcare.databinding.ItemAssistantMessageBinding
 import com.prash.petcare.databinding.ItemAssistantThinkingBinding
 import com.prash.petcare.databinding.ItemAssistantUserMessageBinding
 
-/**
- * Draws the conversation on the assistant screen.
- *
- * Part of the **View** layer: it turns each [AssistantMessage] into a bubble and decides nothing.
- * Which messages exist, what they say and when the reply arrives are all
- * [AssistantViewModel]'s.
- *
- * **Four view types, because there are four genuinely different bubbles** — the assistant's card on
- * the left, the user's accent card on the right, the loading placeholder, and the failure notice.
- * The greeting and a normal answer share a type: they are the same object on screen, and only their
- * text is built differently. Returning the right type from [getItemViewType] is what lets a
- * RecyclerView recycle a left-hand bubble only into another left-hand bubble.
- *
- * Extends [ListAdapter], so appending a message diffs against the previous list on a background
- * thread and animates only what changed. That matters here for one specific reason: a reply
- * *replaces* its loading placeholder under the same id, so DiffUtil sees one item change rather than
- * one removed and one inserted, and the list does not jump under the user's eyes as the answer
- * lands.
- *
- * Every sentence the app itself speaks — the greeting, the failure notice — is resolved from string
- * resources here rather than carried in the state, which is why the ViewModel needs no Context.
- */
+/** Draws the conversation on the assistant screen. */
 class AssistantAdapter :
     ListAdapter<AssistantMessage, RecyclerView.ViewHolder>(MessageDiffCallback) {
 
@@ -74,13 +53,7 @@ class AssistantAdapter :
             binding.messageText.text = text
         }
 
-        /**
-         * The opening line, named to whoever is signed in.
-         *
-         * Falls back to the unnamed wording when the account has no name recorded rather than
-         * greeting "Hi ." — the two are separate strings so each reads naturally in translation
-         * instead of one being patched with an empty placeholder.
-         */
+        /** The opening line, named to whoever is signed in. */
         fun bindGreeting(greeting: AssistantMessage.Greeting) {
             val context = binding.root.context
             binding.messageText.text = if (greeting.firstName.isNotBlank()) {
@@ -90,14 +63,7 @@ class AssistantAdapter :
             }
         }
 
-        /**
-         * A reply that failed, in words that say what to do about it.
-         *
-         * One sentence per reason rather than a single apology, because the reasons need different
-         * things from the user: turning the network back on, adding a key, waiting a moment, or just
-         * trying again. A generic "something went wrong" would leave a missing key looking like a
-         * glitch — the case most likely to happen and the one with the clearest fix.
-         */
+        /** A reply that failed, in words that say what to do about it. */
         fun bindFailure(reason: AssistantFailure) {
             binding.messageText.setText(
                 when (reason) {
@@ -127,13 +93,7 @@ class AssistantAdapter :
         binding: ItemAssistantThinkingBinding
     ) : RecyclerView.ViewHolder(binding.root)
 
-    /**
-     * How [ListAdapter] compares two conversations.
-     *
-     * Identity is the message id, which is what makes replacing a placeholder with its answer read
-     * as a change to one row. Contents compare the whole object, and every [AssistantMessage] is a
-     * data class, so `==` already means "would draw identically".
-     */
+    /** How [ListAdapter] compares two conversations. */
     private object MessageDiffCallback : DiffUtil.ItemCallback<AssistantMessage>() {
         override fun areItemsTheSame(oldItem: AssistantMessage, newItem: AssistantMessage): Boolean =
             oldItem.id == newItem.id

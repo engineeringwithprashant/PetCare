@@ -1,23 +1,4 @@
-<!--
-    The app's dark theme.
-
-    Android picks this folder automatically when the device is in dark mode, in place of
-    values/themes.xml. It declares exactly the same Material 3 role attributes with the dark
-    palette behind them — which is why no layout or Kotlin file needs to know which theme is
-    active, and why nothing in the app checks for dark mode.
-
-    The roles are not simply inverted. Two points are worth spelling out:
-
-     - The cream page becomes a warm near-black and the white cards become a *lighter* charcoal, so
-       the card is still the lighter of the two and still lifts off the page. Inverting the pair
-       instead would leave the cards darker than the background, and every card would read as a
-       hole rather than as a raised surface.
-     - The pastel pills keep their hues but swap which half is pale: a deep desaturated ground with
-       light text on it. The mint pill is still the mint pill, so "the green one is age" holds in
-       either theme.
-
-    See colors.xml for the values themselves.
--->
+<!-- The app's dark theme. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="Base.Theme.PetCare" parent="Theme.Material3.DayNight.NoActionBar">
@@ -49,11 +30,7 @@
         <item name="colorSurfaceVariant">@color/md_theme_dark_surfaceVariant</item>
         <item name="colorOnSurfaceVariant">@color/md_theme_dark_onSurfaceVariant</item>
 
-        <!-- Switched off for the same reason as in the light theme: the app signals depth with the
-             surface/background split and the shadow, not by tinting raised surfaces yellow. This is
-             only safe because the dark palette makes colorSurface genuinely lighter than the
-             background — in a scheme where the two matched, this overlay is the only thing that
-             makes a raised card visible at all in dark mode. -->
+        <!-- Switched off for the same reason as in the light theme. -->
         <item name="elevationOverlayEnabled">false</item>
 
         <item name="colorOutline">@color/md_theme_dark_outline</item>
@@ -63,12 +40,10 @@
         <item name="colorOnSurfaceInverse">@color/md_theme_dark_inverseOnSurface</item>
         <item name="colorPrimaryInverse">@color/md_theme_dark_inversePrimary</item>
 
-        <!-- In dark mode the bright yellow *is* the legible foreground, so this lands back on the
-             primary — the light theme's deep amber would disappear into the background. -->
+        <!-- In dark mode the bright yellow is the legible foreground, so this lands back on the primary. -->
         <item name="colorAccentText">@color/accent_text_dark</item>
 
-        <!-- The "chosen" fill flips to yellow here: a near-black fill would disappear into the
-             near-black page. See attrs.xml. -->
+        <!-- The "chosen" fill flips to yellow here: a near-black fill would disappear into the near-black page. -->
         <item name="colorSelectedContainer">@color/selected_container_dark</item>
         <item name="colorOnSelectedContainer">@color/on_selected_container_dark</item>
         <item name="colorOnSelectedContainerNeutral">@color/on_selected_container_neutral_dark</item>
@@ -85,25 +60,18 @@
         <item name="colorOnPillLilac">@color/pill_dark_on_lilac</item>
         <item name="colorPillPeach">@color/pill_dark_peach</item>
         <item name="colorOnPillPeach">@color/pill_dark_on_peach</item>
-        <!-- The same pill inverted for dark mode: a deep ground with pale text, like the stat pills
-             above, so "the green one means verified" stays true in either theme. -->
+        <!-- The same pill inverted for dark mode: a deep ground with pale text, like the stat pills above. -->
         <item name="colorPillVerified">@color/verified_pill_dark</item>
         <item name="colorOnPillVerified">@color/on_verified_pill_dark</item>
 
-        <!-- The warning cards inverted for dark mode: a deep tinted ground with a lighter edge, like
-             the pills above, so "the yellow one is a warning and the red one is the last try" stays
-             true in either theme. A pale wash here would glare on the near-black page. -->
+        <!-- The warning cards inverted for dark mode: a deep tinted ground with a lighter edge. -->
         <item name="colorAuthAlertWarning">@color/auth_alert_warning_fill_dark</item>
         <item name="colorAuthAlertWarningEdge">@color/auth_alert_warning_edge_dark</item>
         <item name="colorAuthAlertDanger">@color/auth_alert_danger_fill_dark</item>
         <item name="colorAuthAlertDangerEdge">@color/auth_alert_danger_edge_dark</item>
         <item name="colorOnAuthAlertDanger">@color/auth_alert_danger_title_dark</item>
 
-        <!-- The floating navigation bar, inverted. The slab becomes a near-black at 90% over the
-             near-black page — dark on dark, separated by its hairline edge rather than by tone — and
-             the active tab flips to an accent pill with near-black on it, since the near-black pill
-             the light theme uses would vanish into the page here. The muted ink for the four idle
-             tabs flips with it. See attrs.xml. -->
+        <!-- The floating navigation bar, inverted. The slab becomes a near-black at 90% over the near-black page. -->
         <item name="colorNavBarSurface">@color/nav_bar_surface_dark</item>
         <item name="colorNavTabActive">@color/nav_tab_active_dark</item>
         <item name="colorOnNavTabActive">@color/on_nav_tab_active_dark</item>
@@ -111,15 +79,10 @@
         <item name="colorNavBadgeActive">@color/nav_badge_active_dark</item>
         <item name="colorOnNavBadgeActive">@color/on_nav_badge_active_dark</item>
 
-        <!-- The map cards' loading ground, inverted: a deep slate rather than a pale sage, so the
-             card does not glare on the near-black page in the moment before the tiles arrive. See
-             attrs.xml. -->
+        <!-- The map cards' loading ground, inverted: a deep slate rather than a pale sage. -->
         <item name="colorMapGround">@color/map_ground_dark</item>
 
-        <!-- The vaccination status pills, inverted: a deep ground with pale ink, so a pill on the
-             charcoal card reads as quietly as its pale-wash twin does on the white one. The "due
-             soon" pair is the same in both themes — it is the accent used as the accent always is,
-             see attrs.xml. -->
+        <!-- The vaccination status pills, inverted: a deep ground with pale ink. -->
         <item name="colorVaccinationClear">@color/vaccination_clear_dark</item>
         <item name="colorOnVaccinationClear">@color/on_vaccination_clear_dark</item>
         <item name="colorVaccinationOverdue">@color/vaccination_overdue_dark</item>
@@ -127,10 +90,7 @@
         <item name="colorVaccinationDue">@color/vaccination_due</item>
         <item name="colorOnVaccinationDue">@color/on_vaccination_due</item>
 
-        <!-- The shape scale and the default component styles are identical in both themes: dark
-             mode changes what colour a card is, never how round it is. They are repeated rather
-             than inherited because this style declares its own Material parent, and an Android
-             theme takes nothing from the same-named style in another resource folder. -->
+        <!-- The shape scale and the default component styles are identical in both themes. -->
         <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.PetCare.Small</item>
         <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.PetCare.Medium</item>
         <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.PetCare.Large</item>
@@ -155,8 +115,7 @@
 
         <item name="materialCardViewStyle">@style/PetCare.Card</item>
 
-        <!-- False in this theme: the page behind the system bars is now near-black, so their icons
-             have to be light to be visible. -->
+        <!-- False in this theme: the page behind the system bars is now near-black. -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>

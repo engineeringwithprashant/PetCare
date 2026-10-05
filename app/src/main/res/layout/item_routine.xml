@@ -1,24 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One care routine on the pet detail screen, under the "Care routines" heading.
-
-    Laid out left to right:
-      - **The routine's name** in bold, with **its schedule** ("Every day", "Weekly") muted beneath —
-        and "· Paused" added to the schedule when the routine is switched off.
-      - **The task count** ("3 tasks") in a small neutral pill.
-      - **The overflow button** ("⋮"), which opens edit / pause-or-resume / delete.
-
-    Tapping anywhere else on the card opens the routine itself, where its tasks are managed.
-
-    **Why a ConstraintLayout here.** The row has a flexible column (name and schedule, which must
-    shrink and ellipsize for a long name) between two things that must keep their natural size (the
-    pill and the button). ConstraintLayout expresses "take the space between these two" with a
-    0dp-wide view constrained to its neighbours, and does it in one flat level, which matters because
-    this layout is inflated for every routine in the list.
-
-    The card is the app's default rounded white card (PetCare.Card.Clickable) with the pet cards'
-    larger corner applied as an overlay, so it matches the "About" card above it.
--->
+<!-- One care routine on the pet detail screen, under the "Care routines" heading. -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -29,9 +10,7 @@
     android:layout_marginBottom="@dimen/card_spacing"
     app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
 
-    <!-- End padding is smaller than start padding because the overflow button carries 8dp of its own
-         padding around the glyph; with the full card padding as well, the dots would sit visibly
-         further from the edge than the name does from the other. -->
+    <!-- End padding is smaller than start padding. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -40,9 +19,7 @@
         android:paddingEnd="@dimen/spacing_xs"
         android:paddingBottom="@dimen/card_padding">
 
-        <!-- The routine's name. Width 0dp between the parent's start and the task count: it takes
-             whatever the pill and button leave, and ellipsizes rather than pushing them off the card.
-             Bold, per the design, so it is clearly the card's heading. -->
+        <!-- The routine's name. Width 0dp between the parent's start and the task count. -->
         <TextView
             android:id="@+id/routineTitleText"
             style="@style/PetCare.ListTitle"
@@ -57,9 +34,7 @@
             app:layout_constraintVertical_chainStyle="packed"
             tools:text="Morning care" />
 
-        <!-- How often it repeats, muted, plus "· Paused" when the routine is switched off. The name
-             and this line form a packed vertical chain, so the pair is centred as a block against the
-             pill and button however tall the text turns out to be. -->
+        <!-- How often it repeats, muted, plus "· Paused" when the routine is switched off. -->
         <TextView
             android:id="@+id/routineScheduleText"
             style="@style/PetCare.ListSubtitle"
@@ -72,8 +47,7 @@
             app:layout_constraintTop_toBottomOf="@id/routineTitleText"
             tools:text="Every day" />
 
-        <!-- The number of tasks in the routine. Centred vertically on the card by constraining both
-             its top and bottom to the parent. -->
+        <!-- The number of tasks in the routine, centred by constraining its top and bottom to the parent. -->
         <TextView
             android:id="@+id/taskCountText"
             style="@style/PetCare.RoutineCard.TaskCount"
@@ -84,8 +58,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="3 tasks" />
 
-        <!-- The overflow menu button. Its content description names the routine — set by the adapter
-             — so a screen reader user can tell one card's menu from the next. -->
+        <!-- The overflow menu button. Its content description names the routine — set by the adapter. -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/overflowButton"
             style="@style/PetCare.RoutineCard.OverflowButton"

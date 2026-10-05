@@ -1,45 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The header shared by the tabs and the pet detail screen: the app's monogram and the screen's name
-    on the left, the light/dark toggle and the pet-count badge on the right.
-
-    Two extras exist for the Home tab only, and are hidden (visibility="gone") unless a screen turns
-    them on through TabHeader.kt: an "AI" pill between the toggle and the badge, and a small red dot on
-    the badge's corner for overdue care. Gone rather than invisible, so every other screen lays this
-    row out exactly as it did before they were added.
-
-    **Why a separate layout pulled in with <include>.** Both tabs draw this row, and it has to look
-    *identical* on each — the user switches between them with the bottom bar, and a header that
-    shifted by a few pixels or changed colour as they did so would read as two different apps. One
-    file is what makes that a fact rather than a promise. ViewBinding supports this directly: an
-    <include> given an android:id becomes a nested binding (`binding.header.themeToggle`), so the
-    fragments keep type-safe access to every view in here without a single findViewById.
-
-    **Why these tabs carry their own header at all.** Every other screen takes its title from the
-    MaterialToolbar in activity_main.xml, and MainActivity hides that toolbar on these two. Two of
-    the controls here depend on state a shared toolbar cannot reach: the toggle reflects the current
-    display mode, and the badge counts the user's pets. The trade is that the account actions in the
-    toolbar's overflow menu are not on screen; the profile screen they lead to is still reached from
-    that menu wherever the toolbar is shown.
-
-    **The monogram opens the profile screen**, from every screen that draws this header. Those screens
-    hide the shared toolbar, whose overflow menu used to be the only route to the account — so without
-    this, the profile screen would be unreachable from most of the app. See TabHeader.kt.
-
-    **The badge opens the notifications screen.** It counts pets and carries the red dot for care
-    that needs attention, so pressing it to see what needs attention is the reading it already
-    invites. It is the only route to that screen, which is why every screen drawing this header
-    attaches it — and why the notifications screen itself passes no action, leaving the count as a
-    fact rather than a control (see TabHeader.kt).
-
-    The behaviour (title, toggle state, badge count, taps) is attached by TabHeader.kt, so the two
-    fragments share the Kotlin as well as the XML.
-
-    A horizontal LinearLayout rather than a ConstraintLayout. There are four children in one row, the
-    title takes whatever is left over, and nothing is positioned relative to anything but its
-    neighbour — which is precisely the arrangement a LinearLayout describes in one attribute and a
-    ConstraintLayout needs eight to express.
--->
+<!-- The header shared by the tabs and the pet detail screen: the app's monogram and the screen's name on the left. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -52,38 +12,8 @@
     android:paddingEnd="@dimen/screen_padding"
     android:paddingBottom="@dimen/spacing_sm">
 
-    <!--
-        The app's monogram: a "p" on a rounded yellow square, and the way in to the profile screen.
-
-        A TextView rather than an icon, so the letter is drawn from a font and stays crisp at any
-        density without a drawable per size — in Bricolage Grotesque, the app's character face, so the
-        mark matches the headlines. Its background supplies the shape — see bg_monogram.xml.
-
-        **It is now a control, where it used to be decoration.** Tapping the app's own mark to reach
-        "your account" is the arrangement a great many apps already use, and it gives the profile
-        screen a route from every screen that draws this header — which matters because those screens
-        hide the shared toolbar, and its overflow menu was previously the only way in. The foreground
-        ripple is drawn *over* the yellow square rather than replacing its background, so the mark
-        keeps its colour and shape and only gains the press feedback.
-
-        It is no longer hidden from accessibility: it does something now, so it needs a label saying
-        what. On the profile screen itself the tap is unhooked and the label removed again — see
-        TabHeader.kt, which does the same for the badge on the notifications screen.
-    -->
-    <!--
-        **Two layers, letter behind photo.** The mark is the yellow "p" until the user sets a profile
-        photo, and their face afterwards. Both are laid out here and the photo is simply shown or
-        hidden (TabHeader.showProfilePhoto), rather than one view swapping between a letter and a
-        bitmap: they need different view types — a TextView draws the letter from the font, and only
-        a ShapeableImageView clips a photograph to the rounded square — and stacking them means the
-        letter is already in place as the correct fallback whenever there is no photo, or the file
-        behind it has gone missing.
-
-        The FrameLayout carries the id, the tap, the ripple and the label, so everything that made
-        the monogram a control still applies to the pair as a whole and TabHeader is unchanged in that
-        respect. A FrameLayout is the right container because this is the one arrangement it
-        expresses in a single attribute: two children occupying the same space.
-    -->
+    <!-- The app's monogram: a "p" on a rounded yellow square, and the way in to the profile screen. -->
+    <!-- Two layers, letter behind photo. The mark is the yellow "p" until the user sets a profile photo. -->
     <FrameLayout
         android:id="@+id/monogram"
         android:layout_width="@dimen/monogram_size"
@@ -93,9 +23,7 @@
         android:focusable="true"
         android:foreground="?attr/selectableItemBackgroundBorderless">
 
-        <!-- The fallback: a "p" on the rounded yellow square, from bg_monogram.xml. In Bricolage
-             Grotesque, the app's character face, so the mark matches the headlines. Hidden from
-             TalkBack because the frame around it carries the label for the pair. -->
+        <!-- The fallback: a "p" on the rounded yellow square, from bg_monogram.xml. -->
         <TextView
             android:id="@+id/monogramLetter"
             android:layout_width="match_parent"
@@ -109,17 +37,7 @@
             android:textColor="@color/on_accent_yellow"
             android:textStyle="bold" />
 
-        <!--
-            The user's photo, drawn over the letter when there is one.
-
-            A ShapeableImageView clips the bitmap to the same rounded square the yellow tile uses, so
-            the mark keeps its shape whichever layer is showing — the radius lives in one shape style
-            rather than being baked into a cropped image. centerCrop fills the tile, which is what
-            makes the rounded corners visible on a photo of any aspect ratio.
-
-            Starts GONE so a header drawn before the photo has loaded shows the letter rather than an
-            empty square.
-        -->
+        <!-- The user's photo, drawn over the letter when there is one. -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/monogramPhoto"
             android:layout_width="match_parent"
@@ -132,12 +50,7 @@
 
     </FrameLayout>
 
-    <!-- The screen's name, set by the fragment ("Home", "Pets"). layout_weight="1" on a zero-width
-         view is LinearLayout's "take everything left over", which is what pushes the two controls to
-         the far end however wide the title turns out to be.
-
-         accessibilityHeading marks it as the screen's heading, so TalkBack users can jump straight
-         to it with heading navigation. -->
+    <!-- The screen's name, set by the fragment ("Home", "Pets"). -->
     <TextView
         android:id="@+id/headerTitle"
         android:layout_width="0dp"
@@ -151,18 +64,7 @@
         tools:targetApi="p"
         tools:text="Pets" />
 
-    <!--
-        The light/dark toggle.
-
-        A LinearLayout made clickable rather than a MaterialButton with an icon: the pill holds a
-        glyph and a word that change independently — the sun becomes a moon and "Light" becomes
-        "Dark" — and a button's icon and text are a single styled unit that is awkward to re-colour
-        by halves.
-
-        It reports the mode currently in use, not the one a tap would bring about. Its
-        contentDescription says the opposite, because a screen reader announces the description
-        *instead of* the label and so has to carry the action as well — both are set in TabHeader.kt.
-    -->
+    <!-- The light/dark toggle. -->
     <LinearLayout
         android:id="@+id/themeToggle"
         android:layout_width="wrap_content"
@@ -198,11 +100,7 @@
 
     </LinearLayout>
 
-    <!-- The "AI" pill. Hidden by default and shown by TabHeader.showAssistantPill(), which only Home,
-         Notifications and Profile call — so it is a sibling of the bell in the header's right-hand
-         controls rather than something belonging to any one screen. It borrows the theme toggle's
-         capsule and type so those controls read as one family. It opens the assistant; the fragment
-         decides what that means, since each one navigates with its own action. -->
+    <!-- The "AI" pill. Hidden by default and shown by TabHeader.showAssistantPill(), which only Home. -->
     <TextView
         android:id="@+id/aiPill"
         android:layout_width="wrap_content"
@@ -223,35 +121,13 @@
         android:visibility="gone"
         tools:visibility="visible" />
 
-    <!--
-        The notifications bell, with the number of unread alerts on its corner.
-
-        **It used to be a number, and the number was the wrong one.** The badge showed how many pets
-        the account had while tapping it opened the notifications screen — a control labelled with one
-        thing and leading to another, which only worked because a count with a dot beside it is a
-        natural thing to press. A bell says what it opens without being explained, and it lets the
-        figure on its corner mean what a figure on a bell always means: how many are waiting. The pet
-        count left the header with it; it is on the profile screen's stat row, where it is a fact
-        about the account rather than a control.
-
-        A FrameLayout because the bubble is genuinely *stacked* on the bell rather than placed beside
-        it, which is the one arrangement a FrameLayout expresses in a single attribute
-        (layout_gravity="top|end"). The bubble sits inside the well's top-right corner rather than
-        outside it, so nothing has to escape the frame's bounds and no ancestor needs clipChildren
-        turned off to draw it.
-
-        Both children are filled in by TabHeader.showAlertCount, which is driven from
-        SessionViewModel.unreadAlertCount — one figure, derived once, so the bell and the list behind
-        it can never disagree.
-    -->
+    <!-- The notifications bell, with the number of unread alerts on its corner. -->
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_sm">
 
-        <!-- The bell itself, in the same rounded well and at the same height as the theme toggle and
-             the AI pill, so the header's right-hand controls stay one family. The glyph is inset by
-             padding rather than drawn small, which keeps the whole well as the touch target. -->
+        <!-- The bell itself, in the same rounded well and at the same height as the theme toggle and the AI pill. -->
         <ImageView
             android:id="@+id/notificationsBell"
             android:layout_width="@dimen/header_badge_size"
@@ -264,11 +140,7 @@
             android:src="@drawable/ic_bell"
             app:tint="?attr/colorOnSurface" />
 
-        <!-- How many alerts are unread: "3", or "9+" past that. Hidden entirely at zero rather than
-             drawn as a "0", because a bell with nothing waiting should look quiet.
-
-             Hidden from TalkBack because the bell's own description already states the count in
-             words — a screen reader would otherwise announce the bare digit a second time. -->
+        <!-- How many alerts are unread: "3", or "9+" past that. -->
         <TextView
             android:id="@+id/alertCountBadge"
             android:layout_width="wrap_content"

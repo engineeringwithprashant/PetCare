@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The tinted circle a care-category icon sits inside on a dashboard task row.
-
-    `android:shape="oval"` with equal width and height on the view gives a true circle, which is
-    what lets a column of these line up as a consistent left edge down the list however wide the
-    text beside them runs.
-
-    The fill is a theme role rather than a fixed colour, so the badge follows dark mode with no
-    second drawable — see the note at the top of colors.xml on why nothing in this app names a
-    colour resource directly from a layout.
--->
+<!-- The tinted circle a care-category icon sits inside on a dashboard task row. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 

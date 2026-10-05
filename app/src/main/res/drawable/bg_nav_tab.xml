@@ -1,33 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The background of one tab in the floating navigation bar: nothing at all when the tab is
-    inactive, the filled pill when it is active, and a ripple over either while it is being pressed.
-
-    **Why the whole thing is one drawable rather than code setting a colour.** A tab changes
-    appearance on *state*, and Android already has a mechanism for that. Declaring the rule here
-    means FloatingNavBar only ever sets `isSelected`, and the pill, its fade and the press feedback
-    all follow from that one line — there is no second place that has to remember to repaint a tab
-    when it stops being current.
-
-    **The fade is the spec's `transition: background .2s ease`.** A StateListDrawable given
-    enterFadeDuration/exitFadeDuration cross-fades between its items instead of swapping them, which
-    is what stops the pill appearing out of nowhere while the tab is still mid-way through widening.
-    200ms is short enough to feel like part of the same gesture as the width change (260ms) and long
-    enough not to read as a flicker.
-
-    **The ripple is the outer layer, not the inner one,** so the press feedback is drawn over the
-    pill rather than under it — under it, an active tab would swallow its own ripple entirely.
--->
+<!-- The background of one tab in the floating navigation bar: nothing at all when the tab is inactive. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?attr/colorControlHighlight">
 
-    <!--
-        The mask is what confines the ripple to the pill's rounded rectangle — the spec's
-        `overflow: hidden`, as far as the press feedback is concerned. Without it the ripple spreads
-        to the tab's square bounds and shows as corners lighting up outside the pill.
-
-        Its colour is irrelevant and never drawn; a mask contributes only its shape.
-    -->
+    <!-- The mask is what confines the ripple to the pill's rounded rectangle — the spec's `overflow: hidden`. -->
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
             <solid android:color="@android:color/white" />
@@ -40,8 +16,7 @@
             android:enterFadeDuration="200"
             android:exitFadeDuration="200">
 
-            <!-- Active: the filled pill. Themed, because the fill is near-black by day and the
-                 accent at night — see attrs.xml. -->
+            <!-- Active: the filled pill. Themed, because the fill is near-black by day and the accent at night. -->
             <item android:state_selected="true">
                 <shape android:shape="rectangle">
                     <solid android:color="?attr/colorNavTabActive" />
@@ -49,9 +24,7 @@
                 </shape>
             </item>
 
-            <!-- Inactive: nothing. A transparent *shape* rather than a plain transparent colour, so
-                 both states of the fade are the same kind of drawable at the same size — a colour
-                 drawable and a shape cross-fade unevenly. -->
+            <!-- Inactive: nothing. A transparent shape rather than a plain transparent colour. -->
             <item>
                 <shape android:shape="rectangle">
                     <solid android:color="@android:color/transparent" />

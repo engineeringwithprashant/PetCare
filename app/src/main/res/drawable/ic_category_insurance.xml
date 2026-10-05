@@ -1,9 +1,4 @@
-<!--
-    Shield with a tick, marking the INSURANCE expense category — cover premiums and policy fees.
-
-    A shield is the conventional symbol for protection, which is what the category is about; the
-    tick inside distinguishes it from a plain badge.
--->
+<!-- Shield with a tick, marking the INSURANCE expense category — cover premiums and policy fees. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

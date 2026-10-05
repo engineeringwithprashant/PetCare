@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Label colour of a Tasks-tab filter chip: the accent on the selected fill, ordinary text
-     otherwise. Paired with filter_chip_background.xml, so the two always switch together. -->
+<!-- Label colour of a Tasks-tab filter chip: the accent on the selected fill, ordinary text otherwise. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="?attr/colorOnSelectedContainer" android:state_checked="true" />
     <item android:color="?attr/colorOnSurface" />

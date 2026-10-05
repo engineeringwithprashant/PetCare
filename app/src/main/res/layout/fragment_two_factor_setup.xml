@@ -1,28 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Two-factor setup (TwoFactorSetupFragment): scan the QR code into an authenticator app, then type
-    a code back to prove the scan worked.
-
-    Reached from the profile screen's two-factor switch, so — like the change-password form — it shows
-    the shared app bar with its back arrow rather than drawing the tab header. It is a step *into*
-    something, not a step sideways.
-
-    **Why both steps are on one screen.** They are two halves of one action, and the second is only
-    meaningful while the first is still in front of the user: a code that does not match means "scan
-    it again", and an answer like that is no use on a screen where the QR code is no longer visible.
-    A ScrollView is what makes one tall screen workable rather than forcing a split.
-
-    **Top to bottom.** A progress bar while the secret is being made; a failure line for the rare case
-    where the account has gone; then the content — the "STEP 1" label and instructions, the QR code on
-    its white card, which account it is for, the secret in text with a copy button for anyone setting
-    up an authenticator on this same phone, a divider, and then "STEP 2" with the six code boxes, the
-    keypad and the confirm button.
-
-    **Why the QR card is white in both themes.** A QR code is read by a camera, and scanners expect
-    dark modules on a light background; several refuse an inverted one outright. So this one card does
-    not follow the app's dark theme — it stays white with a light border around the code, which is the
-    quiet zone the format requires. See util.QrCodeRenderer.
--->
+<!-- Two-factor setup (TwoFactorSetupFragment): scan the QR code into an authenticator app. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -40,8 +17,7 @@
         android:paddingTop="@dimen/content_top_padding"
         android:paddingEnd="@dimen/screen_padding">
 
-        <!-- Shown only while the secret is being generated and the account read. GONE takes no space,
-             so the content does not jump down when it disappears. -->
+        <!-- Shown only while the secret is being generated and the account read. -->
         <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/setupProgress"
             android:layout_width="match_parent"
@@ -51,9 +27,7 @@
             app:trackCornerRadius="2dp"
             tools:visibility="visible" />
 
-        <!-- The account was deleted while this screen was opening — on another device, and pulled
-             down by a sync. There is nothing to set up, and saying so is better than a QR code that
-             belongs to nobody. -->
+        <!-- The account was deleted while this screen was opening — on another device, and pulled down by a sync. -->
         <TextView
             android:id="@+id/setupFailedText"
             style="@style/PetCare.Auth.ErrorText"
@@ -64,8 +38,7 @@
             android:visibility="gone"
             tools:visibility="gone" />
 
-        <!-- Everything else. Hidden as a block rather than line by line, so there is one visibility
-             rule for "is there a setup to show?" instead of a dozen that could disagree. -->
+        <!-- Everything else. Hidden as a block rather than line by line. -->
         <LinearLayout
             android:id="@+id/setupContent"
             android:layout_width="match_parent"
@@ -85,9 +58,7 @@
                 android:layout_marginTop="@dimen/spacing_sm"
                 android:text="@string/two_factor_setup_scan_body" />
 
-            <!-- The white card. layout_gravity centres it in the column; the card's padding is the
-                 quiet zone around the code. cardElevation 0 and a hairline stroke, so a white card on
-                 a white page in light mode still has a visible edge. -->
+            <!-- The white card. layout_gravity centres it in the column. -->
             <com.google.android.material.card.MaterialCardView
                 style="@style/PetCare.Card"
                 android:layout_width="wrap_content"
@@ -101,10 +72,7 @@
                 app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp">
 
-                <!-- A fixed square. The fragment reads this view's pixel width and generates the
-                     bitmap at exactly that size, so the modules are never resampled. The content
-                     description names what it is; the secret below is the accessible way to enter it,
-                     since a QR code cannot be read out. -->
+                <!-- A fixed square. The fragment reads this view's pixel width and generates the bitmap at exactly that size. -->
                 <ImageView
                     android:id="@+id/qrImage"
                     android:layout_width="@dimen/two_factor_qr_size"
@@ -114,9 +82,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Shown only if the code could not be encoded at all. Setup is still possible — the
-                 secret underneath is typed in by hand — and this says so rather than leaving a blank
-                 square. -->
+            <!-- Shown only if the code could not be encoded at all. -->
             <TextView
                 android:id="@+id/qrFallbackText"
                 style="@style/PetCare.Auth.ErrorText"
@@ -128,8 +94,7 @@
                 android:visibility="gone"
                 tools:visibility="gone" />
 
-            <!-- Which account the authenticator entry will be filed under. Worth showing: on a shared
-                 handset it is the only thing on the screen that says whose account this protects. -->
+            <!-- Which account the authenticator entry will be filed under. -->
             <TextView
                 android:id="@+id/setupAccountText"
                 style="@style/PetCare.Auth.Helper"
@@ -146,15 +111,7 @@
                 android:layout_marginTop="@dimen/spacing_lg"
                 android:text="@string/two_factor_setup_key_label" />
 
-            <!--
-                The secret in text, for anyone whose authenticator is on this same phone (nothing can
-                scan a code on the screen it is displayed on) or whose camera will not focus.
-
-                textIsSelectable so it can be selected and copied by hand as well as with the button.
-                Monospace because it is transcribed character by character, where the difference
-                between similar glyphs matters. The fragment inserts a space every four characters for
-                the same reason.
-            -->
+            <!-- The secret in text, for anyone whose authenticator is on this same phone. -->
             <TextView
                 android:id="@+id/secretText"
                 android:layout_width="match_parent"
@@ -185,8 +142,7 @@
                 android:layout_marginTop="@dimen/spacing_md"
                 android:text="@string/two_factor_setup_step_confirm" />
 
-            <!-- Says why the second step exists, which is the thing most likely to be misread as
-                 busywork: the code is the only proof that the scan actually worked. -->
+            <!-- Says why the second step exists, which is the thing most likely to be misread as busywork. -->
             <TextView
                 style="@style/PetCare.Subtitle"
                 android:layout_width="match_parent"
@@ -194,8 +150,7 @@
                 android:layout_marginTop="@dimen/spacing_sm"
                 android:text="@string/two_factor_setup_confirm_body" />
 
-            <!-- The same six boxes and keypad the sign-in code screens use, so entering a code looks
-                 and behaves identically wherever it happens. See view_code_keypad.xml. -->
+            <!-- The same six boxes and keypad the sign-in code screens use. -->
             <com.prash.petcare.ui.auth.CodeKeypadView
                 android:id="@+id/codeKeypad"
                 android:layout_width="match_parent"

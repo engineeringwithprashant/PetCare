@@ -1,35 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The Home tab's icon: a house, drawn as an outline.
-
-    **Why the nav icons are stroked rather than filled.** The bar marks the current tab by widening
-    it into a pill and writing its name inside, so the icons no longer have to carry "selected" on
-    their own. A line drawing is the quieter shape for that job, and it gives the bar a second,
-    subtler way to say which tab is live — the active icon is the same outline drawn a little
-    heavier. See ic_tab_home_active.xml for that pair.
-
-    **No android:tint here.** The colour is applied by the tab's ImageView from
-    res/color/nav_tab_ink.xml, a state list that follows the tab's selected state. A tint baked into
-    the drawable would win over that and leave every tab looking identically active. The path is
-    therefore stroked in white, which is simply the neutral value a tint replaces.
-
-    The 24dp canvas is the icon grid the paths are drawn on; the tab lays it out at 21dp
-    (nav_tab_icon_size), so the whole set scales together from one place.
--->
+<!-- The Home tab's icon: a house, drawn as an outline. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!--
-        One continuous outline: up the left roof slope to the apex, down the right slope, then the
-        right wall, the floor, and the doorway punched out of the middle of it before the left wall
-        closes the shape.
-
-        The two 1-unit arcs at the bottom corners are what round them; a stroked path with square
-        corners would read as a box with a hat on rather than as a house.
-    -->
+    <!-- One continuous outline: up the left roof slope to the apex, down the right slope, then the right wall. -->
     <path
         android:fillColor="@android:color/transparent"
         android:pathData="M4,10.4 L12,4 L20,10.4 V19 A1,1 0 0 1 19,20 H14.8 V14.8 H9.2 V20 H5 A1,1 0 0 1 4,19 Z"

@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The small circle the "+" sits in on a quick-action tile.
-
-    The circle is what gives a 14dp glyph enough weight to anchor the tile above its label; a bare
-    plus at that size reads as a stray mark rather than as the tile's icon.
-
-    Filled with the muted surface role rather than the accent: three yellow circles in a row would
-    put the accent on the three *least* important things on the screen, and the accent is the app's
-    way of saying "this is the thing to press".
--->
+<!-- The small circle the "+" sits in on a quick-action tile. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 

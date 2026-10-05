@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The circular well holding the user's profile photo, on the dark header card.
-
-    **Dark in both themes**, like the pet cards and the bottom navigation bar — see the pet-card note
-    in colors.xml. It sits on a card that is itself dark in either mode, so a themed fill would make
-    the well vanish into its card in one mode and stand out as a light disc in the other. The pet
-    photo wells follow the same rule and for the same reason: a photograph does not change with the
-    theme, so neither should the space reserved for one.
-
-    Seen only where there is no photo yet, and as the ground behind one that does not quite fill the
-    circle. A stroke in the same family as the card marks the well's edge when the two colours are
-    close, so an empty well still reads as a place a picture goes rather than as a smudge.
--->
+<!-- The circular well holding the user's profile photo, on the dark header card. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 

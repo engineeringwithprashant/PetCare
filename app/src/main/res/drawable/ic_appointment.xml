@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Marks the "Upcoming appointments" card on the dashboard: a calendar page.
-
-    A calendar rather than the vet category's medical cross, deliberately. The cross already means
-    "this is a vet task" on every checklist row in the app; reusing it as the heading of a card
-    *made of* vet tasks would say the same thing twice. The calendar says the different thing the
-    card is actually about — that these are dated, and still ahead.
--->
+<!-- Marks the "Upcoming appointments" card on the dashboard: a calendar page. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

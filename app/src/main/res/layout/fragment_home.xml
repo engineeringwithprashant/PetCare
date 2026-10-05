@@ -1,39 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The Home tab — the dashboard the app opens on once signed in.
-
-    It reads top to bottom as the questions an owner asks when they open the app: *what time is it and
-    is everything backed up* (greeting, clock, sync line), *three quick facts* (walk window, this month's
-    spending, next vet visit), *what do I do now* (the dark next-up card), *how is today going* (today's
-    care and the week's streak), *who are my animals* (the sideways pet row), *anything worth knowing*
-    (the yellow insight card), *what is ahead* (coming up this week) and *what else might I do* (quick
-    actions).
-
-    **Why this screen carries its own header.** Every non-tab screen takes its title from the
-    MaterialToolbar in activity_main.xml, and MainActivity hides that toolbar here. The header's
-    controls depend on state a shared toolbar cannot reach — the theme toggle reflects the display mode,
-    the badge counts the user's pets and lights its red dot for overdue care — so it is the shared
-    view_tab_header.xml instead, with the Home-only "AI" pill switched on by HomeFragment.
-
-    **Why the header is outside the scrolling area.** It is the app's identity and its controls, not
-    content: scrolling them away would make the theme toggle reachable only from the top of the page.
-
-    **Why one NestedScrollView with short lists inside it.** The dashboard is a fixed set of sections,
-    not an unbounded feed. The two lists in it — at most a handful of pets, at most four upcoming items —
-    are given wrap_content and nestedScrollingEnabled="false", which hands scrolling to the page so it
-    moves as one rather than containing little scrolling boxes. Every item is therefore inflated at once
-    instead of recycled, which is the right trade at these sizes.
-
-    **Bleeding rows to the screen edge.** The page has a 16dp gutter, but the stat row and the pet row
-    scroll sideways, and a sideways row that stops 16dp short of the edge looks cropped. Each is given a
-    -16dp margin to reach the edges and 16dp of padding to line its first card back up with the gutter,
-    with clipToPadding="false" so cards scroll *through* that padding rather than being cut off at it.
-    The containers around them are arranged so nothing clips them at the gutter either — see the note
-    on dashboardContent.
-
-    All spacing comes from dimens.xml and all text from the styles in styles.xml, so this screen keeps
-    step with the other redesigned tabs in both light and dark mode.
--->
+<!-- The Home tab — the dashboard the app opens on once signed in. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -42,17 +8,12 @@
     android:orientation="vertical"
     tools:context=".ui.home.HomeFragment">
 
-    <!-- ============================== Header ==============================
-         The monogram and "Home" on the left; theme toggle, AI pill and pet badge on the right. The
-         android:id makes ViewBinding expose it as a nested binding, `binding.header`. -->
+    <!-- ============================== Header ============================== -->
     <include
         android:id="@+id/header"
         layout="@layout/view_tab_header" />
 
-    <!-- ============================== The page ==============================
-         Everything below the header scrolls as one. layout_height="0dp" with layout_weight="1" gives
-         it all the room the header does not take; clipToPadding="false" lets the last card scroll
-         clear of the bottom padding instead of stopping underneath it. -->
+    <!-- ============================== The page ============================== -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/dashboardScroll"
         android:layout_width="match_parent"
@@ -70,19 +31,14 @@
             android:paddingStart="@dimen/home_screen_padding"
             android:paddingEnd="@dimen/home_screen_padding">
 
-            <!-- ============================ Greeting ============================
-                 The greeting on the left takes whatever width the clock leaves (weight 1 on a 0dp
-                 width). baselineAligned="false" because the two sides are blocks of different sizes,
-                 not one line of text; the clock column is nudged down so its figure sits level with
-                 the greeting's first line. -->
+            <!-- ============================ Greeting ============================ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:baselineAligned="false"
                 android:orientation="horizontal">
 
-                <!-- "Good evening, / Prashant" — two lines, built by the fragment. accessibilityHeading
-                     lets TalkBack users jump to the start of the page's content. -->
+                <!-- "Good evening, / Prashant" — two lines, built by the fragment. -->
                 <TextView
                     android:id="@+id/greetingText"
                     style="@style/PetCare.Home.Greeting"
@@ -121,13 +77,7 @@
 
             </LinearLayout>
 
-            <!--
-                How the Firestore backup is getting on: a small coloured dot and a muted line.
-
-                Status rather than content, so small and quiet — findable when the user wonders, easy to
-                ignore otherwise. Hidden as a whole (visibility="gone") before the first sync has anything
-                to report, so the cards move up rather than leaving a gap where a message might be.
-            -->
+            <!-- How the Firestore backup is getting on: a small coloured dot and a muted line. -->
             <LinearLayout
                 android:id="@+id/syncRow"
                 android:layout_width="match_parent"
@@ -158,17 +108,7 @@
 
             </LinearLayout>
 
-            <!-- ================= Everything, when there are pets =================
-                 Hidden as one when the user has no pets, and the empty state below takes its place.
-                 One container means the fragment toggles one visibility, and can never leave a stray
-                 section heading behind.
-
-                 It cancels the page's gutter (negative margins) and puts the same gutter back as its
-                 own padding. That looks like a no-op for the cards, and is — but it makes this
-                 container's *bounds* span the full screen width. A view group clips its children to
-                 its bounds and only passes touches to them within its bounds, so without this the two
-                 sideways rows inside, which reach out into the gutters, would be cut off at the gutter
-                 and could not be swiped from the screen's edge. -->
+            <!-- ================= Everything, when there are pets ================= -->
             <LinearLayout
                 android:id="@+id/dashboardContent"
                 android:layout_width="match_parent"
@@ -180,10 +120,7 @@
                 android:paddingStart="@dimen/home_screen_padding"
                 android:paddingEnd="@dimen/home_screen_padding">
 
-                <!-- ========================== Stat cards ==========================
-                     Three fixed-width cards in a sideways row — see the note at the top about bleeding
-                     to the edge. The vertical padding is room for the cards' shadows, which a scroll
-                     view would otherwise clip flat along the top and bottom. -->
+                <!-- ========================== Stat cards ========================== -->
                 <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -198,9 +135,7 @@
                     android:paddingBottom="@dimen/spacing_xs"
                     android:scrollbars="none">
 
-                    <!-- Each <include> sets its own size and margin, which is why width and height are
-                         repeated here: an <include> only applies layout_ attributes when it is given
-                         both dimensions. -->
+                    <!-- Each <include> sets its own size and margin. -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -230,9 +165,7 @@
 
                 </HorizontalScrollView>
 
-                <!-- ========================== Next up ==========================
-                     The one dark card on the page, in both themes, so "what to do now" is the first
-                     thing the eye lands on. Its colours are fixed values — see colors.xml. -->
+                <!-- ========================== Next up ========================== -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/nextUpCard"
                     android:layout_width="match_parent"
@@ -243,17 +176,7 @@
                     app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.NextUp"
                     app:strokeWidth="0dp">
 
-                    <!--
-                        Ring on the left, words and button on the right, centred against each other
-                        whichever is taller.
-
-                        **minHeight is what makes this the dominant card.** Its content is shorter
-                        when nothing is due — no "Mark done" button, a one-line title — and without a
-                        floor the card would collapse to about 100dp on exactly the days it should
-                        still anchor the screen. 140dp is its resting height with a pending task, so
-                        pinning the minimum there means the card never shrinks below the size the eye
-                        has learned to expect. It still grows past it for a two-line title.
-                    -->
+                    <!-- Ring on the left, words and button on the right. -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -263,9 +186,7 @@
                         android:orientation="horizontal"
                         android:padding="@dimen/next_up_card_padding">
 
-                        <!-- The countdown ring with its number stacked in the middle — a FrameLayout
-                             because the children genuinely overlap. The fragment gives this container
-                             one description ("22 min away") and hides the pieces inside from TalkBack. -->
+                        <!-- The countdown ring with its number stacked in the middle — a FrameLayout. -->
                         <FrameLayout
                             android:id="@+id/nextUpRingContainer"
                             android:layout_width="wrap_content"
@@ -309,9 +230,7 @@
 
                         </FrameLayout>
 
-                        <!-- The words. 0dp width with weight 1 is the LinearLayout spelling of
-                             "flex: 1, min-width: 0": it takes whatever the ring leaves, and a long
-                             title wraps inside it rather than pushing the ring off the card. -->
+                        <!-- The words. 0dp width with weight 1 is the LinearLayout spelling of "flex: 1, min-width: 0". -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -341,8 +260,7 @@
                                 android:layout_marginTop="7dp"
                                 tools:text="Krishala · 6:00 PM · Slicker brush" />
 
-                            <!-- Completes the task. Hidden by the fragment when there is nothing left
-                                 to complete. -->
+                            <!-- Completes the task. Hidden by the fragment. -->
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/markDoneButton"
                                 style="@style/PetCare.Home.MarkDoneButton"
@@ -357,8 +275,7 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ========================= Today's care =========================
-                     A light card: the day's progress ring and headline, then the week's streak. -->
+                <!-- ========================= Today's care ========================= -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/todayCard"
                     style="@style/PetCare.Card.Feature"
@@ -381,9 +298,7 @@
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
-                            <!-- The ring with "1 / OF 6" stacked in its middle; see the note on the
-                                 next-up ring for why a FrameLayout. The ring itself is Material's
-                                 determinate progress indicator, styled by PetCare.CareRing. -->
+                            <!-- The ring with "1 / OF 6" stacked in its middle. -->
                             <FrameLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content">
@@ -397,8 +312,7 @@
                                     android:importantForAccessibility="no"
                                     tools:progress="20" />
 
-                                <!-- Announced as one sentence ("1 of 6 tasks done today") through the
-                                     description the fragment sets on this container. -->
+                                <!-- Announced as one sentence. -->
                                 <LinearLayout
                                     android:id="@+id/todayProgressLabels"
                                     android:layout_width="wrap_content"
@@ -458,8 +372,7 @@
                             style="@style/PetCare.PetDetail.AboutDivider"
                             android:layout_marginTop="@dimen/home_today_block_gap" />
 
-                        <!-- "CARE STREAK" on the left, "5 full days" pushed to the right by the label's
-                             weight. baselineAligned keeps the two different sizes on one line. -->
+                        <!-- "CARE STREAK" on the left, "5 full days" pushed to the right by the label's weight. -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -483,10 +396,7 @@
 
                         </LinearLayout>
 
-                        <!-- The seven day boxes, oldest on the left and today on the right. Each
-                             <include> takes an equal share (weight 1 on 0dp) with a gap before all but
-                             the first. The row is one accessibility unit, described by the fragment.
-                             baselineAligned="false": the columns are boxes, not lines of text. -->
+                        <!-- The seven day boxes, oldest on the left and today on the right. -->
                         <LinearLayout
                             android:id="@+id/streakRow"
                             android:layout_width="match_parent"
@@ -557,10 +467,7 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ========================== Your pets ==========================
-                     A quiet label with a hint on the far right, then a sideways row of dark photo
-                     cards. The label is small and letter-spaced rather than a full heading, because
-                     the cards are the subject. -->
+                <!-- ========================== Your pets ========================== -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -583,9 +490,7 @@
 
                 </LinearLayout>
 
-                <!-- The pet cards, scrolling sideways, bled to the screen edges. A RecyclerView with a
-                     horizontal layout manager (set by the fragment) rather than a HorizontalScrollView,
-                     because the number of pets changes and DiffUtil animates it. -->
+                <!-- The pet cards, scrolling sideways, bled to the screen edges. -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/petsRecyclerView"
                     android:layout_width="match_parent"
@@ -603,8 +508,7 @@
                     tools:listitem="@layout/item_home_pet"
                     tools:orientation="horizontal" />
 
-                <!-- ========================== Insight ==========================
-                     The one yellow card: the accent used as a fill with dark content, in both themes. -->
+                <!-- ========================== Insight ========================== -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/insightCard"
                     android:layout_width="match_parent"
@@ -662,8 +566,7 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ===================== Coming up this week =====================
-                     A light card: the header row, then one row per item (item_coming_up.xml). -->
+                <!-- ===================== Coming up this week ===================== -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/comingUpCard"
                     style="@style/PetCare.Card.Feature"
@@ -710,8 +613,7 @@
                             tools:itemCount="3"
                             tools:listitem="@layout/item_coming_up" />
 
-                        <!-- Shown instead of the rows when the week ahead is empty, so the card says so
-                             rather than showing a header over nothing. -->
+                        <!-- Shown instead of the rows when the week ahead is empty, so the card says. -->
                         <TextView
                             android:id="@+id/comingUpEmptyText"
                             style="@style/PetCare.Subtitle"
@@ -727,13 +629,7 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ======================== Quick actions ========================
-                     Three equal cards (weight 1 on 0dp widths, so "Log expense" is no wider than "Add
-                     pet"), each a circled "+" over its label. baselineAligned="false" because the
-                     children are cards, not lines of text.
-
-                     Each suppresses lint's UseCompoundDrawables suggestion: the "+" has its own
-                     circular background, which a compound drawable cannot carry. -->
+                <!-- ======================== Quick actions ======================== -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -841,11 +737,7 @@
 
             </LinearLayout>
 
-            <!--
-                Shown instead of the whole dashboard when the user has no pets: an icon, a sentence
-                saying what to do next, and a button that does it. On the very first launch this is the
-                only thing on the screen, so it has to carry the first action too.
-            -->
+            <!-- Shown instead of the whole dashboard when the user has no pets: an icon. -->
             <LinearLayout
                 android:id="@+id/emptyStateContainer"
                 style="@style/PetCare.EmptyState"
@@ -872,8 +764,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/home_empty_message" />
 
-                <!-- Filled, in the accent: on a screen with nothing else on it, this is the one thing
-                     to do. -->
+                <!-- Filled, in the accent: on a screen with nothing else on it, this is the one thing to do. -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/addFirstPetButton"
                     android:layout_width="wrap_content"

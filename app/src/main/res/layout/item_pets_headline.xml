@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The headline at the top of the Pets tab's list: "Two pets,\none household".
-
-    **Why it is a list item and not a TextView above the RecyclerView.** In the design the headline
-    scrolls away with the cards while the header above it stays put. Placing it inside the list —
-    as the first of three adapters joined by a ConcatAdapter, see PetsFragment — is what makes it
-    scroll as part of the content without wrapping the RecyclerView in a second scrolling container,
-    which would defeat the recycling that makes a long pet list cheap.
-
-    Just one TextView, so it is its own root: a wrapping ViewGroup would add a layer to measure and
-    nothing else. The bottom margin is the gap to the first card; RecyclerView honours item margins.
--->
+<!-- The headline at the top of the Pets tab's list: "Two pets,\none household". -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/headlineText"

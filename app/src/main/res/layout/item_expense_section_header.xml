@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The "ALL EXPENSES" heading in the Money tab's list, with the hairline above it that separates the
-    category legend from the expense cards.
-
-    A row in the RecyclerView rather than a fixed view, because it has to scroll away with the content
-    it introduces. The divider lives in this row rather than as a row of its own: it only ever appears
-    immediately above this heading, so the two are one piece of the page.
-
-    The heading is the app's quiet section label — small, upper-case, letter-spaced and muted — since
-    its job is to name what follows, not to compete with the cards beneath it.
--->
+<!-- The "ALL EXPENSES" heading in the Money tab's list. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"

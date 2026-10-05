@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The badge on the profile screen's "Name & details" row: a head and shoulders.
-
-    **Why these four rows carry icons at all.** The ACCOUNT card's rows used to be marked with
-    four-letter codes — "NAME", "MAIL", "PHON", "PASS" — set in the mono face inside the same rounded
-    square. They were legible but they were words, so the card read as a list of labels each announced
-    by a second, abbreviated label; "PHON" in particular is an abbreviation a reader has to decode. A
-    glyph is recognised rather than read, which is what a badge is for.
-
-    **No tint here.** The four icons are tinted by PetCare.Profile.BadgeIcon, so one style decides how
-    every badge on the card sits against its well — see styles.xml. A tint baked into the drawable would
-    quietly override it.
--->
+<!-- The badge on the profile screen's "Name & details" row: a head and shoulders. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

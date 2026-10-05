@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One message from the user: aligned right and visually distinct from the assistant's.
-
-    **How it is distinguished.** Two signals rather than one, because side alone is not enough for
-    someone scanning quickly, and colour alone is not enough for someone who cannot distinguish it:
-    the bubble sits on the opposite edge *and* is filled with the app's accent rather than the
-    surface. Its text colour is the accent's paired ink, so the contrast holds in both themes — see
-    the accent note in colors.xml.
-
-    See item_assistant_message.xml for why the card is wrapped in a frame rather than being the root.
--->
+<!-- One message from the user: aligned right and visually distinct from the assistant's. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"

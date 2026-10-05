@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One row of the Money tab's category legend, under the total card: a coloured dot, the category's
-    name, and on the right its share of the month and the amount — "■ Medication   89%  Rs 4,665".
-
-    No card around it. The legend is a key to the bar above, meant to be read as one compact block;
-    boxing each line would break it into separate-looking fragments and compete with the expense cards
-    further down.
-
-    A horizontal LinearLayout: four views in a row, the name taking the leftover width (weight 1) so
-    the percentage and amount are pushed flush right and line up in columns down the legend. That is
-    one attribute here; a ConstraintLayout would need a chain.
--->
+<!-- One row of the Money tab's category legend, under the total card: a coloured dot, the category's name. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -22,8 +11,7 @@
     android:paddingEnd="@dimen/spacing_xs"
     android:paddingBottom="6dp">
 
-    <!-- The dot, tinted per row with the category's colour. Decorative: the name beside it says
-         which category this is, so it is hidden from TalkBack. -->
+    <!-- The dot, tinted per row with the category's colour. -->
     <View
         android:id="@+id/categoryDot"
         android:layout_width="@dimen/expenses_legend_dot_size"

@@ -1,34 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One alert card on the notifications screen: a square type code ("VAX"), the alert's sentence in
-    bold over "Care reminder · 2h ago", and a red dot in the corner while it is unread.
-
-    A clickable MaterialCardView, so the whole card is one touch target with a ripple that follows its
-    rounded corners. Tapping marks the alert read and opens what it is about — the pet's detail screen
-    or the Tasks tab, depending on the alert (see NotificationsFragment).
-
-    **Two children stacked, not one.** A MaterialCardView *is* a FrameLayout, so the row of content
-    and the unread dot are laid on top of each other as siblings, the dot pinned to the top-right
-    corner with layout_gravity. That is the one arrangement a FrameLayout expresses in a single
-    attribute; making the dot a third child of the row below would tie its position to the text's
-    height, and it would drift down the card whenever a title wrapped to two lines.
-
-    **Colours are set per card, not here.** The card's fill and the badge's fill and text all depend on
-    whether the alert has been read, which this layout cannot know — NotificationsAdapter applies them.
-    What is fixed here is everything that does not vary, so a rebind only touches the few things that
-    do.
-
-    Inside the row, a horizontal LinearLayout with the text column taking the leftover width (width 0
-    plus weight 1), so a long sentence wraps within the column instead of pushing the badge off the
-    card. The same shape as the Money tab's expense card, deliberately: a badge, a title and a meta
-    line is the same kind of row, and it should read as one.
-
-    **The card's own measurements are a little tighter than the app's general card.** The padding, the
-    badge and the gap between cards each come down a step (alert_card_padding, alert_badge_size and
-    alert_card_spacing in dimens.xml, each with its reasoning). The title, the meta line and the unread
-    dot are deliberately untouched: those carry the information, and the card is still comfortably
-    above the 48dp a tap target needs.
--->
+<!-- One alert card on the notifications screen: a square type code ("VAX"). -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -47,8 +18,7 @@
         android:orientation="horizontal"
         android:padding="@dimen/alert_card_padding">
 
-        <!-- "VAX", "MISS", "MILE". Its fill and text colour are set by the adapter: the accent while
-             unread, the quiet surface once read. -->
+        <!-- "VAX", "MISS", "MILE". Its fill and text colour are set by the adapter: the accent while unread. -->
         <TextView
             android:id="@+id/alertBadgeText"
             style="@style/PetCare.Notifications.Badge"
@@ -81,18 +51,14 @@
 
         </LinearLayout>
 
-        <!-- Reserves the dot's width at the end of the row so a long unwrapped word can never run
-             underneath it. It is not the dot itself: the dot is stacked over the card below, because
-             it belongs to the card's corner rather than to this row's vertical centre. -->
+        <!-- Reserves the dot's width at the end of the row so a long unwrapped word can never run underneath it. -->
         <Space
             android:layout_width="@dimen/spacing_sm"
             android:layout_height="1dp" />
 
     </LinearLayout>
 
-    <!-- The unread mark. Hidden on a read card, and gone rather than invisible so it reserves nothing
-         when it is not there. Purely visual — its meaning is added to the card's own description
-         instead, so TalkBack does not stop on an unlabelled shape. -->
+    <!-- The unread mark. Hidden on a read card, and gone rather than invisible so it reserves nothing. -->
     <View
         android:id="@+id/alertUnreadDot"
         android:layout_width="@dimen/alert_dot_size"

@@ -29,20 +29,7 @@ import java.util.TimeZone
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/**
- * Draws the whole Money tab below the chips: the dark total card, the category legend, the "ALL
- * EXPENSES" heading and the expense cards.
- *
- * Part of the **View** layer: it binds [ExpenseListItem]s the ViewModel has already built and reports
- * taps, and decides nothing. Four row layouts share one list through RecyclerView *view types* —
- * [getItemViewType] labels each position, and the adapter keeps a separate recycling pool per type, so
- * the total card is never reused as an expense card.
- *
- * A [ListAdapter], which diffs each new list against the previous one off the main thread and redraws
- * only the rows that changed, rather than every row whenever the database emits.
- *
- * @property onExpenseClick Called with a tapped expense. A lambda so navigation stays in the fragment.
- */
+/** Draws the whole Money tab below the chips: the dark total card, the category legend. */
 class ExpenseAdapter(
     private val onExpenseClick: (Expense) -> Unit
 ) : ListAdapter<ExpenseListItem, RecyclerView.ViewHolder>(ExpenseDiffCallback) {
@@ -66,8 +53,7 @@ class ExpenseAdapter(
                 ItemExpenseSectionHeaderBinding.inflate(inflater, parent, false)
             )
             VIEW_TYPE_EXPENSE -> ExpenseViewHolder(ItemExpenseBinding.inflate(inflater, parent, false), onExpenseClick)
-            // Unreachable: getItemViewType only returns the constants above. Throwing means a future
-            // row type fails loudly here instead of silently drawing as the wrong thing.
+            // Unreachable: getItemViewType only returns the constants above.
             else -> throw IllegalArgumentException("Unknown expense view type: $viewType")
         }
     }
@@ -95,10 +81,7 @@ class ExpenseAdapter(
                 monthName(month.monthStart)
             )
 
-            // "Rs 5,240" at full size and ".00" at half, in one TextView. A RelativeSizeSpan scales just
-            // the characters it covers, so the two parts share a baseline and line up exactly as in
-            // the design — two TextViews side by side would need baseline constraints and would still
-            // drift at large font scales.
+            // "Rs 5,240" at full size and ".00" at half, in one TextView.
             val (whole, fraction) = splitCurrency(month.total, item.currencySymbol)
             binding.totalAmountText.text = SpannableStringBuilder(whole).apply {
                 val start = length
@@ -117,10 +100,7 @@ class ExpenseAdapter(
             binding.totalCaptionText.text = caption(month.expenseCount, month.petCount, month.changePercent, month.previousMonthStart)
         }
 
-        /**
-         * "3 expenses · 2 pets · +12% vs August". The comparison is left off when last month had no
-         * spending, since there is no percentage to give — see MonthlySpending.changePercent.
-         */
+        /** "3 expenses · 2 pets · +12% vs August". The comparison is left off when last month had no spending. */
         private fun caption(expenses: Int, pets: Int, change: Int?, previousMonthStart: Long): String {
             val resources = binding.root.resources
             val parts = mutableListOf(
@@ -140,14 +120,7 @@ class ExpenseAdapter(
             return parts.joinToString(resources.getString(R.string.expenses_caption_separator))
         }
 
-        /**
-         * The month's full name, "September", in the device's language.
-         *
-         * "LLLL" is the *standalone* month form, which matters in languages that inflect month names:
-         * Russian writes "сентябрь" on its own but "сентября" inside a date, and "MMMM" would give
-         * the second. Formatted in UTC because the month start is stored as midnight UTC — see
-         * MonthlySpending — and a zone west of Greenwich would otherwise print the previous month.
-         */
+        /** The month's full name, "September", in the device's language. */
         private fun monthName(monthStartUtc: Long): String =
             SimpleDateFormat("LLLL", Locale.getDefault())
                 .apply { timeZone = TimeZone.getTimeZone("UTC") }
@@ -163,8 +136,7 @@ class ExpenseAdapter(
             val context = binding.root.context
             val spend = item.spend
 
-            // The dot is a shape tinted per row, so one drawable serves every category and the dot
-            // always matches its bar segment exactly — both read the same colorRes.
+            // The dot is a shape tinted per row.
             binding.categoryDot.backgroundTintList =
                 ColorStateList.valueOf(ContextCompat.getColor(context, spend.category.colorRes()))
             binding.categoryNameText.setText(spend.category.labelRes())
@@ -188,16 +160,13 @@ class ExpenseAdapter(
             val expense = item.expense
             val categoryName = context.getString(expense.category.labelRes())
 
-            // Re-set on every bind: rows are recycled, and a listener left from a previous bind would
-            // open whichever expense used to occupy this card.
+            // Re-set on every bind: rows are recycled.
             binding.root.setOnClickListener { onExpenseClick(expense) }
 
-            // The category's emoji, not its name: the subtitle below already writes the category out
-            // in words, so the badge is free to be the fast-to-scan symbol of the pair.
+            // The category's emoji, not its name: the subtitle below already writes the category out in words.
             binding.expenseBadgeText.setText(expense.category.emojiRes())
             binding.expenseTitleText.text = expense.title
-            // "Medication · Sep 12, 2026". formatStoredDate reads the stored date in UTC and in the
-            // locale's own medium style, so it is the day the user picked, written their way.
+            // "Medication · Sep 12, 2026". formatStoredDate reads the stored date in UTC and in the locale's own medium style.
             binding.expenseSubtitleText.text = context.getString(
                 R.string.expenses_row_subtitle_format,
                 categoryName,
@@ -205,9 +174,7 @@ class ExpenseAdapter(
             )
             binding.expenseAmountText.text = formatCurrency(expense.amount, item.currencySymbol)
 
-            // Notes are not shown on the card — the design gives each expense exactly two lines —
-            // but they are still spoken, so a TalkBack user loses nothing the sighted user could open
-            // the expense to read.
+            // Notes are not shown on the card — the design gives each expense exactly two lines.
             val notes = expense.notes?.takeIf { it.isNotBlank() }
             binding.root.contentDescription = listOfNotNull(
                 expense.title,
@@ -218,10 +185,7 @@ class ExpenseAdapter(
         }
     }
 
-    /**
-     * Compares rows by [ExpenseListItem.itemId] for identity and by data-class equality for content,
-     * so a corrected receipt redraws its own card, the legend and the total — and nothing else.
-     */
+    /** Compares rows by [ExpenseListItem.itemId] for identity and by data-class equality for content. */
     private object ExpenseDiffCallback : DiffUtil.ItemCallback<ExpenseListItem>() {
         override fun areItemsTheSame(oldItem: ExpenseListItem, newItem: ExpenseListItem): Boolean =
             oldItem.itemId == newItem.itemId

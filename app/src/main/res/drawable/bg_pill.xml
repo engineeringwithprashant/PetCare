@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The capsule behind a pastel stat pill.
-
-    One shape, no colour of its own. `android:solid` is white so that the `android:backgroundTint`
-    each PetCare.Pill.* style applies comes through unaltered — a tint multiplies against what is
-    already there, so a coloured solid here would darken every pill that used it.
-
-    Describing the shape once and tinting it five ways is what keeps the pills' geometry identical:
-    with five separate drawables, one radius edited and four forgotten is a matter of time.
-
-    The radius is far larger than the pill can ever be tall, which is how a rounded rectangle
-    becomes a capsule — the corners meet in the middle of each end.
--->
+<!-- The capsule behind a pastel stat pill. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

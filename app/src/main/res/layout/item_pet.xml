@@ -1,28 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One pet's card on the Pets tab.
-
-    Two stacked panels inside one rounded card:
-      1. **The photo**, filling a tall area at the top, with the species marked in a small yellow chip
-         in its top-left corner.
-      2. **A light panel** underneath: the pet's name, who cares for them, and a row of three facts —
-         age, weight and how many tasks are due today — split by hairline dividers.
-
-    **Why the name is under the photo here but across it on the dashboard.** The dashboard's large
-    card is a glance, and writing on the photo saves height. This tab is where the user comes to look
-    at their animals, so the photo is left clear to be looked at, and the text moves onto the card's
-    own surface where it follows the theme like any other text — which also makes room for the stats
-    row the dashboard card has no space for.
-
-    **Why a vertical LinearLayout inside the card, not a ConstraintLayout.** Every child simply sits
-    below the one before it at full width. That is exactly what a vertical LinearLayout expresses,
-    and this layout is inflated for every visible row of a scrolling list, so it is kept as flat and
-    simple to measure as the design allows.
-
-    The card is the app's default MaterialCardView style (white surface in light mode, charcoal in
-    dark, soft shadow) with two additions: the larger pet-card corner radius, applied as a shape
-    overlay so ripple and shadow follow it, and a tap that opens the pet — attached by PetAdapter.
--->
+<!-- One pet's card on the Pets tab. -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -39,38 +16,12 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- ============================ The photo ============================
-             A ConstraintLayout used as a stack: its two children genuinely *overlap*, with the chip
-             drawn over the photo's corner, and they are painted in the order declared.
-
-             **Why not the FrameLayout this used to be.** The panel no longer has a fixed height. It
-             derives its shape from pet_photo_aspect_ratio — the single ratio every pet photo is
-             framed and drawn in — and a dimension ratio is something only ConstraintLayout can
-             express. Its height therefore follows the card's width on any screen, and always matches
-             the shape the user cropped their photo to. -->
+        <!-- ============================ The photo ============================ -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <!-- The photograph.
-
-                 Both dimensions are 0dp — "match constraints" — and the ratio resolves them: the
-                 width fills the card, and the ratio's "H," prefix tells ConstraintLayout to compute
-                 the *height* from it. The parent's wrap_content then takes its height from this
-                 view, so the whole panel is exactly one photo tall.
-
-                 centerCrop still, but it now has almost nothing left to do: the stored image is
-                 already this shape, so it scales to fit and trims nothing. It stays for the two
-                 cases where the image is *not* this shape — a photo saved before the app cropped on
-                 the way in, and the paw-print placeholder — where covering the panel is still the
-                 right behaviour.
-
-                 The dark ground (bg_pet_photo_dark) shows behind the paw-print placeholder when the
-                 pet has no photo. It is dark in both themes so adding a photo fills the panel in
-                 rather than changing its whole character — see the pet-card note in colors.xml.
-
-                 No rounding of its own: the MaterialCardView clips it to the card's rounded top
-                 corners. The bitmap is loaded asynchronously by ui/common/PetPhotoBinder.kt. -->
+            <!-- The photograph. -->
             <ImageView
                 android:id="@+id/petPhotoImage"
                 android:layout_width="0dp"
@@ -84,9 +35,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- The species chip, pinned to the photo's top-left corner. Upper-cased by its style
-                 rather than in the string, so the label stays correct in a language where blanket
-                 capitals are wrong. -->
+            <!-- The species chip, pinned to the photo's top-left corner. -->
             <TextView
                 android:id="@+id/speciesChip"
                 style="@style/PetCare.SpeciesChip.Accent"
@@ -99,17 +48,14 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- ========================== The light panel ==========================
-             Its colour is the card's own surface, so it is white in light mode and charcoal in dark
-             without this layout knowing which is in use. -->
+        <!-- ========================== The light panel ========================== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="@dimen/card_padding">
 
-            <!-- The pet's name: the card's heading. Two lines at most, so a long name wraps rather
-                 than being cut, but cannot push the stats row far down the card. -->
+            <!-- The pet's name: the card's heading. Two lines at most, so a long name wraps rather than being cut. -->
             <TextView
                 android:id="@+id/petNameText"
                 style="@style/PetCare.Headline"
@@ -120,9 +66,7 @@
                 android:textColor="?attr/colorOnSurface"
                 tools:text="Krishala Pant Thapa Baby" />
 
-            <!-- "Cared for by …" — smaller and muted, because it supports the name rather than
-                 competing with it. Hidden by the adapter until the owner's name has loaded, rather
-                 than reading "Cared for by" with nothing after it. -->
+            <!-- "Cared for by …" — smaller and muted, because it supports the name rather than competing with it. -->
             <TextView
                 android:id="@+id/caredForByText"
                 android:layout_width="match_parent"
@@ -134,19 +78,7 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="Cared for by Prashant" />
 
-            <!--
-                The three facts, in an outlined box (bg_pets_stat_row.xml).
-
-                Equal thirds via layout_weight="1" on zero-width children: the row is divided
-                evenly whatever each value's length, so "0 mo" and "25 kg" line up card after card
-                instead of every card's columns landing somewhere different.
-
-                The dividers are 1dp Views between the blocks with match_parent height — see
-                PetCare.PetStat.Divider for how that resolves inside a wrap_content row.
-
-                baselineAligned="false" because the children are blocks, not single lines of text;
-                there is no baseline worth aligning, and measuring one costs an extra pass.
-            -->
+            <!-- The three facts, in an outlined box (bg_pets_stat_row.xml). -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

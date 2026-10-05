@@ -1,23 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One saved delegation contact, on the profile screen: a circular initial, their name and what they
-    help with, and a small role pill on the right.
-
-    **Why a separate file inflated in code rather than a RecyclerView.** The contacts card sits inside
-    the profile screen's NestedScrollView, and a RecyclerView nested in a scrolling parent has to be
-    given an unbounded height to avoid its own scrolling fighting the page's — at which point it
-    recycles nothing and is a LinearLayout with extra steps. The list is also two or three rows at
-    most. So ProfileFragment inflates one of these per contact into a plain container; this file is
-    what keeps every row identical, exactly as an adapter's item layout would.
-
-    The root is the row itself rather than a wrapper, so the container can add and remove these
-    directly and the vertical rhythm comes from the shared PetCare.Profile.Row style — the same style
-    the account and security rows use, which is what makes all five cards read as one list.
-
-    Clickable, because the whole row is the control: tapping it opens the Tasks tab with this person
-    already chosen as the recipient. The remove button on the end is a second, smaller target inside
-    it — see the note there.
--->
+<!-- One saved delegation contact, on the profile screen: a circular initial, their name and what they help. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -26,19 +8,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <!-- The contact's first initial. A letter in a circle is how a person is drawn everywhere, which
-         is what tells these rows apart from the square code badges on the account card above — see
-         bg_profile_avatar.xml. Purely decorative: the name is written immediately beside it, so a
-         screen reader announcing the letter as well would only repeat it. -->
+    <!-- The contact's first initial. A letter in a circle is how a person is drawn everywhere. -->
     <TextView
         android:id="@+id/contactInitial"
         style="@style/PetCare.Profile.Avatar"
         android:importantForAccessibility="no"
         tools:text="S" />
 
-    <!-- The name and the note. layout_weight="1" on a zero width is LinearLayout's "take everything
-         left over", which is what keeps the pill pinned to the end however long a name turns out to
-         be, and lets a long note wrap rather than pushing the pill off the screen. -->
+    <!-- The name and the note. layout_weight="1" on a zero width is LinearLayout's "take everything left. -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -54,8 +31,7 @@
             android:layout_height="wrap_content"
             tools:text="Sysy" />
 
-        <!-- What they help with, in the user's own words, or a prompt saying what tapping does when
-             they did not write one. -->
+        <!-- What they help with, in the user's own words, or a prompt saying what tapping does. -->
         <TextView
             android:id="@+id/contactNote"
             style="@style/PetCare.Profile.RowSubtitle"
@@ -65,9 +41,7 @@
 
     </LinearLayout>
 
-    <!-- "HELPER". A label rather than a permission: this app has one account and grants nobody
-         anything, so the pill says what the person does, not what they may do. See
-         DelegationContactStore. -->
+    <!-- "HELPER". A label rather than a permission: this app has one account and grants nobody anything. -->
     <TextView
         android:id="@+id/contactRolePill"
         style="@style/PetCare.Profile.StatusPill.Neutral"
@@ -75,14 +49,7 @@
         android:layout_height="wrap_content"
         android:text="@string/profile_contact_role" />
 
-    <!--
-        Removing this contact.
-
-        A borderless icon button rather than a swipe: the row's own tap already does something, and a
-        swipe gesture on a row inside a vertically scrolling page is awkward to discover and easy to
-        trigger by accident. Its content description names the person, so a screen reader announces
-        "Remove Sysy" rather than four identical "Remove" buttons down the card.
-    -->
+    <!-- Removing this contact. -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/contactRemoveButton"
         style="@style/Widget.Material3.Button.IconButton"

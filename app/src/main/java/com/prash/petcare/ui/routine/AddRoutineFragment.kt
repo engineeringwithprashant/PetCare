@@ -18,17 +18,7 @@ import com.prash.petcare.databinding.FragmentAddRoutineBinding
 import com.prash.petcare.ui.common.setToolbarTitle
 import kotlinx.coroutines.launch
 
-/**
- * Form for creating a care routine, or renaming and rescheduling an existing one.
- *
- * A routine is the schedule a group of tasks share — "every morning", "every Sunday". The class keeps
- * its original "Add" name because creating is still what it is mostly for; editing arrives through
- * the same destination with a real `routineId`, from the "Edit" item on a routine card's menu on the
- * pet detail screen. Which mode is in use is entirely the ViewModel's to interpret — this fragment
- * renders whatever state comes back.
- *
- * As the **View** in MVVM it holds no logic: validation and persistence live in [RoutineViewModel].
- */
+/** Form for creating a care routine, or renaming and rescheduling an existing one. */
 class AddRoutineFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
@@ -61,11 +51,7 @@ class AddRoutineFragment : Fragment() {
     }
 
     private fun setUpListeners() {
-        /*
-         * The group reports both the button being selected and the one being cleared, so the
-         * `isChecked` flag is tested — without it the schedule would be set twice on every tap,
-         * once from the option the user chose and once from the option they moved away from.
-         */
+        /* The group reports both the button being selected and the one being cleared. */
         binding.scheduleToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
 
@@ -110,13 +96,11 @@ class AddRoutineFragment : Fragment() {
 
         binding.routineNameInputLayout.error = state.titleError?.let { getString(it) }
 
-        // Reflects the ViewModel's choice back onto the toggle. `check` is a no-op when the right
-        // button is already selected, so this does not fight the user or loop with the listener.
+        // Reflects the ViewModel's choice back onto the toggle.
         val buttonId = when (state.repeatUnit) {
             RepeatUnit.DAY -> R.id.dailyButton
             RepeatUnit.WEEK -> R.id.weeklyButton
-            // The form offers only daily and weekly; anything else falls back to the daily button
-            // so the group is never left with nothing selected.
+            // The form offers only daily and weekly; anything else falls back to the daily button.
             else -> R.id.dailyButton
         }
         binding.scheduleToggleGroup.check(buttonId)
@@ -127,12 +111,10 @@ class AddRoutineFragment : Fragment() {
 
     private fun handleEvent(event: RoutineEvent) {
         when (event) {
-            // Written once, from a one-shot event, so it never overwrites the user's typing. After a
-            // rotation the EditText restores its own text, and the event is not repeated.
+            // Written once, from a one-shot event, so it never overwrites the user's typing.
             is RoutineEvent.PrefillForm -> binding.routineNameInput.setText(event.title)
 
-            // The pet detail screen behind this one is already observing the database, so it shows
-            // the new or changed routine as soon as this screen closes.
+            // The pet detail screen behind this one is already observing the database.
             is RoutineEvent.Saved -> findNavController().navigateUp()
 
             is RoutineEvent.Error ->

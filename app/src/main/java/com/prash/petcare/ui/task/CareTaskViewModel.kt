@@ -21,19 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-/**
- * The parts of the care task form the ViewModel owns.
- *
- * The typed title, supplies and notes stay in their EditTexts, which restore themselves across
- * rotation. Held here are the two values chosen from pickers, plus errors and progress.
- *
- * @property isEditMode True when changing an existing task, false when creating one. Controls the
- *   screen title and whether the delete button appears.
- * @property category Which kind of care this is; the checklist groups by it.
- * @property timeOfDayMinutes Chosen time as minutes since midnight, or null if not yet picked.
- * @property isLoading True while the owning routine, and any existing task, are being fetched.
- * @property isSaving True while a write is in flight.
- */
+/** The parts of the care task form the ViewModel owns. */
 data class CareTaskFormState(
     val isEditMode: Boolean = false,
     val category: TaskCategory = TaskCategory.FEEDING,
@@ -44,15 +32,7 @@ data class CareTaskFormState(
     @param:StringRes val timeError: Int? = null
 )
 
-/**
- * Starting values for a *new* task, supplied by the screen that opened the form.
- *
- * Used by "Book a visit" on the Places tab, which opens this form already reading "Visit Patan Animal
- * Hospital", with the clinic's details in the notes and the category set to a vet visit. The user
- * still picks the time and presses save, so a prefill is a suggestion, not a saved record.
- *
- * Ignored in edit mode: an existing task's own values always win over anything passed in.
- */
+/** Starting values for a new task, supplied by the screen that opened the form. */
 data class CareTaskPrefill(
     val title: String?,
     val notes: String?,
@@ -62,19 +42,10 @@ data class CareTaskPrefill(
 /** A one-off occurrence the task form reacts to exactly once. */
 sealed interface CareTaskEvent {
 
-    /**
-     * Carries a loaded task so the fragment can fill in the text fields.
-     *
-     * Sent as an event rather than exposed as state precisely because it must happen once. Writing
-     * these values on every state emission would overwrite whatever the user was part-way through
-     * typing.
-     */
+    /** Carries a loaded task so the fragment can fill in the text fields. */
     data class PrefillForm(val task: CareTask) : CareTaskEvent
 
-    /**
-     * Carries a [CareTaskPrefill]'s text for a new task, for the same once-only reason as
-     * [PrefillForm]. A separate event because there is no task row to send yet.
-     */
+    /** Carries a [CareTaskPrefill]'s text for a new task, for the same once-only reason as [PrefillForm]. */
     data class PrefillDraft(val title: String, val notes: String) : CareTaskEvent
 
     /** The task was created or updated; the screen should close. */
@@ -87,25 +58,7 @@ sealed interface CareTaskEvent {
     data class Error(@param:StringRes val messageRes: Int) : CareTaskEvent
 }
 
-/**
- * Backs the add/edit care task form.
- *
- * One ViewModel serves both modes, distinguished by [taskId]: [NO_TASK_ID] means "create a new
- * task", anything else means "edit that one". Splitting this in two would duplicate all the
- * validation and scheduling arithmetic for the sake of one branch.
- *
- * A task records what to do and at what time of day, never on which date — the routine it belongs
- * to decides which days it applies to, which is what lets one row stand for "every morning".
- *
- * The pet is read from the routine rather than passed in separately, so the two can never disagree
- * about which animal a task is for.
- *
- * @param careTaskRepository Where the task is written, updated or removed.
- * @param careRoutineRepository Used to look up the owning routine.
- * @param routineId The routine this task belongs to.
- * @param taskId Which task to edit, or [NO_TASK_ID] to create one.
- * @param prefill Starting values for a new task, or null for an empty form.
- */
+/** Backs the add/edit care task form. */
 class CareTaskViewModel(
     private val careTaskRepository: CareTaskRepository,
     private val careRoutineRepository: CareRoutineRepository,
@@ -120,10 +73,7 @@ class CareTaskViewModel(
     /** The owning routine, needed for its pet and its start date. */
     private var routine: CareRoutine? = null
 
-    /**
-     * The task as it was loaded, kept so a save can preserve the fields the form does not show —
-     * the id, the pet, and whether it has been ticked off today.
-     */
+    /** The task as it was loaded, kept so a save can preserve the fields the form does not show — the id, the pet. */
     private var loadedTask: CareTask? = null
 
     private val _formState = MutableStateFlow(CareTaskFormState(isEditMode = isEditMode))
@@ -136,12 +86,7 @@ class CareTaskViewModel(
         load()
     }
 
-    /**
-     * Fetches the owning routine, and the task itself when editing.
-     *
-     * Both happen in one coroutine, in order, because the routine has to exist before there is any
-     * point looking at the task.
-     */
+    /** Fetches the owning routine, and the task itself when editing. */
     private fun load() {
         viewModelScope.launch {
             val loadedRoutine = careRoutineRepository.getRoutine(routineId)
@@ -157,7 +102,6 @@ class CareTaskViewModel(
 
             if (!isEditMode) {
                 // A new task starts from the defaults — or from what the opening screen suggested.
-                // The category is state (it lives in a dropdown); the text goes out once as an event.
                 _formState.value = _formState.value.copy(
                     isLoading = false,
                     category = prefill?.category ?: _formState.value.category
@@ -180,8 +124,7 @@ class CareTaskViewModel(
 
             loadedTask = task
 
-            // Picker-chosen values become state, because the views holding them cannot restore
-            // themselves the way an EditText can.
+            // Picker-chosen values become state.
             _formState.value = _formState.value.copy(
                 isLoading = false,
                 category = task.category,
@@ -236,16 +179,13 @@ class CareTaskViewModel(
 
             val minutes = state.timeOfDayMinutes ?: return@launch
 
-            // The anchor date: the routine's own start day, at this task's time of day. Recomputed
-            // on every save so that changing the time keeps the anchor consistent with it.
+            // The anchor date: the routine's own start day, at this task's time of day.
             val dueAt = CareSchedule.startOfDay(owningRoutine.startDate) +
                 minutes * MILLIS_PER_MINUTE
 
             val existing = loadedTask
 
-            // `copy` on the loaded task keeps id, petId and createdAt untouched, and preserves
-            // whether it has already been ticked off today — editing a task's wording should not
-            // quietly mark this morning's feed as undone.
+            // `copy` on the loaded task keeps id, petId and createdAt untouched.
             val task = existing?.copy(
                 title = trimmedTitle,
                 notes = notes.trimToNull(),
@@ -275,13 +215,7 @@ class CareTaskViewModel(
         }
     }
 
-    /**
-     * Deletes the task being edited.
-     *
-     * The confirmation dialog is the fragment's responsibility; by the time this runs the user has
-     * already agreed. Unlike pausing a routine there is no reversible alternative here — a task is
-     * either part of the routine or it is not.
-     */
+    /** Deletes the task being edited. */
     fun delete() {
         val task = loadedTask ?: return
 

@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The knob of the checklist switch on the record screen.
-
-    **White when on**, as the design draws it: a white disc is the one thing that reads clearly against
-    the accent track in either theme, where Material's default — the near-black it pairs with the
-    accent everywhere else — would make the knob merge with the dark page behind the switch in night
-    mode.
-
-    **The theme's outline colour when off**, so the knob is still plainly visible in the empty groove.
-    A solid colour rather than the on-surface ink at reduced opacity, which is the rule the app follows
-    throughout: an alpha here would let the card show through the knob and change its shade with
-    whatever sits behind the row.
--->
+<!-- The knob of the checklist switch on the record screen. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item

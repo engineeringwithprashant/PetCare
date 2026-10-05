@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The step bar on the two-factor screen: three short segments, the completed ones in yellow, with
-    "STEP 2 OF 2" at the right-hand end. (The password reset is a single step and has no bar.)
-
-    Included with an id, so each screen reaches it as `binding.stepProgress` and calls
-    `showStep(step, total)` (ui/auth/AuthScreens.kt) rather than setting the segments and the label
-    separately — the two can then never disagree.
-
-    The bar is the app's existing SegmentedProgressView from the Tasks tab, reused as-is: it already
-    draws "n segments, the first k filled" with rounded ends in the accent colour. Only its height
-    differs here, and that view honours an exact layout_height.
-
-    Horizontal LinearLayout: the bar takes every pixel the label does not (width 0dp + weight 1), which
-    keeps the label pinned to the right edge whatever its translated length.
--->
+<!-- The step bar on the two-factor screen: three short segments, the completed ones in yellow. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"

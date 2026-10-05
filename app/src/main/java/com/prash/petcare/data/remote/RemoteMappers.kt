@@ -12,31 +12,9 @@ import com.prash.petcare.data.local.entity.PlaceCategory
 import com.prash.petcare.data.local.entity.RepeatUnit
 import com.prash.petcare.data.local.entity.TaskCategory
 
-/**
- * Translates between the app's Room entities and the plain maps stored in Firestore.
- *
- * **Why the conversion is written out by hand.** Firestore can serialise an object automatically,
- * and for a throwaway app that would be less code. It is avoided here for three reasons:
- *  - it would silently tie the database's column names to the wire format, so renaming a Kotlin
- *    property — something Room lets you do freely — would quietly orphan every document already
- *    stored;
- *  - reflection-based deserialisation throws when a document does not match the class, which is
- *    exactly the case that must be survivable: documents are written by other installs, possibly
- *    running an older version of the app;
- *  - it gives nowhere to make deliberate decisions about what should *not* be sent, of which
- *    [Pet.photoPath] below is the important one.
- *
- * **Reading is total, writing is partial.** Every `...FromRemote` function returns null rather than
- * throwing when a document is missing something it cannot do without, so one malformed document
- * costs one record instead of the whole sync.
- */
+/** Translates between the app's Room entities and the plain maps stored in Firestore. */
 
-// ------------------------------------------------------------------------------------------------
-// Field names
-//
-// Declared once as constants rather than typed as literals at each use: a typo in a string literal
-// is not a compile error, and one misspelled key would write a field that is never read back.
-// ------------------------------------------------------------------------------------------------
+// Field names.
 
 private const val FIELD_ID = "id"
 private const val FIELD_OWNER_ID = "ownerId"
@@ -76,14 +54,7 @@ private const val FIELD_OPENING_MINUTES = "openingMinutes"
 private const val FIELD_CLOSING_MINUTES = "closingMinutes"
 private const val FIELD_IS_PINNED = "isPinned"
 
-// ------------------------------------------------------------------------------------------------
-// Reading helpers
-//
-// Firestore has no integer type: every number comes back as a Long or a Double regardless of what
-// was written, so `as Int` on a field written from an Int would throw. Going through Number and
-// converting is what makes reading a document robust against that, and against a field that is
-// missing or holds the wrong type altogether — all of which yield null rather than an exception.
-// ------------------------------------------------------------------------------------------------
+// Reading helpers.
 
 private fun Map<String, Any?>.longOrNull(key: String): Long? = (this[key] as? Number)?.toLong()
 private fun Map<String, Any?>.intOrNull(key: String): Int? = (this[key] as? Number)?.toInt()
@@ -92,30 +63,15 @@ private fun Map<String, Any?>.stringOrNull(key: String): String? = this[key] as?
 private fun Map<String, Any?>.booleanOr(key: String, fallback: Boolean): Boolean =
     this[key] as? Boolean ?: fallback
 
-/**
- * Rebuilds an enum constant from the name stored in the document.
- *
- * Falls back rather than throwing when the name is unrecognised, which happens for real: a newer
- * version of the app may have added a category this build has never heard of, and one unfamiliar
- * constant is not a reason to drop the record entirely.
- */
+/** Rebuilds an enum constant from the name stored in the document. */
 private inline fun <reified T : Enum<T>> Map<String, Any?>.enumOr(key: String, fallback: T): T {
     val name = stringOrNull(key) ?: return fallback
     return enumValues<T>().firstOrNull { it.name == name } ?: fallback
 }
 
-// ------------------------------------------------------------------------------------------------
-// Pet
-// ------------------------------------------------------------------------------------------------
+// Pet.
 
-/**
- * Converts a pet into the document written to Firestore.
- *
- * [Pet.photoPath] is deliberately absent. It is an absolute path into *this* device's internal
- * storage, so on any other install it would point at a file that does not exist — a broken
- * reference is worse than no reference. The photo itself would need uploading to somewhere like
- * Firebase Storage to travel with the pet, which is beyond what this sync layer does.
- */
+/** Converts a pet into the document written to Firestore. */
 fun Pet.toRemoteMap(): Map<String, Any?> = mapOf(
     FIELD_ID to id,
     FIELD_OWNER_ID to ownerId,
@@ -134,14 +90,7 @@ fun Pet.toRemoteMap(): Map<String, Any?> = mapOf(
     FIELD_UPDATED_AT to updatedAt
 )
 
-/**
- * Rebuilds a pet from a document, or returns null if it cannot be trusted.
- *
- * @param ownerId The local account the pulled data belongs to. Taken from the sync session rather
- *   than from the document, because the owner id in Firestore was assigned by whichever device
- *   wrote it and need not be this install's id for the same person. Everything else about the row
- *   is the user's own data and is taken as written.
- */
+/** Rebuilds a pet from a document, or returns null if it cannot be trusted. */
 fun petFromRemote(document: Map<String, Any?>, ownerId: Long): Pet? {
     val id = document.longOrNull(FIELD_ID) ?: return null
     val name = document.stringOrNull(FIELD_NAME) ?: return null
@@ -151,15 +100,12 @@ fun petFromRemote(document: Map<String, Any?>, ownerId: Long): Pet? {
         ownerId = ownerId,
         name = name,
         species = document.enumOr(FIELD_SPECIES, PetSpecies.OTHER),
-        // Documents uploaded before gender existed have no such field, and a newer app version
-        // might one day send a value this build does not know. Both fall back to UNKNOWN — "not
-        // recorded" is the honest reading of either, and neither is a reason to drop the pet.
+        // Documents uploaded before gender existed have no such field.
         gender = document.enumOr(FIELD_GENDER, PetGender.UNKNOWN),
         breed = document.stringOrNull(FIELD_BREED),
         dateOfBirth = document.longOrNull(FIELD_DATE_OF_BIRTH),
         weightKg = document.doubleOrNull(FIELD_WEIGHT_KG),
-        // Left null here and restored from the local row by the sync layer, so pulling an edit
-        // made elsewhere does not wipe the photo this device has on disk.
+        // Left null here and restored from the local row by the sync layer.
         photoPath = null,
         notes = document.stringOrNull(FIELD_NOTES),
         dietaryNotes = document.stringOrNull(FIELD_DIETARY_NOTES),
@@ -170,9 +116,7 @@ fun petFromRemote(document: Map<String, Any?>, ownerId: Long): Pet? {
     )
 }
 
-// ------------------------------------------------------------------------------------------------
-// CareRoutine
-// ------------------------------------------------------------------------------------------------
+// CareRoutine.
 
 fun CareRoutine.toRemoteMap(): Map<String, Any?> = mapOf(
     FIELD_ID to id,
@@ -200,8 +144,7 @@ fun careRoutineFromRemote(document: Map<String, Any?>): CareRoutine? {
         title = title,
         description = document.stringOrNull(FIELD_DESCRIPTION),
         category = document.enumOr(FIELD_CATEGORY, TaskCategory.OTHER),
-        // A zero or negative interval would mean "repeats every no time at all" and would send the
-        // schedule arithmetic into a loop, so anything below 1 is corrected to 1.
+        // A zero or negative interval would mean "repeats every no time at all" and would send the schedule arithmetic into a loop.
         repeatInterval = (document.intOrNull(FIELD_REPEAT_INTERVAL) ?: 1).coerceAtLeast(1),
         repeatUnit = document.enumOr(FIELD_REPEAT_UNIT, RepeatUnit.DAY),
         startDate = document.longOrNull(FIELD_START_DATE) ?: System.currentTimeMillis(),
@@ -211,9 +154,7 @@ fun careRoutineFromRemote(document: Map<String, Any?>): CareRoutine? {
     )
 }
 
-// ------------------------------------------------------------------------------------------------
-// CareTask
-// ------------------------------------------------------------------------------------------------
+// CareTask.
 
 fun CareTask.toRemoteMap(): Map<String, Any?> = mapOf(
     FIELD_ID to id,
@@ -239,8 +180,7 @@ fun careTaskFromRemote(document: Map<String, Any?>): CareTask? {
     return CareTask(
         id = id,
         petId = petId,
-        // Genuinely optional, unlike petId: the SET_NULL rule on the routine foreign key means a
-        // task can outlive its routine, so a null here is ordinary rather than a broken document.
+        // Genuinely optional, unlike petId.
         routineId = document.longOrNull(FIELD_ROUTINE_ID),
         title = title,
         notes = document.stringOrNull(FIELD_NOTES),
@@ -255,9 +195,7 @@ fun careTaskFromRemote(document: Map<String, Any?>): CareTask? {
     )
 }
 
-// ------------------------------------------------------------------------------------------------
-// Expense
-// ------------------------------------------------------------------------------------------------
+// Expense.
 
 fun Expense.toRemoteMap(): Map<String, Any?> = mapOf(
     FIELD_ID to id,
@@ -275,8 +213,7 @@ fun expenseFromRemote(document: Map<String, Any?>): Expense? {
     val id = document.longOrNull(FIELD_ID) ?: return null
     val petId = document.longOrNull(FIELD_PET_ID) ?: return null
     val title = document.stringOrNull(FIELD_TITLE) ?: return null
-    // An expense with no amount is not a usable spending record — it would silently distort every
-    // total it appeared in, which is worse than being absent from them.
+    // An expense with no amount is not a usable spending record.
     val amount = document.doubleOrNull(FIELD_AMOUNT) ?: return null
 
     return Expense(
@@ -292,18 +229,9 @@ fun expenseFromRemote(document: Map<String, Any?>): Expense? {
     )
 }
 
-// ------------------------------------------------------------------------------------------------
-// Place
-// ------------------------------------------------------------------------------------------------
+// Place.
 
-/**
- * Converts a saved place into the document written to Firestore.
- *
- * The coordinates are written as two plain numbers rather than as a Firestore `GeoPoint`. A GeoPoint
- * would only pay for itself with geo-queries ("places within 2 km"), which this app never asks
- * Firestore — distances are worked out on the device — and two numbers keep the document readable
- * and mirror the Room columns one-to-one, like every other field here.
- */
+/** Converts a saved place into the document written to Firestore. */
 fun Place.toRemoteMap(): Map<String, Any?> = mapOf(
     FIELD_ID to id,
     FIELD_OWNER_ID to ownerId,
@@ -321,19 +249,7 @@ fun Place.toRemoteMap(): Map<String, Any?> = mapOf(
     FIELD_UPDATED_AT to updatedAt
 )
 
-/**
- * Rebuilds a place from a document, or returns null if it cannot be trusted.
- *
- * The coordinates are required, not defaulted. Falling back to 0,0 would quietly put the user's vet
- * in the Gulf of Guinea, and every distance on the Places tab would be thousands of kilometres out —
- * a missing place is far less confusing than a wrong one.
- *
- * Opening hours outside a real day (below 0 or at/after 24:00) are dropped to null rather than kept,
- * since the "open now" check would otherwise compare against a time that never comes round.
- *
- * @param ownerId The local account the pulled data belongs to — see [petFromRemote] for why it is
- *   taken from the sync session rather than from the document.
- */
+/** Rebuilds a place from a document, or returns null if it cannot be trusted. */
 fun placeFromRemote(document: Map<String, Any?>, ownerId: Long): Place? {
     val id = document.longOrNull(FIELD_ID) ?: return null
     val name = document.stringOrNull(FIELD_NAME) ?: return null
@@ -344,8 +260,7 @@ fun placeFromRemote(document: Map<String, Any?>, ownerId: Long): Place? {
         id = id,
         ownerId = ownerId,
         name = name,
-        // STORE is the least specific category, so an unrecognised one from a newer app version
-        // lands somewhere harmless rather than claiming to be a vet.
+        // STORE is the least specific category.
         category = document.enumOr(FIELD_CATEGORY, PlaceCategory.STORE),
         area = document.stringOrNull(FIELD_AREA),
         latitude = latitude,

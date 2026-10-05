@@ -15,17 +15,7 @@ import com.prash.petcare.ui.common.formatTimeOfDay
 import java.util.Date
 import java.util.Locale
 
-/**
- * Draws the rows of the dashboard's "Coming up this week" card (item_coming_up.xml).
- *
- * Part of the **View** layer: [HomeDashboard.comingUp] has already decided which tasks appear and in
- * what order; this only turns each [ComingUpItem] into text and colour and reports taps.
- *
- * A [ListAdapter] so the minute-by-minute rebuilds of the dashboard's state leave unchanged rows alone —
- * see [HomePetAdapter] for why that matters on this screen.
- *
- * @property onItemClick Called with the routine id of the tapped row, which the fragment opens.
- */
+/** Draws the rows of the dashboard's "Coming up this week" card (item_coming_up.xml). */
 class ComingUpAdapter(
     private val onItemClick: (routineId: Long) -> Unit
 ) : ListAdapter<ComingUpItem, ComingUpAdapter.RowViewHolder>(ComingUpDiffCallback) {
@@ -45,13 +35,7 @@ class ComingUpAdapter(
         private val onItemClick: (routineId: Long) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        /**
-         * The two date formats for the left-hand column.
-         *
-         * `android.icu` rather than `java.text`: ICU is part of the platform from API 24 (the app's
-         * minimum) and follows the locale's own abbreviations. Created per holder rather than per bind,
-         * because formatters are comparatively expensive to build and a holder binds many times.
-         */
+        /** The two date formats for the left-hand column. */
         private val dayOfMonthFormat = android.icu.text.SimpleDateFormat("d", Locale.getDefault())
         private val weekdayFormat = android.icu.text.SimpleDateFormat("EEE", Locale.getDefault())
 
@@ -60,8 +44,7 @@ class ComingUpAdapter(
             val task = item.task
             val day = Date(item.dayStart)
 
-            // Every row shown has a routine — HomeDashboard.comingUp only lists tasks it could find one
-            // for — but the id is nullable on the entity, so the tap is simply not attached without it.
+            // Every row shown has a routine — HomeDashboard.comingUp only lists tasks it could find.
             val routineId = task.routineId
             binding.root.setOnClickListener { routineId?.let(onItemClick) }
 
@@ -70,10 +53,7 @@ class ComingUpAdapter(
 
             binding.titleText.text = task.title
 
-            // "Patan Animal Hospital · 11:00 AM" or "Grooming routine · 6:00 PM". The first line of the
-            // task's notes is used as its location when there is one — a visit booked from the Places
-            // tab starts its notes with where the place is — and the routine's name otherwise. A task
-            // with no time of day reads "· due", as the design shows.
+            // "Patan Animal Hospital · 11:00 AM" or "Grooming routine · 6:00 PM".
             val where = task.notes
                 ?.lineSequence()
                 ?.map { it.trim() }
@@ -84,14 +64,11 @@ class ComingUpAdapter(
             binding.subtitleText.text =
                 listOf(where, time).joinToString(context.getString(R.string.home_meta_separator))
 
-            // The bar's colour says what kind of care it is at a glance. Applied as a tint over bg_pill,
-            // so the capsule shape is described once in the drawable.
+            // The bar's colour says what kind of care it is at a glance.
             binding.categoryBar.backgroundTintList =
                 ColorStateList.valueOf(ContextCompat.getColor(context, task.category.barColorRes()))
 
             // One sentence for TalkBack instead of five fragments: "Coat brush for Krishala, Friday.
-            // Open routine." The full weekday is used here because an abbreviation read aloud is
-            // noise.
             val spokenDay = android.icu.text.SimpleDateFormat("EEEE", Locale.getDefault()).format(day)
             binding.root.contentDescription =
                 context.getString(R.string.cd_coming_up_row, task.title, item.petName, spokenDay)
@@ -108,10 +85,7 @@ class ComingUpAdapter(
     }
 }
 
-/**
- * The colour of the thin bar beside a "coming up" row, by care category — see the care category
- * colours in colors.xml.
- */
+/** The colour of the thin bar beside a "coming up" row, by care category. */
 @ColorRes
 private fun TaskCategory.barColorRes(): Int = when (this) {
     TaskCategory.GROOMING -> R.color.care_category_grooming

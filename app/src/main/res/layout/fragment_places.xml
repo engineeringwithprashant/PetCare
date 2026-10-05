@@ -1,32 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The Places tab: the user's saved vets, groomers, parks and shops, by distance.
-
-    Top to bottom:
-      - **The header** (monogram, "Places", theme toggle, pet count), shared with the other tabs. Fixed
-        above the scrolling page: it is identity and controls, not content.
-      - Everything else scrolls as one page:
-          · the **map card** — a real, interactive Google map centred on the selected place, with its
-            name and distance on a pill over the top and "Directions" / "Google maps" over the foot;
-          · the **category chips** — All, Vet, Grooming, Park, Store;
-          · the **featured place** card — name and "open now", hours and phone, notes, the GPS tag and
-            "open in maps", then "book a visit" and "pinned";
-          · the **saved places** list, tapping a row to feature it;
-          · "+ Add a place".
-
-    **Why one NestedScrollView with the list inside it,** rather than a RecyclerView for the whole page:
-    the same reasoning as fragment_checklist.xml. The map, chips and card are a handful of stateful
-    views, not rows, and the list of places a household saves is short and bounded, so the list is
-    wrap_content with nestedScrollingEnabled="false" and the page does all the scrolling.
-
-    **Why a CoordinatorLayout at the root:** so Snackbars ("No maps app is installed…") attach here and
-    appear above the bottom navigation bar rather than on top of it — see fragment_checklist.xml.
-
-    **Why the page's bottom inset is so deep.** The floating navigation bar is drawn *over* the
-    scrolling content, so without it the page's last rows — the "+ ADD PLACE" pill in the saved-places
-    heading, and the "+ ADD A PLACE" row at the foot — can come to rest underneath the bar, where they
-    cannot be read or tapped. The same figure and the same reason as the dashboard's.
--->
+<!-- The Places tab: the user's saved vets, groomers, parks and shops, by distance. -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -58,18 +31,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- ============================== Map card ==============================
-                     A real interactive map, centred on whichever place is selected and with a dot
-                     marking it. See PlaceMapView for why it is MapLibre rather than the Google Maps
-                     SDK, and MapStyles for where its tiles and cartography come from.
-
-                     The card's own background is the map's *loading ground*: it is what the user sees
-                     for the second or two before the first tiles arrive. A theme role rather than a
-                     fixed colour, because a map is a surface being drawn on and so follows the page —
-                     pale sage by day, deep slate by night.
-
-                     clipToOutline (via the card's shape) is what keeps the square map surface inside
-                     the 28dp corners; without it the map's corners would poke out past the card's. -->
+                <!-- ============================== Map card ============================== -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/mapCard"
                     android:layout_width="match_parent"
@@ -81,15 +43,12 @@
                     app:cardElevation="@dimen/card_elevation"
                     app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge">
 
-                    <!-- The map fills the card; the two overlays are laid over it, which is what the
-                         FrameLayout is for — they are *on* the map, not above or below it. -->
+                    <!-- The map fills the card; the two overlays are laid. -->
                     <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
 
-                        <!-- attributionBottomInset lifts the map's credit line above the two buttons
-                             along the foot of this card, which would otherwise be drawn over it. See
-                             the styleable in attrs.xml. -->
+                        <!-- attributionBottomInset lifts the map's credit line above the two buttons along the foot of this card. -->
                         <com.prash.petcare.ui.place.PlaceMapView
                             android:id="@+id/placesMap"
                             android:layout_width="match_parent"
@@ -97,12 +56,7 @@
                             android:contentDescription="@string/cd_places_map"
                             app:attributionBottomInset="@dimen/places_map_attribution_inset" />
 
-                        <!-- "PATAN ANIMAL HOSPITAL · 1.2 KM". wrap_content inside a full-width parent,
-                             so it hugs a short name but is measured against the card's width and
-                             ellipsizes a long one rather than running off the edge.
-
-                             Hidden from TalkBack: the name and distance are both already announced by
-                             the featured card below, and a screen reader should not read them twice. -->
+                        <!-- "PATAN ANIMAL HOSPITAL · 1.2 KM". wrap_content inside a full-width parent. -->
                         <TextView
                             android:id="@+id/mapPlacePill"
                             style="@style/PetCare.Places.MapPill"
@@ -113,13 +67,7 @@
                             android:importantForAccessibility="no"
                             tools:text="Patan Animal Hospital · 1.2 km" />
 
-                        <!-- "MAP / SATELLITE", in the corner opposite the name pill. Aerial imagery
-                             earns its place on this card: a saved vet or park is recognised from the
-                             look of its yard and its roof long before its name is read off a drawn
-                             map. A two-state toggle here rather than the Add a place picker's
-                             three-way menu: this card shows a place, and the extra choice between
-                             photography with and without labels is one for somebody choosing a point,
-                             not for somebody looking at one. See PetCare.Map.LayerToggle. -->
+                        <!-- "MAP / SATELLITE", in the corner opposite the name pill. -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/mapLayerButton"
                             style="@style/PetCare.Map.LayerToggle"
@@ -129,9 +77,7 @@
                             android:layout_margin="@dimen/places_map_overlay_inset"
                             tools:text="@string/map_layer_switch_to_satellite" />
 
-                        <!-- The two ways out to Google Maps. "Directions" takes the leftover width
-                             (weight 1 on a zero width) because it is the action the screen exists to
-                             offer; "Google maps" takes only what its label needs. -->
+                        <!-- The two ways out to Google Maps. "Directions" takes the leftover width. -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -161,10 +107,7 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ============================ Category chips ============================
-                     A horizontally scrolling single-selection row; the chips are added in code — see
-                     ui/common/FilterChips.kt. clipToPadding="false" lets the row scroll edge to edge
-                     while its first chip still lines up with the screen gutter. -->
+                <!-- ============================ Category chips ============================ -->
                 <HorizontalScrollView
                     android:id="@+id/categoryChipScroll"
                     android:layout_width="match_parent"
@@ -185,9 +128,7 @@
 
                 </HorizontalScrollView>
 
-                <!-- ============================ Featured place ============================
-                     The feature card style with the pet cards' softer corner, so it reads as the
-                     page's subject in the same way a pet card does on the Pets tab. -->
+                <!-- ============================ Featured place ============================ -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/featuredCard"
                     style="@style/PetCare.Card.Feature"
@@ -204,8 +145,7 @@
                         android:orientation="vertical"
                         android:padding="@dimen/card_padding">
 
-                        <!-- Name and the "open now" pill. The name takes the leftover width and wraps
-                             onto a second line if it must, rather than pushing the pill off the card. -->
+                        <!-- Name and the "open now" pill. The name takes the leftover width and wraps. -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -242,10 +182,7 @@
                             android:layout_marginTop="2dp"
                             tools:text="Vet clinic · Pulchowk" />
 
-                        <!-- Hours and phone, side by side in one outlined row split by a hairline — the
-                             construction of the Pets tab's stat row. Equal halves through weight 1 on
-                             each block; baselineAligned="false" stops LinearLayout nudging one block
-                             down to line up the text baselines of two differently sized values. -->
+                        <!-- Hours and phone, side by side in one outlined row split by a hairline. -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -277,8 +214,7 @@
 
                             <View style="@style/PetCare.PetStat.Divider" />
 
-                            <!-- Tappable when a number is saved: it opens the dialler. Given a ripple
-                                 through selectableItemBackground so it looks pressable when it is. -->
+                            <!-- Tappable when a number is saved: it opens the dialler. -->
                             <LinearLayout
                                 android:id="@+id/phoneBlock"
                                 style="@style/PetCare.PetStat"
@@ -312,8 +248,7 @@
                             android:layout_marginTop="@dimen/spacing_md"
                             tools:text="Krishala's vaccination clinic. Walk-ins before 10:00, appointments after." />
 
-                        <!-- The GPS tag and the maps link on one line. The chip wraps its text; the link
-                             follows it directly, as in the design, rather than being pushed to the edge. -->
+                        <!-- The GPS tag and the maps link on one line. The chip wraps its text. -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -338,8 +273,7 @@
 
                         </LinearLayout>
 
-                        <!-- The two actions. "Book a visit" takes the leftover width (weight 1) and
-                             "Pinned" only what its label needs, so the main action is the big target. -->
+                        <!-- The two actions. "Book a visit" takes the leftover width. -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -368,12 +302,7 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ============================ Saved places ============================
-                     The heading and the way to add another, on one line. The label takes the leftover
-                     width (weight 1 on a zero width), which is what keeps the pill flush right
-                     whatever the heading says — the same construction as the distance strip's label
-                     and range above. baselineAligned="false" stops LinearLayout nudging the pill to
-                     line its label up with the heading's baseline, which would sit it low. -->
+                <!-- ============================ Saved places ============================ -->
                 <LinearLayout
                     android:id="@+id/savedPlacesHeader"
                     android:layout_width="match_parent"
@@ -395,10 +324,7 @@
                         android:text="@string/places_saved_label"
                         tools:targetApi="p" />
 
-                    <!-- "+ ADD PLACE" — the way in to the add-a-place screen, where a place can be
-                         saved by searching, by dropping a pin, or from where the phone is. Here
-                         rather than only at the foot of the page because this is the heading of the
-                         list it adds to, which is where the user is looking when they want another. -->
+                    <!-- "+ ADD PLACE" — the way in to the add-a-place screen. -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/addPlacePill"
                         style="@style/PetCare.Places.AddPill"
@@ -422,9 +348,7 @@
                     android:visibility="gone"
                     tools:text="No park places saved yet." />
 
-                <!-- The rows. wrap_content with nested scrolling off, so the page scrolls rather than
-                     the list — see the note at the top of this file. The side padding with
-                     clipToPadding="false" keeps each card's shadow from being cut at the gutter. -->
+                <!-- The rows. wrap_content with nested scrolling off, so the page scrolls rather than the list. -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/placesRecyclerView"
                     android:layout_width="match_parent"
@@ -437,8 +361,7 @@
                     tools:itemCount="4"
                     tools:listitem="@layout/item_place_row" />
 
-                <!-- Shown when no place has been saved at all, in place of the strip, chips, card and
-                     list. The add button below stays, since it is the answer to the empty state. -->
+                <!-- Shown when no place has been saved at all, in place of the strip, chips, card and list. -->
                 <LinearLayout
                     android:id="@+id/emptyPlacesContainer"
                     style="@style/PetCare.EmptyState"
@@ -467,8 +390,7 @@
 
                 </LinearLayout>
 
-                <!-- "+ ADD A PLACE": the Pets tab's outlined add row, so adding reads the same on
-                     both tabs. -->
+                <!-- "+ ADD A PLACE": the Pets tab's outlined add row, so adding reads the same on both tabs. -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/addPlaceButton"
                     style="@style/PetCare.AddRowButton"

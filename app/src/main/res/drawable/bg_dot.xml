@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    A small filled circle — the marker under a week-strip date meaning "care is scheduled this day".
-
-    White so the backgroundTint applied in the layout comes through unaltered; the tint is a colour
-    state list, which is what lets the dot turn to the accent when its cell is selected without any
-    code. The oval takes its size from the view, so the same file works at any diameter.
--->
+<!-- A small filled circle — the marker under a week-strip date meaning "care is scheduled this day". -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 

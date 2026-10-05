@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The hairline between two rows on the profile screen, as a layout that can be inflated.
-
-    The fixed cards declare their dividers inline as `<View style="@style/PetCare.Profile.RowDivider" />`,
-    which is the right thing there — the rows are known at build time and so are the lines between
-    them. The delegation-contacts card is different: its rows are inflated one per saved contact, so
-    the lines between them have to be created at the same moment. This file is that same divider in a
-    form ProfileFragment can inflate, so both kinds of card draw an identical line from an identical
-    style rather than one of them building a View in code with a colour and a height typed out again.
--->
+<!-- The hairline between two rows on the profile screen, as a layout that can be inflated. -->
 <View xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/PetCare.Profile.RowDivider"
     android:layout_width="match_parent"

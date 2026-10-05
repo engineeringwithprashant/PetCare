@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The two-factor check (TwoFactorFragment): the second step of signing in, where the user types the
-    six-digit code from Google Authenticator.
-
-    Top to bottom: the shared header, the step bar ("STEP 2 OF 2"), the code boxes with the on-screen
-    keypad (CodeKeypadView — a reusable component, kept separate so any later code screen gets
-    identical behaviour), a note about the code
-    refreshing beside a "LOST ACCESS?" link, the verify button, and a way back.
-
-    There is deliberately no text field anywhere on this screen, so the system keyboard has nothing to
-    open for — the keypad is the only input. See view_code_keypad.xml.
-
-    ScrollView so the keypad stays reachable on short screens and in landscape, where the whole column
-    is taller than the window.
--->
+<!-- The two-factor check (TwoFactorFragment): the second step of signing. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/PetCare.Auth.Page"
@@ -43,9 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_md" />
 
-        <!-- The note and the link share a row: the note takes the remaining width (weight 1) and wraps
-             onto a second line, the link keeps its natural width at the end. center_vertical lines the
-             link up with the middle of the two-line note, as in the mockup. -->
+        <!-- The note and the link share a row: the note takes the remaining width. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

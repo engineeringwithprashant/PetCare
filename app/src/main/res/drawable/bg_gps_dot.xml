@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The "current location" dot in the middle of its tinted well — on the Add a place screen's
-    current-location card, and in the placeholder shown before the live map has a fix to draw.
-
-    A white ring around the disc rather than none, because this mark lands on two different grounds
-    (the dark card, and the map card's pale or slate loading ground) and the ring is what separates
-    it from either. Both colours are fixed rather than themed, for the same reason: the mark means
-    "you are here" wherever it appears, and it is the shape every maps app uses for it.
-
-    The fill is tinted from code on the card, where the colour carries the GPS status — blue for a
-    fix, accent while looking, coral when there is none. See AddPlaceFragment.renderGpsCard.
--->
+<!-- The "current location" dot in the middle of its tinted well. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 

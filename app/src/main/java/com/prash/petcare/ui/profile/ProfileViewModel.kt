@@ -49,15 +49,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-/**
- * The four preference choices, gathered so the screen renders them from one object.
- *
- * @property weightUnit Kilograms or pounds, on the pet cards and the pet detail screen.
- * @property reminderChannel How the user would rather be told — see [ReminderChannel] on how far that
- *   choice actually reaches.
- * @property weekStart Which day the Tasks week strip and the care streak begin on.
- * @property currency Which symbol money is written with. Never a conversion.
- */
+/** The four preference choices, gathered so the screen renders them from one object. */
 data class ProfilePreferences(
     val weightUnit: WeightUnit = WeightUnit.METRIC,
     val reminderChannel: ReminderChannel = ReminderChannel.PUSH,
@@ -65,37 +57,12 @@ data class ProfilePreferences(
     val currency: CurrencyPreference = CurrencyPreference.NPR
 )
 
-/**
- * The security-card setting whose value lives in the preferences file.
- *
- * Two-factor authentication is deliberately *not* here, even though its switch sits in the same card.
- * It is not a preference: it is a property of the account, it lives in the database beside the
- * account's own row, and it means nothing without the secret and recovery codes stored with it. So it
- * is published separately, from [ProfileViewModel.twoFactor], by the repository that owns it. Folding
- * it into this object would have put one fact about the account into a file about this installation.
- *
- * A wrapper around a single Boolean may look like ceremony, and today it nearly is — the "unlock with
- * fingerprint" switch that used to sit beside it has been removed (see [SettingsStore]). It is kept
- * as a type rather than collapsed to a bare `StateFlow<Boolean>` because the screen renders this card
- * from one object, and adding the next preference-backed security row should be a field here rather
- * than a new flow, a new collector and a new render call.
- */
+/** The security-card setting whose value lives in the preferences file. */
 data class ProfileSecurity(
     val careRemindersEnabled: Boolean = true
 )
 
-/**
- * Everything the profile screen displays.
- *
- * @property user The signed-in account, or null while the first database read is in flight.
- * @property petCount How many pets are in care — the header pill and the first stat card.
- * @property streakFullDays How many days this week every due task was completed. The dashboard's own
- *   figure, from the dashboard's own function, so the two screens can never report different streaks.
- * @property tasksThisWeek How many care tasks fall due across the current week.
- * @property contacts The people saved for delegation.
- * @property isLoading True until the first database read returns, so the screen can tell "still
- *   loading" apart from "genuinely empty".
- */
+/** Everything the profile screen displays. */
 data class ProfileUiState(
     val user: User? = null,
     val petCount: Int = 0,
@@ -105,13 +72,7 @@ data class ProfileUiState(
     val isLoading: Boolean = true
 )
 
-/**
- * What the screen should do once, in response to something the user did.
- *
- * Events rather than state, because each is a one-off: a message to show, a file to write, a screen to
- * leave. Held in state they would fire again on every rotation — the user would see "Records saved"
- * each time they turned the phone.
- */
+/** What the screen should do once, in response to something the user did. */
 sealed interface ProfileEvent {
 
     /** The CSV is ready; the fragment hands it to the system's save dialog. */
@@ -123,12 +84,7 @@ sealed interface ProfileEvent {
     /** A delegation contact was saved without a name or without a number; nothing was added. */
     data object ContactIncomplete : ProfileEvent
 
-    /**
-     * A delegation contact's number is not a real number for the country chosen; nothing was added.
-     *
-     * Kept apart from [ContactIncomplete] because the two send the user to different places: one
-     * field is empty, or the country beside the number is wrong.
-     */
+    /** A delegation contact's number is not a real number for the country chosen; nothing was added. */
     data object ContactPhoneInvalid : ProfileEvent
 
     /** The account and everything under it is gone; the fragment returns to the sign-in screen. */
@@ -140,40 +96,11 @@ sealed interface ProfileEvent {
     /** Two-factor authentication has been turned off, and the secret and codes are gone. */
     data object TwoFactorDisabled : ProfileEvent
 
-    /**
-     * The code typed to turn two-factor authentication off was refused, so it is still on.
-     *
-     * Carries the message rather than a plain failure flag, because "that code is not right" and
-     * "you have already used that recovery code" send the user to different places — see
-     * [com.prash.petcare.data.repository.TwoFactorCheck].
-     */
+    /** The code typed to turn two-factor authentication off was refused, so it is still on. */
     data class TwoFactorDisableFailed(@param:StringRes val messageRes: Int) : ProfileEvent
 }
 
-/**
- * Supplies the profile screen with the account, the stats, the settings and the saved contacts, and
- * carries out the changes the screen asks for.
- *
- * Sits in the middle of the MVVM chain: it reads from [UserRepository], [PetRepository] and the two
- * local stores, and publishes state for [ProfileFragment] to render. It holds no Android view types,
- * so it survives rotation and can be tested without a device.
- *
- * **Why the stores are a dependency like any repository.** [SettingsStore] and
- * [DelegationContactStore] live in the data layer and expose flows, exactly as a repository does. They
- * are SharedPreferences rather than Room underneath, and each explains at length why — but that is a
- * storage decision, invisible from here. Nothing about depending on them differs from depending on a
- * DAO-backed repository.
- *
- * **Why the streak comes from [HomeDashboard] rather than being recomputed.** "Day streak" on this
- * screen and the streak row on the dashboard are the same fact, and a second implementation of a rule
- * as fiddly as "every task due that day was completed within that day" would drift from the first
- * within a release. Calling the dashboard's own pure function means they cannot disagree. It sits in
- * `ui/home` rather than in the data layer, which is a little awkward, but reaching sideways to a pure
- * function in the same layer is much better than duplicating the rule.
- *
- * @param userId Which account to show, read from the session — see
- *   [com.prash.petcare.ui.session.SessionViewModel].
- */
+/** Supplies the profile screen with the account, the stats, the settings and the saved contacts. */
 class ProfileViewModel(
     private val userRepository: UserRepository,
     private val petRepository: PetRepository,
@@ -187,13 +114,7 @@ class ProfileViewModel(
     private val userId: Long
 ) : ViewModel() {
 
-    /**
-     * How the backup is getting on.
-     *
-     * The same status the dashboard shows, from the same source. Kept out of [uiState] for the reason
-     * it is there too: the account's details and the sync's progress change on completely different
-     * rhythms, and rebuilding a week of streak days because a sync ticked would be work for nothing.
-     */
+    /** How the backup is getting on. */
     val syncStatus: StateFlow<SyncStatus> = syncManager.status
 
     /** The four preference choices, as one object the screen can render in a single pass. */
@@ -218,13 +139,7 @@ class ProfileViewModel(
             initialValue = ProfileSecurity()
         )
 
-    /**
-     * Whether the account has an authenticator set up, and how many recovery codes it has left.
-     *
-     * Straight from the repository, which reads it out of the database — so the row redraws by itself
-     * when setup finishes on another screen, and when a recovery code is spent at sign-in. Nothing
-     * here has to be told that something changed.
-     */
+    /** Whether the account has an authenticator set up, and how many recovery codes it has left. */
     val twoFactor: StateFlow<TwoFactorStatus> = twoFactorRepository.observeStatus(userId)
         .stateIn(
             scope = viewModelScope,
@@ -232,18 +147,7 @@ class ProfileViewModel(
             initialValue = TwoFactorStatus()
         )
 
-    /**
-     * Each pet with its routines, tasks and expenses.
-     *
-     * The same shape the dashboard builds, and for the same reason: the streak is computed from a
-     * single consistent snapshot of every pet's care. [flatMapLatest] rebuilds the per-pet queries
-     * when a pet is added or removed and cancels the previous ones, so a deleted pet's queries stop
-     * rather than accumulating. The empty case is short-circuited because `combine` over an empty list
-     * never emits — without it, an account with no pets would sit on the loading state forever.
-     *
-     * Expenses are queried here even though this screen shows no money, because [PetCareData] carries
-     * them and the export needs them. One subscription serving both is cheaper than two.
-     */
+    /** Each pet with its routines, tasks and expenses. */
     @OptIn(ExperimentalCoroutinesApi::class)
     private val petCareFlow: Flow<List<PetCareData>> =
         petRepository.observePetsForOwner(userId).flatMapLatest { pets ->
@@ -262,29 +166,13 @@ class ProfileViewModel(
             }
         }
 
-    /**
-     * The completion history the streak is drawn from.
-     *
-     * A week's worth, which is all the streak asks about. The start is fixed when the ViewModel is
-     * created and does not move if the screen is left open — harmless, because the query is
-     * "everything since then" and so still covers every newer day; it only carries a few extra rows.
-     */
+    /** The completion history the streak is drawn from. */
     private val completionsFlow = careTaskRepository.observeCompletionsForOwnerSince(
         ownerId = userId,
         fromMillis = historyWindowStart()
     )
 
-    /**
-     * The screen's state.
-     *
-     * Everything here is driven by Room and the preferences file, so there is no manual refresh
-     * anywhere: adding a pet, ticking a task, saving a contact or changing the week start all arrive
-     * as a new emission.
-     *
-     * `WhileSubscribed(5_000)` keeps the queries alive for five seconds after the last observer
-     * leaves — long enough to survive a rotation, short enough that a backgrounded screen stops doing
-     * work.
-     */
+    /** The screen's state. */
     val uiState: StateFlow<ProfileUiState> = combine(
         userRepository.observeUser(userId),
         petCareFlow,
@@ -315,17 +203,9 @@ class ProfileViewModel(
     private val _events = Channel<ProfileEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    // ---------------------------------------------------------------------------------------------
-    // Preferences and security
-    // ---------------------------------------------------------------------------------------------
+    // Preferences and security.
 
-    /*
-     * Each of these is a single line handing the choice to the store, and that is the whole point:
-     * the store publishes a flow, every screen that cares reads that flow, and so a tap here redraws
-     * the Pets tab's weight pills or the Money tab's symbols with nothing else to remember. There is
-     * deliberately no "save" step and no confirmation — a preference that takes effect immediately and
-     * can be tapped back is not a decision that needs one.
-     */
+    /* Each of these is a single line handing the choice to the store, and that is the whole point. */
 
     fun onWeightUnitChosen(unit: WeightUnit) = settingsStore.setWeightUnit(unit)
 
@@ -339,21 +219,7 @@ class ProfileViewModel(
     /** True while a turn-off is in flight, so a second confirm cannot start another. */
     private var isDisablingTwoFactor = false
 
-    /**
-     * Turns two-factor authentication off, once [code] has been accepted.
-     *
-     * **The check and the change are one call**, deliberately. Verifying in the dialog and disabling
-     * from a separate method would be two steps with a gap between them, and the gap is the bug: the
-     * second could be reached without the first by any future caller who did not know the rule. Here
-     * the only way to reach [TwoFactorRepository.disable] is through a code that has just been
-     * accepted.
-     *
-     * A recovery code is accepted as well as an authenticator code, and doing so *spends* it — which
-     * is right: it was used, and the codes are about to be deleted anyway.
-     *
-     * Every refusal leaves the account exactly as it was and says which refusal it is, so someone who
-     * mistyped can try again and someone reading a spent line off their sheet is told to try another.
-     */
+    /** Turns two-factor authentication off, once [code] has been accepted. */
     fun onTwoFactorDisableConfirmed(code: String) {
         if (isDisablingTwoFactor) return
         isDisablingTwoFactor = true
@@ -371,9 +237,7 @@ class ProfileViewModel(
                 TwoFactorCheck.Incorrect ->
                     ProfileEvent.TwoFactorDisableFailed(R.string.error_code_incorrect)
 
-                // Already off — turned off on another device, or while this dialog was open. There is
-                // nothing to do and nothing has gone wrong, so this reports the outcome the user
-                // asked for rather than an error about a state they cannot see.
+                // Already off — turned off on another device, or while this dialog was open.
                 TwoFactorCheck.NotEnabled -> ProfileEvent.TwoFactorDisabled
             }
 
@@ -382,37 +246,12 @@ class ProfileViewModel(
         }
     }
 
-    /**
-     * Turns care reminders on or off.
-     *
-     * The only switch on the screen that changes what the app *does* rather than how it looks:
-     * [com.prash.petcare.reminder.ReminderManager] observes this value and withdraws every scheduled
-     * alarm when it goes false, re-registering them all when it comes back. Nothing needs to be
-     * called here to make that happen — it is watching the flow.
-     */
+    /** Turns care reminders on or off. */
     fun onCareRemindersChanged(enabled: Boolean) = settingsStore.setCareRemindersEnabled(enabled)
 
-    // ---------------------------------------------------------------------------------------------
-    // Delegation contacts
-    // ---------------------------------------------------------------------------------------------
+    // Delegation contacts.
 
-    /**
-     * Saves a delegation contact, once its name and number are acceptable.
-     *
-     * **Why the checks moved here from the dialog.** They were a pair of `isEmpty()` calls in
-     * [ProfileFragment], which was fine while "acceptable" meant "not blank". It no longer does: the
-     * number now has to be a real number for the country chosen, because the whole point of this list
-     * is that a delegation message can be *sent* to it, and a local number saved with no dialling
-     * code will not leave the country it was typed in. A rule with that much behind it belongs where
-     * the app's other rules are, and where it can be tested without driving a dialog.
-     *
-     * Both halves are required: a contact with no number is one nothing can be delegated to, which is
-     * the single thing this list exists for.
-     *
-     * @param phoneRegion The country chosen beside the number box, and [phone] the local number typed
-     *   next to it. Stored as one international number — see [PhoneNumbers].
-     * @param note Optional; blank is stored as no note rather than as an empty line.
-     */
+    /** Saves a delegation contact, once its name and number are acceptable. */
     fun onContactAdded(name: String, phoneRegion: String, phone: String, note: String) {
         val trimmedName = name.trim()
         val trimmedPhone = phone.trim()
@@ -432,8 +271,7 @@ class ProfileViewModel(
 
         contactStore.add(
             name = trimmedName,
-            // Just confirmed valid above, so toE164 cannot return null here; the elvis is there
-            // because the function is nullable, not because the fallback is reachable.
+            // Just confirmed valid above, so toE164 cannot return null here; the elvis is there.
             phoneNumber = PhoneNumbers.toE164(phoneRegion, trimmedPhone) ?: trimmedPhone,
             note = note.trim().takeIf { it.isNotEmpty() }
         )
@@ -443,21 +281,9 @@ class ProfileViewModel(
         contactStore.remove(contactId)
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Data and privacy
-    // ---------------------------------------------------------------------------------------------
+    // Data and privacy.
 
-    /**
-     * Builds the CSV and hands it to the screen to save.
-     *
-     * **The ViewModel builds the text; the fragment writes the file.** Writing means a
-     * `ContentResolver` and a URI the user picked through the system's save dialog, both of which are
-     * Android framework objects a ViewModel must not touch. Splitting at exactly this point keeps the
-     * rule intact and leaves the interesting half — what goes in the file — testable.
-     *
-     * The rows are taken with [first] rather than by collecting: an export is a snapshot of this
-     * moment, not something that should keep producing new files as the data changes.
-     */
+    /** Builds the CSV and hands it to the screen to save. */
     fun onExportRequested() {
         viewModelScope.launch {
             val petCare = petCareFlow.first()
@@ -481,14 +307,7 @@ class ProfileViewModel(
         }
     }
 
-    /**
-     * Records a newly chosen profile photo.
-     *
-     * The file has already been written by the screen — copying a picked image is framework work
-     * needing a Context — so what arrives here is a path, and the only thing left is the database
-     * write. Deleting the *previous* file belongs to the repository, which is the one place that knows
-     * what the old path was before this one replaced it; see [UserRepository.updatePhoto].
-     */
+    /** Records a newly chosen profile photo. */
     fun onPhotoChosen(photoPath: String) {
         viewModelScope.launch {
             userRepository.updatePhoto(userId, photoPath)
@@ -503,17 +322,7 @@ class ProfileViewModel(
     /** True while a deletion is in flight, so a second tap cannot start another one. */
     private var isDeleting = false
 
-    /**
-     * Deletes the account and everything belonging to it, once Firebase has accepted [password].
-     *
-     * Called only after the screen has taken two confirmations, the second of which asks the user to
-     * type the word and their password — see ProfileFragment. The word is not checked again here;
-     * the password is checked by Firebase, inside [UserRepository.deleteAccount], which also explains
-     * the order the account's two halves are deleted in.
-     *
-     * A failure leaves everything in place and is reported, so the user can fix it (a mistyped
-     * password, no connection) and try again.
-     */
+    /** Deletes the account and everything belonging to it, once Firebase has accepted [password]. */
     fun onDeleteAccountConfirmed(password: String) {
         if (isDeleting) return
         isDeleting = true
@@ -542,14 +351,7 @@ class ProfileViewModel(
         else -> R.string.auth_error_unknown
     }
 
-    /**
-     * How many care tasks fall due across the seven days of [week].
-     *
-     * Counted day by day through [CareSchedule.tasksDueOn], the same function the checklist and the
-     * streak use, so "due" means exactly what it means everywhere else in the app — a repeating task
-     * counts once for each day it lands on, which is what makes "18 tasks this week" the number of
-     * things to actually do rather than the number of task rows in the database.
-     */
+    /** How many care tasks fall due across the seven days of [week]. */
     private fun tasksDueAcross(petCare: List<PetCareData>, week: List<Long>): Int =
         week.sumOf { dayStart ->
             petCare.sumOf { CareSchedule.tasksDueOn(it.routines, it.tasks, dayStart).size }
@@ -566,12 +368,7 @@ class ProfileViewModel(
 
     companion object {
 
-        /**
-         * Builds the ViewModel for a particular account.
-         *
-         * A function rather than a property because the user id is only known at runtime and has to
-         * be captured here to reach the constructor.
-         */
+        /** Builds the ViewModel for a particular account. */
         fun factory(userId: Long): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =

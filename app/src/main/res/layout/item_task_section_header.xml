@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    A time-of-day header in the Tasks list: "MORNING ———————— 2/3".
-
-    A horizontal LinearLayout of three views: the label, a hairline rule that stretches to fill the
-    middle (0dp width with layout_weight="1"), and the done/total count pinned to the end. The rule is
-    what ties the label and the count together across the width, so the count is read as belonging to
-    this section rather than floating on its own.
-
-    Both texts use PetCare.SectionLabel — small, upper-case, letter-spaced and muted — so the header
-    labels the cards beneath it without competing with their titles.
--->
+<!-- A time-of-day header in the Tasks list: "MORNING ———————— 2/3". -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"

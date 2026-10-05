@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Stands in for the assistant's message while its reply is being produced.
-
-    **Why it is a message rather than a spinner over the screen.** The answer will appear exactly
-    here, so the wait is shown exactly here: the placeholder occupies the space the reply will take
-    and is replaced by it in place, which is why the list does not jump when the answer lands. An
-    overlay would also block the conversation the user is waiting to read.
-
-    Deliberately the same card, side and shape as item_assistant_message.xml — only the contents
-    differ — so the swap reads as one thing filling in rather than two different things.
--->
+<!-- Stands in for the assistant's message while its reply is being produced. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -27,9 +17,7 @@
         app:strokeColor="?attr/colorOutlineVariant"
         app:strokeWidth="1dp">
 
-        <!-- An indeterminate bar rather than a spinner: it sits on one line inside a bubble the
-             width of a short sentence, which a circular indicator would not. The content
-             description is what a screen reader announces, since the bar itself says nothing. -->
+        <!-- An indeterminate bar rather than a spinner. -->
         <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/thinkingIndicator"
             android:layout_width="@dimen/assistant_thinking_width"

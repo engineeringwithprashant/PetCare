@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The contents of CodeKeypadView (ui/auth/CodeKeypadView.kt): six code boxes, an error line, and a
-    4×3 numeric keypad. Used by the two-factor screen; kept as its own component so any other
-    code-entry screen gets exactly the same boxes and keys.
-
-    **Why <merge>.** CodeKeypadView *is* a vertical LinearLayout. Inflating an ordinary layout into it
-    would put a second LinearLayout inside the first for no reason; <merge> adds these children
-    directly to the custom view instead. tools:parentTag tells Android Studio's preview what the parent
-    will be, since a merge file has no root of its own to draw.
-
-    **Why the boxes are TextViews, not EditTexts.** The design replaces the system keyboard with its
-    own keypad. A focusable text field would summon the system keyboard the moment it got focus; a
-    TextView never can. The "focused" yellow box is therefore drawn from a view state that
-    CodeKeypadView sets — see res/drawable/bg_auth_code_box.xml.
--->
+<!-- The contents of CodeKeypadView (ui/auth/CodeKeypadView.kt): six code boxes, an error line. -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -22,18 +8,7 @@
     tools:orientation="vertical"
     tools:parentTag="android.widget.LinearLayout">
 
-    <!--
-        The six boxes, as one horizontal ConstraintLayout chain.
-
-        Every box has width 0dp ("match constraints"), so the chain shares the row equally between them
-        whatever the screen width. Each height is then derived from that width by
-        layout_constraintDimensionRatio="H,11:12" — width:height, with "H" meaning "compute the
-        height" — which keeps the boxes the same slightly-taller-than-square shape as the mockup on
-        every phone, rather than a fixed height that would look squat on a wide screen.
-
-        focusable/importantForAccessibility: the row is one accessibility node whose description
-        ("3 of 6 digits entered") CodeKeypadView keeps up to date; the boxes themselves are hidden.
-    -->
+    <!-- The six boxes, as one horizontal ConstraintLayout chain. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/codeBoxes"
         android:layout_width="match_parent"
@@ -98,8 +73,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- The rejected-code message. Gone until there is one, so it takes no space; a live region (from
-         the style) so TalkBack reads it out the moment it appears. -->
+    <!-- The rejected-code message. Gone until there is one, so it takes no space; a live region (from the style). -->
     <TextView
         android:id="@+id/codeError"
         style="@style/PetCare.Auth.ErrorText"
@@ -110,15 +84,7 @@
         tools:text="@string/error_code_incorrect"
         tools:visibility="visible" />
 
-    <!--
-        The keypad: four rows of three, laid out as the phone dial pad (1-2-3 on top, 0 centred at the
-        bottom). Each row is a horizontal LinearLayout whose children all have width 0dp and weight 1,
-        so the three cells split the row evenly; the start margin on the second and third cell is the
-        gap between keys. The first row also gets extra space above it, separating keypad from boxes.
-
-        Keys carry their digit as their text, which is also what TalkBack reads. Click listeners are
-        attached in CodeKeypadView, which maps each key to its digit.
-    -->
+    <!-- The keypad: four rows of three, laid out as the phone dial pad (1-2-3 on top, 0 centred at the bottom). -->
     <LinearLayout
         style="@style/PetCare.Auth.KeyRow"
         android:layout_marginTop="@dimen/spacing_md">
@@ -190,12 +156,7 @@
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
-    <!-- Bottom row: CLEAR, 0, and backspace.
-
-         CLEAR empties every box at once; backspace removes one digit. CLEAR is the same rounded key as
-         the digits but with a small, muted, letter-spaced label (PetCare.Auth.Key.Clear), so it reads
-         as a secondary action beside them. Both non-digit keys carry a spoken description, since
-         "clear" alone and a backspace glyph say little about what they clear. -->
+    <!-- Bottom row: CLEAR, 0, and backspace. -->
     <LinearLayout style="@style/PetCare.Auth.KeyRow">
 
         <com.google.android.material.button.MaterialButton

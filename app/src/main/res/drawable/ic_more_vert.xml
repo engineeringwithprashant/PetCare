@@ -1,12 +1,4 @@
-<!--
-    The vertical three-dot "more options" glyph, on the right of each care routine card.
-
-    This is the platform's established sign for "there are more actions hidden here", so users open
-    it without having to be told — which is what lets the card show only the routine's name,
-    schedule and count while still offering edit, pause and delete.
-
-    Tinted by the button that shows it, so the white fill here never appears on screen.
--->
+<!-- The vertical three-dot "more options" glyph, on the right of each care routine card. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

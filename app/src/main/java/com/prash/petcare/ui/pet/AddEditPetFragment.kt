@@ -33,17 +33,7 @@ import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.util.PetPhotoStorage
 import kotlinx.coroutines.launch
 
-/**
- * Form for creating a new pet or editing an existing one.
- *
- * Which mode it runs in depends on the `petId` navigation argument: [PetViewModel.NO_PET_ID] means
- * add, anything else means edit. The distinction is entirely the ViewModel's to interpret — this
- * fragment simply renders whatever state comes back.
- *
- * As the **View** in MVVM it owns no logic: validation, persistence and photo clean-up all live in
- * [PetViewModel]. What it does own are the things that genuinely need a Context or a view — the
- * photo picker, the date picker and the confirmation dialog.
- */
+/** Form for creating a new pet or editing an existing one. */
 class AddEditPetFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
@@ -59,25 +49,10 @@ class AddEditPetFragment : Fragment() {
         PetViewModel.factory(petId, ownerId)
     }
 
-    /**
-     * Which photo path is currently drawn on screen.
-     *
-     * Decoding an image is not free, so this guards against re-loading the same file every time
-     * any unrelated part of the state changes. Cleared in [onDestroyView] so a rebuilt view draws
-     * the photo again.
-     */
+    /** Which photo path is currently drawn on screen. */
     private var renderedPhotoPath: String? = null
 
-    /**
-     * Launcher for the system photo picker.
-     *
-     * Registered as a property because `registerForActivityResult` must be called while the
-     * fragment is being created — doing it later throws, since the result callback has to be in
-     * place before the fragment can be restored and handed a pending result.
-     *
-     * The photo picker needs no storage permission: the user chooses the image in a system UI that
-     * the app never sees, and only the single chosen item is shared back.
-     */
+    /** Launcher for the system photo picker. */
     private val pickPhotoLauncher = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
@@ -87,12 +62,7 @@ class AddEditPetFragment : Fragment() {
         }
     }
 
-    /**
-     * The framing dialog, held so it can be dismissed with the view.
-     *
-     * A dialog that outlives the fragment's view leaks the whole hierarchy behind it, and one still
-     * on screen when the user rotates would be left orphaned by the recreation.
-     */
+    /** The framing dialog, held so it can be dismissed with the view. */
     private var cropDialog: AlertDialog? = null
 
     override fun onCreateView(
@@ -112,13 +82,7 @@ class AddEditPetFragment : Fragment() {
         observeViewModel()
     }
 
-    /**
-     * Fills the species dropdown.
-     *
-     * The visible labels and [PetSpecies.entries] are built from the same list in the same order,
-     * so the tapped position maps straight back to an enum constant. Reading the enum back from the
-     * displayed text instead would break the moment the app is translated.
-     */
+    /** Fills the species dropdown. */
     private fun setUpSpeciesDropdown() {
         val labels = PetSpecies.entries.map { getString(it.labelRes()) }.toTypedArray()
         binding.speciesInput.setSimpleItems(labels)
@@ -128,13 +92,7 @@ class AddEditPetFragment : Fragment() {
         }
     }
 
-    /**
-     * Forwards a tap on the Male / Female / Unknown group to the ViewModel.
-     *
-     * The group reports both the button being selected and the one being cleared, so `isChecked`
-     * is tested — without it every tap would record two genders in quick succession, the one
-     * chosen and the one moved away from, and whichever arrived last would win.
-     */
+    /** Forwards a tap on the Male / Female / Unknown group to the ViewModel. */
     private fun setUpGenderToggle() {
         binding.genderToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
@@ -150,16 +108,12 @@ class AddEditPetFragment : Fragment() {
             )
         }
 
-        // The field is focusable so it can be reached by keyboard, D-pad or switch access —
-        // with focusable="false" the picker could only ever be opened by touch. Suppressing the
-        // soft keyboard keeps focusing it from popping one up for a field nobody types into. This
-        // has no public XML attribute, so it is set here.
+        // The field is focusable so it can be reached by keyboard, D-pad or switch access.
         binding.dateOfBirthInput.showSoftInputOnFocus = false
         binding.dateOfBirthInput.setOnClickListener { showDatePicker() }
 
         binding.saveButton.setOnClickListener {
-            // The typed values are read straight off the fields and handed over; deciding whether
-            // they are valid is the ViewModel's job.
+            // The typed values are read straight off the fields and handed.
             viewModel.save(
                 name = binding.nameInput.text?.toString().orEmpty(),
                 breed = binding.breedInput.text?.toString().orEmpty(),
@@ -181,29 +135,12 @@ class AddEditPetFragment : Fragment() {
         }
     }
 
-    /**
-     * Opens the framing dialog on the chosen image.
-     *
-     * **Why a picked photo is no longer saved straight away.** Every pet card draws its photo in one
-     * fixed shape, and the app used to fill that shape by cropping to the centre — which on a
-     * full-body photo is the animal's middle rather than its face. So the picked image is decoded to
-     * memory, the user frames it, and only what they framed is written to disk. Nothing is stored if
-     * they cancel.
-     *
-     * Done here rather than in the ViewModel because reading the picked URI needs a ContentResolver
-     * — and therefore a Context, which the ViewModel deliberately does not hold. Only the resulting
-     * file path is passed on.
-     *
-     * Uses the fragment's own `lifecycleScope`, not `viewLifecycleOwner`'s: a picker result can
-     * arrive before the view has been recreated, and the view lifecycle owner does not exist yet at
-     * that point.
-     */
+    /** Opens the framing dialog on the chosen image. */
     private fun showCropDialog(uri: Uri) {
         val appContext = requireContext().applicationContext
 
         lifecycleScope.launch {
-            // Decoded before the dialog is built, so a file that turns out not to be an image is
-            // reported plainly instead of opening an empty framing window over nothing.
+            // Decoded before the dialog is built.
             val source = PetPhotoStorage.decodeForCrop(appContext, uri)
             if (source == null) {
                 viewModel.onPhotoFailed()
@@ -221,23 +158,12 @@ class AddEditPetFragment : Fragment() {
                 .setPositiveButton(R.string.pet_photo_crop_confirm) { _, _ ->
                     saveCrop(cropBinding.photoCropView)
                 }
-                // Cancelling stores nothing at all, which is the point of decoding to memory first:
-                // there is no half-finished file on disk to tidy up if the user changes their mind.
+                // Cancelling stores nothing at all, which is the point of decoding to memory first.
                 .show()
         }
     }
 
-    /**
-     * Writes the framed photo and hands its path to the ViewModel.
-     *
-     * The bitmap is produced on the main thread — it is one `drawBitmap` into an image no larger
-     * than the screen, so it is quick — and only the compress-and-write half is moved to a
-     * background thread inside [PetPhotoStorage.saveBitmap]. Doing it in this order is what lets the
-     * crop be read from the view before the dialog tears it down.
-     *
-     * The width asked for is the view's own, so a phone with a wider screen stores a
-     * correspondingly sharper image, capped inside the crop view at a sensible maximum.
-     */
+    /** Writes the framed photo and hands its path to the ViewModel. */
     private fun saveCrop(cropView: PhotoCropView) {
         val appContext = requireContext().applicationContext
         val cropped = cropView.croppedBitmap(cropView.width)
@@ -247,8 +173,7 @@ class AddEditPetFragment : Fragment() {
             return
         }
 
-        // The fragment's own scope, not the view's: see the note on the picker result above — the
-        // same reasoning applies to the write that follows it.
+        // The fragment's own scope, not the view's: see the note on the picker result above.
         lifecycleScope.launch {
             val savedPath = PetPhotoStorage.saveBitmap(appContext, cropped)
             if (savedPath != null) {
@@ -275,13 +200,7 @@ class AddEditPetFragment : Fragment() {
         picker.show(childFragmentManager, DATE_PICKER_TAG)
     }
 
-    /**
-     * Asks before deleting.
-     *
-     * Deleting a pet also removes its care tasks, routines and expenses through the database's
-     * cascade rules, and none of that can be undone — far too much to lose to a mis-tap, which is
-     * why the dialog spells out the consequence rather than just asking "are you sure?".
-     */
+    /** Asks before deleting. */
     private fun showDeleteConfirmation() {
         val petName = binding.nameInput.text?.toString()?.trim().orEmpty()
 
@@ -326,9 +245,7 @@ class AddEditPetFragment : Fragment() {
         // `false` stops the dropdown treating this as typed input and filtering its own list.
         binding.speciesInput.setText(getString(state.species.labelRes()), false)
 
-        // Reflects the ViewModel's choice back onto the group — which is what restores it after a
-        // rotation and fills it in for an existing pet. `check` does nothing when that button is
-        // already selected, so this cannot loop with the listener above.
+        // Reflects the ViewModel's choice back onto the group.
         binding.genderToggleGroup.check(buttonForGender(state.gender))
 
         binding.dateOfBirthInput.setText(state.dateOfBirth?.let { formatStoredDate(it) }.orEmpty())
@@ -356,14 +273,12 @@ class AddEditPetFragment : Fragment() {
             return
         }
 
-        // Decoding touches the disk, so it happens in a coroutine. Tying it to the view lifecycle
-        // means the work is cancelled if the screen closes first.
+        // Decoding touches the disk, so it happens in a coroutine.
         viewLifecycleOwner.lifecycleScope.launch {
             val bitmap = PetPhotoStorage.load(path)
             if (bitmap != null) {
                 binding.petPhotoImage.setImageBitmap(bitmap)
-                // centerCrop fills the whole card with the photo; the padding that gives the
-                // placeholder icon breathing room would leave a border around a real image.
+                // centerCrop fills the whole card with the photo.
                 binding.petPhotoImage.scaleType = ImageView.ScaleType.CENTER_CROP
                 binding.petPhotoImage.setPadding(0, 0, 0, 0)
             }
@@ -375,8 +290,7 @@ class AddEditPetFragment : Fragment() {
         when (event) {
             is PetEvent.PrefillForm -> prefillForm(event.pet)
 
-            // Both outcomes simply close the screen; the home screen behind it is already
-            // observing the database and updates itself.
+            // Both outcomes simply close the screen.
             is PetEvent.Saved, is PetEvent.Deleted -> findNavController().navigateUp()
 
             is PetEvent.Error -> {
@@ -386,20 +300,7 @@ class AddEditPetFragment : Fragment() {
         }
     }
 
-    /**
-     * Writes a loaded pet's values into the text fields.
-     *
-     * Deliberately called once, from a one-shot event, rather than on every state update — writing
-     * into an EditText the user is typing in would move their cursor and undo their edits. After a
-     * rotation these fields restore themselves from Android's own saved instance state, so there is
-     * nothing to repeat.
-     *
-     * The weight is written with a plain `toString`, which SetTextI18n would normally flag as
-     * ignoring locale — hence the suppression. It is deliberate: this value is read back and parsed
-     * with `toDoubleOrNull` on save, and that expects a full stop as the decimal separator. Writing
-     * "24,5" here in a locale that uses a comma would make the pet's own weight fail validation the
-     * next time the form was saved.
-     */
+    /** Writes a loaded pet's values into the text fields. */
     @SuppressLint("SetTextI18n")
     private fun prefillForm(pet: Pet) {
         binding.nameInput.setText(pet.name)
@@ -411,13 +312,7 @@ class AddEditPetFragment : Fragment() {
         binding.favouriteToysInput.setText(pet.favouriteToys.orEmpty())
     }
 
-    /**
-     * The two directions between a toggle button id and a [PetGender].
-     *
-     * Kept as a matched pair next to each other so a fourth option would be added to both at once.
-     * The `when` over the enum has no `else`, so adding a constant to [PetGender] will not compile
-     * until it has a button here.
-     */
+    /** The two directions between a toggle button id and a [PetGender]. */
     private fun buttonForGender(gender: PetGender): Int = when (gender) {
         PetGender.MALE -> R.id.genderMaleButton
         PetGender.FEMALE -> R.id.genderFemaleButton
@@ -435,8 +330,7 @@ class AddEditPetFragment : Fragment() {
         super.onDestroyView()
         // Forces the photo to be drawn again against the new view hierarchy.
         renderedPhotoPath = null
-        // The framing dialog holds a decoded bitmap and a view hierarchy of its own; left showing,
-        // it would keep the destroyed view alive behind it.
+        // The framing dialog holds a decoded bitmap and a view hierarchy of its own; left showing.
         cropDialog?.dismiss()
         cropDialog = null
         _binding = null

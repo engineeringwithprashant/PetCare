@@ -1,38 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The profile screen: who is signed in, how the app behaves for them, and the way out.
-
-    Top to bottom:
-      - **The header** (monogram, "Profile", theme toggle, AI pill, pet count), shared with the tabs
-        and the other non-tab screens as res/layout/view_tab_header.xml. The monogram is unhooked here
-        — it is what opened this screen, and reopening the screen already being looked at is a dead
-        end (see TabHeader.kt, which does the same for the badge on the notifications screen).
-      - **The identity card** — a dark panel with the photo well, the name, the email and phone, and
-        two pills. The one dark object on the page in either theme, so the eye lands on "this is you"
-        first.
-      - **Three stat cards** — pets in care, day streak, tasks this week.
-      - **Five settings cards** — ACCOUNT, SECURITY, PREFERENCES, DELEGATION CONTACTS and
-        DATA &amp; PRIVACY. Every one of them is a section label over a stack of rows separated by
-        hairlines, drawn from the shared PetCare.Profile.* styles, which is what makes them read as one
-        list broken into groups rather than five differently proportioned panels.
-      - **The footer** — the outlined "LOG OUT" button and the version line.
-
-    **Why the header does not scroll and everything else does.** The header carries the theme toggle
-    and the pet badge, which are controls rather than content; on every other screen that draws it they
-    stay put, and a header that scrolled away here alone would read as a different app. So the root is
-    a vertical LinearLayout holding the header and a NestedScrollView beneath it that takes whatever is
-    left (height 0 + weight 1).
-
-    **Why one long layout rather than a RecyclerView.** The content is fixed: these cards and these
-    rows, in this order, always. A RecyclerView exists to recycle views for a list whose length is
-    unknown, and there is nothing here whose length is unknown except the contacts card — which
-    ProfileFragment fills by inflating item_profile_contact.xml into a container, for the reason given
-    at the top of that file. Declaring the rest in XML is what lets every one of them be read in place.
-
-    **Why the rows are LinearLayouts rather than ConstraintLayouts.** Each row is a badge, a column of
-    text that takes the leftover width, and a control at the end — which is what a LinearLayout says in
-    one attribute per child and a ConstraintLayout needs a chain and six constraints to express.
--->
+<!-- The profile screen: who is signed in, how the app behaves for them, and the way out. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -41,15 +8,12 @@
     android:orientation="vertical"
     tools:context=".ui.profile.ProfileFragment">
 
-    <!-- The shared header, as a nested binding (`binding.header`) — see the note at the top of
-         view_tab_header.xml on why one file draws this row for every screen that has it. -->
+    <!-- The shared header, as a nested binding (`binding.header`). -->
     <include
         android:id="@+id/header"
         layout="@layout/view_tab_header" />
 
-    <!-- clipToPadding="false" with bottom padding lets the last thing on the page scroll clear of the
-         floating bottom navigation bar while still being drawn as it passes through the padding,
-         rather than being cut off at its edge. -->
+    <!-- clipToPadding="false" with bottom padding lets the last row scroll clear of the floating nav bar. -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -65,12 +29,7 @@
             android:paddingTop="@dimen/content_top_padding"
             android:paddingEnd="@dimen/screen_padding">
 
-            <!-- ==================================================================================
-                 The identity card
-
-                 Dark in both themes by design — see the profile section of colors.xml. A photo well on
-                 the left, and a column of name, contact lines and pills on the right.
-                 ================================================================================== -->
+            <!-- The identity card. -->
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/PetCare.Card"
@@ -87,31 +46,12 @@
                     android:orientation="horizontal"
                     android:padding="@dimen/profile_card_padding">
 
-                    <!--
-                        The photo well and the "+" on its corner.
-
-                        A FrameLayout because the button is genuinely *stacked* on the well rather than
-                        placed beside it, which is the one arrangement a FrameLayout expresses in a
-                        single attribute (layout_gravity="bottom|end"). The well is a circle drawn in a
-                        square box, so a disc in the box's bottom-right corner lands just outside the
-                        circle's curve — where an "edit" affordance conventionally sits on an avatar.
-                    -->
+                    <!-- The photo well and the "+" on its corner. -->
                     <FrameLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content">
 
-                        <!--
-                            The photo itself.
-
-                            A ShapeableImageView so the picture is *masked* to the circle rather than
-                            drawn square behind a round background — the same component and the same
-                            50%-corner shape the app uses for round pet thumbnails. centerCrop fills
-                            the circle from the middle of whatever aspect the image has.
-
-                            Its background is a shaped drawable rather than a flat colour, for the
-                            reason bg_photo_circle.xml gives: a flat background is not part of the
-                            masked content and can be left painted square behind the circle.
-                        -->
+                        <!-- The photo itself. -->
                         <com.google.android.material.imageview.ShapeableImageView
                             android:id="@+id/profilePhoto"
                             android:layout_width="@dimen/profile_photo_size"
@@ -121,8 +61,7 @@
                             android:scaleType="centerCrop"
                             app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.Circle" />
 
-                        <!-- Changes the photo. The one bright mark on the dark card, so it is found
-                             instantly against any picture behind it. -->
+                        <!-- Changes the photo. The one bright mark on the dark card. -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/changePhotoButton"
                             style="@style/PetCare.Profile.AddPhotoButton"
@@ -132,8 +71,7 @@
 
                     </FrameLayout>
 
-                    <!-- The name, the two contact lines and the pills. Takes the leftover width, so a
-                         long name wraps to its second line rather than pushing the card wider. -->
+                    <!-- The name, the two contact lines and the pills. Takes the leftover width. -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -141,8 +79,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <!-- accessibilityHeading marks the name as this screen's heading below the
-                             header's own title, so TalkBack users can jump straight to it. -->
+                        <!-- accessibilityHeading marks the name as this screen's heading below the header's own title. -->
                         <TextView
                             android:id="@+id/profileNameText"
                             style="@style/PetCare.Profile.Name"
@@ -167,9 +104,7 @@
                             android:layout_height="wrap_content"
                             tools:text="+977 98·· ··12" />
 
-                        <!-- The role and the pet count. A horizontal row rather than two pills in a
-                             Flow: there are exactly two, they are short, and they never need to
-                             wrap. -->
+                        <!-- The role and the pet count. A horizontal row rather than two pills in a Flow. -->
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -199,13 +134,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ==================================================================================
-                 The stat row
-
-                 Three cards sharing the width equally. Each is wrapped so layout_weight can divide the
-                 row into exact thirds — a MaterialCardView carries its own margins, and weighting the
-                 cards directly would have those margins eat into the thirds unevenly.
-                 ================================================================================== -->
+            <!-- The stat row. -->
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -305,20 +234,7 @@
 
             </LinearLayout>
 
-            <!-- ==================================================================================
-                 ACCOUNT
-
-                 Four rows: the name and details, the email, the phone number and the password. Each is
-                 a square glyph badge — a person, an envelope, a handset, a padlock — two lines of text,
-                 and a pill on the right saying what pressing it would do, or, for the two "VERIFIED"
-                 pills, that it is a status and nothing will happen. See the note on
-                 profile_status_verified in strings.xml.
-
-                 The badges hold icons rather than the mono four-letter codes they used to ("NAME",
-                 "MAIL", "PHON", "PASS"): the well, its tint and its size are unchanged, so the card's
-                 rhythm is the same, but a glyph is recognised where a code has to be decoded. See
-                 ic_profile_person.xml for the whole of that argument.
-                 ================================================================================== -->
+            <!-- ACCOUNT. -->
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/PetCare.Card"
@@ -342,18 +258,14 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Name & details. The whole row opens the form, and the EDIT pill is a visible
-                         affordance for the same action rather than a second, competing target — see
-                         ProfileFragment, which attaches one listener to both. -->
+                    <!-- Name & details. The whole row opens the form. -->
                     <LinearLayout
                         android:id="@+id/accountNameRow"
                         style="@style/PetCare.Profile.Row.Clickable"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
-                        <!-- The row's glyph badge. Decorative: the row already announces its own title
-                             ("Name & details") to a screen reader, and an icon described after it would
-                             only repeat the word it illustrates. -->
+                        <!-- The row's glyph badge. Decorative: the row already announces its own title. -->
                         <ImageView
                             style="@style/PetCare.Profile.BadgeIcon"
                             android:importantForAccessibility="no"
@@ -393,9 +305,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Email. Not clickable: the address cannot be changed here — it is the sign-in
-                         identifier and the key the backup is filed under (see UserRepository) — so a
-                         row that responded to a tap would promise an edit the app will not make. -->
+                    <!-- Email. Not clickable: the address cannot be changed here. -->
                     <LinearLayout
                         style="@style/PetCare.Profile.Row"
                         android:layout_width="match_parent"
@@ -439,9 +349,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Phone. Also not clickable — it is edited on the same form the EDIT pill above
-                         opens, and two rows leading to one form would be two ways to ask the same
-                         question. -->
+                    <!-- Phone. Also not clickable — it is edited on the same form the EDIT pill above opens. -->
                     <LinearLayout
                         style="@style/PetCare.Profile.Row"
                         android:layout_width="match_parent"
@@ -475,9 +383,7 @@
 
                         </LinearLayout>
 
-                        <!-- Hidden when there is no number to describe as anything: a "VERIFIED" pill
-                             beside "Add one so carers know who is texting" would be confirming
-                             something that does not exist. -->
+                        <!-- Hidden when there is no number to describe as anything. -->
                         <TextView
                             android:id="@+id/phoneVerifiedPill"
                             style="@style/PetCare.Profile.StatusPill"
@@ -489,8 +395,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Change password. The accent pill, because unlike the three rows above it this
-                         is the one on this card a user might have come here specifically to do. -->
+                    <!-- Change password. The accent pill. -->
                     <LinearLayout
                         android:id="@+id/accountPasswordRow"
                         style="@style/PetCare.Profile.Row.Clickable"
@@ -538,15 +443,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ==================================================================================
-                 SECURITY
-
-                 Three switches and a note. Two of them save a value and take effect at once; the
-                 two-factor switch instead opens the flow that can do the work, because turning a
-                 second factor on takes a QR code and a proof, and turning it off takes a code. The
-                 note beneath covers the one row that is still a stated intention rather than a
-                 working feature.
-                 ================================================================================== -->
+            <!-- SECURITY. -->
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/PetCare.Card"
@@ -571,19 +468,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!--
-                        Two-factor authentication: a six-digit code from an authenticator app, asked
-                        for after the password at every sign-in.
-
-                        The switch opens a flow rather than saving a value. On, and it goes to the
-                        setup screen (scan, confirm, save the recovery codes); off, and it asks for a
-                        current code first. Either way the switch's own position comes back from the
-                        account — see ProfileFragment.renderTwoFactor — so it can never be left
-                        claiming something the account is not.
-
-                        The subtitle is filled in by the fragment, because it names a live figure: how
-                        many recovery codes are left.
-                    -->
+                    <!-- Two-factor authentication: a six-digit code from an authenticator app. -->
                     <LinearLayout
                         style="@style/PetCare.Profile.Row"
                         android:layout_width="match_parent"
@@ -621,14 +506,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Care reminders. This one does real work: ReminderManager reads it and
-                         withdraws every scheduled alarm when it is off.
-
-                         An "Unlock with fingerprint" row used to sit between this and the two-factor
-                         row above. It was removed rather than finished: nothing gated the app behind
-                         a fingerprint, so the switch saved a preference and changed nothing, which is
-                         a security control that lies about itself. Its stored value is deleted on
-                         first launch — see SettingsStore.forgetFingerprintUnlock. -->
+                    <!-- Care reminders. This one does real work. -->
                     <LinearLayout
                         style="@style/PetCare.Profile.Row"
                         android:layout_width="match_parent"
@@ -663,8 +541,7 @@
 
                     </LinearLayout>
 
-                    <!-- The note. Inside the card rather than below it, so it reads as an aside about
-                         these rows rather than as a new section. -->
+                    <!-- The note. Inside the card rather than below it, so it reads as an aside about these rows. -->
                     <TextView
                         style="@style/PetCare.Profile.Note"
                         android:layout_width="match_parent"
@@ -676,14 +553,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ==================================================================================
-                 PREFERENCES
-
-                 Four rows, each a title on the left and a two-option toggle on the right. Two of them
-                 carry a subtitle as well, and both times it is there to stop the choice claiming more
-                 than it does — see profile_row_currency_subtitle and
-                 profile_row_reminder_channel_subtitle in strings.xml.
-                 ================================================================================== -->
+            <!-- PREFERENCES. -->
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/PetCare.Card"
@@ -707,8 +577,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Weight units. Applied on the pet cards and the pet detail screen; the stored
-                         column stays in kilograms either way — see ui/common/WeightFormatting.kt. -->
+                    <!-- Weight units. Applied on the pet cards and the pet detail screen. -->
                     <LinearLayout
                         style="@style/PetCare.Profile.Row"
                         android:layout_width="match_parent"
@@ -793,8 +662,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Week start. Applied on the Tasks tab's week strip and the dashboard's care
-                         streak, both of which build their week from CareSchedule.weekContaining. -->
+                    <!-- Week start. Applied on the Tasks tab's week strip and the dashboard's care streak. -->
                     <LinearLayout
                         style="@style/PetCare.Profile.Row"
                         android:layout_width="match_parent"
@@ -881,17 +749,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ==================================================================================
-                 DELEGATION CONTACTS
-
-                 The people the user hands a checklist to. Deliberately **not** a care team: nobody is
-                 invited, nobody signs in, and no access is granted — this app has a single account.
-                 See DelegationContactStore for why that distinction is worth making in the naming as
-                 well as in the code.
-
-                 The rows are inflated into [contactsContainer] by ProfileFragment, one
-                 item_profile_contact.xml each.
-                 ================================================================================== -->
+            <!-- DELEGATION CONTACTS. -->
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/PetCare.Card"
@@ -925,9 +783,7 @@
                             android:layout_weight="1"
                             android:text="@string/profile_section_contacts" />
 
-                        <!-- "2 SAVED", or "NONE YET". A fact about the list rather than an invite
-                             state: nothing is ever sent to these people without the user pressing
-                             send, so there is no pending invitation to report. -->
+                        <!-- "2 SAVED", or "NONE YET". A fact about the list rather than an invite state. -->
                         <TextView
                             android:id="@+id/contactsStatusPill"
                             style="@style/PetCare.Profile.StatusPill.Accent"
@@ -939,8 +795,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Shown instead of the rows when nothing has been saved yet. It explains what
-                         the card is for, which an empty card cannot. -->
+                    <!-- Shown instead of the rows when nothing has been saved yet. -->
                     <TextView
                         android:id="@+id/contactsEmptyText"
                         style="@style/PetCare.Profile.RowSubtitle"
@@ -959,8 +814,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical" />
 
-                    <!-- The outlined "Add a contact" row, the same component the Pets tab ends its
-                         list with, so "there is room for one more" is the same object app-wide. -->
+                    <!-- The outlined "Add a contact" row, the same component the Pets tab ends its list. -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/addContactButton"
                         style="@style/PetCare.AddRowButton"
@@ -974,11 +828,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ==================================================================================
-                 DATA & PRIVACY
-
-                 Three rows with a chevron: export, backup, and the one destructive action in the app.
-                 ================================================================================== -->
+            <!-- DATA & PRIVACY. -->
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/PetCare.Card"
@@ -1030,8 +880,7 @@
 
                         </LinearLayout>
 
-                        <!-- The chevron is decorative: the row is already announced as a button with
-                             its title, and "arrow" read after it would add nothing. -->
+                        <!-- The chevron is decorative: the row is already announced as a button with its title. -->
                         <ImageView
                             android:layout_width="@dimen/profile_chevron_size"
                             android:layout_height="@dimen/profile_chevron_size"
@@ -1043,9 +892,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Backup & sync. Its subtitle is the same sync status the dashboard reports,
-                         from the same source, so the two can never give differently-worded answers to
-                         the same question. Tapping it asks the sync to run now. -->
+                    <!-- Backup & sync. Its subtitle is the same sync status the dashboard reports. -->
                     <LinearLayout
                         android:id="@+id/backupRow"
                         style="@style/PetCare.Profile.Row.Clickable"
@@ -1085,9 +932,7 @@
 
                     <View style="@style/PetCare.Profile.RowDivider" />
 
-                    <!-- Delete account. Red, and the only row in the app drawn that way — see
-                         PetCare.Profile.RowTitle.Destructive. Two confirmations stand between this tap
-                         and anything being deleted; see ProfileFragment.confirmDeleteAccount. -->
+                    <!-- Delete account. Red, and the only row in the app drawn that way. -->
                     <LinearLayout
                         android:id="@+id/deleteAccountRow"
                         style="@style/PetCare.Profile.Row.Clickable"
@@ -1139,8 +984,7 @@
                 android:layout_marginTop="@dimen/home_section_gap"
                 android:text="@string/profile_log_out" />
 
-            <!-- "PetCare 1.0 · records stored on this device". The version is read from BuildConfig by
-                 the fragment, so this line cannot claim a version the build is not. -->
+            <!-- "PetCare 1.0 · records stored on this device". The version is read from BuildConfig by the fragment. -->
             <TextView
                 android:id="@+id/versionText"
                 style="@style/PetCare.Profile.Version"

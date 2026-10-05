@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Schibsted Grotesk at its *interface* weights — the family for titles, buttons and chips.
-
-    Medium (500) answers a normal-style request and SemiBold (600) answers a bold one. Material 3's
-    Title and Label roles, and most of the app's buttons, ask for bold, so in practice buttons, chips
-    and task titles render SemiBold: clearly firmer than body copy without the heaviness of full
-    Bold at small sizes. See schibsted_grotesk.xml for why the typeface is split into two families.
-
-    Bold is 700 and the nearest file here is 600, a gap of only 100, so Android uses SemiBold as-is
-    rather than faking extra weight on top of it.
--->
+<!-- Schibsted Grotesk at its interface weights — the family for titles, buttons and chips. -->
 <font-family xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 

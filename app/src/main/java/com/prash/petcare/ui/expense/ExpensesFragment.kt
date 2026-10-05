@@ -30,30 +30,14 @@ import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
-/**
- * The Money tab: this month's spending as a dark total card with a stacked category bar, a legend of
- * what it went on, and every expense recorded — for one pet or all of them.
- *
- * In MVVM this is the **View**. [ExpenseViewModel] merges the pets' expenses, works out the month's
- * figures and builds the rows; this class draws them, and forwards chip taps, card taps, swipes and
- * the add button. It formats nothing it can avoid — the rows are formatted by [ExpenseAdapter] — and
- * decides nothing about the data.
- *
- * **Also one pet's spending.** Opened from a pet's detail page with a `petId`, the same screen shows
- * that animal alone: the shared header and the chips are hidden, and MainActivity shows the normal
- * toolbar with a back arrow and the title "Spending on Bella". See the note at the top of
- * nav_graph.xml.
- */
+/** The Money tab: this month's spending as a dark total card with a stacked category bar. */
 class ExpensesFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
     private var _binding: FragmentExpensesBinding? = null
     private val binding get() = _binding!!
 
-    /**
-     * Which pet to show, or [ExpenseViewModel.NO_PET_ID] on the tab. `arguments?` because the bottom
-     * bar navigates here with no argument bundle at all.
-     */
+    /** Which pet to show, or [ExpenseViewModel.NO_PET_ID] on the tab. */
     private val petId: Long by lazy {
         arguments?.getLong(ARG_PET_ID, ExpenseViewModel.NO_PET_ID) ?: ExpenseViewModel.NO_PET_ID
     }
@@ -65,10 +49,7 @@ class ExpensesFragment : Fragment() {
         ExpenseViewModel.factory(ownerId = sessionViewModel.userId.value, petId = petId)
     }
 
-    /**
-     * Tapping a card opens that expense for editing, with the pet the expense *belongs to* — not the
-     * chip that happens to be selected, which on "All pets" is no pet at all.
-     */
+    /** Tapping a card opens that expense for editing, with the pet the expense belongs. */
     private val expenseAdapter = ExpenseAdapter(
         onExpenseClick = { expense -> openExpenseForm(expense.petId, expense.id) }
     )
@@ -94,18 +75,14 @@ class ExpensesFragment : Fragment() {
         observeViewModel()
     }
 
-    /**
-     * Shows the header and chips on the tab, and neither for one pet — where the toolbar carries the
-     * pet's name and there is no other pet to choose.
-     */
+    /** Shows the header and chips on the tab, and neither for one pet. */
     private fun setUpModeSpecificChrome() {
         val isTab = viewModel.showsPetPicker
         binding.header.root.isVisible = isTab
         binding.petChipScroll.isVisible = isTab
 
         if (isTab) {
-            // The badge opens the notifications screen, as on every other screen that draws this
-            // header.
+            // The badge opens the notifications screen, as on every other screen that draws this header.
             binding.header.setUp(
                 title = R.string.expenses_header_title,
                 onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
@@ -113,8 +90,7 @@ class ExpensesFragment : Fragment() {
                 onMonogramClick = ::openProfile
             )
 
-            // Keeps the header's mark showing the user's profile photo, falling back to the app's
-            // monogram when there is none. See TabHeader.bindHeaderFromSession.
+            // Keeps the header's mark showing the user's profile photo, falling back to the app's monogram.
             bindHeaderFromSession(binding.header, sessionViewModel)
         }
     }
@@ -123,25 +99,16 @@ class ExpensesFragment : Fragment() {
         binding.expensesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = expenseAdapter
-            // Not setHasFixedSize(true): the card, legend rows and expense cards are all different
-            // heights, so the list must re-measure as rows come and go.
+            // Not setHasFixedSize(true): the card, legend rows and expense cards are all different heights.
         }
     }
 
-    /**
-     * Swipe-to-delete on the expense cards, following the app-wide convention: **left is
-     * destructive**, with an undo rather than a confirmation. [SwipeActionCallback] draws the red
-     * background and bin as the card slides.
-     *
-     * Only expense cards can be swiped. The total card, legend and heading are all *derived* from the
-     * expenses; offering the gesture on them would imply there was something of their own to delete.
-     */
+    /** Swipe-to-delete on the expense cards, following the app-wide convention: left is destructive, with an undo. */
     private fun setUpSwipeGestures() {
         val callback = SwipeActionCallback(
             context = requireContext(),
             allowedDirections = { position ->
-                // `currentList` is what the adapter is actually showing, which is what the swiped
-                // position refers to — ViewModel state could be a frame ahead and name another row.
+                // `currentList` is what the adapter is actually showing, which is what the swiped position refers.
                 val item = expenseAdapter.currentList.getOrNull(position)
                 if (item is ExpenseListItem.ExpenseRow) ItemTouchHelper.LEFT else 0
             },
@@ -163,40 +130,28 @@ class ExpensesFragment : Fragment() {
         }
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Rendering
-    // ---------------------------------------------------------------------------------------
+    // Rendering.
 
     private fun render(state: ExpensesUiState) {
         if (viewModel.showsPetPicker) {
             renderPetChips(state)
         } else {
-            // "Spending on Bella" in the toolbar. Until the pet loads, the destination's own label
-            // stays, which reads sensibly on its own.
+            // "Spending on Bella" in the toolbar. Until the pet loads, the destination's own label stays.
             state.pet?.let { setToolbarTitle(getString(R.string.expenses_title_format, it.name)) }
         }
 
         expenseAdapter.submitList(state.items)
 
-        // The list and the empty state share one slot and exactly one shows — neither while loading,
-        // so "No expenses yet" never flashes up before the first result.
+        // The list and the empty state share one slot and exactly one shows — neither while loading.
         binding.expensesRecyclerView.isVisible = !state.isLoading && state.hasExpenses
         binding.emptyExpensesContainer.isVisible = state.showsEmptyState
         renderEmptyStateWording(state)
 
         // An expense needs a pet to belong to; with none, the button has nothing it could do.
-        // Disabled rather than hidden, so the user is not left wondering where it went.
         binding.addExpenseFab.isEnabled = !viewModel.showsPetPicker || state.pets.isNotEmpty()
     }
 
-    /**
-     * Fills the chip row — "All pets", then each pet — and marks the chosen one. Hidden entirely for an
-     * account with no pets, where the empty state explains instead.
-     *
-     * The chips are keyed by string so the shared helper can serve this row and the Tasks tab's alike
-     * — see ui/common/FilterChips.kt. It only rebuilds the chips when the pets change, so recording an
-     * expense does not reset the row's scroll position.
-     */
+    /** Fills the chip row — "All pets", then each pet — and marks the chosen one. */
     private fun renderPetChips(state: ExpensesUiState) {
         binding.petChipScroll.isVisible = state.pets.isNotEmpty()
 
@@ -212,11 +167,7 @@ class ExpensesFragment : Fragment() {
         )
     }
 
-    /**
-     * Words the empty state. "No expenses yet" and "you have no pets" both leave nothing to draw, but
-     * inviting a brand-new user to record spending on a pet they have not added would send them
-     * looking for a form that cannot exist yet.
-     */
+    /** Words the empty state. "No expenses yet" and "you have no pets" both leave nothing to draw. */
     private fun renderEmptyStateWording(state: ExpensesUiState) {
         if (state.hasNoPets) {
             binding.emptyExpensesIcon.setImageResource(R.drawable.ic_pet_placeholder)
@@ -229,17 +180,9 @@ class ExpensesFragment : Fragment() {
         }
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Adding and editing
-    // ---------------------------------------------------------------------------------------
+    // Adding and editing.
 
-    /**
-     * The add button: open the expense form for the right pet.
-     *
-     * Every expense belongs to exactly one pet, so the form needs one. The pet in view is used when
-     * there is one — the pet this screen was opened for, or the chosen chip. With "All pets" chosen, a
-     * household with a single pet goes straight to the form; with several, a short list asks which.
-     */
+    /** The add button: open the expense form for the right pet. */
     private fun startAddExpense() {
         val state = viewModel.uiState.value
 
@@ -268,10 +211,7 @@ class ExpensesFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Opens the existing add/edit expense form. [AddEditExpenseViewModel.NO_EXPENSE_ID] records a new
-     * expense; a real id edits that one.
-     */
+    /** Opens the existing add/edit expense form. [AddEditExpenseViewModel.NO_EXPENSE_ID] records a new expense. */
     private fun openExpenseForm(forPetId: Long, expenseId: Long) {
         findNavController().navigate(
             R.id.action_expenses_to_add_edit_expense,
@@ -282,9 +222,7 @@ class ExpensesFragment : Fragment() {
         )
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Undo
-    // ---------------------------------------------------------------------------------------
+    // Undo.
 
     private fun handleEvent(event: ExpenseEvent) {
         when (event) {
@@ -292,10 +230,7 @@ class ExpensesFragment : Fragment() {
         }
     }
 
-    /**
-     * Offers to undo a swipe-delete — which is what makes the gesture safe without a confirmation.
-     * Anchored to the floating action button so the bar lifts clear of it rather than hiding under it.
-     */
+    /** Offers to undo a swipe-delete — which is what makes the gesture safe without a confirmation. */
     private fun showUndoDeleteSnackbar(event: ExpenseEvent.Deleted) {
         val root = _binding?.root ?: return
         Snackbar.make(root, getString(R.string.expense_deleted_format, event.expense.title), Snackbar.LENGTH_LONG)
@@ -308,8 +243,7 @@ class ExpensesFragment : Fragment() {
         super.onDestroyView()
         petDialog?.dismiss()
         petDialog = null
-        // The adapter outlives the view as a fragment property; detaching it stops the destroyed
-        // RecyclerView being kept alive through it.
+        // The adapter outlives the view as a fragment property.
         binding.expensesRecyclerView.adapter = null
         _binding = null
     }

@@ -11,25 +11,7 @@ import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import com.prash.petcare.R
 
-/**
- * The horizontal stacked bar on the Money tab's total card: one rounded segment per spending
- * category, each as long as that category's share of the month and drawn in its colour.
- *
- * **Why a custom View.** A LinearProgressIndicator draws one proportion; this needs several, side by
- * side, each a different colour, with a small gap between them. The existing
- * [com.prash.petcare.ui.common.SegmentedProgressView] draws *equal* segments (one per task), which is
- * a different chart. Building this from a View per category inside a LinearLayout with weights would
- * work, but would add and remove child views every time the month's categories changed; drawing a
- * few rounded rectangles in [onDraw] costs nothing to update and has no hierarchy to measure.
- *
- * **Tiny shares stay visible.** A category worth 0.4% of the month would otherwise be a sliver
- * narrower than a pixel. Every segment is given at least [minSegmentWidth] — about a dot — and the
- * width that borrows is taken from the larger segments in proportion to their size, so the bar still
- * fills exactly.
- *
- * **Accessibility.** The colours carry no words, so the view is hidden from TalkBack: the legend rows
- * directly beneath it state every category, percentage and amount in text.
- */
+/** The horizontal stacked bar on the Money tab's total card: one rounded segment per spending category. */
 class CategoryBarView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -82,8 +64,7 @@ class CategoryBarView @JvmOverloads constructor(
 
         val widths = segmentWidths(right - left - gap * (segments.size - 1))
 
-        // Drawn from the start edge, so in a right-to-left language the largest category still sits
-        // where reading begins.
+        // Drawn from the start edge.
         val isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         var cursor = if (isRtl) right else left
 
@@ -91,8 +72,7 @@ class CategoryBarView @JvmOverloads constructor(
             val w = widths[index]
             if (isRtl) rect.set(cursor - w, top, cursor, bottom) else rect.set(cursor, top, cursor + w, bottom)
 
-            // Recolouring one Paint rather than keeping a Paint per segment: onDraw runs on every
-            // frame of any animation on screen, and allocating inside it causes stutter.
+            // Recolouring one Paint rather than keeping a Paint per segment.
             segmentPaint.color = segment.color
             canvas.drawRoundRect(rect, radius, radius, segmentPaint)
 
@@ -100,14 +80,7 @@ class CategoryBarView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Shares each segment's width out of [available] pixels, guaranteeing every segment at least
-     * [minSegmentWidth] and still adding up to exactly [available].
-     *
-     * Segments below the minimum are fixed at it; the rest divide what remains in proportion to their
-     * shares. If there are so many categories that even the minimum does not fit, every segment
-     * simply gets an equal slice.
-     */
+    /** Shares each segment's width out of [available] pixels. */
     private fun segmentWidths(available: Float): FloatArray {
         val count = segments.size
         if (minSegmentWidth * count >= available) return FloatArray(count) { available / count }

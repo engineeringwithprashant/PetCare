@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The form behind the profile screen's "EDIT" pill: the account's own name, contact number and role,
-    with the email shown but locked.
-
-    Reached from the profile screen, so it shows the shared app bar with its back arrow rather than
-    drawing the tab header — it is a step *into* something, not a step sideways, and the arrow back to
-    where the user came from is the right chrome for that.
-
-    **Why it is a ScrollView.** Four fields fit on a phone today, but not at a large font scale and not
-    with the keyboard up — and MainActivity applies the keyboard inset as padding on the root, so a
-    ScrollView here re-measures into the smaller space and scrolls the focused field into view by
-    itself. Every other form in the app is built the same way, for the same reason.
-
-    A vertical LinearLayout inside it: fields stacked, nothing positioned relative to anything but its
-    neighbour.
--->
+<!-- The form behind the profile screen's "EDIT" pill: the account's own name, contact number and role. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -32,9 +17,7 @@
         android:paddingTop="@dimen/content_top_padding"
         android:paddingEnd="@dimen/screen_padding">
 
-        <!-- The name. The one required field on the form — see AccountDetailsViewModel.onSave for why
-             it is the only thing validated. Its error is shown on the layout, which is what the
-             `errorEnabled` slot reserves room for so the fields below do not jump when it appears. -->
+        <!-- The name. The one required field on the form. -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/nameInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -52,27 +35,7 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!--
-            The phone number: a country selector and the local number beside it.
-
-            Optional, and the helper says what it is for rather than only that it may be left blank —
-            a field whose purpose is stated is one people are willing to fill in.
-
-            **Why the country is asked for separately.** The number is stored in one international
-            form, which is what lets the same account be found by that number at sign-in, and a number
-            can only be turned into that form — or checked at all — against a country. The behaviour
-            behind the pair is ui/common/PhoneNumberInput.kt, shared with the register form and the
-            two dialogs that ask for a number.
-
-            A number saved before this form had a selector is read back into the two boxes on open;
-            see PhoneNumberInput.setStoredNumber, which is why an existing profile's number does not
-            simply vanish the first time this screen is opened after the change.
-
-            A horizontal LinearLayout: the selector at a fixed width so the number box always begins
-            in the same place whatever the dialling code, and the number taking the rest (width 0 +
-            weight 1). baselineAligned="false" because a baseline-aligning row measures a weighted
-            child before it knows its width, and can then keep the wrong height.
-        -->
+        <!-- The phone number: a country selector and the local number beside it. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -80,9 +43,7 @@
             android:baselineAligned="false"
             android:orientation="horizontal">
 
-            <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it
-                 unfocusable, so it can never summon the keyboard, and gives it a spoken description
-                 naming the country in full — the label itself is a flag and a number. -->
+            <!-- Not typed into: tapping it opens the country list. -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/phoneCountryLayout"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -100,8 +61,7 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- inputType="phone" brings up the dialling keypad. How many digits it accepts is capped
-                 per country by PhoneNumberInput, so an over-long number cannot be typed at all. -->
+            <!-- inputType="phone" brings up the dialling keypad; PhoneNumberInput caps the digits per country. -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/phoneInputLayout"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -125,19 +85,7 @@
 
         </LinearLayout>
 
-        <!--
-            The email, shown and locked.
-
-            Present rather than omitted, because the address is one of the account's defining facts and
-            a form without it would look as though it had been forgotten. Disabled rather than merely
-            read-only, so it is drawn greyed, cannot take focus, and is announced by TalkBack as
-            unavailable — all three of which say "not editable" more clearly than a field that accepts
-            typing and then silently discards it.
-
-            The helper text carries the reason. It is not an arbitrary restriction: the address is the
-            sign-in identifier *and* the key the Firestore sync files this account's data under, so
-            changing it here would strand everything already uploaded. See UserRepository.updateDetails.
-        -->
+        <!-- The email, shown and locked. -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -167,19 +115,7 @@
             android:layout_marginTop="@dimen/spacing_lg"
             android:text="@string/account_details_role_label" />
 
-        <!--
-            Owner or carer.
-
-            A MaterialButtonToggleGroup rather than the two-half toggle the profile screen uses for its
-            preferences. The difference is deliberate: those are compact controls squeezed to the right
-            of a row, where a pair of real buttons would not fit; here there is a full screen width and
-            a form label above, so the standard Material component — which brings the single-selection
-            behaviour, the touch targets and the "selected" announcement for free — is simply the right
-            thing.
-
-            singleSelection with selectionRequired means exactly one is always chosen, so the form can
-            never be saved with no role and the fragment never has to handle that case.
-        -->
+        <!-- Owner or carer. -->
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/roleToggleGroup"
             android:layout_width="match_parent"
@@ -213,8 +149,7 @@
             android:layout_marginTop="@dimen/spacing_sm"
             android:text="@string/account_details_role_helper" />
 
-        <!-- The one action on the screen, so it is the filled accent button — which everywhere in this
-             app means "this is the thing to do". -->
+        <!-- The one action on the screen, so it is the filled accent button. -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/saveButton"
             style="@style/PetCare.TaskActionButton.Filled"

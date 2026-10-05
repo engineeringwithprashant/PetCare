@@ -15,12 +15,7 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
-/**
- * Why a Firebase Authentication call failed, in the app's own terms.
- *
- * Repositories and ViewModels see this enum and never a Firebase exception class. That keeps
- * Firebase out of every layer above the data layer.
- */
+/** Why a Firebase Authentication call failed, in the app's own terms. */
 enum class AuthFailure {
 
     /** Wrong password, or no account with that email. Firebase reports both the same way. */
@@ -29,10 +24,7 @@ enum class AuthFailure {
     /** Firebase found no account for the address, or the account is disabled. */
     ACCOUNT_UNAVAILABLE,
 
-    /**
-     * Another account already uses this address: at registration, or at a Google sign-in Firebase
-     * would not attach to the existing account.
-     */
+    /** Another account already uses this address: at registration. */
     EMAIL_IN_USE,
 
     /** Registration or password change: the password fails the project's password policy. */
@@ -54,50 +46,16 @@ enum class AuthFailure {
     UNKNOWN
 }
 
-/**
- * Who a Google sign-in turned out to be.
- *
- * @property email The account's address, as Google reports it.
- * @property displayName The name on the Google account, or null if it has none.
- */
+/** Who a Google sign-in turned out to be. */
 data class SignedInAccount(val email: String, val displayName: String?)
 
 /** Thrown by [FirebaseAuthService] for any failed call. [failure] says what went wrong. */
 class AuthException(val failure: AuthFailure, cause: Throwable? = null) : Exception(cause)
 
-/**
- * The only class in the app that talks to Firebase Authentication. It is the auth counterpart of
- * [FirestoreSyncService].
- *
- * **What Firebase is responsible for.** Firebase stores every account's email and password and
- * checks them. The app no longer keeps a password or a password hash anywhere on the device. The
- * local Room `users` row is only the account's profile (name, phone, role, photo) and the owner that
- * pets and other records point to. [com.prash.petcare.data.repository.UserRepository] keeps the two
- * in step, matched by email address.
- *
- * **Like a DAO, but for a remote service.** Every method is a `suspend` function that either
- * finishes or throws [AuthException]. Deciding what a failure means for the screen is the
- * repository's job. `await()` (kotlinx-coroutines-play-services) turns each Firebase `Task` into a
- * suspending call.
- *
- * **Changing the password or deleting the account asks for the password first.** Firebase only
- * allows these right after a login and otherwise throws "recent login required". Checking the
- * password again first (re-authentication) also confirms it is the account owner making the change
- * rather than someone who picked up an unlocked phone.
- *
- * @property auth Injected, so PetCareApplication is the only place that calls
- *   `FirebaseAuth.getInstance()`.
- */
+/** The only class in the app that talks to Firebase Authentication. */
 class FirebaseAuthService(private val auth: FirebaseAuth) {
 
-    /**
-     * Creates a Firebase account and signs it in. [displayName] is saved on the Firebase account so
-     * that a login on another device can fill in the local profile's name.
-     *
-     * If saving the name fails, the call still succeeds. The account exists by then, and only the
-     * name on a *future* device would be affected. Failing here would tell the user registration
-     * failed when it had worked.
-     */
+    /** Creates a Firebase account and signs it in. [displayName] is saved on the Firebase account. */
     suspend fun createAccount(email: String, password: String, displayName: String) {
         val user = call { auth.createUserWithEmailAndPassword(email, password).await().user }
             ?: throw AuthException(AuthFailure.UNKNOWN)
@@ -108,52 +66,25 @@ class FirebaseAuthService(private val auth: FirebaseAuth) {
         }.onFailure { if (it is CancellationException) throw it }
     }
 
-    /**
-     * Signs in with an email and password.
-     *
-     * @return The display name saved on the account, or null if it has none. Used to create the
-     *   local profile when this device has never seen the account before.
-     */
+    /** Signs in with an email and password. */
     suspend fun signIn(email: String, password: String): String? {
         val user = call { auth.signInWithEmailAndPassword(email, password).await().user }
             ?: throw AuthException(AuthFailure.UNKNOWN)
         return user.displayName
     }
 
-    /**
-     * Signs in to Firebase with a Google ID token.
-     *
-     * [idToken] comes from Credential Manager on the device (ui.auth.GoogleSignInLauncher). It proves
-     * which Google account the user picked. `GoogleAuthProvider.getCredential` wraps it as a Firebase
-     * credential, and `signInWithCredential` checks it with Google and signs in. The first Google
-     * sign-in for an address also creates the Firebase account, so the same call serves "register"
-     * and "log in".
-     *
-     * **An address that already has a password account.** Firebase allows one account per email
-     * by default. Google is a trusted provider for Gmail addresses, so Firebase attaches the Google
-     * sign-in to the existing account rather than refusing. For an address whose password account
-     * was never email-verified, Firebase *removes* the password so that only the owner of the Google
-     * account can get in. Where Firebase refuses instead, this throws
-     * [AuthFailure.EMAIL_IN_USE].
-     *
-     * @return The account's email and display name, which the repository uses to find or create
-     *   the local profile.
-     */
+    /** Signs in to Firebase with a Google ID token. */
     suspend fun signInWithGoogle(idToken: String): SignedInAccount {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         val user = call { auth.signInWithCredential(credential).await().user }
             ?: throw AuthException(AuthFailure.UNKNOWN)
 
-        // Google accounts always have an email, and the app matches profiles by it. Without one,
-        // there is no way to tell which profile this account is.
+        // Google accounts always have an email, and the app matches profiles by it.
         val email = user.email ?: throw AuthException(AuthFailure.UNKNOWN)
         return SignedInAccount(email = email, displayName = user.displayName)
     }
 
-    /**
-     * Checks [currentPassword] again, then replaces it with [newPassword]. Throws
-     * [AuthFailure.INVALID_CREDENTIALS] if the current password is wrong.
-     */
+    /** Checks [currentPassword] again, then replaces it with [newPassword]. */
     suspend fun changePassword(email: String, currentPassword: String, newPassword: String) {
         val user = reauthenticate(email, currentPassword)
         call { user.updatePassword(newPassword).await() }
@@ -172,18 +103,10 @@ class FirebaseAuthService(private val auth: FirebaseAuth) {
         call { auth.sendPasswordResetEmail(email).await() }
     }
 
-    /**
-     * Signs the Firebase user out on this device. Local only, with no network call, so it cannot
-     * fail. After this, Firestore requests are no longer made as this account.
-     */
+    /** Signs the Firebase user out on this device. Local only, with no network call, so it cannot fail. */
     fun signOut() = auth.signOut()
 
-    /**
-     * Returns the signed-in Firebase user after checking [password] again.
-     *
-     * It first checks that the signed-in Firebase user is the account being changed. Emails are
-     * compared case-insensitively, matching how the local database looks accounts up.
-     */
+    /** Returns the signed-in Firebase user after checking [password] again. */
     private suspend fun reauthenticate(email: String, password: String): FirebaseUser {
         val user = auth.currentUser
         if (user == null || !user.email.equals(email, ignoreCase = true)) {
@@ -193,18 +116,11 @@ class FirebaseAuthService(private val auth: FirebaseAuth) {
         return user
     }
 
-    /**
-     * Runs one Firebase call and converts any exception it throws into an [AuthException].
-     *
-     * The order of the `catch` blocks matters. Kotlin uses the first block whose type matches, and
-     * several Firebase exceptions are subclasses of others. For example, the weak-password exception
-     * is a kind of invalid-credentials exception, so it has to be caught first.
-     */
+    /** Runs one Firebase call and converts any exception it throws into an [AuthException]. */
     private suspend fun <T> call(block: suspend () -> T): T = try {
         block()
     } catch (e: CancellationException) {
-        // The screen was closed while the call was in flight. Rethrow so the coroutine is cancelled
-        // properly instead of being reported as a failure.
+        // The screen was closed while the call was in flight.
         throw e
     } catch (e: FirebaseNetworkException) {
         throw AuthException(AuthFailure.NO_NETWORK, e)
@@ -217,12 +133,10 @@ class FirebaseAuthService(private val auth: FirebaseAuth) {
     } catch (e: FirebaseAuthInvalidUserException) {
         throw AuthException(AuthFailure.ACCOUNT_UNAVAILABLE, e)
     } catch (e: FirebaseAuthRecentLoginRequiredException) {
-        // Should not happen, because the password is checked again first. If it does, signing in
-        // again is the fix, which is what NOT_SIGNED_IN tells the screen.
+        // Should not happen, because the password is checked again first.
         throw AuthException(AuthFailure.NOT_SIGNED_IN, e)
     } catch (e: FirebaseAuthInvalidCredentialsException) {
-        // One exception type for two problems: the error code separates a malformed address from
-        // a wrong password.
+        // One exception type for two problems: the error code separates a malformed address from a wrong password.
         val failure = if (e.errorCode == "ERROR_INVALID_EMAIL") {
             AuthFailure.INVALID_EMAIL
         } else {

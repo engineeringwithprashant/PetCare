@@ -34,24 +34,7 @@ import com.prash.petcare.ui.common.emojiLabel
 import com.prash.petcare.ui.common.setToolbarTitle
 import kotlinx.coroutines.launch
 
-/**
- * Form for adding a care task to a routine, or changing an existing one.
- *
- * Which mode it runs in depends on the `taskId` navigation argument: [CareTaskViewModel.NO_TASK_ID]
- * means add, anything else means edit. The distinction is the ViewModel's to interpret — this
- * fragment renders whatever state comes back.
- *
- * As the **View** in MVVM it owns no logic: validation, persistence and the scheduling arithmetic
- * all live in [CareTaskViewModel]. What it owns are the things that genuinely need a Context or a
- * view — the time picker, the confirmation dialog, and the notification permission prompt.
- *
- * **Why the notification permission is asked for here.** A task's time of day is what a reminder
- * fires at, so the moment the user first picks one is the moment a reminder becomes a thing they
- * might want — and the moment the prompt explains itself. Asking on the home screen instead would
- * mean a cold request before the user has anything to be reminded about, which is the surest way to
- * have it refused. Nothing about saving the task depends on the answer: the alarm is scheduled
- * either way, and only the notification is lost if it is refused.
- */
+/** Form for adding a care task to a routine, or changing an existing one. */
 class AddEditTaskFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
@@ -64,11 +47,7 @@ class AddEditTaskFragment : Fragment() {
         requireArguments().getLong(ARG_TASK_ID, CareTaskViewModel.NO_TASK_ID)
     }
 
-    /**
-     * Suggested starting values, when the form was opened by "Book a visit" on the Places tab. All
-     * three arguments default to null in the nav graph, so every other route in gets an empty form.
-     * An unrecognised category name is ignored rather than trusted.
-     */
+    /** Suggested starting values, when the form was opened by "Book a visit" on the Places tab. */
     private val prefill: CareTaskPrefill? by lazy {
         val args = requireArguments()
         val title = args.getString(ARG_PREFILL_TITLE)
@@ -84,28 +63,13 @@ class AddEditTaskFragment : Fragment() {
         CareTaskViewModel.factory(routineId, taskId, prefill)
     }
 
-    /**
-     * Whether the notification permission has already been raised on this screen.
-     *
-     * Stops the rationale reappearing every time the user reopens the time picker to adjust the
-     * minutes. Deliberately not persisted across a rotation: the flag lives only as long as the
-     * fragment instance, and the prompt is only reached by picking a time again, so at worst the
-     * user is asked once more after turning their phone — which is a far smaller annoyance than
-     * carrying state around to prevent it.
-     */
+    /** Whether the notification permission has already been raised on this screen. */
     private var hasOfferedReminders = false
 
-    /**
-     * Handles the result of the notification permission request.
-     *
-     * Registered as a property because `registerForActivityResult` must be called while the fragment
-     * is being created — the callback has to be in place before a fragment recreated behind the
-     * system prompt can be handed the pending result.
-     */
+    /** Handles the result of the notification permission request. */
     private val requestNotificationPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            // Granted needs no acknowledgement — the next reminder simply arrives. A refusal is
-            // explained, because otherwise the silence would look like the feature was broken.
+            // Granted needs no acknowledgement — the next reminder simply arrives.
             if (!isGranted) onNotificationPermissionDenied()
         }
 
@@ -125,16 +89,9 @@ class AddEditTaskFragment : Fragment() {
         observeViewModel()
     }
 
-    /**
-     * Fills the category dropdown.
-     *
-     * The labels and [TaskCategory.entries] are built from the same list in the same order, so the
-     * tapped position maps straight back to an enum constant. Reading the category back from the
-     * displayed text would break the moment the app is translated.
-     */
+    /** Fills the category dropdown. */
     private fun setUpCategoryDropdown() {
-        // "💊  Medication" — the same emoji the Tasks tab's filter chips carry, so a category is the
-        // same thing to look for whether it is being chosen here or filtered for there.
+        // "💊 Medication" — the same emoji the Tasks tab's filter chips carry.
         val labels = TaskCategory.entries
             .map { it.emojiLabel(requireContext()) }
             .toTypedArray()
@@ -146,9 +103,7 @@ class AddEditTaskFragment : Fragment() {
     }
 
     private fun setUpClickListeners() {
-        // Focusable so it can be reached by keyboard, D-pad or switch access, with the soft
-        // keyboard suppressed so focusing does not pop one up for a field nobody types into. See
-        // AddEditPetFragment for the same treatment of its date field.
+        // Focusable so it can be reached by keyboard, D-pad or switch access, with the soft keyboard suppressed.
         binding.timeInput.showSoftInputOnFocus = false
         binding.timeInput.setOnClickListener { showTimePicker() }
 
@@ -184,36 +139,19 @@ class AddEditTaskFragment : Fragment() {
             .build()
 
         picker.addOnPositiveButtonClickListener {
-            // The chosen values are read back off the picker itself, which is how its API reports
-            // the selection.
+            // The chosen values are read back off the picker itself, which is how its API reports the selection.
             viewModel.onTimeSelected(picker.hour, picker.minute)
 
-            // The task now has a moment to be reminded at, so this is where asking to notify makes
-            // sense to the user. Nothing below depends on the answer.
+            // The task now has a moment to be reminded at, so this is where asking to notify makes sense to the user.
             offerReminderNotifications()
         }
 
         picker.show(childFragmentManager, TIME_PICKER_TAG)
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Reminder notification permission
-    // ---------------------------------------------------------------------------------------
+    // Reminder notification permission.
 
-    /**
-     * Offers to turn reminder notifications on, if that is still an open question.
-     *
-     * Returns without doing anything in the three cases where asking would be pointless:
-     *  - **before Android 13**, where `POST_NOTIFICATIONS` does not exist as a runtime permission
-     *    and notifications work from the manifest declaration alone;
-     *  - when it has **already been granted**, since re-requesting a held permission does nothing;
-     *  - when this screen has **already asked once**, so adjusting the time twice does not mean
-     *    being nagged twice.
-     *
-     * A permanent refusal is handled by the system rather than here: once the user has chosen "don't
-     * allow" twice, the launcher below returns denied immediately without showing anything, and
-     * [onNotificationPermissionDenied] points them at the settings screen instead.
-     */
+    /** Offers to turn reminder notifications on, if that is still an open question. */
     private fun offerReminderNotifications() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         if (hasOfferedReminders) return
@@ -223,21 +161,12 @@ class AddEditTaskFragment : Fragment() {
         showReminderRationale()
     }
 
-    /**
-     * Explains what the notification is for, then asks.
-     *
-     * Shown unconditionally rather than only when `shouldShowRequestPermissionRationale` suggests
-     * it, for the reason set out in
-     * [com.prash.petcare.ui.checklist.ChecklistFragment.showRationaleThenRequest]: that helper
-     * returns false on the very first request, which is exactly when the user has least idea why
-     * they are being asked.
-     */
+    /** Explains what the notification is for, then asks. */
     private fun showReminderRationale() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.permission_notifications_title)
             .setMessage(R.string.permission_notifications_message)
-            // "Not now" does nothing at all, so declining costs the user nothing and the task still
-            // saves normally.
+            // "Not now" does nothing at all, so declining costs the user nothing and the task still saves normally.
             .setNegativeButton(R.string.permission_not_now, null)
             .setPositiveButton(R.string.permission_continue) { _, _ ->
                 requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -245,21 +174,9 @@ class AddEditTaskFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Says what a refusal means, and offers a way back if it was permanent.
-     *
-     * Never treated as an error: the task, its time and its alarm are all still saved, and only the
-     * notification is lost — so this is a brief note rather than anything that blocks the form.
-     *
-     * After a request has been refused, `shouldShowRequestPermissionRationale` returning false means
-     * the user chose not to be asked again. The system will no longer show a prompt, so requesting
-     * once more would do nothing at all and the only remaining route is the app's settings screen.
-     */
+    /** Says what a refusal means, and offers a way back if it was permanent. */
     private fun onNotificationPermissionDenied() {
-        // A permission result can arrive after the view has gone — the system prompt is another
-        // window, and the fragment behind it can be destroyed and recreated while it is up. Read
-        // through the nullable binding rather than the `!!` accessor so that case is a no-op instead
-        // of a crash.
+        // A permission result can arrive after the view has gone — the system prompt is another window.
         val root = _binding?.root ?: return
 
         val snackbar = Snackbar.make(
@@ -290,12 +207,7 @@ class AddEditTaskFragment : Fragment() {
         startActivity(intent)
     }
 
-    /**
-     * Asks before deleting.
-     *
-     * Removing a task takes it out of the routine permanently and cannot be undone, so the dialog
-     * names the task rather than asking a generic "are you sure?".
-     */
+    /** Asks before deleting. */
     private fun showDeleteConfirmation() {
         val taskTitle = binding.taskTitleInput.text?.toString()?.trim().orEmpty()
 
@@ -351,15 +263,13 @@ class AddEditTaskFragment : Fragment() {
         when (event) {
             is CareTaskEvent.PrefillForm -> prefillForm(event.task)
 
-            // Only text fields the user has not already started typing in are filled, so a
-            // suggestion can never overwrite their own words.
+            // Only text fields the user has not already started typing in are filled.
             is CareTaskEvent.PrefillDraft -> {
                 if (binding.taskTitleInput.text.isNullOrEmpty()) binding.taskTitleInput.setText(event.title)
                 if (binding.notesInput.text.isNullOrEmpty()) binding.notesInput.setText(event.notes)
             }
 
-            // Both outcomes simply close the screen. The routine detail screen behind it already
-            // observes the database, so its task list updates itself.
+            // Both outcomes simply close the screen. The routine detail screen behind it already observes the database.
             is CareTaskEvent.Saved, is CareTaskEvent.Deleted -> findNavController().navigateUp()
 
             is CareTaskEvent.Error -> {
@@ -369,14 +279,7 @@ class AddEditTaskFragment : Fragment() {
         }
     }
 
-    /**
-     * Writes a loaded task's values into the text fields.
-     *
-     * Deliberately called once, from a one-shot event, rather than on every state update — writing
-     * into an EditText the user is typing in would move their cursor and undo their edits. After a
-     * rotation these fields restore themselves from Android's own saved instance state, so there is
-     * nothing to repeat.
-     */
+    /** Writes a loaded task's values into the text fields. */
     private fun prefillForm(task: CareTask) {
         binding.taskTitleInput.setText(task.title)
         binding.suppliesInput.setText(task.requiredSupplies.orEmpty())

@@ -1,15 +1,4 @@
-<!--
-    The app's spacing, shape and elevation scale.
-
-    Every gap, corner and shadow in the app is one of these values rather than a number typed into a
-    layout. Two reasons: a shared scale keeps rhythm consistent between screens that were written
-    weeks apart, and values declared in dp are scaled per device, where a raw pixel figure would be
-    a different physical size on every screen.
-
-    The spacing scale is a familiar 4dp grid — each step roughly doubling — which is what Material's
-    own layouts are built on. Picking from a short list also removes the temptation to nudge a gap
-    to 18dp because it looked slightly better on one device.
--->
+<!-- The app's spacing, shape and elevation scale. -->
 <resources>
 
     <!-- ================================ Spacing scale ================================ -->
@@ -24,53 +13,26 @@
     <!-- Major breaks: above a screen's primary action, or around an empty state. -->
     <dimen name="spacing_xl">32dp</dimen>
 
-    <!-- ============================== Screen structure ==============================
-         The redesign settles on a uniform 16dp gutter everywhere, replacing the 24dp the app used
-         before. The change is deliberate: cards now carry their own 16dp of internal padding, so a
-         24dp gutter on top of that pushed content 40dp from the screen edge and left the cards
-         looking narrow on a phone. 16dp outside and 16dp inside reads as one consistent rhythm. -->
+    <!-- ============================== Screen structure ============================== -->
     <dimen name="screen_padding">16dp</dimen>
-    <!-- The gutter as a negative margin, for a sideways-scrolling row that has to reach the screen's
-         edges from inside a padded column — see fragment_home.xml. Always the exact negative of
-         screen_padding, so the row's first card still lines up with everything above it. -->
+    <!-- The gutter as a negative margin. -->
     <dimen name="screen_padding_negative">-16dp</dimen>
 
     <!-- Breathing room above the first item on a screen, under the app bar. -->
     <dimen name="content_top_padding">12dp</dimen>
 
-    <!--
-        The three values below all measure from the same thing: the floating bottom navigation bar's
-        footprint, which is **76dp** — 60dp of bar (46dp of tabs inside 7dp of padding above and
-        below, nav_tab_height + nav_bar_padding) plus the 16dp it floats above the bottom of the
-        window (nav_bar_margin_bottom).
+    <!-- The three values below all measure from the same thing: the floating bottom navigation bar's footprint. -->
 
-        The bar is an overlay, not a row cut out of the screen: no fragment's height is reduced by
-        it, and the page is meant to be seen scrolling behind it — see the note on it in
-        activity_main.xml. So anything that must not come to *rest* underneath it — the last row of
-        a list, a button at the foot of a form, a floating action button — has to keep that 76dp
-        clear itself. These are the values that do it; nothing that has to clear the bar should
-        invent its own number.
-    -->
-
-    <!-- A floating action button's bottom margin. Lifted the bar's full footprint plus a small gap,
-         because the button floats over exactly the corner the bar occupies: at the usual 16dp it
-         sat behind the bar and could not be tapped at all. Its side margin stays screen_padding. -->
+    <!-- A floating action button's bottom margin. Lifted the bar's full footprint plus a small gap. -->
     <dimen name="fab_margin_bottom">84dp</dimen>
 
-    <!-- Bottom padding on a scrolling list that has a floating action button over it, so the last
-         row can scroll clear of the button rather than finishing underneath it: the button's
-         raised margin (84dp) plus the 56dp button itself, plus a gap above it. -->
+    <!-- Bottom padding on a scrolling list that has a floating action button. -->
     <dimen name="list_padding_bottom_fab">156dp</dimen>
 
-    <!-- Bottom padding for a scrolling list on a screen with no floating action button: only the
-         bar has to be cleared, so the footprint plus a gap. Used with clipToPadding="false", which
-         is what lets content scroll up *through* this space instead of stopping at its edge. -->
+    <!-- Bottom padding for a scrolling list on a screen with no floating action button. -->
     <dimen name="list_padding_bottom">92dp</dimen>
 
-    <!-- ================================ Shape scale ================================
-         The redesign's rounded-corner language, in three steps. Everything the user perceives as a
-         "card" lands in the 16–20dp band; anything smaller is a detail *inside* a card and takes
-         the small radius, so the two never look like they are competing to be the same thing. -->
+    <!-- ================================ Shape scale ================================ -->
 
     <!-- Small: pills, chips, tiny inner tiles. -->
     <dimen name="corner_radius_sm">12dp</dimen>
@@ -79,9 +41,7 @@
     <!-- Large: full-width feature cards and the photo header on the pet detail screen. -->
     <dimen name="corner_radius_lg">20dp</dimen>
 
-    <!-- ============================== Elevation scale ==============================
-         Deliberately shallow. A soft, barely-there shadow is what separates a white card from a
-         cream page; a heavy one on a light background reads as dirt rather than as depth. -->
+    <!-- ============================== Elevation scale ============================== -->
 
     <!-- Resting elevation for an ordinary card. -->
     <dimen name="card_elevation">2dp</dimen>
@@ -94,147 +54,75 @@
     <!-- Padding inside a card, between its edge and its content. Matches the screen gutter. -->
     <dimen name="card_padding">16dp</dimen>
 
-    <!-- ============================== Pastel stat pills ==============================
-         The soft tinted chips carrying one fact each — age, weight, species. -->
-    <!-- Fully rounded ends. Any value at least half the pill's height produces a capsule, so this
-         is set well above it rather than being kept in step with the pill's exact height. -->
+    <!-- ============================== Pastel stat pills ============================== -->
+    <!-- Fully rounded ends. Any value at least half the pill's height produces a capsule. -->
     <dimen name="pill_corner_radius">100dp</dimen>
     <dimen name="pill_padding_horizontal">12dp</dimen>
     <dimen name="pill_padding_vertical">6dp</dimen>
     <dimen name="pill_spacing">8dp</dimen>
 
     <!-- ================================ Pet imagery ================================ -->
-    <!-- Height of the photo panel on the add/edit pet form, where the photo is an input rather than
-         the subject of the screen. -->
+    <!-- Height of the photo panel on the add/edit pet form, where the photo is an input. -->
     <dimen name="pet_photo_form_height">180dp</dimen>
 
     <!-- Size of a category icon beside a heading or a list row. -->
     <dimen name="category_icon_size">20dp</dimen>
     <!-- The tinted circle a category icon sits inside on a dashboard task row. -->
     <dimen name="category_badge_size">36dp</dimen>
-    <!-- Size of the illustration at the top of an empty state. Large enough to read as an
-         illustration rather than as a stray icon. -->
+    <!-- Size of the illustration at the top of an empty state. -->
     <dimen name="empty_state_icon_size">72dp</dimen>
 
     <!-- Gap between the edge of a list row and the icon revealed behind it while swiping. -->
     <dimen name="checklist_swipe_icon_margin">24dp</dimen>
 
-    <!-- ============================== Shared header and cards ==============================
-         Sizes first introduced by the dashboard and now shared with the other redesigned screens: the
-         header row, the care ring and the soft card corner. The rest of the dashboard's own sizes are in
-         the "Home dashboard (redesign)" section at the end of this file. -->
+    <!-- ============================== Shared header and cards ============================== -->
 
     <!-- The rounded square holding the app's "p" monogram in the dashboard header. -->
     <dimen name="monogram_size">32dp</dimen>
     <dimen name="monogram_corner_radius">10dp</dimen>
 
-    <!-- The circular badge on the right of the header reporting how many pets are in care, and the
-         theme-toggle pill beside it. Both are sized to the same height so the header's right-hand
-         cluster sits on one line. -->
+    <!-- The circular badge on the right of the header reporting how many pets are in care. -->
     <dimen name="header_control_height">32dp</dimen>
     <dimen name="header_badge_size">32dp</dimen>
 
-    <!-- The progress ring on the "today's care" card.
-         The ring is drawn *inside* this box, so the thickness eats into it: a 96dp ring 8dp thick
-         leaves an 80dp hole, which is what the completed count has to fit into. -->
-    <!--
-        The gap between the Today's-care ring and the heading block beside it.
-
-        Its own dimension rather than the general spacing_md (16dp) it used, because this is not
-        generic spacing: it separates a circle from a column of text, and a circle's bounding box
-        touches its neighbour at only one point, so the same nominal gap reads as tighter here than
-        it would between two straight edges. Measured off design/home-mockup-top.png, where the gap
-        is 13 of the mockup's pixels, and the specification puts it at 16dp.
-    -->
+    <!-- The progress ring on the "today's care" card. The ring is drawn inside this box. -->
+    <!-- The gap between the Today's-care ring and the heading block beside it. -->
     <dimen name="home_today_ring_spacing">16dp</dimen>
-    <!-- The card's own padding, and the gap between its two blocks (the ring row and the streak).
-         Tighter than the app's usual card_padding because this card holds four things and is asked
-         to stay compact. -->
+    <!-- The card's own padding, and the gap between its two blocks (the ring row and the streak). -->
     <dimen name="home_today_card_padding">18dp</dimen>
     <dimen name="home_today_block_gap">14dp</dimen>
-    <!--
-        The today's-care ring: 74dp across with a 56dp hole, which is a 9dp band.
-
-        **It is deliberately the secondary element in its card.** The headline beside it is what the
-        user reads; the ring is a glance. At the 92dp it was, the circle outweighed the sentence next
-        to it and the card had to grow tall to hold them both. Capped at 74dp it sits comfortably
-        beside two lines of 18sp text, which is what makes the whole card more compact.
-
-        As on the next-up ring, the spec's "disc inside the ring" is expressed as the band's
-        thickness: (74 - 56) / 2 is 9dp, and the card's own surface shows through the middle exactly
-        as a centred disc of the same colour would.
-    -->
+    <!-- The today's-care ring: 74dp across with a 56dp hole, which is a 9dp band. -->
     <dimen name="care_ring_size">74dp</dimen>
     <dimen name="care_ring_thickness">9dp</dimen>
-    <!-- Exactly half the thickness, which is the largest radius the progress indicator accepts and
-         the value that rounds each end of the band into a semicircle. -->
-    <!-- Half the band's thickness, the most the component accepts: both ends become semicircles and
-         a part-finished day reads as a capsule rather than a cut segment. -->
+    <!-- Exactly half the thickness. -->
+    <!-- Half the band's thickness, the most the component accepts. -->
     <dimen name="care_ring_corner_radius">4.5dp</dimen>
 
-    <!-- The corner radius shared by the pet cards on every tab and the dashboard's large cards. Larger
-         than the app's usual card radius: these are a page's subject, and the softer corner is what
-         separates them from an ordinary list row elsewhere in the app. -->
+    <!-- The corner radius shared by the pet cards on every tab and the dashboard's large cards. -->
     <dimen name="pet_card_corner_radius">24dp</dimen>
 
-    <!-- ================================= Pets tab =================================
-         The redesigned Pets tab: one tall card per pet, stacked, then an outlined "Add a pet" row.
-         The cards reuse pet_card_corner_radius above, so a pet looks like the same object on both
-         tabs. -->
+    <!-- ================================= Pets tab ================================= -->
 
-    <!--
-        The shape every pet photo is stored, framed and drawn in, as a ConstraintLayout dimension
-        ratio.
-
-        **Why one shape for the whole app, in one place.** When a pet's photo is chosen the user
-        frames it themselves (see ui/common/PhotoCropView.kt) and the framed result is what gets
-        saved. That promise — what you framed is what the cards show — only holds while every card
-        draws the same shape the cropper offered. A card with a ratio of its own would have to crop
-        the crop, and the user's choice would be overruled after all. So the Pets card, the
-        dashboard's row card, the detail hero and the cropper all derive their frame from this value
-        and there is no second place to forget.
-
-        4:3 landscape is chosen because it was closest to what the two full-width surfaces already
-        were: the Pets card's photo was 200dp and the detail hero 300dp, both within a few dp of
-        their 4:3 heights, so adopting it cost those screens almost no visible change.
-
-        Kept as a string rather than a dimen because ConstraintLayout's dimensionRatio is a ratio,
-        not a length. It is mirrored by PhotoCropView.PET_PHOTO_ASPECT, which needs it as a number.
-
-        The "H," prefix is part of the value rather than written at each use site, because XML cannot
-        join a literal to a resource reference. It tells ConstraintLayout which side to compute: the
-        **height**, from the width. Every one of these frames is as wide as the space it is given and
-        derives its height from that, so one value serves all three.
-    -->
+    <!-- The shape every pet photo is stored, framed and drawn in, as a ConstraintLayout dimension ratio. -->
     <string name="pet_photo_aspect_ratio" translatable="false">H,4:3</string>
-    <!-- Gap between one pet card and the next, and before the add row. A step wider than the app's
-         usual card_spacing: these cards carry a shadow and a photograph, and packed at 12dp the
-         shadows of neighbouring cards run together. -->
+    <!-- Gap between one pet card and the next, and before the add row. -->
     <dimen name="pets_card_spacing">16dp</dimen>
     <!-- The age / weight / due-today blocks inside a card. -->
     <dimen name="pets_stat_padding_horizontal">12dp</dimen>
     <dimen name="pets_stat_padding_vertical">10dp</dimen>
     <!-- The hairline between two stat blocks, and the outline around the row of them. -->
     <dimen name="pets_stat_divider_width">1dp</dimen>
-    <!-- The full-width "+ Add a pet" row at the foot of the list. At least 48dp is Android's minimum
-         touch target; the extra keeps it in proportion with the tall cards above. -->
+    <!-- The full-width "+ Add a pet" row at the foot of the list. -->
     <dimen name="pets_add_row_height">56dp</dimen>
 
-    <!-- ============================== Pet detail screen ==============================
-         The redesigned single-pet screen: the photo card, the action row, the "About" card and the
-         care routine cards. Corners reuse pet_card_corner_radius, so this pet's photo card is the same
-         object it was on the Pets and Home tabs, only larger. -->
+    <!-- ============================== Pet detail screen ============================== -->
 
-    <!-- The pet's full name across the scrim: a step up from PetCare.Headline's 24sp, because here it
-         is the title of the whole page. In sp so it grows with the user's font size. -->
+    <!-- The pet's full name across the scrim: a step up from PetCare.Headline's 24sp. -->
     <dimen name="pet_detail_name_text_size">28sp</dimen>
-    <!-- The round back button over the photo. The view is 48dp — Android's minimum touch target —
-         and 4dp insets on every side draw the visible disc at 40dp inside it, so the button looks
-         light on the photo without being any harder to hit. -->
+    <!-- The round back button over the photo. The view is 48dp — Android's minimum touch target. -->
     <dimen name="pet_detail_back_button_touch_size">48dp</dimen>
     <dimen name="pet_detail_back_button_inset">4dp</dimen>
-    <!-- The round gender badge beside the species chip, sized to the chip's own height so the two sit
-         as a matched pair, and the Mars/Venus glyph inside it. -->
+    <!-- The round gender badge beside the species chip, sized to the chip's own height. -->
     <dimen name="pet_detail_gender_badge_size">24dp</dimen>
     <dimen name="pet_detail_gender_icon_padding">4dp</dimen>
 
@@ -242,28 +130,20 @@
     <dimen name="pet_detail_action_button_height">46dp</dimen>
     <dimen name="pet_detail_action_gap">8dp</dimen>
 
-    <!-- The "About" card. The label column has a fixed width so every value starts at the same x
-         position down the card, which is what makes it read as a table rather than as five
-         sentences. Wide enough for "FAVOURITE TOYS" on one line at the default font size; a larger
-         font wraps the label rather than squeezing the value. -->
+    <!-- The "About" card. The label column has a fixed width. -->
     <dimen name="pet_detail_about_label_width">120dp</dimen>
     <dimen name="pet_detail_about_row_padding_vertical">14dp</dimen>
 
-    <!-- The small yellow "+" beside "Care routines". The circle is 36dp; the button's view is 48dp
-         with 6dp insets on each side, so the touch target still meets Android's 48dp minimum. -->
+    <!-- The small yellow "+" beside "Care routines". The circle is 36dp. -->
     <dimen name="pet_detail_add_routine_touch_size">48dp</dimen>
     <dimen name="pet_detail_add_routine_inset">6dp</dimen>
 
     <!-- The "⋮" overflow button on a routine card: a 40dp icon button. -->
     <dimen name="routine_card_overflow_size">40dp</dimen>
 
-    <!-- ================================= Tasks tab =================================
-         The redesigned Tasks tab: week strip, progress card, filter chips, task cards and the two
-         actions at the foot. -->
+    <!-- ================================= Tasks tab ================================= -->
 
-    <!-- One day cell in the week strip. Seven share the width, so only the height and the gap
-         between cells are fixed; the corner is a little under half the width a cell ends up at on
-         a phone, which rounds it towards a pill without becoming a circle. -->
+    <!-- One day cell in the week strip. Seven share the width. -->
     <dimen name="week_day_height">60dp</dimen>
     <dimen name="week_day_gap">6dp</dimen>
     <dimen name="week_day_corner_radius">16dp</dimen>
@@ -274,9 +154,7 @@
     <dimen name="segmented_progress_height">8dp</dimen>
     <dimen name="segmented_progress_gap">4dp</dimen>
 
-    <!-- The small outlined "Reset day" pill in the progress card. Shorter than a standard 40dp
-         button because it is a secondary action sitting beside a headline, not below a form — its
-         touch area is still padded out to 48dp by Material's own inset handling. -->
+    <!-- The small outlined "Reset day" pill in the progress card. -->
     <dimen name="small_pill_button_height">36dp</dimen>
 
     <!-- A task card: the time badge on the left, the round check button on the right. -->
@@ -284,77 +162,51 @@
     <dimen name="task_check_button_size">40dp</dimen>
     <dimen name="task_check_icon_size">20dp</dimen>
     <dimen name="task_check_stroke_width">1.5dp</dimen>
-    <!-- The category emoji in front of a task's title. A shade larger than the title beside it, so it
-         reads as a symbol the eye can aim at rather than a character that wandered into the word. In
-         sp, like the title, so the two grow together when the user enlarges text. -->
+    <!-- The category emoji in front of a task's title. A shade larger than the title beside. -->
     <dimen name="task_category_emoji_size">18sp</dimen>
-    <!-- Gap between task cards; tighter than between pet cards because these are rows of a list
-         grouped under headers, and wide gaps would break the groups apart visually. -->
+    <!-- Gap between task cards; tighter than between pet cards. -->
     <dimen name="task_card_spacing">10dp</dimen>
 
     <!-- The two buttons at the foot of the tab: "+ Add task" and "Delegate". -->
     <dimen name="task_action_button_height">52dp</dimen>
 
-    <!-- The circled "+" on each of the dashboard's quick-action cards. The cards' own height is
-         home_quick_action_height, further down with the rest of the redesigned dashboard. -->
+    <!-- The circled "+" on each of the dashboard's quick-action cards. -->
     <dimen name="quick_action_icon_size">26dp</dimen>
 
-    <!-- ===================== The floating bottom navigation bar =====================
-         The bar genuinely floats: it is laid over the content rather than taking a row of its own,
-         so these margins are the gap between the slab and the edges of the screen, not padding
-         inside a reserved band. See activity_main.xml.
-
-         The three that set its height are deliberately arithmetic: 7 + 46 + 7 = 60dp, a control
-         small enough to hover over a page without becoming the page's bottom edge. Changing the tab
-         height without changing the padding is what would quietly turn it back into a bar. -->
+    <!-- ===================== The floating bottom navigation bar ===================== -->
     <dimen name="nav_bar_margin_horizontal">14dp</dimen>
     <dimen name="nav_bar_margin_bottom">16dp</dimen>
     <dimen name="nav_bar_padding">7dp</dimen>
     <dimen name="nav_bar_corner_radius">24dp</dimen>
 
-    <!-- One tab. The height doubles as the touch target, which is why it is checked against
-         nav_tab_min_touch_target below rather than chosen freely. -->
+    <!-- One tab. The height doubles as the touch target. -->
     <dimen name="nav_tab_height">46dp</dimen>
-    <!-- A touch under half the tab's height: the pill's ends are strongly rounded but not a full
-         lozenge, matching the slab's own corner treatment one scale down. -->
+    <!-- A touch under half the tab's height: the pill's ends are strongly rounded but not a full lozenge. -->
     <dimen name="nav_tab_corner_radius">18dp</dimen>
-    <!-- The gap between two tabs. Small enough that the row still reads as one control; large enough
-         that the active pill has visible air around it rather than butting into its neighbours. -->
+    <!-- The gap between two tabs. Small enough that the row still reads as one control. -->
     <dimen name="nav_tab_gap">4dp</dimen>
-    <!-- Breathing room inside the *active* pill only. An inactive tab has none: it holds an icon and
-         nothing else, and padding would only make the icon's target smaller. -->
+    <!-- Breathing room inside the active pill only. An inactive tab has none: it holds an icon and nothing else. -->
     <dimen name="nav_tab_active_padding_horizontal">14dp</dimen>
 
     <dimen name="nav_tab_icon_size">21dp</dimen>
     <!-- Between the icon and the label that appears beside it on the active pill. -->
     <dimen name="nav_tab_icon_label_gap">8dp</dimen>
 
-    <!-- Android's own minimum for anything a finger presses. Applied as the tab's minHeight, so the
-         44dp floor holds even if nav_tab_height above is ever reduced — the two are related but not
-         the same statement, and a design tweak should not be able to shrink a target below the
-         guideline in silence. The tab's *width* is not set here at all — it is a share of the row —
-         but it clears the same floor by construction; FloatingNavBar works the arithmetic out for
-         the narrowest screen Android supports. -->
+    <!-- Android's own minimum for anything a finger presses. -->
     <dimen name="nav_tab_min_touch_target">44dp</dimen>
 
-    <!-- The Tasks tab's open-count badge. Square at rest (a single digit in a circle) and stretching
-         only as wide as a second digit needs, which is what min_width plus horizontal padding
-         expresses; the radius is far larger than the box so the ends stay fully round at any width. -->
+    <!-- The Tasks tab's open-count badge. Square at rest. -->
     <dimen name="nav_badge_size">16dp</dimen>
     <dimen name="nav_badge_padding_horizontal">4dp</dimen>
     <dimen name="nav_badge_corner_radius">999dp</dimen>
-    <!-- Where the badge sits within the tab: high and to the right, clear of the icon's top corner.
-         The inset from the right is tighter on the active tab, because that tab is wider and the
-         badge would otherwise drift away from the icon it belongs to. -->
+    <!-- Where the badge sits within the tab: high and to the right, clear of the icon's top corner. -->
     <dimen name="nav_badge_margin_top">9dp</dimen>
     <dimen name="nav_badge_margin_end">14dp</dimen>
     <dimen name="nav_badge_margin_end_active">10dp</dimen>
 
-    <!-- ================================= Money tab =================================
-         The dark total card, its stacked category bar, the legend and the expense cards. -->
+    <!-- ================================= Money tab ================================= -->
 
-    <!-- The month's total — the largest figure in the app, because it is the one this tab exists to
-         answer. In sp, so it still grows with the user's font-size setting. -->
+    <!-- The month's total — the largest figure in the app, because it is the one this tab exists to answer. -->
     <dimen name="expenses_total_text_size">44sp</dimen>
     <!-- The stacked bar. Thick enough that a 3% segment is still a readable coloured capsule. -->
     <dimen name="expenses_category_bar_height">10dp</dimen>
@@ -363,27 +215,18 @@
     <dimen name="expenses_legend_dot_corner_radius">3dp</dimen>
     <!-- The category badge on an expense card, and the gap between cards. -->
     <dimen name="expenses_badge_size">44dp</dimen>
-    <!-- How big the category emoji is drawn inside that badge and inside the saved-place one. In sp
-         rather than dp, like any other text, so it grows with the user's font-size setting instead
-         of staying stubbornly small on a phone set to large text. About half the badge, which leaves
-         the symbol reading as something sitting *in* a tile rather than filling it edge to edge. -->
+    <!-- How big the category emoji is drawn inside that badge and inside the saved-place one. -->
     <dimen name="category_badge_emoji_size">20sp</dimen>
     <dimen name="expenses_badge_corner_radius">12dp</dimen>
     <dimen name="expenses_card_spacing">12dp</dimen>
 
-    <!-- ================================= Places tab =================================
-         The map card, the featured place card and the saved-place rows. -->
+    <!-- ================================= Places tab ================================= -->
 
-    <!-- The map card at the top of the tab. Tall enough that the street the place sits on is legible
-         with the two overlays laid over it, and short enough that the featured card below it is still
-         on screen on a small phone — which is the pairing the tab is read as. -->
+    <!-- The map card at the top of the tab. Tall enough that the street the place sits on is legible. -->
     <dimen name="places_map_height">280dp</dimen>
-    <!-- How far the pill and the two buttons sit in from the map card's edges. One figure for all
-         four sides, so the overlays read as a consistent frame around the map rather than as three
-         separately placed objects. -->
+    <!-- How far the pill and the two buttons sit in from the map card's edges. -->
     <dimen name="places_map_overlay_inset">12dp</dimen>
-    <!-- How far the map's credit line is lifted on this tab, so the two hand-off buttons along the
-         foot of the card cannot be drawn over it. Their height plus their own inset. -->
+    <!-- How far the map's credit line is lifted on this tab. -->
     <dimen name="places_map_attribution_inset">54dp</dimen>
     <!-- The overlay pill naming the selected place, and the two map buttons under it. -->
     <dimen name="places_map_pill_padding_horizontal">11dp</dimen>
@@ -392,11 +235,9 @@
     <dimen name="places_map_action_padding_horizontal">14dp</dimen>
     <dimen name="places_map_action_padding_vertical">13dp</dimen>
     <dimen name="places_map_action_text_size">10.5sp</dimen>
-    <!-- Deeper than the app's usual card lift. These capsules sit on map tiles rather than on a flat
-         surface, and a shallow shadow is lost against street detail. -->
+    <!-- Deeper than the app's usual card lift. These capsules sit on map tiles rather than on a flat surface. -->
     <dimen name="places_map_action_elevation">6dp</dimen>
-    <!-- The rounded-square category badge on a saved-place row ("Vet", "Grm"). A rounded square
-         rather than a circle, so it echoes the header's monogram rather than a pet's round photo. -->
+    <!-- The rounded-square category badge on a saved-place row ("Vet", "Grm"). -->
     <dimen name="places_badge_size">40dp</dimen>
     <dimen name="places_badge_corner_radius">10dp</dimen>
     <!-- The outlined pair of info blocks (hours, phone) in the featured card. -->
@@ -406,23 +247,12 @@
     <!-- Gap between saved-place rows. -->
     <dimen name="places_row_spacing">10dp</dimen>
 
-    <!-- ============================ Home dashboard (redesign) ============================
-         The redesigned Home tab, top to bottom. Its large cards reuse pet_card_corner_radius, so the
-         dashboard's cards are the same softly rounded objects as the pet cards on every other tab. -->
+    <!-- ============================ Home dashboard (redesign) ============================ -->
 
     <!-- The header's "AI" pill: the theme toggle's height, with a little horizontal room. -->
     <dimen name="header_ai_pill_padding_horizontal">10dp</dimen>
     <!-- The red dot on the pet badge's corner, including its page-coloured ring. -->
-    <!-- The bell in the header, and the unread-count bubble on its corner.
-
-         The glyph is inset inside the 32dp well rather than drawn at 32dp: 7dp a side leaves an 18dp
-         bell, which matches the weight of the 16dp sun beside it in the theme toggle while the whole
-         well stays the touch target.
-
-         The bubble is 16dp tall — half the well, which is the proportion that reads as "a badge on a
-         control" rather than as a second control — and grows sideways for "9+" through minWidth plus
-         horizontal padding. Its corner radius is deliberately larger than it can ever be tall, so the
-         ends stay perfectly round at any width instead of turning into an ellipse. -->
+    <!-- The bell in the header, and the unread-count bubble on its corner. -->
     <dimen name="header_bell_padding">7dp</dimen>
     <dimen name="header_alert_count_size">16dp</dimen>
     <dimen name="header_alert_count_corner_radius">10dp</dimen>
@@ -432,160 +262,66 @@
     <!-- The coloured dot before "All synced". -->
     <dimen name="sync_dot_size">6dp</dimen>
 
-    <!-- The three stat cards. A fixed width rather than a third each, so the row can scroll sideways on
-         a narrow phone with the third card peeking in from the edge, as the design draws it, and a long
-         amount such as "Rs 12,480" is never squeezed. -->
-    <!--
-        ================== The Home screen's own spacing scale ==================
-
-        These are deliberately *not* the app-wide screen_padding and card_spacing. The dashboard is
-        specified as a single composition — gutters, section gaps and card radii all chosen together
-        — and the other four tabs are not. Giving Home its own names is what lets it be tuned to that
-        specification without dragging Tasks, Places, Money and Pets along with it.
-
-        The negative gutter is the exact inverse of the padding: the stat row and the pet row bleed
-        out to the screen edges by cancelling the parent's padding, then re-apply it as their own so
-        the first card still lines up with the greeting above.
-    -->
+    <!-- The three stat cards. A fixed width rather than a third. -->
+    <!-- ================== The Home screen's own spacing scale ================== -->
     <dimen name="home_screen_padding">18dp</dimen>
     <dimen name="home_screen_padding_negative">-18dp</dimen>
-    <!-- The scroll area's own top and bottom insets. The bottom is deep because the floating bottom
-         navigation is drawn over the scrolling content — without it the last card would come to rest
-         underneath the bar and look cut off. -->
+    <!-- The scroll area's own top and bottom insets. The bottom is deep. -->
     <dimen name="home_scroll_padding_top">8dp</dimen>
     <dimen name="home_scroll_padding_bottom">130dp</dimen>
-    <!-- The gap between two top-level sections: greeting, stat row, next-up card, today's care,
-         pets. One value used everywhere, which is what gives the column its even rhythm. -->
+    <!-- The gap between two top-level sections: greeting, stat row, next-up card, today's care, pets. -->
     <dimen name="home_section_gap">18dp</dimen>
 
-    <!--
-        ============================ The stat cards ============================
-
-        A stat card is a *summary*, not a headline: three short lines that should read at a glance
-        and take as little vertical space as possible, so the dark next-up card below stays the
-        dominant object on the screen.
-
-        **Width is a minimum, not a fixed size.** The card is wrap_content with this as its minWidth,
-        which is what lets an unusually long figure widen its own card instead of being shrunk or
-        truncated to fit a fixed one. In practice every value fits inside 116dp, so the three cards
-        are uniform; the minimum is what guarantees they *stay* uniform.
-
-        The three gaps and the padding are what land the card near 100dp tall: 13 + 11 + 8 + 19 + 8 +
-        21 + 13. Adding whitespace anywhere here is what made earlier versions too tall.
-    -->
+    <!-- ============================ The stat cards ============================ -->
     <dimen name="home_stat_card_min_width">116dp</dimen>
     <dimen name="home_stat_card_padding">13dp</dimen>
     <dimen name="home_stat_card_corner_radius">18dp</dimen>
-    <!-- One gap, used both under the label and under the figure: the card is an evenly spaced stack
-         of three lines rather than a figure with satellites. -->
+    <!-- One gap, used both under the label and under the figure. -->
     <dimen name="home_stat_line_spacing">8dp</dimen>
-    <!-- The card's uppercase micro-label. 8.5sp is the smallest the app sets anywhere and is only
-         legible because IBM Plex Mono is wide-set and this text is always upper-case. -->
+    <!-- The card's uppercase micro-label. 8.5sp is the smallest the app sets anywhere and is only legible. -->
     <dimen name="home_stat_label_text_size">8.5sp</dimen>
     <dimen name="home_stat_card_gap">8dp</dimen>
-    <!--
-        The bold figure in a stat card. In sp, so it grows with the user's font size; the text view
-        also shrinks it towards the minimum to fit rather than cutting a long amount off.
-
-        19sp against an 8.5sp label is a ratio of well over two, which is what makes the figure read
-        as the card's subject without the card having to be tall. It is deliberately *below* the
-        next-up card's 20sp title: these are summaries and that is the headline.
-
-        **There is no longer a minimum.** Auto-sizing was removed from this view — see
-        item_home_stat.xml — because the card can now widen instead, which is a better answer than
-        shrinking the one thing the card exists to show. The dimension is kept as a single named size.
-    -->
+    <!-- The bold figure in a stat card. In sp, so it grows with the user's font size. -->
     <dimen name="home_stat_value_text_size">19sp</dimen>
     <!-- The small status pill at the foot of a stat card. -->
     <dimen name="home_stat_pill_padding_horizontal">8dp</dimen>
-    <!-- 5dp rather than 3dp. The pill keeps its capsule shape at any height, so the padding is what
-         decides it: 5dp above and below an 8.5sp line lands the pill at about 21dp, which is the
-         third of the card's three lines the spacing was calculated around. -->
+    <!-- 5dp rather than 3dp. The pill keeps its capsule shape at any height, so the padding is what decides. -->
     <dimen name="home_stat_pill_padding_vertical">5dp</dimen>
 
-    <!-- The next-up card's ring. Drawn *inside* this box, so a 96dp ring 7dp thick leaves an 82dp hole
-         for the minute count; the corner radius is half the thickness, the most the indicator accepts. -->
-    <!--
-        ======================== The dark next-up card ========================
-
-        The screen's dominant object: the one card that answers "what do I do now". Everything here
-        is sized to keep it visibly heavier than the summary cards above and the care card below —
-        see next_up_card_min_height on the layout for why the floor matters more than the padding.
-    -->
+    <!-- The next-up card's ring. Drawn inside this box. -->
+    <!-- ======================== The dark next-up card ======================== -->
     <dimen name="next_up_card_min_height">140dp</dimen>
     <dimen name="next_up_card_padding">20dp</dimen>
     <dimen name="next_up_card_corner_radius">28dp</dimen>
-    <!-- Between the ring and the column of words. Wider than the card's other gaps because it
-         separates two whole blocks rather than two lines. -->
+    <!-- Between the ring and the column of words. Wider than the card's other gaps. -->
     <dimen name="next_up_content_gap">18dp</dimen>
 
-    <!--
-        The countdown ring: 96dp across with a 72dp hole, which is a 12dp band.
-
-        The spec describes this as a conic-gradient ring with a smaller disc centred on it. A
-        CircularProgressIndicator already *is* that shape — an arc of accent over a faint track — so
-        the disc is expressed as what it actually is here: the thickness of the band. (96 - 72) / 2
-        is 12dp, and the card's own background shows through the middle exactly as a centred disc of
-        the same colour would.
-    -->
+    <!-- The countdown ring: 96dp across with a 72dp hole, which is a 12dp band. -->
     <dimen name="next_up_ring_size">96dp</dimen>
     <dimen name="next_up_ring_thickness">12dp</dimen>
-    <!-- Half the thickness, which is the most the component accepts: at exactly half, both ends of
-         the band are semicircles and a part-finished countdown reads as a capsule rather than a
-         segment cut with a knife. -->
+    <!-- Half the thickness, which is the most the component accepts: at exactly half. -->
     <dimen name="next_up_ring_corner_radius">6dp</dimen>
     <!-- The minute count in the middle of the ring, and the task title beside it. -->
-    <!-- The number inside the ring. 21sp inside a 72dp hole leaves the figure room to breathe above
-         its unit label; at the 28sp it was, a three-digit count touched the band. -->
+    <!-- The number inside the ring. 21sp inside a 72dp hole leaves the figure room to breathe above its unit label. -->
     <dimen name="next_up_minutes_text_size">21sp</dimen>
-    <!-- The task title — the card's subject, and the largest type on the dashboard after the
-         greeting. It stays a step above the 19sp stat figures and the 18sp care headline, which is
-         what ranks the three cards against each other. -->
+    <!-- The task title — the card's subject, and the largest type on the dashboard after the greeting. -->
     <dimen name="next_up_title_text_size">20sp</dimen>
     <!-- "MARK DONE": a compact pill, shorter than a form button because it sits inside a card. -->
-    <!-- "MARK DONE". 11dp of padding above and below a 10sp line comes to about 35dp, which keeps
-         the pill compact enough to sit under the subtitle inside a 140dp card. It stays above the
-         44dp the button's own touch target reserves, so the tap area is unaffected by the smaller
-         visual height. -->
+    <!-- "MARK DONE". 11dp of padding above and below a 10sp line comes to about 35dp. -->
     <dimen name="next_up_button_height">35dp</dimen>
     <dimen name="next_up_button_padding_horizontal">15dp</dimen>
 
-    <!-- The care streak's seven boxes. Seven share the width, so only the height, gap and corner are
-         fixed. Today's outline is a touch heavier than a missed day's hairline so it can be found. -->
-    <!--
-        A care-streak day box, and the space between two of them.
-
-        Measured off design/home-mockup-top.png: the boxes there are 33x24 of the mockup's pixels,
-        which at this screen's scale is a box noticeably taller than the 28dp it was, separated by a
-        hairline rather than a visible gutter. Widening the box while *narrowing* the gap is what
-        makes the week read as one continuous strip of days — at 6dp apart they read as seven
-        unrelated chips. The width is not set here: the row divides itself into seven equal weighted
-        columns, so the boxes grow to fill whatever the gap leaves.
-    -->
+    <!-- The care streak's seven boxes. Seven share the width, so only the height, gap and corner are fixed. -->
+    <!-- A care-streak day box, and the space between two of them. -->
     <dimen name="streak_day_height">30dp</dimen>
     <dimen name="streak_day_gap">5dp</dimen>
     <dimen name="streak_day_corner_radius">9dp</dimen>
     <dimen name="streak_day_today_stroke">1.5dp</dimen>
 
-    <!--
-        A pet card in the sideways "Your pets" row.
-
-        **Why it is landscape now, where it used to be portrait (156×180).** The card shows the
-        photo the user framed, and it can only show it faithfully by drawing the same shape they
-        framed — pet_photo_aspect_ratio, 4:3. A portrait card would have had to trim the sides off
-        their crop, which is the very second-guessing the framing step exists to stop.
-
-        200dp is chosen so the card is no shorter than it was: at 4:3 that gives a 150dp height,
-        against the old 180dp, and the row keeps its proportions. It is still narrow enough that the
-        next pet shows at the screen edge on any phone, which is what tells the user the row scrolls.
-
-        Only the width is declared. The height follows from the ratio, so the two can never drift
-        apart — see item_home_pet.xml.
-    -->
+    <!-- A pet card in the sideways "Your pets" row. -->
     <dimen name="home_pet_card_width">200dp</dimen>
     <dimen name="home_pet_card_gap">10dp</dimen>
-    <!-- The gradient behind the name, as a fraction of a now-shorter card: 110dp of scrim on a
-         150dp card would tint almost the whole photo. -->
+    <!-- The gradient behind the name, as a fraction of a now-shorter card. -->
     <dimen name="home_pet_card_scrim_height">76dp</dimen>
 
     <!-- The insight card's "AI" badge. -->
@@ -595,8 +331,7 @@
     <dimen name="insight_button_height">40dp</dimen>
     <dimen name="insight_button_stroke_width">1.5dp</dimen>
 
-    <!-- A "coming up this week" row: the date column's width (wide enough for "28" at the default font
-         size, so every bar lines up down the card) and the coloured bar beside it. -->
+    <!-- A "coming up this week" row: the date column's width. -->
     <dimen name="coming_up_date_width">36dp</dimen>
     <dimen name="coming_up_bar_width">3dp</dimen>
     <dimen name="coming_up_bar_height">34dp</dimen>
@@ -606,205 +341,107 @@
     <!-- The three quick-action cards: a "+" circle over a label, left-aligned. -->
     <dimen name="home_quick_action_height">92dp</dimen>
 
-    <!-- ============================== Notifications ==============================
-         The screen the header's pet-count badge opens: a headline, two group headings and one card
-         per alert. -->
+    <!-- ============================== Notifications ============================== -->
 
-    <!--
-        The screen's type sizes, all set 15% below the app's shared scale.
-
-        **Why this screen is smaller than the rest of the app.** A notification list is skimmed rather
-        than read: the user is looking for whether anything here needs them, not settling in with it.
-        At the app's normal sizes each alert card filled a large part of the screen and three alerts
-        needed a scroll, which is the wrong shape for that job — the point of the screen is to take in
-        the whole list at a glance.
-
-        Stated here as explicit sizes rather than by shrinking the shared styles, because
-        PetCare.ListTitle, PetCare.Places.Meta and PetCare.SectionLabel are used by the Money, Places
-        and Pets screens too, and those are read rather than skimmed. Every value is in sp, so the
-        whole screen still grows with the user's font-size setting.
-    -->
+    <!-- The screen's type sizes, all set 15% below the app's shared scale. -->
 
     <!-- "3 new alerts": the screen's subject and its largest text. Was 26sp. -->
     <dimen name="notifications_headline_text_size">22sp</dimen>
     <!-- The "NEW" / "EARLIER" group headings. The shared section label is 11sp. -->
     <dimen name="notifications_section_text_size">9.5sp</dimen>
-    <!-- An alert's sentence, and the line height that goes with it when it wraps to two lines. The
-         shared list title is 16sp on a 21sp line. -->
+    <!-- An alert's sentence, and the line height that goes with it when it wraps to two lines. -->
     <dimen name="notifications_title_text_size">13.5sp</dimen>
     <dimen name="notifications_title_line_height">18sp</dimen>
     <!-- "Care reminder · 2h ago". The shared meta line is 12sp. -->
     <dimen name="notifications_meta_text_size">10sp</dimen>
-    <!-- The square type code, "VAX". Was the 11sp label; kept level with the group headings so the
-         badge does not end up the largest thing on a card. -->
+    <!-- The square type code, "VAX". Was the 11sp label; kept level with the group headings. -->
     <dimen name="notifications_badge_text_size">9.5sp</dimen>
 
-    <!-- The padding inside an alert card.
-
-         A step tighter than the app's general card_padding (16dp), which these cards used to take.
-         An alert is a one-line sentence with a small badge beside it, and at the general inset the
-         cards read as panels rather than as rows of a list — the Money tab's cards carry an amount
-         and a category as well, so the same padding buys more there. Trimmed rather than halved:
-         these are still tappable cards and the text still needs air around it. -->
+    <!-- The padding inside an alert card. -->
     <dimen name="alert_card_padding">13dp</dimen>
 
-    <!-- The square code badge on an alert card ("VAX", "MISS").
-
-         A little under the Money tab's 44dp badge. It is the one element on the card with no
-         information density to justify its size — three letters — so it is where size can come off
-         without the card losing anything. The corner radius comes down with it, so the square keeps
-         the same proportions rather than looking more rounded at the smaller size. -->
+    <!-- The square code badge on an alert card ("VAX", "MISS"). -->
     <dimen name="alert_badge_size">38dp</dimen>
     <dimen name="alert_badge_corner_radius">10dp</dimen>
 
-    <!-- The red dot in an unread card's top corner. A touch larger than the header's 9dp dot, which
-         has to squeeze onto the corner of a 32dp badge; this one sits in the open space of a card and
-         is sized to be found rather than to fit. -->
+    <!-- The red dot in an unread card's top corner. A touch larger than the header's 9dp dot. -->
     <dimen name="alert_dot_size">8dp</dimen>
 
-    <!-- Gap between alert cards. Tightened alongside the padding above: the cards are shorter now,
-         and a gap left at the old size would have been a larger share of each row than before, which
-         would have undone some of what the tighter padding bought. Still a clear gap — these are
-         separate cards grouped under headings, not one continuous list. -->
+    <!-- Gap between alert cards. Tightened alongside the padding above: the cards are shorter now. -->
     <dimen name="alert_card_spacing">9dp</dimen>
 
-    <!-- ============================== Assistant ==============================
-         The chat screen opened from the dashboard. -->
-    <!-- How wide a message bubble may grow. Capped well short of the full width so a bubble always
-         reads as something someone said rather than as a panel, and so the side a message sits on
-         stays visible at a glance — which is half of how the two speakers are told apart. -->
+    <!-- ============================== Assistant ============================== -->
+    <!-- How wide a message bubble may grow. Capped well short of the full width. -->
     <dimen name="assistant_bubble_max_width">280dp</dimen>
     <dimen name="assistant_bubble_padding">14dp</dimen>
     <dimen name="assistant_bubble_corner_radius">20dp</dimen>
-    <!-- The round send button. 48dp is the smallest comfortable touch target, and the button is
-         square so its fully-rounded corner makes it a circle. -->
+    <!-- The round send button. 48dp is the smallest comfortable touch target, and the button is square. -->
     <dimen name="assistant_send_button_size">48dp</dimen>
-    <!-- How far the input row has to be lifted to clear the floating navigation bar, which is drawn
-         over the page rather than beside it.
-
-         Arithmetic, like the bar's own height: 7 + 46 + 7 = 60dp of slab (nav_bar_padding twice plus
-         nav_tab_height) and 16dp of nav_bar_margin_bottom under it. Changing any of those three without
-         changing this is what would put the send button back underneath the tabs.
-
-         Applied only while the bar is on screen — AssistantFragment.keepInputClearOfNavBar — because the
-         bar is hidden while the keyboard is up, and the row's own 16dp bottom margin is the right gap
-         above a keyboard. -->
+    <!-- How far the input row has to be lifted to clear the floating navigation bar, which is drawn over the page. -->
     <dimen name="assistant_input_nav_clearance">76dp</dimen>
-    <!-- The loading bar standing in for a reply: about the width of a short sentence, so the bubble
-         it sits in is the size the answer will roughly be. -->
+    <!-- The loading bar standing in for a reply: about the width of a short sentence. -->
     <dimen name="assistant_thinking_width">72dp</dimen>
 
-    <!-- ============================== Profile screen ==============================
-         The screen the header's monogram opens: the dark identity card, a row of three stats, and a
-         stack of settings cards.
+    <!-- ============================== Profile screen ============================== -->
 
-         Its large cards reuse pet_card_corner_radius, so the identity card is the same softly rounded
-         object as the pet cards and the dashboard's. -->
-
-    <!-- The dark identity card. Its padding is a step above the app's usual card_padding: this is the
-         page's subject and the one card the eye should land on, and a tight inset would make it read
-         as another settings panel. -->
+    <!-- The dark identity card. Its padding is a step above the app's usual card_padding. -->
     <dimen name="profile_card_padding">18dp</dimen>
 
-    <!--
-        The circular photo well, and the gap between it and the column of text beside it.
-
-        96dp is chosen so the well is comfortably taller than the three lines of text next to it
-        (name, email, phone), which is what makes the card read as a portrait with details rather than
-        as a paragraph with an icon. The gap is its own dimension rather than the general spacing_md,
-        for the reason given on home_today_ring_spacing: a circle's bounding box touches its neighbour
-        at only one point, so the same nominal gap reads as tighter beside a circle than between two
-        straight edges.
-    -->
+    <!-- The circular photo well, and the gap between it and the column of text beside it. -->
     <dimen name="profile_photo_size">96dp</dimen>
     <dimen name="profile_photo_gap">18dp</dimen>
     <dimen name="profile_photo_well_stroke">1dp</dimen>
 
-    <!-- The small yellow "+" on the well's corner. The disc is 30dp inside a 44dp view, so the touch
-         target stays close to Android's 48dp minimum while the mark itself stays small enough not to
-         cover the face in the photo behind it. The ring is what separates the yellow from the well's
-         own rim — see bg_profile_add_photo.xml. -->
+    <!-- The small yellow "+" on the well's corner. The disc is 30dp inside a 44dp view. -->
     <dimen name="profile_add_photo_touch_size">44dp</dimen>
     <dimen name="profile_add_photo_inset">7dp</dimen>
     <dimen name="profile_add_photo_ring">2dp</dimen>
 
-    <!-- The user's name across the card. A step above PetCare.Headline's 24sp, as on the pet detail
-         screen, because here it is the title of the whole page. In sp, so it grows with the user's
-         font-size setting. -->
+    <!-- The user's name across the card. A step above PetCare.Headline's 24sp, as on the pet detail screen. -->
     <dimen name="profile_name_text_size">26sp</dimen>
 
-    <!-- ============================== The stat row ==============================
-         "2 PETS IN CARE", "5 DAY STREAK", "18 TASKS THIS WEEK".
-
-         Three cards sharing the width equally rather than a fixed width with a sideways scroll, unlike
-         the dashboard's: there are exactly three, they are never added to, and all three must be
-         visible at once for the row to read as a summary. The figures are short — a count, a count and
-         a count — so equal thirds hold them comfortably on any phone. -->
+    <!-- ============================== The stat row ============================== -->
     <dimen name="profile_stat_card_padding">13dp</dimen>
     <dimen name="profile_stat_card_gap">8dp</dimen>
-    <!-- The bold figure, and the uppercase micro-label beneath it. The dashboard's sizes, so a stat
-         card is the same object on both screens. -->
+    <!-- The bold figure, and the uppercase micro-label beneath it. -->
     <dimen name="profile_stat_value_text_size">22sp</dimen>
     <dimen name="profile_stat_label_text_size">8.5sp</dimen>
 
-    <!-- ============================== The settings rows ==============================
-         Every card below the stat row is a section label over a stack of rows separated by hairlines.
-         One set of dimensions covers all of them, which is what keeps ACCOUNT, SECURITY, PREFERENCES,
-         contacts and DATA & PRIVACY reading as one list broken into groups rather than five differently
-         proportioned cards. -->
+    <!-- ============================== The settings rows ============================== -->
 
-    <!-- A row's own vertical padding. 14dp above and below two lines of text lands the row near 64dp,
-         comfortably past Android's 48dp minimum for anything tappable. -->
+    <!-- A row's own vertical padding. 14dp above and below two lines of text lands the row near 64dp. -->
     <dimen name="profile_row_padding_vertical">14dp</dimen>
     <!-- Gap between a row's badge and its text, and between its text and the control on the right. -->
     <dimen name="profile_row_gap">14dp</dimen>
-    <!-- The hairline between two rows. It is inset to start at the text rather than at the card's
-         edge, which is the convention that makes a list read as grouped rows — see the layout. -->
+    <!-- The hairline between two rows. It is inset to start at the text rather than at the card's edge. -->
     <dimen name="profile_row_divider_height">1dp</dimen>
 
-    <!-- The square glyph badge on an account row — the person, the envelope, the handset, the padlock.
-         Only the size is declared: the badge takes its shape from bg_alert_badge.xml, which already
-         carries the notifications screen's corner radius — so a small rounded square in front of a row is
-         literally the same object on both screens rather than two that happen to match. -->
+    <!-- The square glyph badge on an account row — the person, the envelope, the handset, the padlock. -->
     <dimen name="profile_badge_size">44dp</dimen>
-    <!-- The inset around the glyph. 11dp on each side of a 44dp well leaves the icon 22dp across, which
-         is the weight the four-letter codes it replaced had: filling the square would make the badge read
-         as a solid tile rather than as a mark on a ground. -->
+    <!-- The inset around the glyph. 11dp on each side of a 44dp well leaves the icon 22dp across. -->
     <dimen name="profile_badge_icon_padding">11dp</dimen>
 
-    <!-- The circular initial avatar on a delegation-contact row. A touch smaller than the square glyph
-         badge: a single letter needs less room than an icon in its inset, and the smaller circle keeps
-         the contact rows visibly lighter than the account rows above them. -->
+    <!-- The circular initial avatar on a delegation-contact row. -->
     <dimen name="profile_avatar_size">40dp</dimen>
 
-    <!-- The two-option preference toggle. 34dp keeps it shorter than the 44dp badge beside it on other
-         rows, so the preference rows read as lighter than the account rows — they hold a choice, not a
-         destination. The padding is what gives each half its width, since the labels differ in length
-         ("Metric" against "Imperial"). -->
+    <!-- The two-option preference toggle. 34dp keeps it shorter than the 44dp badge beside it on other rows. -->
     <dimen name="profile_segment_height">34dp</dimen>
     <dimen name="profile_segment_padding_horizontal">14dp</dimen>
-    <!-- The inset between the track and the filled pill inside it, so the chosen half reads as sitting
-         *in* the groove rather than as covering it. -->
+    <!-- The inset between the track and the filled pill inside. -->
     <dimen name="profile_segment_inset">3dp</dimen>
 
     <!-- The pale note card under the security rows. -->
     <dimen name="profile_note_padding">14dp</dimen>
 
-    <!-- The chevron on a data-and-privacy row. The size the dashboard's "coming up" rows use, so the
-         "there is more this way" arrow is the same mark throughout the app. -->
+    <!-- The chevron on a data-and-privacy row. The size the dashboard's "coming up" rows use. -->
     <dimen name="profile_chevron_size">18dp</dimen>
 
-    <!-- The footer: the outlined "LOG OUT" button and the version line under it. The button takes the
-         Tasks tab's action-button height, so the one full-width button on this screen is the same
-         object as the full-width buttons elsewhere. -->
+    <!-- The footer: the outlined "LOG OUT" button and the version line under it. -->
     <dimen name="profile_logout_button_height">52dp</dimen>
 
-    <!-- ============================ Sign-in screens ============================
-         Log in / register, two-factor, and the two password-reset screens. Sizes are taken from the
-         auth mockups (drawn at roughly 0.9px per dp) and rounded to the app's spacing scale. -->
+    <!-- ============================ Sign-in screens ============================ -->
 
-    <!-- The page gutter. A little wider than the app-wide 16dp: these screens are a single centred
-         column with nothing beside it, and the extra air is what the mockups show. -->
+    <!-- The page gutter. A little wider than the app-wide 16dp. -->
     <dimen name="auth_screen_padding">20dp</dimen>
     <!-- Space above the logo, below the status bar, and below the last element on the page. -->
     <dimen name="auth_screen_padding_top">28dp</dimen>
@@ -813,23 +450,16 @@
     <!-- The logo tile in the sign-in header, and the radius its corners are clipped to. -->
     <dimen name="auth_brand_mark_size">64dp</dimen>
     <dimen name="auth_brand_mark_corner_radius">16dp</dimen>
-    <!-- "PetCare" under the logo: larger than a list title, smaller than the screen heading, so the
-         three lines of the header step down in size as they go. -->
+    <!-- "PetCare" under the logo: larger than a list title, smaller than the screen heading. -->
     <dimen name="auth_brand_name_text_size">19sp</dimen>
 
     <!-- The gap between the header block and the first control (the first field, or the step bar). -->
     <dimen name="auth_header_gap">20dp</dimen>
 
-    <!-- The log in / register toggle: taller than the profile screen's preference toggle because it is
-         the main navigation on this screen rather than a setting.
-
-         No longer used by the log in screen, whose two forms are now reached from the link at the foot
-         of each rather than from a toggle. Kept because PetCare.Auth.SegmentTrack still refers to it
-         and a two-option toggle is likely to return on another sign-in screen. -->
+    <!-- The log in / register toggle: taller than the profile screen's preference toggle. -->
     <dimen name="auth_segment_height">42dp</dimen>
 
-    <!-- Text fields. The height comes from vertical padding inside the field rather than a fixed
-         height, so a larger font setting grows the field instead of clipping the text. -->
+    <!-- Text fields. The height comes from vertical padding inside the field rather than a fixed height. -->
     <dimen name="auth_field_corner_radius">16dp</dimen>
     <dimen name="auth_field_padding_vertical">14dp</dimen>
     <dimen name="auth_field_padding_horizontal">16dp</dimen>
@@ -839,18 +469,9 @@
     <!-- The small mono helper lines ("Forgot it? Reset by email."). -->
     <dimen name="auth_helper_text_size">11sp</dimen>
 
-    <!-- ============================== Phone number fields ==============================
-         The country selector that now sits beside every phone-number box in the app — the register
-         form, the profile's details form, the delegation-contact dialog and the place form. See
-         ui/common/PhoneNumberInput.kt.
-
-         Its width is fixed rather than wrap_content so the number box beside it starts at the same
-         place whichever country is chosen: with wrap_content, picking a one-digit dialling code (+1)
-         after a three-digit one (+977) would shuffle the whole row sideways. Wide enough for a flag,
-         a "+" and four digits — the longest dialling code in use — at the default text size. -->
+    <!-- ============================== Phone number fields ============================== -->
     <dimen name="phone_country_field_width">116dp</dimen>
-    <!-- The gap between the selector and the number box. The app's small spacing: the two are one
-         control split in half, so they should read as a pair rather than as two separate fields. -->
+    <!-- The gap between the selector and the number box. The app's small spacing. -->
     <dimen name="phone_country_field_gap">@dimen/spacing_sm</dimen>
 
     <!-- The main filled button and the Google button. -->
@@ -865,8 +486,7 @@
     <dimen name="auth_code_box_gap">8dp</dimen>
     <dimen name="auth_code_box_stroke_active">1.5dp</dimen>
 
-    <!-- The on-screen keypad. 48dp is the minimum touch target Android's accessibility guidance asks
-         for, and matches the mockup's key height closely. -->
+    <!-- The on-screen keypad. 48dp is the minimum touch target Android's accessibility guidance asks. -->
     <dimen name="auth_key_height">48dp</dimen>
     <dimen name="auth_key_gap">8dp</dimen>
     <dimen name="auth_key_corner_radius">14dp</dimen>
@@ -874,13 +494,10 @@
     <!-- The "CLEAR" key's label: the app's 11sp micro-label size, well below the digits. -->
     <dimen name="auth_key_label_text_size">11sp</dimen>
 
-    <!-- ~~~~~~~~~~ Wrong-password warning card ~~~~~~~~~~
-         The yellow (and, on the last attempt, red) notice that appears between the password helper
-         line and "FORGOT PASSWORD?". -->
+    <!-- ~~~~~~~~~~ Wrong-password warning card ~~~~~~~~~~ -->
     <dimen name="auth_alert_corner_radius">14dp</dimen>
     <dimen name="auth_alert_padding">12dp</dimen>
-    <!-- The exclamation badge: a rounded square, deliberately smaller than the notifications screen's
-         44dp type badge — it marks a line of text inside a form rather than heading a whole card. -->
+    <!-- The exclamation badge: a rounded square. -->
     <dimen name="auth_alert_badge_size">26dp</dimen>
     <dimen name="auth_alert_badge_corner_radius">8dp</dimen>
     <dimen name="auth_alert_badge_text_size">14sp</dimen>
@@ -889,70 +506,48 @@
 
     <!-- ~~~~~~~~~~ The locked screen ~~~~~~~~~~ -->
 
-    <!-- The dark panel. A larger radius than a card elsewhere in the app, as the mockup draws it: it
-         is a full-width panel rather than an item in a list. -->
+    <!-- The dark panel. A larger radius than a card elsewhere in the app, as the mockup draws. -->
     <dimen name="auth_lock_card_corner_radius">24dp</dimen>
     <dimen name="auth_lock_card_padding">24dp</dimen>
 
-    <!-- The countdown ring. Sized so the two-digit minute figure inside it sits comfortably clear of
-         the stroke at large font settings. -->
+    <!-- The countdown ring. Sized. -->
     <dimen name="auth_lock_ring_size">96dp</dimen>
     <dimen name="auth_lock_ring_thickness">7dp</dimen>
-    <!-- The square drawn inside the ring, which is the only area two stacked lines are certain to
-         clear the arc at every height: the inner diameter (96dp less the 7dp stroke on each side, so
-         82dp) times about 0.7. The figure and "MIN LEFT" autosize down to fit it, which is what keeps
-         them inside the circle at large font scales. -->
+    <!-- The square drawn inside the ring. -->
     <dimen name="auth_lock_ring_inner_size">58dp</dimen>
     <dimen name="auth_lock_ring_minutes_text_size">26sp</dimen>
     <!-- How far the figure may shrink before it would stop being the thing the eye lands on. -->
     <dimen name="auth_lock_ring_minutes_min_text_size">15sp</dimen>
-    <!-- "MIN LEFT" under the figure: the app's smallest micro-label, since it only names the unit of
-         the number above it. -->
+    <!-- "MIN LEFT" under the figure: the app's smallest micro-label. -->
     <dimen name="auth_lock_ring_caption_text_size">8sp</dimen>
-    <!-- How far "MIN LEFT" may shrink to stay inside the ring at a large system font scale. IBM Plex
-         Mono stays legible this small because the label is always upper case. -->
+    <!-- How far "MIN LEFT" may shrink to stay inside the ring at a large system font scale. -->
     <dimen name="auth_lock_ring_caption_min_text_size">6sp</dimen>
 
     <!-- "ACCOUNT LOCKED" and the heading beneath it. -->
     <dimen name="auth_lock_label_text_size">10sp</dimen>
     <dimen name="auth_lock_title_text_size">21sp</dimen>
 
-    <!-- The two pale info rows under the panel ("5 failed attempts", "Your pet records are
-         untouched"). Their badge is square and uppercase like the alert badge above, one step larger
-         because it carries a word rather than a single mark. -->
+    <!-- The two pale info rows under the panel ("5 failed attempts", "Your pet records are untouched"). -->
     <dimen name="auth_lock_info_badge_size">34dp</dimen>
     <dimen name="auth_lock_info_badge_text_size">8sp</dimen>
     <dimen name="auth_lock_info_row_padding">14dp</dimen>
 
-    <!-- ===================== Two-factor setup and recovery codes =====================
-         The setup screen reached from the profile screen's two-factor switch, and the codes shown
-         once at the end of it. -->
+    <!-- ===================== Two-factor setup and recovery codes ===================== -->
 
-    <!-- The QR code image. Large enough that a camera focuses on it easily from a comfortable
-         distance, and small enough that the confirmation keypad is still partly visible below it on
-         a short screen — so the user can see there is a second step before they scroll. The bitmap is
-         generated at exactly this size in pixels, never scaled; see util.QrCodeRenderer. -->
+    <!-- The QR code image. Large enough that a camera focuses on it easily from a comfortable distance. -->
     <dimen name="two_factor_qr_size">220dp</dimen>
-    <!-- The white surround between the code and the card's edge. A QR code needs a light quiet zone
-         to be found by a scanner, and this is what supplies it in dark mode, where the page behind
-         the card is not light at all. -->
+    <!-- The white surround between the code and the card's edge. -->
     <dimen name="two_factor_qr_padding">16dp</dimen>
 
-    <!-- The secret printed under the QR code for manual entry. Monospace and a touch larger than body
-         text, because it is a string of characters being transcribed one at a time rather than read. -->
+    <!-- The secret printed under the QR code for manual entry. -->
     <dimen name="two_factor_secret_text_size">15sp</dimen>
 
-    <!-- One recovery code in the two-column grid: its number, the code itself, and the row's own
-         breathing room. -->
+    <!-- One recovery code in the two-column grid: its number, the code itself, and the row's own breathing room. -->
     <dimen name="recovery_code_row_padding">10dp</dimen>
     <dimen name="recovery_code_text_size">17sp</dimen>
     <dimen name="recovery_code_index_width">22dp</dimen>
 
-    <!-- ============================== "Add a place" screen ==============================
-         The sub-screen reached from the Places tab, where a place is saved from the device's GPS.
-         Its metrics come straight from the design (design/New Map 2.png): a 36dp back disc, a 250dp
-         live map, and the app's usual radius scale — 28dp on the large cards, 20dp on the summary,
-         16dp on inputs and a capsule on everything pill-shaped. -->
+    <!-- ============================== "Add a place" screen ============================== -->
 
     <!-- The header: the round back button, and the heading beside it. -->
     <dimen name="add_place_back_button_size">36dp</dimen>
@@ -963,32 +558,22 @@
 
     <!-- ~~~~~~~~~~ The live GPS map ~~~~~~~~~~ -->
 
-    <!-- The map showing the current fix. A little shorter than the Places tab's, because this screen
-         has a long form under it and the map is confirmation of one point rather than something to
-         explore. -->
+    <!-- The map showing the current fix. A little shorter than the Places tab's. -->
     <dimen name="gps_map_height">250dp</dimen>
-    <!-- The status chip in the map's top-left corner ("LIVE GPS", "LOCATING…", "NO GPS FIX"): its
-         inset from the corner, its own padding, the coloured dot in front of the label. -->
+    <!-- The status chip in the map's top-left corner ("LIVE GPS", "LOCATING…", "NO GPS FIX"). -->
     <dimen name="gps_map_chip_inset">12dp</dimen>
     <dimen name="gps_map_chip_padding_horizontal">10dp</dimen>
     <dimen name="gps_map_chip_padding_vertical">7dp</dimen>
     <dimen name="gps_map_chip_text_size">9sp</dimen>
     <dimen name="gps_map_chip_dot_size">7dp</dimen>
-    <!-- The placeholder shown in the map's place before a fix: a blue dot in a tinted well, over a
-         line of explanation. -->
+    <!-- The placeholder shown in the map's place before a fix: a blue dot in a tinted well. -->
     <dimen name="gps_map_placeholder_well_size">52dp</dimen>
     <dimen name="gps_map_placeholder_dot_size">14dp</dimen>
     <dimen name="gps_map_placeholder_text_size">12.5sp</dimen>
-    <!-- The white ring around the "you are here" dot, wherever it appears. Thick enough to separate
-         the disc from a pale ground, thin enough to leave most of a 13dp dot blue. -->
+    <!-- The white ring around the "you are here" dot, wherever it appears. -->
     <dimen name="gps_dot_ring_width">2.5dp</dimen>
 
-    <!-- The pin shown over the middle of the map while it is being dragged to choose a point.
-
-         The offset is deliberately *half the size, negative*: a pin marks a point with its tip, and
-         the view is centred by its own middle, so it has to be lifted by half its height for the tip
-         to land on the map's centre — which is the coordinate the screen saves. Changing the size
-         without changing the offset is what would quietly move the saved point half a pin north. -->
+    <!-- The pin shown over the middle of the map while it is being dragged to choose a point. -->
     <dimen name="map_centre_pin_size">40dp</dimen>
     <dimen name="map_centre_pin_offset">-20dp</dimen>
     <!-- The line under the map explaining that it can be dragged. -->
@@ -996,12 +581,7 @@
 
     <!-- ~~~~~~~~~~ The place-search field and its suggestions ~~~~~~~~~~ -->
 
-    <!-- One suggestion row: a pin, a name, and the locality under it.
-
-         48dp minimum because that is the smallest comfortable touch target, and these rows are tapped
-         rather than read — a mis-tap here does not pick the wrong word, it saves the wrong hospital.
-         The two-line content usually makes a row taller than the minimum anyway; the floor is for the
-         one-line rows, where a result has no address to show. -->
+    <!-- One suggestion row: a pin, a name, and the locality under it. -->
     <dimen name="place_search_row_min_height">48dp</dimen>
     <dimen name="place_search_row_padding_horizontal">14dp</dimen>
     <dimen name="place_search_row_padding_vertical">8dp</dimen>
@@ -1009,28 +589,17 @@
     <dimen name="place_search_row_name_text_size">14sp</dimen>
     <dimen name="place_search_row_address_text_size">11.5sp</dimen>
 
-    <!-- How much of the map stays uncovered below a full suggestions panel.
-
-         It does two jobs with one number: it keeps a strip of map visible, so the panel reads as a
-         dropdown over the map rather than as a screen that has replaced it, and it is what bounds the
-         list's height — the rows scroll inside the panel once they would need more room than this
-         leaves. Roughly a row's worth, which is also enough to show that there is a map underneath. -->
+    <!-- How much of the map stays uncovered below a full suggestions panel. -->
     <dimen name="place_search_results_bottom_inset">56dp</dimen>
 
     <!-- ~~~~~~~~~~ The map's overlaid controls ~~~~~~~~~~ -->
-    <!-- The icon inside the "I'M HERE" and "MAP TYPE" pills. Small enough to sit inside a 9sp mono
-         label without the pill growing taller than the status chips it shares the card with. -->
+    <!-- The icon inside the "I'M HERE" and "MAP TYPE" pills. -->
     <dimen name="map_pill_icon_size">13dp</dimen>
     <dimen name="map_pill_icon_padding">5dp</dimen>
-    <!-- The round recentre button in the map's bottom corner. 40dp is the smallest circle that still
-         clears the 40dp minimum touch target once its own inset is counted — anything daintier would
-         look right and be hard to hit. -->
+    <!-- The round recentre button in the map's bottom corner. -->
     <dimen name="map_recentre_button_size">40dp</dimen>
     <dimen name="map_recentre_icon_size">19dp</dimen>
-    <!-- Where MapLibre's compass sits. Far enough down to clear the "MAP TYPE" pill it would
-         otherwise share the top-end corner with: the pill's own inset plus its height, plus a gap.
-         The compass only appears once the map has been rotated off north, so most of the time this
-         reserves space nothing occupies. -->
+    <!-- Where MapLibre's compass sits: far enough down to clear the "MAP TYPE" pill above it. -->
     <dimen name="map_compass_margin_top">58dp</dimen>
     <!-- The credit line over the bottom-start of every map. -->
     <dimen name="map_attribution_margin">6dp</dimen>
@@ -1039,8 +608,7 @@
     <dimen name="map_attribution_padding_vertical">2dp</dimen>
 
     <!-- ~~~~~~~~~~ The "Selected location" card ~~~~~~~~~~ -->
-    <!-- The small pin beside the address. Sized to the cap height of the name line next to it, so the
-         two read as one mark-and-label pair rather than as an icon with text after it. -->
+    <!-- The small pin beside the address. Sized to the cap height of the name line next. -->
     <dimen name="selected_location_pin_size">17dp</dimen>
     <dimen name="selected_location_name_text_size">15sp</dimen>
     <dimen name="selected_location_address_text_size">12sp</dimen>
@@ -1049,15 +617,13 @@
     <!-- ~~~~~~~~~~ The current-location card ~~~~~~~~~~ -->
     <dimen name="gps_card_corner_radius">28dp</dimen>
     <dimen name="gps_card_padding">18dp</dimen>
-    <!-- The dot and the well it sits in. Smaller than the map placeholder's, because on the card it
-         is a status light beside a line of text rather than the only thing on screen. -->
+    <!-- The dot and the well it sits in. Smaller than the map placeholder's. -->
     <dimen name="gps_card_dot_well_size">46dp</dimen>
     <dimen name="gps_card_dot_size">13dp</dimen>
     <dimen name="gps_card_label_text_size">9.5sp</dimen>
     <dimen name="gps_card_area_text_size">14sp</dimen>
     <dimen name="gps_card_coordinates_text_size">10sp</dimen>
-    <!-- The pills under the card's text: "Refresh location", and "Use demo location" when there is
-         no fix to be had. Capsules the height of a comfortable touch target. -->
+    <!-- The pills under the card's text: "Refresh location", and "Use demo location". -->
     <dimen name="gps_card_button_height">38dp</dimen>
     <dimen name="gps_card_button_padding_horizontal">14dp</dimen>
     <dimen name="gps_card_button_text_size">9.5sp</dimen>
@@ -1070,71 +636,44 @@
     <dimen name="add_place_summary_corner_radius">20dp</dimen>
     <dimen name="add_place_summary_padding">15dp</dimen>
     <dimen name="add_place_summary_text_size">11.5sp</dimen>
-    <!-- The save button is a touch taller than the app's other full-width buttons, as the design
-         has it: it is the only action on a long form and the end of the journey. -->
+    <!-- The save button is a touch taller than the app's other full-width buttons, as the design has. -->
     <dimen name="add_place_save_button_height">56dp</dimen>
 
-    <!-- The page's own bottom inset. Deep, because the floating navigation bar is drawn *over* the
-         scrolling content: without it "SAVE PLACE" — the single action on the screen — comes to rest
-         underneath the bar. The same figure and the same reason as home_scroll_padding_bottom. -->
+    <!-- The page's own bottom inset. Deep. -->
     <dimen name="add_place_scroll_padding_bottom">130dp</dimen>
 
-    <!-- The same inset for the four add/edit forms — pet, task, expense and place.
-
-         They needed it just as badly and did not have it: each ends in its buttons, and on the place
-         form in edit mode the last of them is "Delete place", which came to rest entirely behind the
-         navigation bar. A button under the bar is not merely hard to read — the bar takes the tap, so
-         pressing it navigated to another tab instead, and the action could not be reached at all
-         except with the keyboard open (which hides the bar).
-
-         Applied as the scrolling column's own bottom padding rather than the scroller's, so the
-         content simply grows by this much and the last button can scroll up clear of the bar. -->
+    <!-- The same inset for the four add/edit forms — pet, task, expense and place. -->
     <dimen name="form_scroll_padding_bottom">130dp</dimen>
 
-    <!-- "+ ADD PLACE" in the Places tab's "Saved places" heading. A compact accent capsule, sized to
-         sit on the heading's line without pushing it taller. -->
+    <!-- "+ ADD PLACE" in the Places tab's "Saved places" heading. -->
     <dimen name="places_add_pill_height">32dp</dimen>
     <dimen name="places_add_pill_padding_horizontal">13dp</dimen>
     <dimen name="places_add_pill_text_size">9.5sp</dimen>
 
-    <!-- ============================ Vaccination history ============================
-         The card on a pet's detail screen listing the shots it has had, and the "Record a
-         vaccination" screen that adds to it.
-
-         The card is built to a tighter grid than the rest of the pet page: an 18dp gutter rather than
-         the app's usual 16dp card_padding, and rows only 14dp deep. That is deliberate — a history is
-         a *list of facts being scanned*, not a set of panels being read one at a time, and the closer
-         spacing is what lets four shots be taken in at a glance. The same reasoning as the
-         notification cards' 13dp padding further up this file. -->
+    <!-- ============================ Vaccination history ============================ -->
 
     <!-- ~~~~~~~~~~ The card and its header row ~~~~~~~~~~ -->
     <dimen name="vaccination_card_gutter">18dp</dimen>
     <dimen name="vaccination_header_padding_top">16dp</dimen>
     <dimen name="vaccination_header_padding_bottom">13dp</dimen>
-    <!-- A step smaller than the app's general section label, because it labels a card rather than a
-         region of the page and the "+ RECORD" pill shares its line. -->
+    <!-- A step smaller than the app's general section label, because it labels a card. -->
     <dimen name="vaccination_label_text_size">10sp</dimen>
 
     <!-- ~~~~~~~~~~ One row ~~~~~~~~~~ -->
     <dimen name="vaccination_row_padding_vertical">14dp</dimen>
     <!-- The gap between the row's four parts: date column, bar, text, pill. -->
     <dimen name="vaccination_row_gap">13dp</dimen>
-    <!-- Wide enough for a two-digit day over "SEP 25" without either wrapping, and fixed so the bars
-         line up in a column down the card whatever the dates are — see item_vaccination.xml. -->
+    <!-- Wide enough for a two-digit day over "SEP 25" without either wrapping, and fixed. -->
     <dimen name="vaccination_date_width">40dp</dimen>
     <dimen name="vaccination_day_text_size">16sp</dimen>
     <dimen name="vaccination_month_text_size">8sp</dimen>
-    <!-- The status bar. Narrower than the dashboard's category bars and stretched to the row's full
-         height rather than given a fixed one, so it reads as an edge marking the row rather than as a
-         tick beside it. -->
+    <!-- The status bar. Narrower than the dashboard's category bars and stretched to the row's full height. -->
     <dimen name="vaccination_bar_width">3dp</dimen>
     <dimen name="vaccination_name_text_size">13.5sp</dimen>
     <dimen name="vaccination_meta_text_size">10sp</dimen>
     <dimen name="vaccination_meta_gap">4dp</dimen>
 
-    <!-- The status pill. Smaller than every other pill in the app: it carries one upper-case word at
-         the end of a dense row, and at the pastel pills' size it would be the loudest thing on the
-         card. -->
+    <!-- The status pill. Smaller than every other pill in the app. -->
     <dimen name="vaccination_pill_padding_horizontal">9dp</dimen>
     <dimen name="vaccination_pill_padding_vertical">6dp</dimen>
     <dimen name="vaccination_pill_text_size">8.5sp</dimen>
@@ -1145,38 +684,30 @@
 
     <!-- ~~~~~~~~~~ "Record a vaccination" ~~~~~~~~~~ -->
 
-    <!-- The gap between the screen's eight blocks. One figure for all of them, so the form reads as an
-         even column rather than as groups of differing weight. -->
+    <!-- The gap between the screen's eight blocks. One figure for all of them. -->
     <dimen name="record_block_gap">18dp</dimen>
 
-    <!-- "for Krishala Pant Thapa Baby", under the heading. A half-step smaller than the Add a place
-         subtitle it inherits from: it names the pet rather than explaining the screen. -->
+    <!-- "for Krishala Pant Thapa Baby", under the heading. -->
     <dimen name="record_subtitle_text_size">10.5sp</dimen>
     <!-- The micro-label over each field. -->
     <dimen name="record_field_label_text_size">9.5sp</dimen>
 
-    <!-- The species-aware preset chips. A step smaller than the Tasks tab's filter chips: these are
-         shortcuts that fill a field, not a filter the screen is read through. -->
+    <!-- The species-aware preset chips. A step smaller than the Tasks tab's filter chips. -->
     <dimen name="record_chip_text_size">11sp</dimen>
     <dimen name="record_chip_gap">7dp</dimen>
 
-    <!-- The two date fields. A slightly tighter corner and padding than the text fields above them
-         (14dp against 16dp), which is the design's way of marking them as a pair of values rather than
-         two more boxes to type in. -->
+    <!-- The two date fields. A slightly tighter corner and padding than the text fields above them. -->
     <dimen name="record_date_field_corner_radius">14dp</dimen>
     <dimen name="record_date_field_padding">12dp</dimen>
     <dimen name="record_date_text_size">12sp</dimen>
     <dimen name="record_date_column_gap">10dp</dimen>
 
-    <!-- The "repeats every" segmented control: four options in one groove. Taller than the profile
-         screen's two-option toggle, because four labels in the same width need the extra height to
-         stay comfortably tappable. -->
+    <!-- The "repeats every" segmented control: four options in one groove. -->
     <dimen name="record_repeat_height">44dp</dimen>
     <dimen name="record_repeat_inset">4dp</dimen>
     <dimen name="record_repeat_text_size">10.5sp</dimen>
 
-    <!-- The checklist toggle row: the whole row is one button, so it takes a card's padding rather
-         than a list row's. -->
+    <!-- The checklist toggle row: the whole row is one button, so it takes a card's padding. -->
     <dimen name="record_toggle_corner_radius">20dp</dimen>
     <dimen name="record_toggle_padding">15dp</dimen>
     <dimen name="record_toggle_gap">13dp</dimen>
@@ -1185,9 +716,7 @@
 
     <dimen name="record_clinic_text_size">13sp</dimen>
 
-    <!-- The page's own bottom inset, for the reason given on add_place_scroll_padding_bottom: the
-         floating navigation bar is drawn over the scrolling content, and without this "SAVE RECORD"
-         comes to rest underneath it. -->
+    <!-- The page's own bottom inset, for the reason given on add_place_scroll_padding_bottom. -->
     <dimen name="record_scroll_padding_bottom">130dp</dimen>
 
 </resources>

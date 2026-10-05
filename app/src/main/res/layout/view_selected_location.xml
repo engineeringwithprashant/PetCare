@@ -1,30 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    "SELECTED LOCATION": what the map's centre pin is currently pointing at, in words and figures.
-
-    **What replaced what.** The Add a place screen used to carry a large dark card here that reported
-    on the *device* — a status dot, "Pin moved on the map", a "Try again" button and a "Use demo
-    location" pill beside it. Most of that card existed to cope with having no GPS fix, which is no
-    longer a dead end now that the map itself can be moved to any point on Earth; and the demo position
-    has gone entirely, because a place saved at made-up coordinates looks exactly like a real one. What
-    is left is the only question the user actually has at this point in the form — "which place is
-    about to be saved?" — answered in three lines.
-
-    **Why three lines rather than one.** They are read at different moments and with different weight:
-    the name is glanced at to confirm the right place, the fuller address is read only if the name is
-    ambiguous, and the coordinates are the fallback that is always true even when the other two are
-    blank. Collapsing them into one string would make the important half as quiet as the rest.
-
-    **The coordinates are never hidden**, even when the address resolves perfectly. They are the thing
-    actually stored on the place, and requirement 7 is explicit that a place must remain saveable with
-    nothing but them — so they are shown as the answer rather than as a diagnostic.
-
-    An outlined card in the app's light card language, matching the geotag card on the full place form:
-    this sits inside a form rather than on a page of cards, so it is outlined rather than elevated.
-
-    accessibilityLiveRegion polite: the content changes as the user moves the map, and a screen reader
-    should mention the new place without interrupting whatever is being typed.
--->
+<!-- "SELECTED LOCATION": what the map's centre pin is currently pointing at, in words and figures. -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -47,9 +22,7 @@
             android:layout_height="wrap_content"
             android:text="@string/selected_location_label" />
 
-        <!-- The pin and the three lines beside it. baselineAligned false because the icon and the
-             text block are different kinds of thing: aligning their baselines would drag the icon
-             down to sit on the first line's feet rather than centring it against the name. -->
+        <!-- The pin and the three lines beside it. baselineAligned false. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -57,8 +30,7 @@
             android:baselineAligned="false"
             android:orientation="horizontal">
 
-            <!-- Decorative: everything it stands for is in the text beside it, so a screen reader
-                 announcing "pin" as well would only add noise. -->
+            <!-- Decorative: everything it stands for is in the text beside. -->
             <ImageView
                 android:id="@+id/selectedPinIcon"
                 android:layout_width="@dimen/selected_location_pin_size"
@@ -75,9 +47,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <!-- "Pulchowk, Lalitpur" — or, before the lookup answers, what is being waited for;
-                     or, when it found nothing, that the pin is simply where it was dropped. There is
-                     always something on this line. -->
+                <!-- "Pulchowk, Lalitpur" — or, before the lookup answers, what is being waited. -->
                 <TextView
                     android:id="@+id/selectedNameText"
                     style="@style/PetCare.SelectedLocation.Name"
@@ -85,9 +55,7 @@
                     android:layout_height="wrap_content"
                     tools:text="Pulchowk, Lalitpur" />
 
-                <!-- "Lalitpur Metropolitan City, Bagmati, Nepal". Gone rather than blank when the
-                     lookup had nothing further to add, so the card closes up instead of leaving a
-                     gap that reads as a missing value. -->
+                <!-- "Lalitpur Metropolitan City, Bagmati, Nepal". Gone rather than blank. -->
                 <TextView
                     android:id="@+id/selectedAddressText"
                     style="@style/PetCare.SelectedLocation.Address"
@@ -98,8 +66,7 @@
                     tools:text="Lalitpur Metropolitan City, Bagmati"
                     tools:visibility="visible" />
 
-                <!-- Monospace, so the digits line up under each other as the map moves and the
-                     figures change; see the Places tab, which writes every number this way. -->
+                <!-- Monospace, so the digits line up under each other as the map moves and the figures change. -->
                 <TextView
                     android:id="@+id/selectedCoordinatesText"
                     style="@style/PetCare.SelectedLocation.Coordinates"
@@ -108,11 +75,7 @@
                     android:layout_marginTop="3dp"
                     tools:text="27.6771° N, 85.3132° E" />
 
-                <!-- Shown only when the point came from the device and the user granted "Approximate"
-                     rather than "Precise" location. Kept rather than dropped in the rewrite: the
-                     coordinates look exactly as confident either way, and this is the one line that
-                     says they may be a few hundred metres out. It never appears for a point placed by
-                     hand on the map, which has no accuracy to doubt. -->
+                <!-- Shown only when the point came from the device and the user granted "Approximate". -->
                 <TextView
                     android:id="@+id/selectedNoteText"
                     style="@style/PetCare.SelectedLocation.Address"

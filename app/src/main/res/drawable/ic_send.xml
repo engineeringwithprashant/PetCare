@@ -1,10 +1,4 @@
-<!--
-    Paper-plane icon for the "Delegate" button on the checklist screen.
-
-    A vector drawable rather than a bitmap: drawn from path data at runtime, so it stays sharp at
-    every screen density from one small file. The button re-tints it to match the Material 3 theme,
-    which is why the fill is plain white here.
--->
+<!-- Paper-plane icon for the "Delegate" button on the checklist screen. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

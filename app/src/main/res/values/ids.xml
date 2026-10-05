@@ -1,24 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Resource ids that name nothing in a layout.
-
-    `View.setTag(int, Object)` needs a key, and Android insists that key be a resource id rather
-    than an arbitrary number — the rule exists so two unrelated pieces of code cannot pick the same
-    integer and silently overwrite each other's tag on the same view. Declaring the ids here is how
-    an app creates keys of its own.
-
-    Both of these belong to loadPetPhoto in ui/common/PetPhotoBinder.kt, which uses them to hang a
-    little state on an ImageView it does not own — see that file for what each one carries and why a
-    recycled list row needs it.
--->
+<!-- Resource ids that name nothing in a layout. -->
 <resources>
 
-    <!-- Holds the coroutine loading a photo into this view, so it can be cancelled if the view is
-         rebound to a different pet before the load finishes. -->
+    <!-- Holds the coroutine loading a photo into this view. -->
     <item name="tag_pet_photo_job" type="id" />
 
-    <!-- Holds the path the view is currently *meant* to be showing, so a load that finishes late
-         can check whether it is still wanted. -->
+    <!-- Holds the path the view is currently meant to be showing. -->
     <item name="tag_pet_photo_path" type="id" />
 
 </resources>

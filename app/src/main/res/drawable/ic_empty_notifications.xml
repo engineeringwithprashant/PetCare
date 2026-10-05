@@ -1,13 +1,4 @@
-<!--
-    Bell with a tick, shown in the notifications screen's empty state.
-
-    A separate drawable from ic_notification.xml, which looks similar but cannot be reused here: that
-    one is a notification's *small icon*, drawn by the system status bar as a stencil where only the
-    alpha channel survives, so it is a solid opaque silhouette with no tint. This one is drawn by the
-    app on its own page, so it is tinted to the muted role like the other empty-state illustrations
-    (see ic_empty_tasks.xml) and can afford the tick that says "nothing is waiting" rather than simply
-    "notifications".
--->
+<!-- Bell with a tick, shown in the notifications screen's empty state. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

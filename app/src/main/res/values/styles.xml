@@ -1,32 +1,7 @@
-<!--
-    Reusable widget styles.
-
-    A style is a named bundle of attributes applied to one widget. These exist so a piece of the
-    app's look is described once rather than having the same three or four attributes copied onto
-    every TextView that plays the same part — and so changing how, say, a section heading looks
-    means editing one block here instead of hunting through a dozen layouts.
-
-    Kept apart from themes.xml on purpose: that file defines the app-wide *theme* (the palette every
-    widget inherits), whereas these style individual widgets. The two meet where themes.xml points a
-    *default* attribute such as materialCardViewStyle at a style below — which is how every card in
-    the app picks up the rounded, elevated treatment without a single layout naming it.
-
-    Every one of them takes its colours and text sizes from theme attributes rather than fixed
-    values, so they follow the Material 3 type scale and adapt to dark mode automatically.
-
-    Styles named "PetCare.*" set parent="" explicitly. A dot in a style name is Android's shorthand
-    for inheritance, so "PetCare.SectionHeader" would otherwise be read as extending a style called
-    "PetCare", which does not exist and fails the build. An empty parent says the dots are just
-    namespacing. Styles that *do* extend a Material style name it as the parent instead, and so are
-    free to use dots normally.
--->
+<!-- Reusable widget styles. -->
 <resources>
 
-    <!-- ================================== Shapes ==================================
-         The rounded-corner language, as shape appearances Material components can be pointed at.
-         Declaring them here rather than setting cardCornerRadius per layout means the radius is
-         defined once and a component's ripple, stroke and shadow all follow the same outline —
-         setting a radius directly leaves the ripple square at the corners. -->
+    <!-- ================================== Shapes ================================== -->
 
     <style name="ShapeAppearance.PetCare.Small" parent="ShapeAppearance.Material3.Corner.Small">
         <item name="cornerFamily">rounded</item>
@@ -43,29 +18,14 @@
         <item name="cornerSize">@dimen/corner_radius_lg</item>
     </style>
 
-    <!--
-        The softest corner in the app, for the dashboard's three subject cards: today's care, and the
-        two sizes of pet card.
-
-        It exists as a shape appearance rather than as a bare `cardCornerRadius` on each of those
-        layouts, and that is not belt and braces. Every MaterialCardView in the app picks up
-        PetCare.Card from the theme by default, and that style names a shapeAppearance of its own —
-        so a card setting only cardCornerRadius is asking two attributes for a different answer and
-        getting whichever the component happens to resolve last. An **overlay** is applied on top of
-        whatever shape the style supplied, which settles it.
-    -->
+    <!-- The softest corner in the app, for the dashboard's three subject cards: today's care. -->
     <style name="ShapeAppearance.PetCare.XLarge" parent="ShapeAppearance.Material3.Corner.Large">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">@dimen/pet_card_corner_radius</item>
     </style>
 
-    <!-- The logo tile at the top of every sign-in screen: the square logo artwork clipped to the
-         rounded corner the auth mockups draw. See view_auth_header.xml. -->
-    <!-- The rounded square the header's profile photo is clipped to.
-
-         The same radius as bg_monogram.xml, referenced from the same dimension, so the photo and the
-         yellow letter tile it replaces are exactly the same shape — the mark must not appear to
-         change form depending on whether a photo has been set. -->
+    <!-- The logo tile at the top of every sign-in screen. -->
+    <!-- The rounded square the header's profile photo is clipped to. -->
     <style name="ShapeAppearance.PetCare.Monogram" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">@dimen/monogram_corner_radius</item>
@@ -76,67 +36,43 @@
         <item name="cornerSize">@dimen/auth_brand_mark_corner_radius</item>
     </style>
 
-    <!-- The dashboard's sideways pet cards: 22dp, between the summary cards' 18dp and the two large
-         cards' 28dp, which is the ranking the spec sets for the three kinds of card on this screen. -->
+    <!-- The dashboard's sideways pet cards: 22dp, between the summary cards' 18dp and the two large cards' 28dp. -->
     <style name="ShapeAppearance.PetCare.HomePetCard" parent="ShapeAppearance.Material3.Corner.Large">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">22dp</item>
     </style>
 
-    <!-- The dashboard's two large cards — the dark next-up card and the white today's-care card.
-         A step rounder than every other card on the screen (28dp against the pet cards' 24dp and the
-         summary cards' 18dp), which is part of what marks them out as the page's major objects. -->
+    <!-- The dashboard's two large cards — the dark next-up card and the white today's-care card. -->
     <style name="ShapeAppearance.PetCare.NextUp" parent="ShapeAppearance.Material3.Corner.Large">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">@dimen/next_up_card_corner_radius</item>
     </style>
 
-    <!--
-        A circle, used to clip pet photos on the dashboard cards and the picker chips.
-
-        The corner size is given as a *percentage* rather than in dp, which is what makes this one
-        style work for a 64dp card thumbnail and a 24dp chip icon alike: 50% of the shorter edge is
-        exactly the radius that turns any square into a circle. A fixed dp value would have to be
-        kept in step with every size it is applied at.
-    -->
+    <!-- A circle, used to clip pet photos on the dashboard cards and the picker chips. -->
     <style name="ShapeAppearance.PetCare.Circle" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
 
-    <!-- =================================== Cards ===================================
-         The app's defining surface. PetCare.Card is wired into the theme as the default
-         materialCardViewStyle, so *every* MaterialCardView in the app is rounded, white and softly
-         shadowed without naming a style — which is what keeps a card added next year looking like
-         the ones added today.
-
-         Elevated rather than filled or outlined. On a cream page a white card with a soft shadow
-         separates itself through depth, which survives dark mode: an outline would have to be
-         redrawn to stay visible against a dark background, and a filled card would need a different
-         tint. The shadow works either way. -->
+    <!-- =================================== Cards =================================== -->
 
     <style name="PetCare.Card" parent="Widget.Material3.CardView.Elevated">
         <item name="cardCornerRadius">@dimen/corner_radius_md</item>
         <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Medium</item>
         <item name="cardElevation">@dimen/card_elevation</item>
         <item name="cardBackgroundColor">?attr/colorSurface</item>
-        <!-- No stroke: the shadow already separates the card from the page, and drawing a border on
-             top of it reads as the same edge described twice. -->
+        <!-- No stroke: the shadow already separates the card from the page. -->
         <item name="strokeWidth">0dp</item>
     </style>
 
-    <!-- A full-width feature card — the dashboard's task list, the appointments panel. Takes the
-         larger radius and a touch more lift, so it reads as a section of the page rather than as
-         one row among several. -->
+    <!-- A full-width feature card — the dashboard's task list, the appointments panel. -->
     <style name="PetCare.Card.Feature" parent="PetCare.Card">
         <item name="cardCornerRadius">@dimen/corner_radius_lg</item>
         <item name="shapeAppearance">@style/ShapeAppearance.PetCare.Large</item>
         <item name="cardElevation">@dimen/card_elevation_raised</item>
     </style>
 
-    <!-- A card the user can press. The only difference is the feedback: it lifts while held, which
-         is what tells the user it is a control and not just a panel. Ripple and shadow both follow
-         the rounded outline because the shape comes from the inherited shapeAppearance. -->
+    <!-- A card the user can press. The only difference is the feedback: it lifts while held. -->
     <style name="PetCare.Card.Clickable" parent="PetCare.Card">
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
@@ -144,25 +80,7 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!--
-        A **small, flat, outlined** card: the dashboard's three stat cards, its three quick actions,
-        and the profile screen's three stat cards.
-
-        **Why these do not use the shadow the ordinary card relies on.** [PetCare.Card] separates
-        itself from the page with elevation alone, which works for a full-width panel with room around
-        it. It does not work for a row of small cards: a 2dp shadow under a third-of-the-screen card
-        is nearly invisible on the cream page, and in dark mode it is invisible outright — a shadow is
-        drawn *darker* than its background, and there is nothing darker than the near-black page. The
-        three cards then read as bare text floating in a row rather than as surfaces, which is exactly
-        what was happening to the quick actions and the profile stats before this style existed.
-
-        So the separation is drawn instead of cast: a hairline border in the theme's outline colour,
-        which is visible in both themes, with the elevation dropped to zero so the card is not
-        describing its edge twice.
-
-        The radius is the stat card's rather than the app's general medium, because these three rows
-        are the one place the app puts small cards side by side, and they should read as one family.
-    -->
+    <!-- A small, flat, outlined card: the dashboard's three stat cards, its three quick actions. -->
     <style name="PetCare.Card.Outlined" parent="PetCare.Card">
         <item name="cardCornerRadius">@dimen/home_stat_card_corner_radius</item>
         <item name="cardElevation">0dp</item>
@@ -170,25 +88,14 @@
         <item name="strokeWidth">1dp</item>
     </style>
 
-    <!-- The same card where it is a control — the dashboard's quick actions. Pressable, with the
-         ripple following the rounded outline; it stays flat while held rather than lifting, because
-         it has no shadow to lift with. -->
+    <!-- The same card where it is a control — the dashboard's quick actions. -->
     <style name="PetCare.Card.Outlined.Clickable" parent="PetCare.Card.Outlined">
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- ================================= Typography =================================
-         A small set of named roles covers the whole app. Using a role rather than picking a text
-         appearance per screen is what keeps headings the same size everywhere.
-
-         Typefaces mostly arrive through the text appearance each role names — type.xml maps
-         Headline roles to Bricolage Grotesque and Title/Body/Label roles to Schibsted Grotesk. A
-         style names a font directly only where its part in the design differs from its Material
-         role: a *number* or *name* set at a Title size (Bricolage), or an upper-case micro-label
-         (IBM Plex Mono). A fontFamily set on the style outranks the one in its textAppearance, which
-         is what lets those few styles keep Material's size while swapping the face. -->
+    <!-- ================================= Typography ================================= -->
 
     <!-- The dashboard greeting — the largest text in the app, and the only place it appears. -->
     <style name="PetCare.Greeting" parent="">
@@ -202,23 +109,7 @@
         <item name="android:textColor">?attr/colorOnBackground</item>
     </style>
 
-    <!--
-        The quieter kind of section heading: small, upper-case and widely letter-spaced — "YOUR
-        PETS", with a count on the far right of the same line.
-
-        Used where the heading's job is to *label* what follows rather than to introduce it. At this
-        size the words carry almost no weight of their own, which is the point: the pet cards below
-        are the subject, and a full-sized heading above them would compete. The letter-spacing is
-        what keeps it legible once it is this small and capitalised — set solid, upper-case text at
-        11sp reads as a grey smear.
-
-        The same treatment as PetCare.DetailLabel further down, and deliberately so: both are saying
-        "here is the name of the thing you are about to read".
-
-        Set in IBM Plex Mono, the app's "instrument panel" face: a monospaced label reads as a
-        reading on a gauge rather than as a sentence, which is exactly the distinction this style
-        exists to draw. Every style that inherits from it (field labels, stat labels) gets it too.
-    -->
+    <!-- The quieter kind of section heading: small, upper-case and widely letter-spaced — "YOUR PETS". -->
     <style name="PetCare.SectionLabel" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -229,17 +120,13 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- The dashboard's largest statement — "5 things left for today" — and the pet's name across a
-         card photo. Bold and a step up from a section header, because on the redesigned dashboard
-         these two lines are what the screen is *for*. The colour is left to the layout: one of them
-         sits on a card and the other on a photograph. -->
+    <!-- The dashboard's largest statement — "5 things left for today" — and the pet's name across a card photo. -->
     <style name="PetCare.Headline" parent="">
         <item name="android:textAppearance">?attr/textAppearanceHeadlineSmall</item>
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- A heading *inside* a card. One step quieter than a section header, because the card's own
-         edge is already doing part of the work of saying "a new group starts here". -->
+    <!-- A heading inside a card. One step quieter than a section header. -->
     <style name="PetCare.CardHeader" parent="">
         <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
@@ -267,17 +154,7 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!--
-        One line of the password checklist (ui/common/PasswordChecklistView.kt): a tick or an empty
-        ring, then the rule.
-
-        Small type, because six of these sit under a field and must not out-shout the field itself.
-        The colour is deliberately *not* set here — the view sets it per row, since a met rule and an
-        outstanding one are drawn differently and neither is a fixed property of the style.
-
-        drawablePadding is the gap between the icon and the text. lineSpacingExtra keeps the rows from
-        crowding each other at a large font scale, where six lines close together become a block.
-    -->
+    <!-- One line of the password checklist (ui/common/PasswordChecklistView.kt): a tick or an empty ring. -->
     <style name="PetCare.PasswordRule" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
         <item name="android:drawablePadding">@dimen/spacing_sm</item>
@@ -287,16 +164,7 @@
         <item name="android:paddingBottom">2dp</item>
     </style>
 
-    <!-- ============================== Pastel stat pills ==============================
-         A small fact in a soft tinted capsule — "3 years old", "24.5 kg", "Dog".
-
-         Each variant differs only in which pastel pair it uses. The background is a *tint* applied
-         to one shared drawable rather than five separate drawables, so the shape is described once
-         and adding a sixth colour later is one style here, not a new file.
-
-         The pills are plain TextViews rather than Material Chips on purpose: a Chip is an
-         interactive component that carries a touch target, a ripple and a minimum height built for
-         being tapped. These are read, never pressed, and a row of them needs to stay compact. -->
+    <!-- ============================== Pastel stat pills ============================== -->
 
     <style name="PetCare.Pill" parent="">
         <item name="android:background">@drawable/bg_pill</item>
@@ -332,19 +200,9 @@
         <item name="android:textColor">?attr/colorOnPillPeach</item>
     </style>
 
-    <!-- ======================== Pills on a dashboard pet card ========================
-         The two pills written across a pet card's photo. They break from the pastel family above
-         for a reason that comes up repeatedly in this screen: a pastel wash is designed to sit on a
-         white card, and these sit on a photograph. Neither its ground nor its text colour can be
-         allowed to follow the theme, or the pills would become unreadable in one mode or the other —
-         see the pet-card note in colors.xml.
+    <!-- ======================== Pills on a dashboard pet card ======================== -->
 
-         They also say two different kinds of thing, and are coloured to match: the accent pill
-         carries the pet's *day*, which is the reason to look at the card at all, and the dark pill
-         carries facts that are merely true. -->
-
-    <!-- The accent pill: "Nothing due today", "3 left today". The one piece of yellow on the card,
-         so the eye finds the pet's status before anything else written on it. -->
+    <!-- The accent pill: "Nothing due today", "3 left today". -->
     <style name="PetCare.Pill.Accent" parent="PetCare.Pill">
         <item name="android:background">@drawable/bg_pill</item>
         <item name="android:backgroundTint">@color/accent_yellow</item>
@@ -352,18 +210,14 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- The dark pill: "2 yrs · 26 kg". Translucent, so the photograph shows through it — the chip
-         supplies its own shape and colour, so no tint is applied over it. -->
+    <!-- The dark pill: "2 yrs · 26 kg". Translucent, so the photograph shows. -->
     <style name="PetCare.Pill.OnPhoto" parent="PetCare.Pill">
         <item name="android:background">@drawable/bg_pet_card_chip</item>
         <item name="android:backgroundTint">@null</item>
         <item name="android:textColor">@color/on_pet_card</item>
     </style>
 
-    <!-- The species chip in a pet card's top corner: "CAT", "DOG". Upper-case and letter-spaced so
-         it reads as a category marker rather than as a word somebody wrote on the photo, and small
-         enough to stay out of the way of the picture. In IBM Plex Mono, like the app's other
-         upper-case micro-labels. -->
+    <!-- The species chip in a pet card's top corner: "CAT", "DOG". -->
     <style name="PetCare.SpeciesChip" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -380,32 +234,16 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- The same species marker in the accent, for the Pets tab's cards: "CAT" on a yellow capsule.
-
-         Yellow there rather than the translucent dark chip above, because on the Pets tab nothing is
-         written across the photo — the name and stats live on the light panel below it — so the chip
-         is the only mark on the picture and can afford to be the one bright thing. It inherits the
-         size, case and letter-spacing from PetCare.SpeciesChip and only swaps the colours.
-
-         The capsule is bg_pill tinted to the accent, the same trick the pastel pills use; the text is
-         the colour guaranteed legible on the accent. Both are fixed values, not theme roles, since the
-         chip sits on a photograph in either theme. -->
+    <!-- The same species marker in the accent, for the Pets tab's cards: "CAT" on a yellow capsule. -->
     <style name="PetCare.SpeciesChip.Accent" parent="PetCare.SpeciesChip">
         <item name="android:background">@drawable/bg_pill</item>
         <item name="android:backgroundTint">@color/accent_yellow</item>
         <item name="android:textColor">@color/on_accent_yellow</item>
     </style>
 
-    <!-- ============================ Pets tab: stat blocks ============================
-         The row of three facts under a pet's name on the Pets tab — "0 mo / AGE", "25 kg / WEIGHT",
-         "3 / DUE TODAY". A bold value over a small letter-spaced label, the label deliberately given
-         the same treatment as PetCare.SectionLabel so it reads as a field name rather than as text.
+    <!-- ============================ Pets tab: stat blocks ============================ -->
 
-         Styles rather than attributes repeated three times in item_pet.xml, so the three blocks
-         cannot drift apart and a fourth fact later is one more short block. -->
-
-    <!-- One block: a column holding the value and its label. Width is left to the layout, which
-         divides the row into equal thirds with layout_weight. -->
+    <!-- One block: a column holding the value and its label. -->
     <style name="PetCare.PetStat" parent="">
         <item name="android:orientation">vertical</item>
         <item name="android:paddingStart">@dimen/pets_stat_padding_horizontal</item>
@@ -414,9 +252,7 @@
         <item name="android:paddingBottom">@dimen/pets_stat_padding_vertical</item>
     </style>
 
-    <!-- The figure itself: bold, and one step below the pet's name so the name stays the heading.
-         A number, so it is set in Bricolage Grotesque at the Title size rather than in the Schibsted
-         face its Title role would otherwise give it. -->
+    <!-- The figure itself: bold, and one step below the pet's name so the name stays the heading. -->
     <style name="PetCare.PetStat.Value" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -433,33 +269,17 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- The hairline between two blocks. Full height of the row (match_parent), which a horizontal
-         LinearLayout resolves after measuring its tallest child — so the line always spans the row
-         exactly, however tall a value's text turns out to be at the user's font scale. -->
+    <!-- The hairline between two blocks. Full height of the row (match_parent). -->
     <style name="PetCare.PetStat.Divider" parent="">
         <item name="android:layout_width">@dimen/pets_stat_divider_width</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:background">?attr/colorOutlineVariant</item>
     </style>
 
-    <!--
-        The full-width "+ ADD A PET" row at the foot of the Pets tab (and in its empty state).
-
-        A Material 3 **outlined button** rather than a plain clickable TextView: the component brings
-        the ripple, the focus state, the 48dp touch target and the "button" role TalkBack announces,
-        none of which a TextView has. Outlined, not filled, because it sits at the end of a list of
-        large cards — it should read as "there is room for one more" rather than as the screen's
-        loudest action.
-
-        Styled quietly to match: the muted text colour and a faint outline, letter-spaced capitals
-        like the section labels, and the pet cards' own corner radius so it reads as the outline of a
-        card still to come. The "+" is Material's icon slot rather than a character in the string,
-        so a screen reader announces "Add a pet, button" and not "plus".
-    -->
+    <!-- The full-width "+ ADD A PET" row at the foot of the Pets tab (and in its empty state). -->
     <style name="PetCare.AddRowButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:minHeight">@dimen/pets_add_row_height</item>
-        <!-- Material buttons reserve invisible space above and below for the touch target. The row
-             is already taller than that minimum, so the insets would only add a gap nothing uses. -->
+        <!-- Material buttons reserve invisible space above and below for the touch target. -->
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="cornerRadius">@dimen/pet_card_corner_radius</item>
@@ -476,23 +296,9 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- ================================= Tasks tab =================================
-         The redesigned Tasks tab. Its one piece of visual grammar is "chosen = strong fill": the
-         selected day, the selected filter chips and the Delegate button all use
-         ?attr/colorSelectedContainer (near-black in light mode, yellow in dark — see attrs.xml),
-         and everything unchosen is an outlined shape on the surface colour. -->
+    <!-- ================================= Tasks tab ================================= -->
 
-    <!--
-        A filter chip in the category or pet row.
-
-        A genuine Material filter chip, so it brings the checkable state, the ripple, the touch
-        target and TalkBack's "selected" announcement. The colours come from three state lists in
-        res/color that switch on state_checked, so choosing a chip needs no code beyond checking it.
-
-        The tick Material normally shows on a checked filter chip is switched off: the solid fill
-        already says which chip is chosen, and a tick would make the chip grow as it is selected and
-        shunt the rest of the row sideways under the user's finger.
-    -->
+    <!-- A filter chip in the category or pet row. -->
     <style name="PetCare.FilterChip" parent="Widget.Material3.Chip.Filter">
         <item name="chipBackgroundColor">@color/filter_chip_background</item>
         <item name="chipStrokeColor">@color/filter_chip_stroke</item>
@@ -505,17 +311,14 @@
         <item name="android:checkable">true</item>
     </style>
 
-    <!-- The pet row's chips: the same chip with more horizontal padding. The design gives pets wider
-         pills than categories — there are fewer of them, and a name is the thing being chosen, so it
-         gets more room to be read and tapped. -->
+    <!-- The pet row's chips: the same chip with more horizontal padding. -->
     <style name="PetCare.FilterChip.Pet" parent="PetCare.FilterChip">
         <item name="chipMinHeight">40dp</item>
         <item name="textStartPadding">@dimen/spacing_md</item>
         <item name="textEndPadding">@dimen/spacing_md</item>
     </style>
 
-    <!-- One cell of the week strip: a centred column of weekday, date and dot on bg_week_day.xml.
-         Width is shared out by layout_weight in the layout, so it is not set here. -->
+    <!-- One cell of the week strip: a centred column of weekday, date and dot on bg_week_day.xml. -->
     <style name="PetCare.WeekDay" parent="">
         <item name="android:layout_height">@dimen/week_day_height</item>
         <item name="android:background">@drawable/bg_week_day</item>
@@ -525,14 +328,7 @@
         <item name="android:focusable">true</item>
     </style>
 
-    <!--
-        The small outlined pill button — "RESET DAY" in the progress card.
-
-        An outlined MaterialButton made compact: shorter than the default, fully rounded, with the
-        small letter-spaced capitals the tab uses for secondary labels. insetTop/insetBottom are
-        zeroed because the default insets exist to pad a 40dp button out to a 48dp touch target, and
-        on a 36dp pill they would only add invisible space above and below it.
-    -->
+    <!-- The small outlined pill button — "RESET DAY" in the progress card. -->
     <style name="PetCare.SmallPillButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:minHeight">@dimen/small_pill_button_height</item>
         <item name="android:minWidth">0dp</item>
@@ -549,18 +345,7 @@
         <item name="android:letterSpacing">0.1</item>
     </style>
 
-    <!--
-        The round check button on the right of a task card.
-
-        A *checkable* Material icon button rather than a CheckBox with a custom drawable: the design
-        is a circle that fills yellow, which is a button shape, and MaterialButton supports
-        android:checkable directly — it toggles state_checked on tap, draws its fill, ring and icon
-        from state lists keyed on that state (res/color/task_check_*.xml), and is announced by
-        TalkBack as a toggle with its checked state.
-
-        The circle comes from the 50%-corner shape appearance, so it stays round at any size. Padding
-        is set so the 20dp tick sits centred in the 40dp circle.
-    -->
+    <!-- The round check button on the right of a task card. -->
     <style name="PetCare.TaskCheckButton" parent="Widget.Material3.Button.IconButton.Outlined">
         <item name="android:checkable">true</item>
         <item name="android:minWidth">0dp</item>
@@ -581,9 +366,7 @@
         <item name="strokeWidth">@dimen/task_check_stroke_width</item>
     </style>
 
-    <!-- The pale tag under a task's subtitle naming its supplies — "Flea tablet". The pastel pill's
-         shape with a neutral wash instead of a hue, since supplies are one kind of fact and do not
-         need telling apart from a neighbour. -->
+    <!-- The pale tag under a task's subtitle naming its supplies — "Flea tablet". -->
     <style name="PetCare.Pill.Supplies" parent="PetCare.Pill">
         <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
@@ -594,9 +377,7 @@
         <item name="android:paddingBottom">3dp</item>
     </style>
 
-    <!-- "+ ADD TASK" at the foot of the Tasks tab: the outlined add-row button, on a surface fill so
-         it reads as a solid pill on the cream page beside the dark Delegate button, as in the
-         design. Its label is full-strength because here it is one of the tab's two main actions. -->
+    <!-- "+ ADD TASK" at the foot of the Tasks tab: the outlined add-row button, on a surface fill. -->
     <style name="PetCare.TaskActionButton.Outlined" parent="PetCare.AddRowButton">
         <item name="android:minHeight">@dimen/task_action_button_height</item>
         <item name="backgroundTint">?attr/colorSurface</item>
@@ -604,9 +385,7 @@
         <item name="iconTint">?attr/colorOnSurface</item>
     </style>
 
-    <!-- "DELEGATE": the filled partner of the button above, in the tab's strong "selected" fill.
-         Colours are state lists so the button greys out properly when there is nothing to hand
-         over — see res/color/selected_action_background.xml. -->
+    <!-- "DELEGATE": the filled partner of the button above, in the tab's strong "selected" fill. -->
     <style name="PetCare.TaskActionButton.Filled" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/task_action_button_height</item>
         <item name="android:insetTop">0dp</item>
@@ -620,10 +399,7 @@
         <item name="android:letterSpacing">0.12</item>
     </style>
 
-    <!-- ============================= Category icon badge =============================
-         The tinted circle a care-category icon sits in on a dashboard task row. The circle is what
-         turns a 20dp glyph into something with enough visual weight to anchor the row's left edge,
-         and it gives the icon a guaranteed background to be legible against. -->
+    <!-- ============================= Category icon badge ============================= -->
     <style name="PetCare.CategoryBadge" parent="">
         <item name="android:layout_width">@dimen/category_badge_size</item>
         <item name="android:layout_height">@dimen/category_badge_size</item>
@@ -633,16 +409,9 @@
         <item name="tint">?attr/colorOnPrimaryContainer</item>
     </style>
 
-    <!-- ============================ Pet detail screen ============================
-         The redesigned single-pet screen (fragment_pet_detail.xml, item_routine.xml). It speaks the
-         same visual language as the other redesigned tabs — the dark photo card and pills from the
-         Home tab, the full-pill yellow and outlined buttons from Places, monospace field labels from
-         Places and Money — so a pet opened from any tab feels like part of the same app. -->
+    <!-- ============================ Pet detail screen ============================ -->
 
-    <!-- The pet's full name across the photo's scrim: large, bold and white. White in both themes
-         because it sits on a photograph, not on the page — see the pet-card note in colors.xml. The
-         letters are drawn a touch tighter, which is how large bold type is normally set; at default
-         spacing a 28sp name looks loose. A name, so Bricolage Grotesque. -->
+    <!-- The pet's full name across the photo's scrim: large, bold and white. -->
     <style name="PetCare.PetDetail.Name" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -654,16 +423,7 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!--
-        The round back button in the photo's top-left corner.
-
-        A Material icon button rather than an ImageView with a click listener, so it brings the
-        ripple, focus highlight and "button" role TalkBack announces. Its 48dp view is inset by 4dp on
-        every side, which draws a 40dp disc while keeping the full 48dp touch target; the padding then
-        centres the 20dp arrow within the view. The circle comes from the 50%-corner shape appearance.
-
-        Fixed colours, not theme roles: it sits on a photograph in both themes.
-    -->
+    <!-- The round back button in the photo's top-left corner. -->
     <style name="PetCare.PetDetail.BackButton" parent="Widget.Material3.Button.IconButton.Filled">
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">0dp</item>
@@ -682,10 +442,7 @@
         <item name="rippleColor">@color/accent_yellow</item>
     </style>
 
-    <!-- The small round badge holding the Mars or Venus symbol beside the species chip. The
-         translucent dark capsule the card's other on-photo marks use (bg_pet_card_chip.xml), which
-         at a square size comes out as a circle. The tint — blue or pink — is set by the fragment,
-         since it depends on the pet. -->
+    <!-- The small round badge holding the Mars or Venus symbol beside the species chip. -->
     <style name="PetCare.PetDetail.GenderBadge" parent="">
         <item name="android:layout_width">@dimen/pet_detail_gender_badge_size</item>
         <item name="android:layout_height">@dimen/pet_detail_gender_badge_size</item>
@@ -694,15 +451,7 @@
         <item name="android:scaleType">fitCenter</item>
     </style>
 
-    <!--
-        "CHECKLIST": the filled yellow pill at the start of the action row.
-
-        The accent and its content colour are named directly rather than through colorPrimary, like
-        the Places tab's "Book a visit", so the button stays the brand yellow whatever a surrounding
-        theme overlay does. Insets are zeroed because the row's own 46dp height is already a
-        comfortable target, and the horizontal padding is kept small because three buttons share a
-        phone's width and "EXPENSES" has to fit on one line in its third.
-    -->
+    <!-- "CHECKLIST": the filled yellow pill at the start of the action row. -->
     <style name="PetCare.PetDetail.ActionButton.Filled" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/pet_detail_action_button_height</item>
         <item name="android:minWidth">0dp</item>
@@ -720,11 +469,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "EXPENSES" and "EDIT PET": the outlined partners of the button above. A surface fill, so they
-         read as solid white pills on the cream page as in the design (and charcoal in dark mode), with
-         a hairline outline that keeps their edge visible on the page in either theme. Same metrics as
-         the filled button; the two styles cannot share a parent because Material's filled and
-         outlined buttons are different base styles. -->
+    <!-- "EXPENSES" and "EDIT PET": the outlined partners of the button above. -->
     <style name="PetCare.PetDetail.ActionButton.Outlined" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:minHeight">@dimen/pet_detail_action_button_height</item>
         <item name="android:minWidth">0dp</item>
@@ -745,18 +490,14 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- A field name in the "About" card's left column — "DATE OF BIRTH", "ALLERGIES" — and the
-         "ABOUT" label above them. The app's section label, set in monospace like the field labels on
-         the Places and Money tabs. Allowed a second line (SectionLabel allows one) so a long label at a
-         large font size wraps inside its fixed-width column instead of being cut off. -->
+    <!-- A field name in the "About" card's left column — "DATE OF BIRTH", "ALLERGIES". -->
     <style name="PetCare.PetDetail.AboutLabel" parent="PetCare.SectionLabel">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:maxLines">2</item>
     </style>
 
-    <!-- The recorded value in the right column. Normal weight and full-strength colour: this is the
-         information itself, where the label beside it only names it. -->
+    <!-- The recorded value in the right column. Normal weight and full-strength colour. -->
     <style name="PetCare.PetDetail.AboutValue" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
@@ -769,17 +510,14 @@
         <item name="android:background">?attr/colorOutlineVariant</item>
     </style>
 
-    <!-- "Care routines": a bold heading on the page, a step larger than a card title because it
-         introduces a whole section of cards. -->
+    <!-- "Care routines": a bold heading on the page, a step larger than a card title. -->
     <style name="PetCare.PetDetail.SectionTitle" parent="">
         <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- The small round yellow "+" beside "Care routines". A 48dp view with 6dp insets, so the drawn
-         circle is 36dp — small enough to sit beside a heading — while the touch target stays at the
-         48dp minimum. Padding centres the 18dp plus in the view. -->
+    <!-- The small round yellow "+" beside "Care routines". -->
     <style name="PetCare.PetDetail.AddRoutineButton" parent="Widget.Material3.Button.IconButton.Filled">
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">0dp</item>
@@ -797,12 +535,10 @@
         <item name="backgroundTint">@color/accent_yellow</item>
     </style>
 
-    <!-- The task count on a routine card ("3 tasks"): the Tasks tab's pale supplies tag, since it is
-         the same kind of small neutral fact. -->
+    <!-- The task count on a routine card ("3 tasks"): the Tasks tab's pale supplies tag. -->
     <style name="PetCare.RoutineCard.TaskCount" parent="PetCare.Pill.Supplies" />
 
-    <!-- The "⋮" button on a routine card. A plain (unfilled) icon button, muted, so it reads as
-         secondary to the routine's name. -->
+    <!-- The "⋮" button on a routine card. A plain (unfilled) icon button, muted. -->
     <style name="PetCare.RoutineCard.OverflowButton" parent="Widget.Material3.Button.IconButton">
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">0dp</item>
@@ -816,9 +552,7 @@
         <item name="iconTint">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <!-- ============================ Label-and-value rows ============================
-         The stacked label-over-value pairs on the profile screen. (The pet detail screen used these
-         before its redesign; it now lays its rows out side by side with the PetDetail styles above.) -->
+    <!-- ============================ Label-and-value rows ============================ -->
 
     <!-- Wrapper around one pair, so the two can be shown or hidden as a unit. -->
     <style name="PetCare.DetailBlock" parent="">
@@ -826,8 +560,7 @@
         <item name="android:layout_marginTop">@dimen/card_spacing</item>
     </style>
 
-    <!-- The quieter heading above a value, e.g. "Date of birth". Letter-spaced and upper-case, so a
-         column of them reads as a set of field names rather than as more sentences. -->
+    <!-- The quieter heading above a value, e.g. "Date of birth". -->
     <style name="PetCare.DetailLabel" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -844,10 +577,7 @@
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 
-    <!-- ================================ Empty states ================================
-         Shown when a list has nothing in it. An icon, a short heading and a sentence saying what
-         to do next — far more use than a bare line of grey text, which leaves the user unsure
-         whether the screen is empty or still loading. -->
+    <!-- ================================ Empty states ================================ -->
 
     <!-- The column holding the icon, heading and message. -->
     <style name="PetCare.EmptyState" parent="">
@@ -857,8 +587,7 @@
         <item name="android:paddingEnd">@dimen/spacing_xl</item>
     </style>
 
-    <!-- The illustration. Tinted to a muted role so it frames the message rather than shouting
-         over it. -->
+    <!-- The illustration. Tinted to a muted role so it frames the message rather than shouting over it. -->
     <style name="PetCare.EmptyStateIcon" parent="">
         <item name="android:layout_width">@dimen/empty_state_icon_size</item>
         <item name="android:layout_height">@dimen/empty_state_icon_size</item>
@@ -879,17 +608,9 @@
         <item name="android:gravity">center</item>
     </style>
 
-    <!-- ============================== Quick actions ==============================
-         The three cards along the bottom of the dashboard — "Add task", "Log expense", "Add pet": a
-         circled "+" above a short label. The card itself is PetCare.Home.QuickActionCard below; these
-         two style what sits inside it.
+    <!-- ============================== Quick actions ============================== -->
 
-         A column rather than a row inside each card: three actions side by side on a phone leave each
-         about a third of the screen wide, which is not enough for an icon and a label on one line
-         without the label truncating. -->
-
-    <!-- The circled "+". Padding inside the circle is what keeps the glyph from filling it edge to
-         edge, which would read as a solid blob at this size. -->
+    <!-- The circled "+". Padding inside the circle is what keeps the glyph from filling it edge to edge. -->
     <style name="PetCare.QuickAction.Icon" parent="">
         <item name="android:layout_width">@dimen/quick_action_icon_size</item>
         <item name="android:layout_height">@dimen/quick_action_icon_size</item>
@@ -907,49 +628,28 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- ============================ Today's care ring ============================
-         The circular progress ring on the dashboard's care card, showing how much of today has been
-         ticked off.
-
-         A determinate CircularProgressIndicator rather than a custom View: Material already draws a
-         rounded-cap ring with a track behind it, and it animates between values, which is exactly
-         what this needs and none of which is worth writing by hand.
-
-         The thickness is well above Material's default. At the default the ring reads as a loading
-         spinner that has got stuck; thick enough to be a gauge, it reads as a measurement. -->
+    <!-- ============================ Today's care ring ============================ -->
     <style name="PetCare.CareRing" parent="Widget.Material3.CircularProgressIndicator">
         <item name="indicatorSize">@dimen/care_ring_size</item>
         <item name="trackThickness">@dimen/care_ring_thickness</item>
         <item name="indicatorColor">?attr/colorPrimary</item>
         <item name="trackColor">?attr/colorSurfaceVariant</item>
-        <!-- Rounded ends, so a part-finished day reads as a band rather than as a cut segment.
-             Capped at half the thickness, which is the most the component accepts — at exactly half
-             the two ends are semicircles and the band is a capsule. -->
+        <!-- Rounded ends, so a part-finished day reads as a band rather than as a cut segment. -->
         <item name="trackCornerRadius">@dimen/care_ring_corner_radius</item>
     </style>
 
-    <!-- ============================== Home dashboard ==============================
-         The redesigned Home tab (fragment_home.xml and its item layouts), top to bottom.
+    <!-- ============================== Home dashboard ============================== -->
 
-         It speaks the language the other redesigned tabs established rather than inventing a new one:
-         big names and figures in Bricolage Grotesque, captions and upper-case labels in IBM Plex Mono,
-         white cards on the cream page, one dark card and one yellow card for the two things that matter
-         most. Colours on the dark and yellow cards are fixed values, since those cards look the same in
-         both themes — see the Home dashboard section of colors.xml. -->
-
-    <!-- "Good evening, / Prashant": the largest text on the screen, bold and drawn slightly tight, as
-         large bold type is normally set. -->
+    <!-- "Good evening, / Prashant": the largest text on the screen, bold and drawn slightly tight. -->
     <style name="PetCare.Home.Greeting" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
         <item name="android:textSize">34sp</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
         <item name="android:textStyle">bold</item>
-        <!-- -1.5px at 34px, as an em value. Tight tracking is what lets a two-word greeting fill the
-             line without wrapping into the clock beside it. -->
+        <!-- -1.5px at 34px, as an em value. Tight tracking is what lets a two-word greeting fill the line. -->
         <item name="android:letterSpacing">-0.044</item>
-        <!-- line-height 0.94: below 1, so the two lines of the greeting close up into a single
-             block. includeFontPadding off, or the font's reserved accent space would undo it. -->
+        <!-- line-height 0.94: below 1, so the two lines of the greeting close up into a single block. -->
         <item name="android:includeFontPadding">false</item>
         <item name="lineHeight">32sp</item>
     </style>
@@ -966,15 +666,13 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "THU 11 SEP" under the clock: the app's section label, a little less widely spaced so the date
-         stays about as wide as the time above it. -->
+    <!-- "THU 11 SEP" under the clock: the app's section label, a little less widely spaced. -->
     <style name="PetCare.Home.DateLabel" parent="PetCare.SectionLabel">
         <item name="android:textSize">9.5sp</item>
         <item name="android:letterSpacing">0.12</item>
     </style>
 
-    <!-- "All synced · 3 min ago": muted monospace, not upper-cased, since it is a phrase to read. Also
-         used for "tap to open" beside the pets heading. -->
+    <!-- "All synced · 3 min ago": muted monospace, not upper-cased, since it is a phrase to read. -->
     <style name="PetCare.Home.Caption" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -984,43 +682,20 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!--
-        A stat card's uppercase label: "WALK WINDOW", "SPENT · SEP", "NEXT VET".
-
-        Its own style rather than the shared PetCare.SectionLabel, which it inherits everything else
-        from, because this one label sits directly above a 22sp figure and needs a size of its own to
-        stay in proportion with it. Changing SectionLabel instead would have moved every section
-        heading in the app to suit one card.
-    -->
-    <!--
-        The dashboard's own uppercase section label: "TODAY'S CARE", "CARE STREAK", "YOUR PETS".
-
-        A Home-specific style rather than a change to the shared PetCare.SectionLabel, which every
-        other tab also uses. The dashboard is specified as one composition with its own type scale;
-        retuning the shared label to suit it would silently resize headings on Tasks, Places, Money
-        and Pets, none of which were part of that specification.
-    -->
+    <!-- A stat card's uppercase label: "WALK WINDOW", "SPENT · SEP", "NEXT VET". -->
+    <!-- The dashboard's own uppercase section label: "TODAY'S CARE", "CARE STREAK", "YOUR PETS". -->
     <style name="PetCare.Home.SectionLabel" parent="PetCare.SectionLabel">
         <item name="android:textSize">10sp</item>
         <item name="android:letterSpacing">0.16</item>
     </style>
 
-    <!--
-        "OF 6" under the ring's count. The smallest label in the card, and deliberately so: it is the
-        denominator of the figure above it, not a statement of its own.
-    -->
+    <!-- "OF 6" under the ring's count. The smallest label in the card, and deliberately. -->
     <style name="PetCare.Home.RingTotal" parent="PetCare.SectionLabel">
         <item name="android:textSize">8sp</item>
         <item name="android:letterSpacing">0.14</item>
     </style>
 
-    <!--
-        "All caught up for today" — the dominant element in the today's-care card.
-
-        18sp keeps it below the next-up card's 20sp title, which is what preserves the ranking
-        between the two cards, while standing well clear of the 10sp label above it. The 21sp line
-        height (1.15x) keeps a two-line headline reading as one sentence.
-    -->
+    <!-- "All caught up for today" — the dominant element in the today's-care card. -->
     <style name="PetCare.Home.TodayHeadline" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -1034,27 +709,13 @@
 
     <style name="PetCare.Home.StatLabel" parent="PetCare.SectionLabel">
         <item name="android:textSize">@dimen/home_stat_label_text_size</item>
-        <!-- 0.14em, a touch tighter than the shared section label's 0.14 at a larger size. Letter
-             spacing is expressed in ems on Android, so it scales with the type and does not have to
-             be restated if the size ever moves. -->
+        <!-- 0.14em, a touch tighter than the shared section label's 0.14 at a larger size. -->
         <item name="android:letterSpacing">0.14</item>
-        <!-- One line, and deliberately no ellipsize: the card is wrap_content over a minimum width,
-             so it widens to fit rather than ever needing to truncate this. -->
+        <!-- One line, and deliberately no ellipsize: the card is wrap_content over a minimum width. -->
         <item name="android:maxLines">1</item>
     </style>
 
-    <!--
-        A stat card's bold figure: "22°C", "Rs 4,665", "22 Sep".
-
-        Bricolage Grotesque, the display face, which ships only at ExtraBold (800) — so `bold` here
-        lands on that single file rather than synthesising extra weight. `includeFontPadding="false"`
-        together with a lineHeight equal to the text size gives the line-height-of-1 the figure wants:
-        on its own line, a number needs none of the leading a paragraph does, and trimming it is part
-        of what keeps the card near 100dp.
-
-        `app:lineHeight` rather than `android:lineHeight`, which is API 28 and this app supports 24;
-        AppCompat back-ports it onto the AppCompatTextView every TextView already inflates as.
-    -->
+    <!-- A stat card's bold figure: "22°C", "Rs 4,665", "22 Sep". -->
     <style name="PetCare.Home.StatValue" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -1068,24 +729,14 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!--
-        The small pill at the foot of a stat card: "GOOD NOW", "+12% VS AUG", a pet's name.
-
-        The pastel pill's shape (bg_pill tinted), made smaller and set in bold monospace capitals so it
-        reads as a status rather than as a fact. This style gives the neutral grey wash; the pale green
-        ("GOOD NOW") and yellow (a pet's name) versions are applied by HomeFragment.applyTone, because a
-        pill changes meaning during the day and a style can only be chosen when a view is inflated.
-    -->
+    <!-- The small pill at the foot of a stat card: "GOOD NOW", "+12% VS AUG", a pet's name. -->
     <style name="PetCare.Home.StatPill" parent="">
         <item name="android:background">@drawable/bg_pill</item>
         <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
-        <!-- 8.5sp, the same size as the card's label, so the three lines read as one stack with the
-             figure as the only large element. The spec asks for weight 700; IBM Plex Mono ships here
-             at 500 and 600, so `bold` lands on SemiBold (600) — the nearest available, and close
-             enough at this size that the difference is not visible. -->
+        <!-- 8.5sp, the same size as the card's label. -->
         <item name="android:textSize">8.5sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
@@ -1098,11 +749,9 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- "tap to open" / "3 items" on the right of a section label: the caption, one size smaller so it
-         sits level with the label beside it. -->
+    <!-- "tap to open" / "3 items" on the right of a section label: the caption, one size smaller. -->
     <style name="PetCare.Home.SectionHint" parent="">
-        <!-- The UI weights of the body face (Medium/SemiBold), not the mono label face: this is a
-             short instruction to read, sitting opposite a mono capital label it contrasts with. -->
+        <!-- The UI weights of the body face (Medium/SemiBold), not the mono label face. -->
         <item name="android:fontFamily">@font/schibsted_grotesk_ui</item>
         <item name="fontFamily">@font/schibsted_grotesk_ui</item>
         <item name="android:textSize">11sp</item>
@@ -1111,8 +760,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- The next-up card's ring: yellow on a dark track, thick enough to read as a gauge. See
-         PetCare.CareRing for why a Material progress indicator rather than a custom View. -->
+    <!-- The next-up card's ring: yellow on a dark track, thick enough to read as a gauge. -->
     <style name="PetCare.Home.NextUpRing" parent="Widget.Material3.CircularProgressIndicator">
         <item name="indicatorSize">@dimen/next_up_ring_size</item>
         <item name="trackThickness">@dimen/next_up_ring_thickness</item>
@@ -1121,8 +769,7 @@
         <item name="trackCornerRadius">@dimen/next_up_ring_corner_radius</item>
     </style>
 
-    <!-- "22" inside the ring. includeFontPadding off so the figure and its caption sit as a tight pair
-         in the ring's centre instead of drifting apart on the font's reserved accent space. -->
+    <!-- "22" inside the ring. includeFontPadding off. -->
     <style name="PetCare.Home.NextUpMinutes" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -1135,9 +782,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "MIN AWAY" under the number: the tiniest label on the screen, so letter-spaced to stay
-         legible. Medium (500) rather than bold — inside the ring it sits directly under an ExtraBold
-         figure, and a second heavy weight there turns the pair into a single dark blob. -->
+    <!-- "MIN AWAY" under the number: the tiniest label on the screen, so letter-spaced to stay legible. -->
     <style name="PetCare.Home.NextUpRingCaption" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -1148,17 +793,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!--
-        "NEXT UP" — the card's uppercase micro-label.
-
-        Declared in full rather than inheriting from the Places strip label it used to borrow. The
-        two happened to agree, but they answer to different specifications now, and a change made for
-        the Places tab should not quietly resize a label on the dashboard's most important card.
-
-        A full-strength muted ink rather than a translucent white: setting alpha on the view would
-        fade the text against whatever is behind it and make it inconsistent between the two themes,
-        where a named colour is the same decision made once. See colors.xml.
-    -->
+    <!-- "NEXT UP" — the card's uppercase micro-label. -->
     <style name="PetCare.Home.NextUpLabel" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -1169,8 +804,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- The task's title: large, bold and white — the card's subject. lineHeight is 1.1x the text
-         size, tight enough that a two-line title still reads as one heading rather than two lines. -->
+    <!-- The task's title: large, bold and white — the card's subject. -->
     <style name="PetCare.Home.NextUpTitle" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -1185,9 +819,7 @@
     </style>
 
     <!-- "Krishala · 6:00 PM · Slicker brush" under the title. -->
-    <!-- "Krishala · 6:00 PM · Slicker brush". Body copy, so Schibsted Grotesk at its reading weight
-         rather than the display or mono faces — this is the one line on the card meant to be read as
-         a sentence. 11.5sp with a 16sp line height (1.4x) is the spec's body setting. -->
+    <!-- "Krishala · 6:00 PM · Slicker brush". Body copy, so Schibsted Grotesk at its reading weight. -->
     <style name="PetCare.Home.NextUpMeta" parent="">
         <item name="android:fontFamily">@font/schibsted_grotesk</item>
         <item name="fontFamily">@font/schibsted_grotesk</item>
@@ -1198,8 +830,7 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- "MARK DONE": a filled yellow pill in monospace capitals. The accent is named directly, as the
-         other redesigned tabs' yellow buttons do, so it stays the brand yellow on the dark card. -->
+    <!-- "MARK DONE": a filled yellow pill in monospace capitals. -->
     <style name="PetCare.Home.MarkDoneButton" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/next_up_button_height</item>
         <item name="android:minWidth">0dp</item>
@@ -1210,14 +841,7 @@
         <item name="cornerRadius">@dimen/pill_corner_radius</item>
         <item name="backgroundTint">@color/accent_yellow</item>
         <item name="android:textColor">@color/on_accent_yellow</item>
-        <!-- 12sp mono capitals, letter-spaced to match the card's other uppercase marks. Set here
-             rather than left to the Material button's own label appearance, which would give it the
-             body face and make it read as a form control rather than as part of this card.
-
-             This style used to declare textSize and letterSpacing *twice* — 10sp/0.12 followed by
-             12sp/0.08. A later item silently wins in a style, so 12sp/0.08 was always what the button
-             actually drew and the first pair had never had any effect. The dead pair is removed and
-             these values left exactly as they were rendering, so the card is unchanged. -->
+        <!-- 12sp mono capitals, letter-spaced to match the card's other uppercase marks. -->
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
         <item name="android:textSize">12sp</item>
@@ -1228,14 +852,7 @@
     </style>
 
     <!-- The completed count inside the today's-care ring: a figure, so Bricolage. -->
-    <!--
-        The completed count inside the today's-care ring.
-
-        An explicit 19sp rather than the theme's HeadlineMedium (28sp) it used to borrow. The ring is
-        the card's *secondary* element — the sentence beside it is what the user reads — and a 28sp
-        figure inside a 74dp circle made the circle the loudest thing in the card. 19sp also matches
-        the stat cards' figures, so every small number on the dashboard is now set at one size.
-    -->
+    <!-- The completed count inside the today's-care ring. -->
     <style name="PetCare.Home.RingCount" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -1247,11 +864,9 @@
         <item name="android:includeFontPadding">false</item>
     </style>
 
-    <!-- "5 full days", right-aligned on the streak line: bold and full-strength, since it is the figure
-         the label beside it names. -->
+    <!-- "5 full days", right-aligned on the streak line: bold and full-strength. -->
     <style name="PetCare.Home.StreakCount" parent="">
-        <!-- Body face at its bold weight, not the mono label face: "5 full days" is a phrase the
-             user reads, and it sits opposite a mono capital label that it should contrast with. -->
+        <!-- Body face at its bold weight, not the mono label face: "5 full days" is a phrase the user reads. -->
         <item name="android:fontFamily">@font/schibsted_grotesk</item>
         <item name="fontFamily">@font/schibsted_grotesk</item>
         <item name="android:textSize">11sp</item>
@@ -1262,21 +877,17 @@
 
     <!-- A streak box's weekday, "FR". Centred under its box. -->
     <style name="PetCare.Home.StreakDayLabel" parent="PetCare.SectionLabel">
-        <!-- 8.5sp: the two-letter initials are a key to the boxes above them, not a row of their
-             own, and IBM Plex Mono stays legible this small because the text is always upper-case. -->
+        <!-- 8.5sp: the two-letter initials are a key to the boxes above them, not a row of their own. -->
         <item name="android:textSize">8.5sp</item>
         <item name="android:letterSpacing">0.06</item>
         <item name="android:gravity">center</item>
     </style>
 
-    <!-- A pet's name across the bottom of its card in the sideways row. White on the photo's scrim in
-         both themes, like every name on a pet photo in the app. -->
+    <!-- A pet's name across the bottom of its card in the sideways row. -->
     <style name="PetCare.Home.PetCardName" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
-        <!-- 15sp, not the theme's TitleLarge (22sp) it used to borrow. A pet's name sits over its
-             photograph as a caption, and at 22sp it competed with the next-up card's 20sp title for
-             the eye — which is the ranking this pass exists to fix. -->
+        <!-- 15sp, not the theme's TitleLarge (22sp) it used to borrow. -->
         <item name="android:textSize">15sp</item>
         <item name="android:textColor">@color/on_pet_card</item>
         <item name="android:textStyle">bold</item>
@@ -1284,8 +895,7 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- The "AI" mark on the insight card: a tiny yellow monospace word on the dark rounded square.
-         Hidden from TalkBack, since the label beside it already says what the card is. -->
+    <!-- The "AI" mark on the insight card: a tiny yellow monospace word on the dark rounded square. -->
     <style name="PetCare.Home.InsightBadge" parent="">
         <item name="android:layout_width">@dimen/insight_badge_size</item>
         <item name="android:layout_height">@dimen/insight_badge_size</item>
@@ -1305,8 +915,7 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- The insight sentence: bold and dark, with a little extra leading because it runs to three
-         lines and tightly set bold lines are hard to track back across. -->
+    <!-- The insight sentence: bold and dark, with a little extra leading. -->
     <style name="PetCare.Home.InsightText" parent="">
         <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
         <item name="android:textColor">@color/on_insight_card</item>
@@ -1314,8 +923,7 @@
         <item name="android:lineSpacingExtra">3dp</item>
     </style>
 
-    <!-- "ASK THE ASSISTANT": an outlined pill in the card's dark, so it reads as the card's action
-         without adding a second fill to a panel that is already yellow. -->
+    <!-- "ASK THE ASSISTANT": an outlined pill in the card's dark. -->
     <style name="PetCare.Home.InsightButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:minHeight">@dimen/insight_button_height</item>
         <item name="android:minWidth">0dp</item>
@@ -1365,45 +973,14 @@
     </style>
 
     <!-- A quick-action card: an ordinary pressable white card with the dashboard's softer corner. -->
-    <!-- Only the height is its own: everything that makes it look like a card comes from the shared
-         outlined style, so a quick action and the stat card above it cannot drift apart. -->
+    <!-- Only the height is its own. -->
     <style name="PetCare.Home.QuickActionCard" parent="PetCare.Card.Outlined.Clickable">
         <item name="android:minHeight">@dimen/home_quick_action_height</item>
     </style>
 
-    <!-- =========================== Bottom navigation bar ===========================
-         The bar is a floating control rather than a band across the foot of the screen: a
-         translucent slab with a hairline edge, hovering over whatever page is scrolling beneath it,
-         with the current tab widened into a filled pill that carries its name.
+    <!-- =========================== Bottom navigation bar =========================== -->
 
-         **Why it is a MaterialCardView with a custom view inside, rather than a
-         BottomNavigationView.** Material's bar lays each item out as a fixed-width column with the
-         label beneath the icon, and it has no notion of one item being *wider* than the others. The
-         design turns on exactly that: the active tab grows to nearly twice an inactive one and its
-         label appears beside the icon inside the pill. There is no combination of BottomNavigationView
-         attributes that produces it, so the row is a custom view — see FloatingNavBar — and the slab
-         around it is an ordinary M3 card, which already knows how to draw a shape, a hairline stroke
-         and a shadow correctly in both themes.
-
-         Everything about the row's *behaviour* lives in FloatingNavBar; everything about how the slab
-         and its tabs *look* lives here and in the drawables the tab layout names. -->
-
-    <!--
-        The slab. Parented on the app's card rather than on Material's, so it inherits the one
-        elevation the whole app uses for a resting surface — the spec's "standard card shadow" is
-        literally the same value every other card casts, and taking it from PetCare.Card is what
-        keeps that true if the scale is ever retuned.
-
-        Three things are its own:
-
-        - **A translucent background.** colorSurface would be opaque, and an opaque bar is the thing
-          this design is not; the fill comes from a themed role carrying its own alpha.
-        - **A hairline stroke.** PetCare.Card deliberately has none — its shadow does the separating.
-          A translucent surface has a much weaker shadow relationship with the page behind it, and
-          without an edge the slab's boundary is ambiguous exactly where the page is busiest.
-        - **Content padding.** 7dp on every side, which together with the 46dp tab height is what
-          makes the bar 60dp tall. See dimens.xml.
-    -->
+    <!-- The slab. Parented on the app's card rather than on Material's. -->
     <style name="PetCare.NavBar" parent="PetCare.Card">
         <item name="shapeAppearance">@style/ShapeAppearance.PetCare.NavBar</item>
         <item name="cardBackgroundColor">?attr/colorNavBarSurface</item>
@@ -1412,32 +989,13 @@
         <item name="contentPadding">@dimen/nav_bar_padding</item>
     </style>
 
-    <!--
-        The slab's corner.
-
-        A shape appearance rather than a plain cardCornerRadius, because PetCare.Card already sets
-        one and a MaterialCardView takes its shape from the appearance in preference to the radius —
-        setting only the radius here would be silently ignored and the bar would keep the app's
-        medium corner.
-    -->
+    <!-- The slab's corner. -->
     <style name="ShapeAppearance.PetCare.NavBar" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">@dimen/nav_bar_corner_radius</item>
     </style>
 
-    <!--
-        The active tab's label — the one piece of text the bar draws.
-
-        Schibsted Grotesk Bold rather than the mono face the app's other micro-labels use, and not
-        upper-cased. Those labels are readings off an instrument ("AGE", "0.5 km"); this one is a
-        *place name*, and the tab it names is a destination rather than a value. Set in sentence case
-        at 11sp with a little tracking, so it reads as a word at a glance beside its icon.
-
-        singleLine with no ellipsize is the spec's `white-space: nowrap`, and it is what makes the
-        reveal work: while the pill is widening there is not yet room for the whole word, and a
-        TextView in that position clips its text — so the label is uncovered from the left as the
-        pill grows, rather than appearing first as an ellipsis.
-    -->
+    <!-- The active tab's label — the one piece of text the bar draws. -->
     <style name="PetCare.NavTab.Label" parent="">
         <item name="android:fontFamily">@font/schibsted_grotesk</item>
         <item name="fontFamily">@font/schibsted_grotesk</item>
@@ -1449,20 +1007,7 @@
         <item name="android:includeFontPadding">false</item>
     </style>
 
-    <!--
-        The Tasks tab's open-task count.
-
-        IBM Plex Mono, like every other figure in the app that is read rather than spoken — and here
-        for a second reason: the badge is a box that has to hold "1" and "12" without jumping about,
-        and a monospaced face keeps each digit the same width so the box grows by exactly one
-        character. The family ships Medium and SemiBold, and `bold` resolves to the heavier of the
-        two; see res/font/ibm_plex_mono.xml for why those are the two weights worth shipping at these
-        sizes.
-
-        includeFontPadding is off and the height is fixed, which together centre the digit optically
-        in a 16dp box — with the default font padding the glyph sits noticeably high in a box this
-        small.
-    -->
+    <!-- The Tasks tab's open-task count. -->
     <style name="PetCare.NavTab.Badge" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -1475,12 +1020,7 @@
         <item name="android:includeFontPadding">false</item>
     </style>
 
-    <!-- ================================= Places tab =================================
-         The Places tab's small print — labels, distances, subtitles, the GPS chip — is set in the
-         **IBM Plex Mono** monospace face, as in the design. A distance list is the one place in the
-         app where columns of figures are compared at a glance ("0.5 km", "1.2 km", "1.9 km"), and
-         fixed character widths make those figures line up. Headings and names stay in the grotesque
-         faces, so the monospace reads as "data" beside them. -->
+    <!-- ================================= Places tab ================================= -->
 
     <!-- The meta line under a place's name — "Vet clinic · Pulchowk" — and the distance on a row. -->
     <style name="PetCare.Places.Meta" parent="">
@@ -1492,18 +1032,7 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!--
-        "PATAN ANIMAL HOSPITAL · 1.2 KM" — the pill naming the place the map is centred on.
-
-        Its colours are fixed rather than themed because it sits on Google's tiles, not on the app's
-        surface: a pill that followed the page would be near-black ink on a pale map by day and pale
-        ink on an inverted-pale map by night, and unreadable in one of the two. A translucent
-        near-black with pale ink works over either.
-
-        singleLine with ellipsize rather than wrapping: the pill is a caption on a map, and a
-        two-line one would cover the streets it is naming. Nothing is lost — the full name is in the
-        featured card immediately below.
-    -->
+    <!-- "PATAN ANIMAL HOSPITAL · 1.2 KM" — the pill naming the place the map is centred on. -->
     <style name="PetCare.Places.MapPill" parent="">
         <item name="android:background">@drawable/bg_map_overlay_pill</item>
         <item name="android:paddingStart">@dimen/places_map_pill_padding_horizontal</item>
@@ -1521,18 +1050,7 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!--
-        "DIRECTIONS ↗" and "GOOGLE MAPS", the two links laid over the map's foot.
-
-        Both hand off to Google Maps — see MapLinks — so both are shaped as capsules with the same
-        lettering, and only their weight differs: the accent marks the action the screen exists to
-        offer, and the near-black one beside it is the way to the full listing.
-
-        A drop shadow on both, unlike the app's other buttons, because these sit on photography-like
-        ground: a flat capsule on a pale street tile has no edge to be seen against, and the shadow is
-        what lifts it off the map. Schibsted rather than the app's usual monospace for a pill, because
-        these are words being pressed rather than data being read.
-    -->
+    <!-- "DIRECTIONS ↗" and "GOOGLE MAPS", the two links laid over the map's foot. -->
     <style name="PetCare.Places.MapAction" parent="Widget.Material3.Button">
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">0dp</item>
@@ -1574,17 +1092,13 @@
         <item name="android:layout_marginTop">2dp</item>
     </style>
 
-    <!-- An info block's value: "8:00 – 20:00", "01-5521…". The Pets tab's stat value for size, colour
-         and weight, so a figure in a bordered block matches across tabs — but in IBM Plex Mono rather
-         than Bricolage, because opening hours and phone numbers are read digit by digit, which is the
-         monospace face's job. -->
+    <!-- An info block's value: "8:00 – 20:00", "01-5521…". -->
     <style name="PetCare.Places.InfoValue" parent="PetCare.PetStat.Value">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
     </style>
 
-    <!-- "OPEN NOW": the pastel pill's shape, filled green. Bold monospace capitals so it reads as a
-         status badge rather than as words in the heading beside it. -->
+    <!-- "OPEN NOW": the pastel pill's shape, filled green. -->
     <style name="PetCare.Places.OpenNowPill" parent="PetCare.Pill">
         <item name="android:backgroundTint">@color/open_now_container</item>
         <item name="android:textColor">@color/on_open_now</item>
@@ -1602,13 +1116,7 @@
         <item name="fontFamily">@font/ibm_plex_mono</item>
     </style>
 
-    <!--
-        "OPEN IN MAPS ↗": a text button styled as a link.
-
-        A MaterialButton rather than a clickable TextView, for the ripple, the touch target and the
-        "button" role TalkBack announces. The arrow is part of the label because it is the conventional
-        "this leaves the app" mark, and a screen reader skipping it loses nothing.
-    -->
+    <!-- "OPEN IN MAPS ↗": a text button styled as a link. -->
     <style name="PetCare.Places.TextLink" parent="Widget.Material3.Button.TextButton">
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">36dp</item>
@@ -1626,9 +1134,7 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- "BOOK A VISIT": the card's main action, a fully rounded yellow pill. The accent and its
-         content colour are named directly rather than through colorPrimary, so the button stays the
-         brand yellow even where a surrounding theme overlay re-points the primary. -->
+    <!-- "BOOK A VISIT": the card's main action, a fully rounded yellow pill. -->
     <style name="PetCare.Places.BookButton" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/places_action_button_height</item>
         <item name="android:insetTop">0dp</item>
@@ -1642,15 +1148,7 @@
         <item name="android:letterSpacing">0.12</item>
     </style>
 
-    <!--
-        "PINNED": the outlined partner of the button above, as a checkable toggle.
-
-        android:checkable makes the MaterialButton flip state_checked on each tap and announce itself
-        to TalkBack as a toggle. The fill is held at the surface colour in both states — Material's
-        default checked fill would turn it into a second filled button competing with "Book a visit" —
-        and the checked state shows as a darker outline instead (place_pin_stroke.xml), alongside the
-        label changing from "Pin" to "Pinned".
-    -->
+    <!-- "PINNED": the outlined partner of the button above, as a checkable toggle. -->
     <style name="PetCare.Places.PinButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:checkable">true</item>
         <item name="android:minHeight">@dimen/places_action_button_height</item>
@@ -1671,12 +1169,7 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- The category badge on a saved-place row: the category's emoji in a rounded square
-         (bg_place_badge.xml). Its fill is set by SavedPlaceAdapter, since it depends on whether the
-         row is the featured place. Hidden from TalkBack: the row's own description already names the
-         place.
-
-         Sized like the expense badge, and for the same reason — see the note there. -->
+    <!-- The category badge on a saved-place row: the category's emoji in a rounded square (bg_place_badge.xml). -->
     <style name="PetCare.Places.Badge" parent="">
         <item name="android:layout_width">@dimen/places_badge_size</item>
         <item name="android:layout_height">@dimen/places_badge_size</item>
@@ -1687,20 +1180,9 @@
         <item name="android:importantForAccessibility">no</item>
     </style>
 
-    <!-- ================================= Money tab =================================
-         The redesigned Money (Expenses) tab. It shares the Places tab's typographic voice — figures
-         and captions in monospace, headings in the normal face — and its dark card uses the same
-         fixed colours as the app's other dark panels, since all of them are dark in either theme. -->
+    <!-- ================================= Money tab ================================= -->
 
-    <!--
-        "TOTAL SPENT · SEPTEMBER" on the dark card: small, bold, upper-case and letter-spaced, like
-        the app's section labels but in the fixed muted ink that reads on a dark panel in either
-        theme.
-
-        Written out here rather than inherited. It used to extend the Places tab's distance-strip
-        label, but that strip has been replaced by the map card and the style went with it; this tab
-        is now the only thing that draws the label, so its definition lives where it is used.
-    -->
+    <!-- "TOTAL SPENT · SEPTEMBER" on the dark card: small, bold, upper-case and letter-spaced. -->
     <style name="PetCare.Expenses.TotalLabel" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -1712,11 +1194,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- The month's total. Very large, bold and white on the dark card, with the letters drawn a
-         touch closer together: at this size the default spacing reads as gappy, and the design sets
-         the figure tight. includeFontPadding is off so the figure sits snugly under its label rather
-         than floating in the extra space a font reserves for accents. The biggest number in the app,
-         so Bricolage Grotesque. -->
+    <!-- The month's total. Very large, bold and white on the dark card. -->
     <style name="PetCare.Expenses.TotalAmount" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -1728,8 +1206,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "3 expenses · 2 pets · +12% vs August": the label above in the same muted monospace, but as
-         a sentence rather than a heading — so no capitals and only a trace of letter-spacing. -->
+    <!-- "3 expenses · 2 pets · +12% vs August": the label above in the same muted monospace, but as a sentence. -->
     <style name="PetCare.Expenses.TotalCaption" parent="PetCare.Expenses.TotalLabel">
         <item name="android:textStyle">normal</item>
         <item name="android:textAllCaps">false</item>
@@ -1753,9 +1230,7 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <!-- An amount, bold — on a legend row (page) or an expense card (surface). The colour is set by
-         the layout, since the two sit on different grounds. A number, so Bricolage Grotesque at the
-         Title size. -->
+    <!-- An amount, bold — on a legend row (page) or an expense card (surface). -->
     <style name="PetCare.Expenses.Amount" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -1767,14 +1242,7 @@
     <!-- "Medication · Sep 12, 2026" under an expense's title: the Places tab's meta line. -->
     <style name="PetCare.Expenses.Meta" parent="PetCare.Places.Meta" />
 
-    <!-- The rounded grey square holding a category's emoji (💊) on an expense card. Hidden from
-         TalkBack: the card's own description names the category in full.
-
-         The text size is set explicitly rather than left to a text appearance, because the content
-         is now a symbol rather than a word: labelSmall is sized for three capitals and leaves an
-         emoji looking lost in a 44dp square. No font family either — an emoji is drawn from the
-         system's colour emoji font whatever face is asked for, so naming the mono face here would
-         only mislead the next reader. -->
+    <!-- The rounded grey square holding a category's emoji (💊) on an expense card. -->
     <style name="PetCare.Expenses.Badge" parent="">
         <item name="android:layout_width">@dimen/expenses_badge_size</item>
         <item name="android:layout_height">@dimen/expenses_badge_size</item>
@@ -1785,19 +1253,15 @@
         <item name="android:importantForAccessibility">no</item>
     </style>
 
-    <!-- ============================== Assistant ==============================
-         The chat screen opened from the dashboard's AI pill and its "Ask the assistant" button. -->
+    <!-- ============================== Assistant ============================== -->
 
-    <!-- A message bubble's corner. Rounder than a card, closer to a pill, which is what makes a
-         short message read as speech rather than as a tile. -->
+    <!-- A message bubble's corner. Rounder than a card, closer to a pill. -->
     <style name="ShapeAppearance.PetCare.AssistantBubble" parent="ShapeAppearance.Material3.Corner.Large">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">@dimen/assistant_bubble_corner_radius</item>
     </style>
 
-    <!-- The text inside a bubble. Body face at its reading weight and a generous line height: this
-         is the one place in the app where several sentences are read in sequence. The colour is set
-         here for the assistant's bubble; the user's overrides it, because its ground is the accent. -->
+    <!-- The text inside a bubble. Body face at its reading weight and a generous line height. -->
     <style name="PetCare.Assistant.MessageText" parent="">
         <item name="android:fontFamily">@font/schibsted_grotesk</item>
         <item name="fontFamily">@font/schibsted_grotesk</item>
@@ -1806,22 +1270,17 @@
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 
-    <!-- A suggested-question chip: outlined rather than filled, so the row reads as an offer the
-         user may ignore rather than as the answer they should pick. Built on the app's existing
-         filter chip so the two rows of pills in the app look like the same component. -->
+    <!-- A suggested-question chip: outlined rather than filled, so the row reads as an offer the user may ignore. -->
     <style name="PetCare.Assistant.SuggestionChip" parent="PetCare.FilterChip">
         <item name="chipMinHeight">36dp</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
         <item name="textStartPadding">@dimen/spacing_md</item>
         <item name="textEndPadding">@dimen/spacing_md</item>
-        <!-- A suggestion is an action, not a filter: tapping it sends a message and the chip
-             disappears with the rest of the row, so it must never hold a checked state. -->
+        <!-- A suggestion is an action, not a filter. -->
         <item name="android:checkable">false</item>
     </style>
 
-    <!-- The question field: a filled, fully-rounded box with no label above it, because the hint
-         inside is the whole instruction and a floating label would push the row taller for nothing.
-         The stroke is removed on both states so the shape reads as one soft capsule. -->
+    <!-- The question field: a filled, fully-rounded box with no label above. -->
     <style name="PetCare.Assistant.InputLayout" parent="Widget.Material3.TextInputLayout.FilledBox">
         <item name="boxBackgroundColor">?attr/colorSurface</item>
         <item name="boxCornerRadiusTopStart">@dimen/pill_corner_radius</item>
@@ -1834,28 +1293,9 @@
         <item name="android:textColorHint">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <!-- The round yellow send button. Square with a fully-rounded corner, which is what makes it a
-         circle; the accent is named directly, as the app's other yellow buttons do, so it is the
-         brand yellow in both themes rather than the theme's primary role. -->
+    <!-- The round yellow send button. Square with a fully-rounded corner, which is what makes it a circle. -->
     <style name="PetCare.Assistant.SendButton" parent="Widget.Material3.Button.IconButton.Filled">
-        <!--
-            **Why the arrow needs this much said about it.** A MaterialButton lays its icon out
-            relative to its *text*, and this button has none. With the default `iconGravity` of
-            `start` the icon is simply pinned to the start padding edge — and the Material icon-button
-            style it inherits from carries 12dp of horizontal padding — so a 20dp icon in a 48dp
-            button sat at 12..32dp, two device-pixels left of the button's own centre. That is the
-            off-centre arrow: not the drawable, and not the container's gravity.
-
-            `textStart` is the fix. It switches MaterialButton to the branch that *computes* the
-            icon's position — (button width − text width − paddings − icon width) ÷ 2 — which with no
-            text and the paddings below zeroed comes out at exactly (48 − 20) ÷ 2 = 14dp, putting the
-            icon's centre on the button's. The paddings and insets are then zeroed on both sides so
-            nothing asymmetric can creep back into that calculation, and the minimum width and height
-            are released so the square size set in the layout is what the button actually measures.
-
-            The drawable itself is already centred: its stroke runs symmetrically about x=12 in a
-            24dp viewport, so it needed no correction.
-        -->
+        <!-- Why the arrow needs this much said about it. A MaterialButton lays its icon out relative to its text. -->
         <item name="iconGravity">textStart</item>
         <item name="iconPadding">0dp</item>
         <item name="android:paddingLeft">0dp</item>
@@ -1877,48 +1317,25 @@
         <item name="iconSize">20dp</item>
     </style>
 
-    <!-- ============================== Notifications ==============================
-         The screen the header's pet-count badge opens.
+    <!-- ============================== Notifications ============================== -->
 
-         It borrows rather than invents: the headline is the dashboard's display face, the group
-         headings are the app's shared section label, and an alert card is the Money tab's expense
-         card — square code badge, bold title, muted meta line — with one addition of its own, the
-         unread treatment.
-
-         **The unread treatment, and why it needs no new colours.** An unread card is filled with
-         ?attr/colorPrimaryContainer and its badge with the accent itself. That role already exists for
-         exactly this purpose: "related to the accent without shouting", a pale wash of the brand
-         yellow in light mode and a deep olive in dark (see colors.xml). So the pale yellow card in the
-         design is the app's existing palette used as intended, and it follows the theme for free —
-         where a fixed cream value would have glared on the near-black page in dark mode. -->
-
-    <!-- "3 new alerts": the screen's subject, in the display face and drawn slightly tight, as large
-         bold type is normally set. -->
+    <!-- "3 new alerts": the screen's subject, in the display face and drawn slightly tight. -->
     <style name="PetCare.Notifications.Headline" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
         <item name="android:textSize">@dimen/notifications_headline_text_size</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
         <item name="android:textStyle">bold</item>
-        <!-- Set as an em fraction rather than a pixel figure, so the tightening stays proportional
-             when the size changes — here, and again whenever the user's font-size setting scales it. -->
+        <!-- Set as an em fraction rather than a pixel figure, so the tightening stays proportional. -->
         <item name="android:letterSpacing">-0.035</item>
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- "MARK READ": the Tasks tab's small outlined pill, unchanged. It sits beside a headline as a
-         secondary action there too, which is the same part it plays here. -->
+    <!-- "MARK READ": the Tasks tab's small outlined pill, unchanged. -->
     <style name="PetCare.Notifications.MarkReadButton" parent="PetCare.SmallPillButton" />
 
-    <!--
-        The square type code on an alert card: "VAX", "MISS", "TIP".
-
-        The Money tab's badge with one difference: no colours. Those are set per card by
-        NotificationsAdapter — the accent for unread, the quiet surface for read — because they depend
-        on state this layout cannot know. Hidden from TalkBack, since the card's own description names
-        the alert's kind in full.
-    -->
+    <!-- The square type code on an alert card: "VAX", "MISS", "TIP". -->
     <style name="PetCare.Notifications.Badge" parent="">
         <item name="android:layout_width">@dimen/alert_badge_size</item>
         <item name="android:layout_height">@dimen/alert_badge_size</item>
@@ -1933,19 +1350,12 @@
         <item name="android:importantForAccessibility">no</item>
     </style>
 
-    <!-- The "NEW" and "EARLIER" group headings. The app's section label, set down to this screen's
-         smaller scale — see the Notifications block in dimens.xml for why the whole screen is a step
-         below the rest of the app. A style of its own rather than a size on the shared label, which
-         heads sections on five other screens. -->
+    <!-- The "NEW" and "EARLIER" group headings. The app's section label, set down to this screen's smaller scale. -->
     <style name="PetCare.Notifications.SectionLabel" parent="PetCare.SectionLabel">
         <item name="android:textSize">@dimen/notifications_section_text_size</item>
     </style>
 
-    <!-- An alert's sentence. The Money tab's list title, but allowed to wrap to a second line: an
-         expense's title is a noun the user typed and fits, whereas this is a whole sentence built from
-         a pet's name and a task's, and truncating it would cut off the very thing being reported. The
-         line height comes down with the text, so a wrapped sentence stays a tight two-line block
-         rather than opening a gap between its halves. -->
+    <!-- An alert's sentence. The Money tab's list title, but allowed to wrap to a second line. -->
     <style name="PetCare.Notifications.Title" parent="PetCare.ListTitle">
         <item name="android:textSize">@dimen/notifications_title_text_size</item>
         <item name="android:textStyle">bold</item>
@@ -1953,24 +1363,14 @@
         <item name="lineHeight">@dimen/notifications_title_line_height</item>
     </style>
 
-    <!-- "Care reminder · 2h ago": the meta line shared with the Places and Money tabs, at this
-         screen's scale. -->
+    <!-- "Care reminder · 2h ago": the meta line shared with the Places and Money tabs, at this screen's scale. -->
     <style name="PetCare.Notifications.Meta" parent="PetCare.Places.Meta">
         <item name="android:textSize">@dimen/notifications_meta_text_size</item>
     </style>
 
-    <!-- ================================ Profile screen ================================
-         The screen the header's monogram opens.
+    <!-- ================================ Profile screen ================================ -->
 
-         Its one piece of visual grammar is the **settings row**: a title in bold, a muted subtitle
-         beneath, and a control on the right — repeated down five cards with hairlines between. The
-         styles below describe that row once, which is what stops ACCOUNT, SECURITY, PREFERENCES,
-         contacts and DATA &amp; PRIVACY drifting into five differently proportioned lists. -->
-
-    <!-- ============================ The dark identity card ============================
-         The user's name, email and phone on a dark panel, with the photo well beside them. Its colours
-         are fixed rather than theme roles, because the card is dark in both modes by design — see the
-         profile section of colors.xml. -->
+    <!-- ============================ The dark identity card ============================ -->
 
     <!-- The user's name: the largest text on the screen and its subject. -->
     <style name="PetCare.Profile.Name" parent="">
@@ -1982,8 +1382,7 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- The email and phone lines under it. Quieter than the name but still a fact to be read, so body
-         type rather than a micro-label. -->
+    <!-- The email and phone lines under it. Quieter than the name but still a fact to be read, so body type. -->
     <style name="PetCare.Profile.CardMeta" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
         <item name="android:textColor">@color/on_profile_card_muted</item>
@@ -1991,10 +1390,7 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- The yellow role pill ("OWNER"). The accent as a fill with its guaranteed-legible dark on top,
-         exactly as the accent is used everywhere else in the app, so it reads as the one thing on the
-         card worth noticing after the name. Upper-case and letter-spaced in IBM Plex Mono, like the
-         app's other micro-labels. -->
+    <!-- The yellow role pill ("OWNER"). The accent as a fill with its guaranteed-legible dark on top. -->
     <style name="PetCare.Profile.RolePill" parent="PetCare.Pill">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -2009,16 +1405,13 @@
         <item name="android:paddingEnd">@dimen/spacing_sm</item>
     </style>
 
-    <!-- The dark pet-count pill beside it ("2 PETS"). The same shape and type, in the translucent chip
-         the pet cards use, so the pair reads as one row of two facts of differing importance. -->
+    <!-- The dark pet-count pill beside it ("2 PETS"). The same shape and type. -->
     <style name="PetCare.Profile.CountPill" parent="PetCare.Profile.RolePill">
         <item name="android:backgroundTint">@color/profile_count_pill</item>
         <item name="android:textColor">@color/on_profile_card</item>
     </style>
 
-    <!-- The yellow "+" on the photo well's corner. A filled Material icon button, so it brings the
-         ripple, the focus state and the "button" role TalkBack announces; the circle comes from the
-         50%-corner shape appearance, so it stays round at any size. -->
+    <!-- The yellow "+" on the photo well's corner. A filled Material icon button, so it brings the ripple. -->
     <style name="PetCare.Profile.AddPhotoButton" parent="Widget.Material3.Button.IconButton.Filled">
         <item name="android:layout_width">@dimen/profile_add_photo_touch_size</item>
         <item name="android:layout_height">@dimen/profile_add_photo_touch_size</item>
@@ -2035,25 +1428,18 @@
         <item name="iconGravity">textStart</item>
         <item name="iconPadding">0dp</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.PetCare.Circle</item>
-        <!-- A ring in the card's own colour, separating the yellow disc from the photo well's rim it
-             overlaps. Without it the two circles read as one shape with a bite taken out. Drawn as
-             the button's own stroke rather than as a background drawable, because a MaterialButton
-             builds its shape from backgroundTint and shapeAppearance — a background set underneath
-             would be covered by the very fill it was meant to sit behind. -->
+        <!-- A ring in the card's own colour, separating the yellow disc from the photo well's rim it overlaps. -->
         <item name="strokeColor">@color/profile_card_ground</item>
         <item name="strokeWidth">@dimen/profile_add_photo_ring</item>
     </style>
 
     <!-- ============================== The stat row ============================== -->
 
-    <!-- One of the three cards. Its width is shared out by layout_weight, so only the padding and the
-         corner are set here. -->
-    <!-- The shared outlined card with nothing added: these three are the dashboard's stat row in a
-         different place, and are meant to be recognisably the same object. -->
+    <!-- One of the three cards. Its width is shared out by layout_weight. -->
+    <!-- The shared outlined card with nothing added. -->
     <style name="PetCare.Profile.StatCard" parent="PetCare.Card.Outlined" />
 
-    <!-- The bold figure. A number, so Bricolage Grotesque rather than the face its Title role would
-         otherwise give it — the same choice the dashboard's stat cards make. -->
+    <!-- The bold figure. A number, so Bricolage Grotesque. -->
     <style name="PetCare.Profile.StatValue" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -2064,8 +1450,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- The uppercase micro-label under it: "PETS IN CARE", "DAY STREAK". Two lines allowed, because
-         "TASKS THIS WEEK" does not fit on one at a third of the screen's width. -->
+    <!-- The uppercase micro-label under it: "PETS IN CARE", "DAY STREAK". -->
     <style name="PetCare.Profile.StatLabel" parent="PetCare.SectionLabel">
         <item name="android:textSize">@dimen/profile_stat_label_text_size</item>
         <item name="android:layout_marginTop">@dimen/home_stat_line_spacing</item>
@@ -2074,17 +1459,13 @@
 
     <!-- ============================== The settings rows ============================== -->
 
-    <!-- The small uppercase heading at the top of each card: "ACCOUNT", "SECURITY". The app's section
-         label, given the row padding so it sits on the same rhythm as the rows beneath it. -->
+    <!-- The small uppercase heading at the top of each card: "ACCOUNT", "SECURITY". -->
     <style name="PetCare.Profile.SectionLabel" parent="PetCare.SectionLabel">
         <item name="android:paddingTop">@dimen/profile_row_padding_vertical</item>
         <item name="android:paddingBottom">@dimen/profile_row_padding_vertical</item>
     </style>
 
-    <!-- One row: a horizontal band with its own vertical padding. gravity centres whatever it holds
-         against a control of a different height, and baselineAligned is off for the reason given in
-         fragment_notifications.xml — a LinearLayout would otherwise line a switch up with the title's
-         baseline and push it down the row. -->
+    <!-- One row: a horizontal band with its own vertical padding. -->
     <style name="PetCare.Profile.Row" parent="">
         <item name="android:orientation">horizontal</item>
         <item name="android:baselineAligned">false</item>
@@ -2093,8 +1474,7 @@
         <item name="android:paddingBottom">@dimen/profile_row_padding_vertical</item>
     </style>
 
-    <!-- A row the user can press. Adds the ripple and the "button" role; the ripple is a foreground so
-         it draws over the row's children rather than behind them. -->
+    <!-- A row the user can press. Adds the ripple and the "button" role; the ripple is a foreground. -->
     <style name="PetCare.Profile.Row.Clickable" parent="PetCare.Profile.Row">
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
@@ -2108,15 +1488,12 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- The same line in red, for "Delete account". The error colour rather than the accent, because
-         the accent everywhere else in this app means "this is the thing to do". -->
+    <!-- The same line in red, for "Delete account". The error colour rather than the accent. -->
     <style name="PetCare.Profile.RowTitle.Destructive" parent="PetCare.Profile.RowTitle">
         <item name="android:textColor">?attr/colorError</item>
     </style>
 
-    <!-- The muted second line. Two lines allowed: several of these are a short sentence rather than a
-         label ("used for delegation SMS"), and truncating an explanation to one line would cut it off
-         mid-clause. -->
+    <!-- The muted second line. Two lines allowed: several of these are a short sentence rather than a label. -->
     <style name="PetCare.Profile.RowSubtitle" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
@@ -2125,26 +1502,14 @@
         <item name="android:ellipsize">end</item>
     </style>
 
-    <!-- The hairline between two rows. Inset to begin where the row's text does rather than at the
-         card's edge, which is the convention that makes a stack read as grouped rows of one list
-         instead of as separate panels. -->
+    <!-- The hairline between two rows. Inset to begin where the row's text does rather than at the card's edge. -->
     <style name="PetCare.Profile.RowDivider" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/profile_row_divider_height</item>
         <item name="android:background">?attr/colorOutlineVariant</item>
     </style>
 
-    <!-- The square glyph badge on an account row: the person, the envelope, the handset, the padlock.
-         The notifications screen's badge in the quieter surface, so a small rounded square in front of a
-         row is the same object on both.
-
-         It replaces a mono four-letter code ("NAME", "MAIL", "PHON", "PASS"). The well, its tint and its
-         size are unchanged — only what sits inside it — so the card's rhythm is exactly as it was; see
-         ic_profile_person.xml for why the glyph is the better mark.
-
-         The padding is what centres a 24dp icon in a 44dp well and keeps it at the weight the codes had:
-         at full size the glyph would fill the square edge to edge and read as a filled tile rather than
-         as a mark on a ground. -->
+    <!-- The square glyph badge on an account row: the person, the envelope, the handset, the padlock. -->
     <style name="PetCare.Profile.BadgeIcon" parent="">
         <item name="android:layout_width">@dimen/profile_badge_size</item>
         <item name="android:layout_height">@dimen/profile_badge_size</item>
@@ -2155,8 +1520,7 @@
         <item name="tint">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <!-- The circular initial avatar on a delegation-contact row. A circle rather than a square, for
-         the reason given in bg_profile_avatar.xml: a letter in a circle is how a *person* is drawn. -->
+    <!-- The circular initial avatar on a delegation-contact row. -->
     <style name="PetCare.Profile.Avatar" parent="">
         <item name="android:layout_width">@dimen/profile_avatar_size</item>
         <item name="android:layout_height">@dimen/profile_avatar_size</item>
@@ -2168,9 +1532,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- ============================== The action pills ==============================
-         The small pill on the right of an account row. Three variants, and which one a row gets says
-         what pressing it would do — or that nothing would. -->
+    <!-- ============================== The action pills ============================== -->
 
     <!-- The quiet outlined one: "EDIT". A real action, but a secondary one sitting beside a fact. -->
     <style name="PetCare.Profile.ActionPill" parent="PetCare.SmallPillButton">
@@ -2179,16 +1541,14 @@
         <item name="android:paddingEnd">@dimen/spacing_md</item>
     </style>
 
-    <!-- The accent one: "UPDATE", on the change-password row. Filled, because unlike the other rows
-         this is the one on this card the user might have come here to do. -->
+    <!-- The accent one: "UPDATE", on the change-password row. -->
     <style name="PetCare.Profile.ActionPill.Accent" parent="PetCare.Profile.ActionPill">
         <item name="android:backgroundTint">@color/accent_yellow</item>
         <item name="android:textColor">@color/on_accent_yellow</item>
         <item name="strokeWidth">0dp</item>
     </style>
 
-    <!-- "VERIFIED": pale green, and a TextView rather than a button. It is a *status*, not a control —
-         nothing happens if it is pressed, and drawing it as a button would promise otherwise. -->
+    <!-- "VERIFIED": pale green, and a TextView rather than a button. -->
     <style name="PetCare.Profile.StatusPill" parent="PetCare.Pill">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -2200,8 +1560,7 @@
         <item name="android:letterSpacing">0.1</item>
     </style>
 
-    <!-- The role pill on a delegation-contact row. The quiet surface rather than green: it labels a
-         row rather than confirming anything. -->
+    <!-- The role pill on a delegation-contact row. The quiet surface rather than green: it labels a row. -->
     <style name="PetCare.Profile.StatusPill.Neutral" parent="PetCare.Profile.StatusPill">
         <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
@@ -2213,8 +1572,7 @@
         <item name="android:textColor">@color/on_accent_yellow</item>
     </style>
 
-    <!-- ========================= The two-option preference toggle =========================
-         Metric/Imperial, Push/SMS, Sun/Mon, NPR/USD. -->
+    <!-- ========================= The two-option preference toggle ========================= -->
 
     <!-- The capsule groove both halves sit in. -->
     <style name="PetCare.Profile.SegmentTrack" parent="">
@@ -2224,19 +1582,7 @@
         <item name="android:padding">@dimen/profile_segment_inset</item>
     </style>
 
-    <!--
-        One half of it.
-
-        A TextView with a state-list background rather than two MaterialButtons or a Material
-        button-group: the halves are a single control the user reads as "one of these two", and a pair
-        of buttons brings two touch targets, two ripples and two minimum widths that would make the
-        control far wider than the row has room for. `state_selected` drives both the fill
-        (bg_profile_segment.xml) and the text colour (res/color/profile_segment_text.xml), so the
-        fragment sets one boolean per half and nothing is styled in code.
-
-        duplicateParentState is deliberately *not* used: each half has its own selected state, and
-        inheriting the parent's would select both at once.
-    -->
+    <!-- One half of it. -->
     <style name="PetCare.Profile.Segment" parent="">
         <item name="android:layout_height">match_parent</item>
         <item name="android:background">@drawable/bg_profile_segment</item>
@@ -2251,8 +1597,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- ============================== Footer ==============================
-         The pale note under the security rows, the "LOG OUT" button and the version line. -->
+    <!-- ============================== Footer ============================== -->
 
     <!-- The note card explaining that two-factor ships later. -->
     <style name="PetCare.Profile.Note" parent="">
@@ -2262,36 +1607,23 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <!--
-        "LOG OUT".
-
-        Outlined rather than filled, and in the muted text colour rather than the accent or the error
-        red. Filled would put the yellow — which everywhere else in this app means "this is the thing
-        to do" — on the one button that ends the session. Red would overstate it: signing out destroys
-        nothing, and the app keeps the red for the delete-account row directly above, where it is
-        earned. Outlined and quiet says what this is: available, deliberate, not the default.
-    -->
+    <!-- "LOG OUT". -->
     <style name="PetCare.Profile.LogOutButton" parent="PetCare.AddRowButton">
         <item name="android:minHeight">@dimen/profile_logout_button_height</item>
         <item name="cornerRadius">@dimen/corner_radius_md</item>
         <item name="icon">@drawable/ic_logout</item>
     </style>
 
-    <!-- "PetCare 1.0 · records stored on this device". The quietest text on the screen: it is there to
-         be found, not read. -->
+    <!-- "PetCare 1.0 · records stored on this device". The quietest text on the screen: it is there to be found. -->
     <style name="PetCare.Profile.Version" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:gravity">center</item>
     </style>
 
-    <!-- ================================ Sign-in screens ================================
-         Log in / register, two-factor, and the two password-reset screens. Every one of these screens
-         shares the same header (view_auth_header.xml), the same fields and the same buttons, so each
-         look is described once here and the four layouts only name styles. -->
+    <!-- ================================ Sign-in screens ================================ -->
 
-    <!-- The page itself: a scrolling column on the cream page colour. Set on each screen's root
-         ScrollView. -->
+    <!-- The page itself: a scrolling column on the cream page colour. -->
     <style name="PetCare.Auth.Page" parent="">
         <item name="android:background">?android:attr/colorBackground</item>
         <item name="android:fillViewport">true</item>
@@ -2309,9 +1641,7 @@
 
     <!-- ~~~~~~~~~~ The shared header ~~~~~~~~~~ -->
 
-    <!-- "PetCare" under the logo. Schibsted in bold rather than the Bricolage headline face: the
-         mockup sets the name as a sturdy wordmark, and the heavy Bricolage is kept for the heading
-         two lines below so the two do not compete. -->
+    <!-- "PetCare" under the logo. Schibsted in bold rather than the Bricolage headline face. -->
     <style name="PetCare.Auth.BrandName" parent="">
         <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
         <item name="android:textSize">@dimen/auth_brand_name_text_size</item>
@@ -2320,8 +1650,7 @@
         <item name="android:gravity">center</item>
     </style>
 
-    <!-- "DAILY PET TRACKING": the app's micro-label, centred and spaced a little wider still, since
-         here it is a tagline rather than a heading. -->
+    <!-- "DAILY PET TRACKING": the app's micro-label, centred and spaced a little wider still. -->
     <style name="PetCare.Auth.Tagline" parent="PetCare.SectionLabel">
         <item name="android:letterSpacing">0.2</item>
         <item name="android:gravity">center</item>
@@ -2342,15 +1671,7 @@
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
-    <!-- ~~~~~~~~~~ A two-option toggle on a sign-in screen ~~~~~~~~~~
-         The profile screen's two-option toggle, which already has exactly the design's behaviour: a
-         groove with a strong-filled pill in the chosen half. Only the height and the lettering change,
-         so these inherit rather than re-describe it.
-
-         Currently unused: the log in screen these were written for now switches between its two forms
-         from the link at the foot of the page rather than from a toggle above the fields — see the
-         note at the top of fragment_auth.xml. Kept because the look is part of the sign-in screens'
-         vocabulary and is a style, not a screen. -->
+    <!-- ~~~~~~~~~~ A two-option toggle on a sign-in screen ~~~~~~~~~~ -->
 
     <style name="PetCare.Auth.SegmentTrack" parent="PetCare.Profile.SegmentTrack">
         <item name="android:layout_height">@dimen/auth_segment_height</item>
@@ -2365,22 +1686,13 @@
 
     <!-- ~~~~~~~~~~ Fields ~~~~~~~~~~ -->
 
-    <!-- "EMAIL OR PHONE", "PASSWORD": the micro-label above each field. The design puts the label
-         *above* the box rather than floating inside it, which is why the fields below switch Material's
-         floating hint off. -->
+    <!-- "EMAIL OR PHONE", "PASSWORD": the micro-label above each field. -->
     <style name="PetCare.Auth.FieldLabel" parent="PetCare.SectionLabel">
         <item name="android:layout_marginTop">@dimen/auth_field_gap</item>
         <item name="android:layout_marginBottom">@dimen/auth_label_gap</item>
     </style>
 
-    <!--
-        The field box: a white, softly rounded Material 3 outlined field.
-
-        hintEnabled=false turns off the floating label (the label is the TextView above), and makes
-        android:hint on the inner EditText behave as a plain placeholder — "At least 8 characters".
-        The error message still appears under the box; TextInputLayout draws it whatever the hint
-        setting.
-    -->
+    <!-- The field box: a white, softly rounded Material 3 outlined field. -->
     <style name="PetCare.Auth.Field" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="hintEnabled">false</item>
         <item name="boxBackgroundColor">?attr/colorSurface</item>
@@ -2406,9 +1718,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "Forgot it? Reset by email.", "Used for delegation SMS and OTP login", "Code refreshes every 30
-         seconds…": small muted monospace notes. Monospace to match the labels, which marks them as
-         annotations on the form rather than as part of what the user reads through. -->
+    <!-- "Forgot it? Reset by email.", "Used for delegation SMS and OTP login", "Code refreshes every 30 seconds…". -->
     <style name="PetCare.Auth.Helper" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -2417,9 +1727,7 @@
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
-    <!-- A validation message that is not attached to a TextInputLayout — under the consent checkbox,
-         and under the code boxes. The same size and colour TextInputLayout uses for its own errors, so
-         the two kinds look identical. -->
+    <!-- A validation message that is not attached to a TextInputLayout — under the consent checkbox. -->
     <style name="PetCare.Auth.ErrorText" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
         <item name="android:textColor">?attr/colorError</item>
@@ -2436,22 +1744,18 @@
 
     <!-- ~~~~~~~~~~ Links and buttons ~~~~~~~~~~ -->
 
-    <!-- "FORGOT PASSWORD?", "LOST ACCESS?", "RESEND": bold monospace capitals, the same link the Places
-         tab uses for "OPEN IN MAPS". Inherited so a text link is one object across the app. -->
+    <!-- "FORGOT PASSWORD?", "LOST ACCESS?", "RESEND": bold monospace capitals. -->
     <style name="PetCare.Auth.TextLink" parent="PetCare.Places.TextLink">
         <item name="android:letterSpacing">0.08</item>
     </style>
 
-    <!-- "RESEND" on the reset confirmation screen. It is disabled during the resend cooldown, so its
-         text colour is a state list that turns muted while disabled. See auth_resend_link_text.xml.
-         The label stays on one line so the countdown never wraps next to "Didn't get it?". -->
+    <!-- "RESEND" on the reset confirmation screen. It is disabled during the resend cooldown. -->
     <style name="PetCare.Auth.TextLink.Resend" parent="PetCare.Auth.TextLink">
         <item name="android:textColor">@color/auth_resend_link_text</item>
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "← BACK TO LOG IN", "← USE A DIFFERENT ACCOUNT": the quietest link on the page. Muted, lighter
-         and spaced wider, because it is the way *out* of the flow rather than the way forward. -->
+    <!-- "← BACK TO LOG IN", "← USE A DIFFERENT ACCOUNT": the quietest link on the page. -->
     <style name="PetCare.Auth.BackLink" parent="PetCare.Auth.TextLink">
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:textStyle">normal</item>
@@ -2459,14 +1763,7 @@
         <item name="android:layout_gravity">center_horizontal</item>
     </style>
 
-    <!--
-        The main action — "LOG IN", "CREATE ACCOUNT", "SEND RESET LINK", "VERIFY & LOG IN".
-
-        A full-width pill in the app's strong fill. Its colours are state lists
-        (auth_primary_button_background / _text) so that disabling it — the verify button stays
-        disabled until all six digits are in, the reset button until the email is valid — switches to the solid charcoal resting look rather than
-        Material's translucent default.
-    -->
+    <!-- The main action — "LOG IN", "CREATE ACCOUNT", "SEND RESET LINK", "VERIFY & LOG IN". -->
     <style name="PetCare.Auth.PrimaryButton" parent="Widget.Material3.Button">
         <item name="android:layout_width">match_parent</item>
         <item name="android:minHeight">@dimen/auth_button_height</item>
@@ -2482,9 +1779,7 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- "Continue with Google": a white outlined pill with Google's mark before the label. iconTint is
-         cleared so Material does not repaint the four-colour mark in a single theme colour. Sentence
-         case, unlike the app's own buttons, as Google's sign-in branding asks. -->
+    <!-- "Continue with Google": a white outlined pill with Google's mark before the label. -->
     <style name="PetCare.Auth.GoogleButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:layout_width">match_parent</item>
         <item name="android:minHeight">@dimen/auth_button_height</item>
@@ -2530,9 +1825,7 @@
 
     <!-- ~~~~~~~~~~ Code boxes and keypad (CodeKeypadView) ~~~~~~~~~~ -->
 
-    <!-- One digit box. Its outline comes from bg_auth_code_box.xml, driven by two view states. Hidden
-         from TalkBack individually: the row as a whole announces "3 of 6 digits entered", which is far
-         more useful than six separate one-character boxes. -->
+    <!-- One digit box. Its outline comes from bg_auth_code_box.xml, driven by two view states. -->
     <style name="PetCare.Auth.CodeBox" parent="">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">0dp</item>
@@ -2543,8 +1836,7 @@
         <item name="android:importantForAccessibility">no</item>
     </style>
 
-    <!-- One keypad key: a light rounded button. A MaterialButton rather than a TextView, for the
-         ripple, the button role TalkBack announces, and the minimum touch target. -->
+    <!-- One keypad key: a light rounded button. A MaterialButton rather than a TextView, for the ripple. -->
     <style name="PetCare.Auth.Key" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">@dimen/auth_key_height</item>
@@ -2565,10 +1857,7 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- "CLEAR", the key left of 0. The same rounded key as the digits — inherited, so shape, size,
-         outline and ripple stay identical — but labelled in the app's micro-label treatment
-         (PetCare.SectionLabel: small IBM Plex Mono capitals, widely letter-spaced) and in the muted text
-         colour, so it reads as a secondary action next to the bold digits. -->
+    <!-- "CLEAR", the key left of 0. The same rounded key as the digits — inherited, so shape, size. -->
     <style name="PetCare.Auth.Key.Clear" parent="PetCare.Auth.Key">
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
@@ -2581,21 +1870,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!--
-        A row of three keys.
-
-        **baselineAligned must be false.** A horizontal LinearLayout aligns its children by their
-        text *baseline* by default, shifting each one down until the words line up. That is right for
-        a row of labels and wrong for a row of buttons: the bottom row mixes "0" and the backspace
-        glyph at 18sp with "CLEAR" at 11sp, so the small key was pushed about 4dp down the row to
-        bring its baseline level with the digits. The row is wrap_content and sized to an unshifted
-        key, so those 4dp hung off the bottom and were clipped — which took the CLEAR key's bottom
-        outline with them, leaving a key open along its bottom edge while its neighbours were closed.
-
-        Turning it off aligns the keys by their boxes, which is what a keypad is: a grid of equal
-        tiles whose labels happen to be different sizes. The three digit rows never showed the bug
-        only because every key in them carries the same text size.
-    -->
+    <!-- A row of three keys. -->
     <style name="PetCare.Auth.KeyRow" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -2606,15 +1881,7 @@
 
     <!-- ~~~~~~~~~~ The "New to PetCare? Create an account" footer ~~~~~~~~~~ -->
 
-    <!--
-        The line at the foot of each form leading to the other one, which replaced the toggle that
-        used to sit at the top of the screen.
-
-        Body text rather than the app's link style: the sentence is mostly ordinary prose with only
-        two or three words tappable, and setting the whole line in bold monospace capitals would make
-        a quiet footnote shout louder than the Google button above it. The link inside it is drawn
-        underlined in the full text colour by AuthFragment, as the mockup shows.
-    -->
+    <!-- The line at the foot of each form leading to the other. -->
     <style name="PetCare.Auth.SwitchFormText" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
@@ -2623,14 +1890,9 @@
         <item name="android:layout_gravity">center_horizontal</item>
     </style>
 
-    <!-- ~~~~~~~~~~ The wrong-password warning card ~~~~~~~~~~
-         Shown between the password helper line and "FORGOT PASSWORD?" after a failed attempt. Its
-         fill, edge and title colour are applied by AuthFragment, because the same card is drawn in
-         yellow for attempts 1–3 and in red for the last one — see the log in section of colors.xml. -->
+    <!-- ~~~~~~~~~~ The wrong-password warning card ~~~~~~~~~~ -->
 
-    <!-- The exclamation mark in its rounded square. Bold and centred; the mark's colour and the
-         square's fill are set per style of card. Hidden from TalkBack, which reads the title and
-         detail beneath instead — "exclamation mark" adds nothing to "Wrong password". -->
+    <!-- The exclamation mark in its rounded square. Bold and centred. -->
     <style name="PetCare.Auth.AlertBadge" parent="">
         <item name="android:layout_width">@dimen/auth_alert_badge_size</item>
         <item name="android:layout_height">@dimen/auth_alert_badge_size</item>
@@ -2649,20 +1911,15 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- "4 of 5 attempts left · locks for 15 minutes after the 5th": the same small muted monospace
-         as the form's other helper lines, so it reads as an annotation on the form. -->
+    <!-- "4 of 5 attempts left · locks for 15 minutes after the 5th". -->
     <style name="PetCare.Auth.AlertDetail" parent="PetCare.Auth.Helper">
         <item name="android:textSize">@dimen/auth_alert_detail_text_size</item>
         <item name="android:layout_marginTop">2dp</item>
     </style>
 
-    <!-- ~~~~~~~~~~ The locked screen ~~~~~~~~~~
-         The dark panel that replaces the whole form once sign-in locks, and the two pale rows under
-         it. The panel's colours are fixed rather than theme roles, because it is dark in both modes
-         by design — see the log in section of colors.xml. -->
+    <!-- ~~~~~~~~~~ The locked screen ~~~~~~~~~~ -->
 
-    <!-- The number of minutes inside the countdown ring: the largest thing on the panel, in the
-         display face, because it is the one figure the user is waiting on. -->
+    <!-- The number of minutes inside the countdown ring: the largest thing on the panel, in the display face. -->
     <style name="PetCare.Auth.LockMinutes" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -2673,8 +1930,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "MIN LEFT" under it: the app's micro-label, at its smallest, naming the unit of the figure
-         above rather than making a statement of its own. -->
+    <!-- "MIN LEFT" under it: the app's micro-label, at its smallest, naming the unit of the figure above. -->
     <style name="PetCare.Auth.LockRingCaption" parent="PetCare.SectionLabel">
         <item name="android:textSize">@dimen/auth_lock_ring_caption_text_size</item>
         <item name="android:textColor">@color/on_auth_lock_card_muted</item>
@@ -2682,8 +1938,7 @@
         <item name="android:gravity">center</item>
     </style>
 
-    <!-- "ACCOUNT LOCKED": the micro-label in the lock red, which is the one thing on the panel that
-         says what state the account is in. -->
+    <!-- "ACCOUNT LOCKED": the micro-label in the lock red. -->
     <style name="PetCare.Auth.LockLabel" parent="PetCare.SectionLabel">
         <item name="android:textSize">@dimen/auth_lock_label_text_size</item>
         <item name="android:textColor">@color/auth_lock_red</item>
@@ -2692,8 +1947,7 @@
         <item name="android:gravity">center</item>
     </style>
 
-    <!-- "Too many wrong passwords": the panel's heading, in the display face like every other
-         headline in the app, sized between the screen heading and a card title. -->
+    <!-- "Too many wrong passwords": the panel's heading, in the display face like every other headline in the app. -->
     <style name="PetCare.Auth.LockTitle" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -2703,9 +1957,7 @@
         <item name="android:gravity">center</item>
     </style>
 
-    <!-- The paragraph under it: what happened, when it reopens, and the way round it. Muted against
-         the panel but comfortably legible, with a little extra leading because it runs to three
-         lines. -->
+    <!-- The paragraph under it: what happened, when it reopens, and the way round it. -->
     <style name="PetCare.Auth.LockBody" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
         <item name="android:textColor">@color/on_auth_lock_card_muted</item>
@@ -2713,8 +1965,7 @@
         <item name="android:lineSpacingExtra">3dp</item>
     </style>
 
-    <!-- "TRY" / "SAFE" on the two info rows: the alert badge above in the app's micro-label
-         treatment, since these carry a word rather than a single mark. -->
+    <!-- "TRY" / "SAFE" on the two info rows: the alert badge above in the app's micro-label treatment. -->
     <style name="PetCare.Auth.LockInfoBadge" parent="PetCare.SectionLabel">
         <item name="android:layout_width">@dimen/auth_lock_info_badge_size</item>
         <item name="android:layout_height">@dimen/auth_lock_info_badge_size</item>
@@ -2738,48 +1989,20 @@
         <item name="android:layout_marginTop">2dp</item>
     </style>
 
-    <!-- "TRY AGAIN IN 15 MIN": the outlined companion to the filled reset button, disabled until the
-         wait is over. Built on the Google button so the two outlined pills on the sign-in screens are
-         one object — minus the icon, and upper-cased like the app's own buttons. -->
+    <!-- "TRY AGAIN IN 15 MIN": the outlined companion to the filled reset button. -->
     <style name="PetCare.Auth.SecondaryButton" parent="PetCare.Auth.GoogleButton">
         <item name="icon">@null</item>
         <item name="android:textAllCaps">true</item>
         <item name="android:letterSpacing">0.12</item>
-        <!-- The disabled state has to be spelled out: Material's default is the enabled colour at low
-             opacity, which on the cream page reads as broken rather than as "not yet". This is the
-             same reasoning as the primary button's colour state lists — see attrs.xml. -->
+        <!-- The disabled state has to be spelled out: Material's default is the enabled colour at low opacity. -->
         <item name="android:textColor">@color/auth_secondary_button_text</item>
     </style>
 
-    <!--
-        ============================== "Add a place" screen ==============================
-
-        The sub-screen reached from the Places tab, where a place is saved from the device's GPS
-        (fragment_add_place.xml).
-
-        **Almost nothing here is new grammar.** The category pills are the Tasks tab's filter chips;
-        the two text boxes and the save button are the sign-in screens' fields and primary button; the
-        chip over the map is the same capsule the Places tab lays over *its* map. Each of those
-        already carries the app's rule that "chosen" and "the thing to press" are the strong fill —
-        near-black by day, the accent by night — and that a disabled button is a solid resting slab
-        rather than a faded one. Inheriting them is what keeps this screen part of the same app, and
-        it means the styles below describe only what the design genuinely adds: the live map's status
-        chip and placeholder, and the dark current-location card with its two pills.
-    -->
+    <!-- ============================== "Add a place" screen ============================== -->
 
     <!-- ~~~~~~~~~~ The entry point in the Places tab ~~~~~~~~~~ -->
 
-    <!--
-        "+ ADD PLACE", right-aligned in the "SAVED PLACES" heading.
-
-        The one accent-filled thing in that part of the page, because it is the one action there. Sized
-        to sit on the heading's own line: short, capsule-shaped and letter-spaced like the heading
-        beside it, so the two read as one row rather than as a label with a button dropped next to it.
-
-        A MaterialButton rather than a TextView with a background, for the ripple, the focus state and
-        the "button" role TalkBack announces. Its insets are zeroed because the pill is already its own
-        touch target and the default insets would only add a gap that pushes the heading taller.
-    -->
+    <!-- "+ ADD PLACE", right-aligned in the "SAVED PLACES" heading. -->
     <style name="PetCare.Places.AddPill" parent="Widget.Material3.Button">
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">@dimen/places_add_pill_height</item>
@@ -2801,18 +2024,7 @@
 
     <!-- ~~~~~~~~~~ The screen's header ~~~~~~~~~~ -->
 
-    <!--
-        The round back button beside the heading.
-
-        An *outlined* icon button, unlike the filled disc on a pet's photo (PetCare.PetDetail.BackButton):
-        that one sits on a photograph and needs its own ground to be seen at all, whereas this one sits
-        on the page, where a filled disc would read as a second action competing with "SAVE PLACE". The
-        hairline edge and surface fill are the same treatment as the header's theme toggle, which is
-        the app's existing way of saying "a quiet control on the page".
-
-        The 36dp disc is drawn inside a 48dp view by the inset, so the touch target stays at the
-        minimum even though the circle is smaller than it.
-    -->
+    <!-- The round back button beside the heading. -->
     <style name="PetCare.AddPlace.BackButton" parent="Widget.Material3.Button.IconButton.Outlined">
         <item name="android:layout_width">@dimen/add_place_back_button_size</item>
         <item name="android:layout_height">@dimen/add_place_back_button_size</item>
@@ -2835,27 +2047,20 @@
         <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
-    <!-- "Add a place" — the screen's heading. The app's character face at the design's size, with the
-         letters drawn tighter, which is how heavy type is set large; at default spacing a 26sp
-         Bricolage word looks gappy. Line spacing is pulled to the text's own height (the design's
-         line-height: 1) so a heading that wraps stays a tight two-line block. -->
+    <!-- "Add a place" — the screen's heading. The app's character face at the design's size. -->
     <style name="PetCare.AddPlace.Title" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
         <item name="android:textSize">@dimen/add_place_title_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">?attr/colorOnBackground</item>
-        <!-- The design's -1.1px at 26sp, expressed as the em fraction Android wants (-1.1 ÷ 26).
-             Heavy type set large needs the letters pulled together; at default spacing a 26sp
-             Bricolage word looks gappy. -->
+        <!-- The design's -1.1px at 26sp, expressed as the em fraction Android wants (-1.1 ÷ 26). -->
         <item name="android:letterSpacing">-0.042</item>
         <item name="android:lineSpacingMultiplier">1.0</item>
         <item name="android:includeFontPadding">false</item>
     </style>
 
-    <!-- "Save it from anywhere — no need to be standing there." The sign-in screens' helper voice:
-         small muted monospace, which marks it as an annotation on the screen rather than as something
-         to read through. Left-aligned and allowed to wrap, unlike the centred auth subtitle. -->
+    <!-- "Save it from anywhere — no need to be standing there." The sign-in screens' helper voice. -->
     <style name="PetCare.AddPlace.Subtitle" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -2866,18 +2071,7 @@
 
     <!-- ~~~~~~~~~~ The live GPS map ~~~~~~~~~~ -->
 
-    <!--
-        The status chip in the map's top-left corner: "● LIVE GPS", "● LOCATING…", "● NO GPS FIX".
-
-        The one-glance answer to "is what I am looking at real?", which is why the dot beside the
-        label is coloured by state (blue for a fix, accent while looking, coral when there is none)
-        rather than being decoration. The chip shares the Places tab's map-overlay capsule, for the
-        reason given there: it sits on Google's tiles rather than on the app's surface, so its
-        colours are fixed in both themes.
-
-        The dot is a sibling view in the layout rather than a compound drawable, because its tint
-        changes with state and a drawable start would have to be re-tinted every render.
-    -->
+    <!-- The status chip in the map's top-left corner: "● LIVE GPS", "● LOCATING…", "● NO GPS FIX". -->
     <style name="PetCare.AddPlace.GpsChip" parent="">
         <item name="android:background">@drawable/bg_map_overlay_pill</item>
         <item name="android:paddingStart">@dimen/gps_map_chip_padding_horizontal</item>
@@ -2898,9 +2092,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- The line shown in the map's place before there is a fix to draw one at — "Finding your
-         position…", or the sentence naming the way forward when location is off. Schibsted rather
-         than the screen's monospace: it is a sentence being read, not a value being checked. -->
+    <!-- The line shown in the map's place before there is a fix to draw one at — "Finding your position…". -->
     <style name="PetCare.AddPlace.MapPlaceholder" parent="">
         <item name="android:fontFamily">@font/schibsted_grotesk</item>
         <item name="fontFamily">@font/schibsted_grotesk</item>
@@ -2911,15 +2103,7 @@
         <item name="android:lineSpacingExtra">3dp</item>
     </style>
 
-    <!-- The "MAP / SATELLITE" pill in the map's top-right corner, on the Places tab and on Add a place.
-
-         Sized and coloured as the status chip that faces it across the map — the same overlay ground,
-         the same mono face at the same size, the same padding — so the two corners of the card read as
-         one pair rather than as a label and a button that happen to share a surface. It is a
-         MaterialButton rather than a TextView so it ripples on press and announces itself as a button.
-
-         stateListAnimator is cleared because Material's filled button lifts on press, and a control
-         *painted on* a map should not rise off it; the flat chip opposite has no elevation either. -->
+    <!-- The "MAP / SATELLITE" pill in the map's top-right corner, on the Places tab and on Add a place. -->
     <style name="PetCare.Map.LayerToggle" parent="Widget.Material3.Button">
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">0dp</item>
@@ -2944,32 +2128,14 @@
         <item name="rippleColor">@color/on_map_overlay</item>
     </style>
 
-    <!--
-        The two pills laid over the map picker: "I'M HERE" at the top-start and "MAP TYPE ▾" at the
-        top-end.
-
-        Built on the layer toggle above rather than beside it, so every control that sits on a map in
-        this app shares one ground, one face and one size — which is what keeps the picker's corners
-        reading as a set rather than as three buttons that happened to land on the same card. Only the
-        icon needs adding; each instance supplies its own and its own gravity.
-    -->
+    <!-- The two pills laid over the map picker: "I'M HERE" at the top-start and "MAP TYPE ▾" at the top-end. -->
     <style name="PetCare.Map.ActionPill" parent="PetCare.Map.LayerToggle">
         <item name="iconSize">@dimen/map_pill_icon_size</item>
         <item name="iconPadding">@dimen/map_pill_icon_padding</item>
         <item name="iconTint">@color/on_map_overlay</item>
     </style>
 
-    <!--
-        The round "back to my position" control in the map's bottom corner.
-
-        Icon only and perfectly circular, which is the shape every map application has settled on for
-        this one action — a label would say nothing the crosshair does not. The same translucent ground
-        as the pills, so it belongs to the same set; `cornerRadius` far larger than the button can be
-        makes the circle, exactly as bg_map_overlay_pill draws its capsule.
-
-        The insets and minimum sizes are zeroed because Material's defaults would add 6dp of dead space
-        above and below, which on a square button shows up as an oval.
-    -->
+    <!-- The round "back to my position" control in the map's bottom corner. -->
     <style name="PetCare.Map.RecentreButton" parent="Widget.Material3.Button">
         <item name="android:layout_width">@dimen/map_recentre_button_size</item>
         <item name="android:layout_height">@dimen/map_recentre_button_size</item>
@@ -2990,16 +2156,7 @@
         <item name="rippleColor">@color/on_map_overlay</item>
     </style>
 
-    <!--
-        The "© MapTiler © OpenStreetMap" line over the bottom-start of every map.
-
-        Required rather than decorative — see view_place_map.xml — so it is styled to be legible over
-        anything the map might draw underneath it: the same translucent capsule the map's other
-        overlays use, rather than bare text that would disappear against a dark satellite image.
-
-        As small and quiet as a credit can be while staying readable, because it is a legal notice on
-        a control rather than something the user is meant to read.
-    -->
+    <!-- The "© MapTiler © OpenStreetMap" line over the bottom-start of every map. -->
     <style name="PetCare.Map.Attribution" parent="">
         <item name="android:background">@drawable/bg_map_overlay_pill</item>
         <item name="android:paddingStart">@dimen/map_attribution_padding_horizontal</item>
@@ -3013,14 +2170,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!--
-        The three lines of the "Selected location" card.
-
-        A deliberate size ladder rather than three similar sizes: the name is what the user checks at a
-        glance, the address is read only when the name is ambiguous, and the coordinates are the
-        fallback that is always true. Giving them equal weight would make the card a block of text with
-        no obvious answer in it.
-    -->
+    <!-- The three lines of the "Selected location" card. -->
     <style name="PetCare.SelectedLocation.Name" parent="">
         <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
         <item name="android:textSize">@dimen/selected_location_name_text_size</item>
@@ -3036,8 +2186,7 @@
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
-    <!-- Monospace, so the digits sit under each other as the map moves and the figures change — the
-         same treatment every other number in the Places feature gets. -->
+    <!-- Monospace, so the digits sit under each other as the map moves and the figures change. -->
     <style name="PetCare.SelectedLocation.Coordinates" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -3047,10 +2196,7 @@
 
     <!-- ~~~~~~~~~~ The place-search suggestions ~~~~~~~~~~ -->
 
-    <!-- A suggestion's name: "Patan Hospital". The selected-location card's name treatment a size
-         down, which is deliberate rather than incidental — a row the user is choosing from and the
-         card showing what they chose are the same kind of information at two moments, and typing them
-         alike is what makes the second read as confirmation of the first. -->
+    <!-- A suggestion's name: "Patan Hospital". The selected-location card's name treatment a size down. -->
     <style name="PetCare.PlaceSearch.ResultName" parent="">
         <item name="android:textAppearance">?attr/textAppearanceTitleSmall</item>
         <item name="android:textSize">@dimen/place_search_row_name_text_size</item>
@@ -3066,9 +2212,7 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <!-- "Searching…" / "No places found": the panel's one-line states. Monospace and muted, which is
-         how the rest of the app writes a note *about* a list rather than an item in one — so it cannot
-         be mistaken for a result that could be tapped. -->
+    <!-- "Searching…" / "No places found": the panel's one-line states. -->
     <style name="PetCare.PlaceSearch.Status" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -3077,9 +2221,7 @@
         <item name="android:gravity">center_vertical</item>
     </style>
 
-    <!-- The line under the map: "Drag the map to put the pin on the place…". Deliberately the quietest
-         text on the screen — it is an instruction read once and then never again, so it says its piece
-         at the size of a caption rather than competing with the fields below it. -->
+    <!-- The line under the map: "Drag the map to put the pin on the place…". -->
     <style name="PetCare.AddPlace.MapHint" parent="">
         <item name="android:fontFamily">@font/schibsted_grotesk</item>
         <item name="fontFamily">@font/schibsted_grotesk</item>
@@ -3090,10 +2232,7 @@
 
     <!-- ~~~~~~~~~~ The current-location card ~~~~~~~~~~ -->
 
-    <!-- "CURRENT LOCATION", the title line, and the meta line under it. All three sit on the dark
-         card, so their colours are the fixed on-card values rather than theme roles, and the muted one
-         is a solid colour rather than the light ink at reduced opacity — the rule this screen follows
-         throughout. -->
+    <!-- "CURRENT LOCATION", the title line, and the meta line under it. -->
     <style name="PetCare.AddPlace.HereLabel" parent="PetCare.SectionLabel">
         <item name="android:textSize">@dimen/gps_card_label_text_size</item>
         <item name="android:textColor">@color/on_gps_card_muted</item>
@@ -3107,8 +2246,7 @@
         <item name="android:textColor">@color/on_gps_card</item>
     </style>
 
-    <!-- The coordinates, accuracy and distance from home. Monospace so the figures line up, and held
-         to one line: a coordinate that wrapped mid-number would be unreadable. -->
+    <!-- The coordinates, accuracy and distance from home. Monospace so the figures line up, and held to one line. -->
     <style name="PetCare.AddPlace.HereCoordinates" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -3117,15 +2255,7 @@
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
-    <!--
-        The card's two pills: the outlined "Refresh location", and the accent "Use demo location" that
-        joins it only when there is no fix to be had.
-
-        Outlined rather than filled for the first, because refreshing is a repeat of what the screen
-        already did on arrival — offering it as a second filled button would make the card look like it
-        had two equal actions. Both are sized from the same base so they sit level when they share the
-        row, and both are held to one line so a long label never turns one pill taller than the other.
-    -->
+    <!-- The card's two pills: the outlined "Refresh location". -->
     <style name="PetCare.AddPlace.GpsButton" parent="Widget.Material3.Button">
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">@dimen/gps_card_button_height</item>
@@ -3143,9 +2273,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "REFRESH LOCATION" / "TRY AGAIN" / "LOCATING…" — the quiet one. A transparent fill with the
-         card's own ink softened for the outline, so it reads as secondary *on the dark card* rather
-         than borrowing the page's outline colour, which would be invisible there. -->
+    <!-- "REFRESH LOCATION" / "TRY AGAIN" / "LOCATING…" — the quiet one. -->
     <style name="PetCare.AddPlace.GpsButton.Outline" parent="PetCare.AddPlace.GpsButton">
         <item name="backgroundTint">@android:color/transparent</item>
         <item name="strokeColor">@color/gps_card_button_stroke</item>
@@ -3154,8 +2282,7 @@
         <item name="rippleColor">@color/on_gps_card_muted</item>
     </style>
 
-    <!-- "USE DEMO LOCATION" — the way past a refused permission, in the accent so it reads as the
-         offer it is rather than as an admission of failure. -->
+    <!-- "USE DEMO LOCATION" — the way past a refused permission, in the accent so it reads as the offer. -->
     <style name="PetCare.AddPlace.GpsButton.Demo" parent="PetCare.AddPlace.GpsButton">
         <item name="backgroundTint">@color/accent_yellow</item>
         <item name="android:textColor">@color/on_accent_yellow</item>
@@ -3163,16 +2290,12 @@
 
     <!-- ~~~~~~~~~~ The shared save fields ~~~~~~~~~~ -->
 
-    <!-- The micro-label over each field — "PLACE NAME", "CATEGORY", "NOTE". The sign-in screens' field
-         label, which is the app's section label with the design's spacing above and below it. -->
+    <!-- The micro-label over each field — "PLACE NAME", "CATEGORY", "NOTE". -->
     <style name="PetCare.AddPlace.FieldLabel" parent="PetCare.Auth.FieldLabel">
         <item name="android:letterSpacing">0.16</item>
     </style>
 
-    <!-- The name and note boxes. The sign-in screens' field, unchanged in shape — a white, softly
-         rounded outlined box with the label above it rather than floating inside — and differing only
-         in the weight and size of the text typed into it, which the design sets a step apart for the
-         two. -->
+    <!-- The name and note boxes. The sign-in screens' field, unchanged in shape — a white. -->
     <style name="PetCare.AddPlace.Field" parent="PetCare.Auth.Field" />
 
     <style name="PetCare.AddPlace.NameInput" parent="PetCare.Auth.FieldInput">
@@ -3188,9 +2311,7 @@
         <item name="android:paddingBottom">@dimen/auth_field_padding_horizontal</item>
     </style>
 
-    <!-- The two-line readback above the save button. Monospace, because it is a summary of values
-         rather than prose, and pre-line so the two lines the fragment joins with a newline stay two
-         lines. -->
+    <!-- The two-line readback above the save button. Monospace, because it is a summary of values. -->
     <style name="PetCare.AddPlace.Summary" parent="">
         <item name="android:background">@drawable/bg_add_place_summary</item>
         <item name="android:padding">@dimen/add_place_summary_padding</item>
@@ -3201,53 +2322,28 @@
         <item name="android:lineSpacingExtra">4dp</item>
     </style>
 
-    <!-- "SAVE PLACE". The sign-in screens' primary button, which already does the one thing that
-         matters here: it is disabled until the form is ready, and its disabled look is a solid resting
-         slab with pale ink rather than Material's faded wash — see attrs.xml, colorDisabledContainer.
-         Only the height changes, since this is the single action on a long form. -->
+    <!-- "SAVE PLACE". The sign-in screens' primary button, which already does the one thing that matters here. -->
     <style name="PetCare.AddPlace.SaveButton" parent="PetCare.Auth.PrimaryButton">
         <item name="android:minHeight">@dimen/add_place_save_button_height</item>
     </style>
 
-    <!--
-        ============================= Vaccination history =============================
-
-        Two places: the card on a pet's detail screen listing the shots it has had, and the "Record a
-        vaccination" screen that adds to it.
-
-        **Almost every style below inherits from one the app already had**, and the few that do not
-        are the ones the design genuinely introduces — the row's date column, its status pill, and the
-        four-option repeat control. That is not economy for its own sake: the record screen is the
-        same *kind* of object as "Add a place" (a sub-screen with the shared header, a round back
-        button, a stack of labelled fields, a readback and one full-width action), and inheriting its
-        styles is what makes the two read as the same app rather than as two forms that happen to
-        resemble each other.
-    -->
+    <!-- ============================= Vaccination history ============================= -->
 
     <!-- ~~~~~~~~~~ The card on the pet detail screen ~~~~~~~~~~ -->
 
-    <!-- "VACCINATION HISTORY". The app's section label a step smaller, because it labels a card
-         rather than a region of the page and shares its line with the "+ RECORD" pill. The wider
-         spacing is what keeps upper-case text legible once it is this small — see PetCare.SectionLabel. -->
+    <!-- "VACCINATION HISTORY". The app's section label a step smaller, because it labels a card. -->
     <style name="PetCare.Vaccination.CardLabel" parent="PetCare.SectionLabel">
         <item name="android:textSize">@dimen/vaccination_label_text_size</item>
         <item name="android:letterSpacing">0.16</item>
     </style>
 
-    <!-- "+ RECORD", right-aligned on that line.
-
-         The Places tab's "+ ADD PLACE" pill, unchanged. Both are the single accent-filled action
-         sitting on a quiet heading, and the app deliberately has one object for that rather than two
-         that drift apart; this style exists only so the layout can name the pill by what it is here. -->
+    <!-- "+ RECORD", right-aligned on that line. -->
     <style name="PetCare.Vaccination.AddPill" parent="PetCare.Places.AddPill" />
 
-    <!-- The hairline above each row. The pet detail card's own divider, so the vaccination card is
-         ruled exactly like the "About" card above it. -->
+    <!-- The hairline above each row. The pet detail card's own divider. -->
     <style name="PetCare.Vaccination.Divider" parent="PetCare.PetDetail.AboutDivider" />
 
-    <!-- The day number in the date column — "22". Bricolage, the app's character face, at the size it
-         is used for a figure being read rather than a heading. includeFontPadding is off so the number
-         sits tight to the month label beneath it instead of floating above it. -->
+    <!-- The day number in the date column — "22". Bricolage, the app's character face. -->
     <style name="PetCare.Vaccination.Day" parent="">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
         <item name="fontFamily">@font/bricolage_grotesque</item>
@@ -3259,9 +2355,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <!-- "SEP 25" beneath it. The app's monospace micro-label at its smallest, which is what lets a
-         month and a two-digit year fit a 40dp column on one line. singleLine rather than maxLines,
-         because a label that wrapped would push every row below it out of alignment. -->
+    <!-- "SEP 25" beneath it. The app's monospace micro-label at its smallest. -->
     <style name="PetCare.Vaccination.Month" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -3273,9 +2367,7 @@
         <item name="android:singleLine">true</item>
     </style>
 
-    <!-- The vaccine's name — the one thing on the row set in the app's body face. It is the *subject*
-         of the row; everything either side of it is a reading about that subject, which is why they
-         are all monospace and this is not. -->
+    <!-- The vaccine's name — the one thing on the row set in the app's body face. -->
     <style name="PetCare.Vaccination.Name" parent="">
         <item name="android:fontFamily">@font/schibsted_grotesk_ui</item>
         <item name="fontFamily">@font/schibsted_grotesk_ui</item>
@@ -3285,9 +2377,7 @@
         <item name="android:lineSpacingMultiplier">1.25</item>
     </style>
 
-    <!-- "Next due 4 Oct 2026 · Patan Animal Hospital". The app's meta voice, allowed to wrap onto a
-         second line: a clinic name is long, and truncating it would hide the very thing the line is
-         for. -->
+    <!-- "Next due 4 Oct 2026 · Patan Animal Hospital". The app's meta voice, allowed to wrap onto a second line. -->
     <style name="PetCare.Vaccination.Meta" parent="">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -3296,17 +2386,7 @@
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
-    <!--
-        The status pill — "OVERDUE", "DUE IN 11D", "UP TO DATE".
-
-        No colours here, deliberately: the fill and the ink are the pair for whichever state the row is
-        in, resolved by the adapter from ui/pet/VaccinationStatus.kt. Putting a default colour in this
-        style would mean every pill flashed that state's colour for one frame before being corrected.
-
-        A plain TextView on the shared capsule drawable rather than a Chip, for the reason given on
-        PetCare.Pill: it is read, never pressed. singleLine because "DUE IN 11D" wrapping mid-phrase
-        would be unreadable at 8.5sp.
-    -->
+    <!-- The status pill — "OVERDUE", "DUE IN 11D", "UP TO DATE". -->
     <style name="PetCare.Vaccination.StatusPill" parent="">
         <item name="android:background">@drawable/bg_pill</item>
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
@@ -3323,8 +2403,7 @@
         <item name="android:singleLine">true</item>
     </style>
 
-    <!-- "No vaccinations recorded yet…", shown in the list's place. The meta voice one step larger,
-         so it reads as an explanation rather than as a row with its values missing. -->
+    <!-- "No vaccinations recorded yet…", shown in the list's place. -->
     <style name="PetCare.Vaccination.Empty" parent="PetCare.Vaccination.Meta">
         <item name="android:textSize">@dimen/vaccination_empty_text_size</item>
         <item name="android:lineSpacingExtra">3dp</item>
@@ -3332,10 +2411,7 @@
 
     <!-- ~~~~~~~~~~ "Record a vaccination" ~~~~~~~~~~ -->
 
-    <!-- The heading block, borrowed whole from "Add a place": the same outlined round back button, the
-         same Bricolage title at the same tight spacing, the same monospace line beneath it. The
-         subtitle is a half-step smaller, as the design has it — it names the pet rather than
-         explaining the screen. -->
+    <!-- The heading block, borrowed whole from "Add a place": the same outlined round back button. -->
     <style name="PetCare.Record.BackButton" parent="PetCare.AddPlace.BackButton" />
 
     <style name="PetCare.Record.Title" parent="PetCare.AddPlace.Title" />
@@ -3344,16 +2420,12 @@
         <item name="android:textSize">@dimen/record_subtitle_text_size</item>
     </style>
 
-    <!-- A preset chip — "FVRCP", "Rabies", "DHPP". The Tasks tab's filter chip at a smaller size:
-         mechanically it is the same control (one of a row, checkable, the chosen one filled with the
-         app's "chosen" colour), and it is smaller because these are shortcuts beside a field rather
-         than the filter a whole screen is read through. -->
+    <!-- A preset chip — "FVRCP", "Rabies", "DHPP". The Tasks tab's filter chip at a smaller size. -->
     <style name="PetCare.Record.PresetChip" parent="PetCare.FilterChip">
         <item name="android:textSize">@dimen/record_chip_text_size</item>
     </style>
 
-    <!-- The micro-label over each field — "VACCINE", "DATE GIVEN", "CLINIC / VET". The Add a place
-         label at the design's slightly smaller size. -->
+    <!-- The micro-label over each field — "VACCINE", "DATE GIVEN", "CLINIC / VET". -->
     <style name="PetCare.Record.FieldLabel" parent="PetCare.AddPlace.FieldLabel">
         <item name="android:textSize">@dimen/record_field_label_text_size</item>
     </style>
@@ -3367,15 +2439,7 @@
         <item name="android:textSize">@dimen/record_clinic_text_size</item>
     </style>
 
-    <!--
-        The two date boxes. The same field with a tighter corner, which is the design's way of marking
-        them as a pair of *values* rather than two more things to type into.
-
-        They are read-only boxes that open the app's Material date picker, not typed fields — the same
-        arrangement the expense and pet forms use. That is also the answer to the design's note about
-        forcing the native picker's colour scheme to match the theme: Material's picker is drawn from
-        this app's own theme, so it is already dark on a dark page and there is nothing to override.
-    -->
+    <!-- The two date boxes. The same field with a tighter corner. -->
     <style name="PetCare.Record.DateField" parent="PetCare.Record.Field">
         <item name="boxCornerRadiusTopStart">@dimen/record_date_field_corner_radius</item>
         <item name="boxCornerRadiusTopEnd">@dimen/record_date_field_corner_radius</item>
@@ -3383,8 +2447,7 @@
         <item name="boxCornerRadiusBottomEnd">@dimen/record_date_field_corner_radius</item>
     </style>
 
-    <!-- The date itself. Monospace, so the two dates sit as a matched pair of readings side by side
-         and neither shifts width as the month changes. -->
+    <!-- The date itself. Monospace. -->
     <style name="PetCare.Record.DateInput" parent="PetCare.Auth.FieldInput">
         <item name="android:fontFamily">@font/ibm_plex_mono</item>
         <item name="fontFamily">@font/ibm_plex_mono</item>
@@ -3394,25 +2457,20 @@
         <item name="android:singleLine">true</item>
     </style>
 
-    <!-- The "repeats every" control: the profile screen's preference toggle widened from two options
-         to four. Same groove, same "chosen = strong fill" grammar, taller because four labels in one
-         row need the height to stay tappable. -->
+    <!-- The "repeats every" control: the profile screen's preference toggle widened from two options to four. -->
     <style name="PetCare.Record.RepeatTrack" parent="PetCare.Profile.SegmentTrack">
         <item name="android:layout_height">@dimen/record_repeat_height</item>
         <item name="android:padding">@dimen/record_repeat_inset</item>
     </style>
 
-    <!-- One of its four options. The horizontal padding is dropped to zero because the four share the
-         row by weight rather than by their own width; a minimum padding would make the control wider
-         than the screen on a narrow device. -->
+    <!-- One of its four options. The horizontal padding is dropped to zero. -->
     <style name="PetCare.Record.RepeatSegment" parent="PetCare.Profile.Segment">
         <item name="android:textSize">@dimen/record_repeat_text_size</item>
         <item name="android:paddingStart">0dp</item>
         <item name="android:paddingEnd">0dp</item>
     </style>
 
-    <!-- The checklist toggle. The whole row is the control — see fragment_add_vaccination.xml — so it
-         is drawn as an outlined panel rather than as a bare row with a switch at the end. -->
+    <!-- The checklist toggle. The whole row is the control — see fragment_add_vaccination.xml. -->
     <style name="PetCare.Record.ToggleRow" parent="">
         <item name="android:background">@drawable/bg_record_toggle_row</item>
         <item name="android:padding">@dimen/record_toggle_padding</item>
@@ -3430,9 +2488,7 @@
         <item name="android:textSize">@dimen/record_toggle_meta_text_size</item>
     </style>
 
-    <!-- The readback above the save button, and the button itself: the Add a place screen's, which
-         already are exactly what this design asks for — a sunk monospace panel at the same radius, and
-         a full-width pill whose disabled state is a solid resting slab rather than a faded one. -->
+    <!-- The readback above the save button, and the button itself: the Add a place screen's. -->
     <style name="PetCare.Record.Summary" parent="PetCare.AddPlace.Summary" />
 
     <style name="PetCare.Record.SaveButton" parent="PetCare.AddPlace.SaveButton" />

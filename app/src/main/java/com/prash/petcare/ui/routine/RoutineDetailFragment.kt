@@ -25,13 +25,7 @@ import com.prash.petcare.ui.task.AddEditTaskFragment
 import com.prash.petcare.ui.task.CareTaskViewModel
 import kotlinx.coroutines.launch
 
-/**
- * Shows one routine and the care tasks inside it, in the order they happen through the day.
- *
- * Tasks are not tickable here. This screen shows the template — what the routine consists of, on
- * every day it runs — whereas ticking things off belongs to a particular day and happens on the
- * checklist screen.
- */
+/** Shows one routine and the care tasks inside it, in the order they happen through the day. */
 class RoutineDetailFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
@@ -73,27 +67,14 @@ class RoutineDetailFragment : Fragment() {
         }
     }
 
-    /**
-     * Attaches swipe-to-delete to the task list.
-     *
-     * This is the screen where tasks are managed — added, opened for editing, and now removed — so
-     * it is where a delete gesture belongs. The checklist screen deliberately does not offer one:
-     * a task is a repeating template, so deleting it from a view of *today* would quietly remove it
-     * from every future day as well.
-     *
-     * Only swipe-left is permitted. Swipe-right means "mark done" elsewhere in the app, and
-     * completion is a property of a particular day, which this template list has no concept of.
-     */
+    /** Attaches swipe-to-delete to the task list. */
     private fun setUpSwipeGestures() {
         val callback = SwipeActionCallback(
             context = requireContext(),
-            // Every row here is a task, so all of them are swipeable — unlike the checklist, which
-            // mixes in category headings.
+            // Every row here is a task, so all of them are swipeable — unlike the checklist.
             allowedDirections = { ItemTouchHelper.LEFT },
             onSwipe = { position, _ ->
-                // `currentList` is what the adapter is actually showing, which is what the swiped
-                // position refers to. Reading from ViewModel state instead could disagree with it
-                // mid-update and delete the wrong task.
+                // `currentList` is what the adapter is actually showing, which is what the swiped position refers to.
                 taskAdapter.currentList.getOrNull(position)?.let { task -> onSwipedToDelete(task) }
             }
         )
@@ -101,12 +82,7 @@ class RoutineDetailFragment : Fragment() {
         ItemTouchHelper(callback).attachToRecyclerView(binding.tasksRecyclerView)
     }
 
-    /**
-     * Deletes a swiped task, offering an undo rather than a confirmation.
-     *
-     * The row disappears on its own: the deletion reaches Room, the routine's task query re-emits,
-     * and DiffUtil animates it out. Nothing here has to touch the adapter.
-     */
+    /** Deletes a swiped task, offering an undo rather than a confirmation. */
     private fun onSwipedToDelete(task: CareTask) {
         viewModel.deleteTask(task)
 
@@ -115,8 +91,7 @@ class RoutineDetailFragment : Fragment() {
             getString(R.string.swipe_task_deleted, task.title),
             Snackbar.LENGTH_LONG
         )
-            // The whole task object is captured, so undo puts it back exactly as it was rather
-            // than recreating something similar.
+            // The whole task object is captured, so undo puts it back exactly.
             .setAction(R.string.action_undo) { viewModel.restoreTask(task) }
             .show()
     }
@@ -125,17 +100,11 @@ class RoutineDetailFragment : Fragment() {
         // No task id means the form opens ready to create one.
         binding.addTaskFab.setOnClickListener { openTaskForm(CareTaskViewModel.NO_TASK_ID) }
 
-        // The switch's own listener is attached in render() instead, because it has to be detached
-        // and reattached around each state update to avoid writing the value straight back.
+        // The switch's own listener is attached in render() instead.
         binding.deleteRoutineButton.setOnClickListener { showDeleteConfirmation() }
     }
 
-    /**
-     * Opens the add/edit task form.
-     *
-     * The same destination covers both cases: [CareTaskViewModel.NO_TASK_ID] opens an empty form,
-     * and a real id opens that task with its fields already filled in.
-     */
+    /** Opens the add/edit task form. */
     private fun openTaskForm(taskId: Long) {
         findNavController().navigate(
             R.id.action_routine_detail_to_add_edit_task,
@@ -146,13 +115,7 @@ class RoutineDetailFragment : Fragment() {
         )
     }
 
-    /**
-     * Asks before deleting.
-     *
-     * Deleting a routine also removes every task inside it and cannot be undone, so the dialog
-     * spells out the consequence rather than just asking "are you sure?" — and points at pausing as
-     * the reversible alternative, since that is what most people reaching for delete actually want.
-     */
+    /** Asks before deleting. */
     private fun showDeleteConfirmation() {
         val routineName = viewModel.uiState.value.routine?.title ?: return
 
@@ -182,8 +145,7 @@ class RoutineDetailFragment : Fragment() {
 
     private fun handleEvent(event: RoutineDetailEvent) {
         when (event) {
-            // There is nothing left to show once the routine is gone. The pet detail screen behind
-            // this one already observes the database, so its list updates by itself.
+            // There is nothing left to show once the routine is gone.
             is RoutineDetailEvent.Deleted -> findNavController().navigateUp()
         }
     }
@@ -202,8 +164,6 @@ class RoutineDetailFragment : Fragment() {
             }
 
             // The listener is detached before the state is applied and reattached afterwards.
-            // Without that, reflecting the database's value back onto the switch would fire the
-            // listener and write it straight back again — a write for every read.
             binding.activeSwitch.setOnCheckedChangeListener(null)
             binding.activeSwitch.isChecked = routine.isActive
             binding.activeSwitch.setOnCheckedChangeListener { _, isChecked ->

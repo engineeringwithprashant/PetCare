@@ -5,10 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Unit tests for [CodeEntry], the keypad rules behind the reusable code-entry component (used by two-factor):
- * digits fill left to right, backspace clears the last, and the code is complete at exactly six.
- */
+/** Unit tests for [CodeEntry], the keypad rules behind the reusable code-entry component (used by two-factor). */
 class CodeEntryTest {
 
     /** Types [digits] one key press at a time, as the keypad would. */
@@ -54,8 +51,7 @@ class CodeEntryTest {
     fun `the code is complete only at six digits`() {
         assertFalse(CodeEntry.isComplete(type(1, 2, 3, 4, 5)))
         assertTrue(CodeEntry.isComplete(type(1, 2, 3, 4, 5, 6)))
-        // Completing and then deleting one digit makes it incomplete again, which is what disables
-        // the verify button a second time.
+        // Completing and then deleting one digit makes it incomplete again.
         assertFalse(CodeEntry.isComplete(CodeEntry.backspace(type(1, 2, 3, 4, 5, 6))))
     }
 }

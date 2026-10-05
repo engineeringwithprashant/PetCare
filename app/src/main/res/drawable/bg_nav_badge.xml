@@ -1,24 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The pill behind the Tasks tab's open-task count.
-
-    Two states, because the badge sits on two completely different grounds. On an inactive tab it is
-    a red dot on the bar's pale slab — an alert, asking to be noticed. On the active tab it is
-    already inside the pill the user has just pressed, where red would read as an error in the
-    control rather than as a count, so it becomes the pill's own inverse.
-
-    The badge takes its state from the tab around it: the TextView is declared with
-    duplicateParentState, so the tab's `isSelected` reaches this selector with no code involved. See
-    view_nav_tab.xml.
-
-    The radius is far larger than the badge is tall, which is how a shape is made fully round at
-    whatever width its text gives it — a fixed radius would leave the ends square once the count
-    reached two digits.
--->
+<!-- The pill behind the Tasks tab's open-task count. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- On the active pill. Ordered first: Android takes the first item whose states all match, so a
-         catch-all above this one would swallow it and the badge would stay red. -->
+    <!-- On the active pill. Ordered first: Android takes the first item whose states all match. -->
     <item android:state_selected="true">
         <shape android:shape="rectangle">
             <solid android:color="?attr/colorNavBadgeActive" />

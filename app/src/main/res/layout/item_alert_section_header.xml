@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    A group heading in the notifications list: "TODAY", then "EARLIER".
-
-    A single TextView rather than a container holding one, because unlike the Tasks tab's headers
-    (item_task_section_header.xml) there is no count and no rule to lay out beside it — the heading's
-    whole job is to name the group underneath.
-
-    PetCare.Notifications.SectionLabel is the app's shared quiet heading — small, upper-cased by the
-    style, widely letter-spaced and muted, in the monospace face used for every micro-label in the app
-    — set to this screen's own smaller scale, which is a step below the rest of the app because a
-    notification list is skimmed rather than read (see the Notifications block in dimens.xml). Quiet on
-    purpose either way: the alert cards below are the subject, and a full-sized heading above them
-    would compete with the sentences they carry.
-
-    The margins are the group's spacing: a wide gap above separates it from the cards of the previous
-    group, a tight one below ties it to its own. A RecyclerView has no gap attribute of its own, so
-    spacing between rows is always a margin on the row.
-
-    accessibilityHeading lets TalkBack users jump from one group to the next instead of walking
-    through every card.
--->
+<!-- A group heading in the notifications list: "TODAY", then "EARLIER". -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/alertSectionLabel"

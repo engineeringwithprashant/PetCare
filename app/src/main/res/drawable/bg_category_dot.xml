@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The small coloured square beside each category in the Money tab's legend.
-
-    White with no colour of its own: ExpenseAdapter tints it with the category's colour, the same
-    colour the category's segment has in the bar above, so one drawable serves all nine categories and
-    a dot can never disagree with its segment. See bg_pill.xml for why a tinted shape starts from
-    white.
-
-    A softly rounded square rather than a circle, to echo the rounded segments of the bar it keys.
--->
+<!-- The small coloured square beside each category in the Money tab's legend. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

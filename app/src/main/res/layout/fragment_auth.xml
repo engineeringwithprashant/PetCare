@@ -1,36 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The log in / register screen (AuthFragment).
-
-    **One screen, two forms.** Both modes share the header, the "OR" divider, the Google button and the
-    footer link, and differ only in the block of fields between. So both blocks are laid out here, one
-    above the other, and AuthFragment shows one and hides the other (visibility GONE) according to the
-    mode in AuthViewModel. Hiding rather than removing is what makes "switching preserves anything
-    already typed" work for free: a GONE EditText keeps its text, and since every field has its own id,
-    Android also saves and restores that text across rotation without any code.
-
-    **How the user moves between the two.** A line at the foot of each form — "New to PetCare? Create
-    an account", and its counterpart back — rather than the segmented toggle that used to sit above the
-    fields. Log in is the screen almost everyone arriving here wants, and a toggle across the top gave
-    registering equal billing at the point where a returning user's eye should be going straight to the
-    email field. The link at the bottom is where someone who has *finished* reading the form and found
-    nothing for them will look.
-
-    **The locked panel.** After five wrong passwords for one address, the whole form is replaced by
-    view_auth_locked.xml — see the note at the top of that file. Everything between the header and the
-    end of the page is therefore wrapped in `authContent`, so the fragment can hide the form, the
-    divider, the Google button and the footer in one move rather than six.
-
-    **Why a ScrollView.** The register form is taller than most phones — the mockup itself is drawn in
-    two halves — and the keyboard takes up to half the screen on top of that. MainActivity pads the
-    window by the keyboard's height, and the ScrollView is what lets the column then scroll the focused
-    field into view.
-
-    **Why LinearLayout inside.** The page is a single column where each element simply sits below the
-    last; the only side-by-side arrangements (the helper/link row, the divider, the consent row) are
-    small horizontal LinearLayouts. A ConstraintLayout would express the same thing with a chain of
-    constraints per view and gain nothing.
--->
+<!-- The log in / register screen (AuthFragment). -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -44,9 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Logo, name, tagline, and this mode's heading and subtitle. The heading and subtitle are
-             hidden while the account is locked: the dark panel below carries its own, and two
-             headings stacked would read as two screens at once. -->
+        <!-- Logo, name, tagline, and this mode's heading and subtitle. -->
         <include
             android:id="@+id/header"
             layout="@layout/view_auth_header" />
@@ -67,8 +34,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- labelFor ties the label to its field, so TalkBack reads "Email or phone" when the
-                     field is focused, even though the field itself shows no floating label. -->
+                <!-- labelFor ties the label to its field, so TalkBack reads "Email or phone". -->
                 <TextView
                     style="@style/PetCare.Auth.FieldLabel"
                     android:layout_width="wrap_content"
@@ -76,12 +42,7 @@
                     android:labelFor="@id/identifierInput"
                     android:text="@string/login_identifier_label" />
 
-                <!-- Accepts either an email or a phone number, so the input type is plain text with
-                     autofill hints for both — the keyboard must allow letters and "@".
-
-                     AuthFragment also watches this field's text, which no other field on the screen
-                     needs: the failed-attempt count and the lock belong to the address being typed,
-                     so they have to follow it. See AuthViewModel.onIdentifierChanged. -->
+                <!-- Accepts either an email or a phone number. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/identifierLayout"
                     style="@style/PetCare.Auth.Field"
@@ -106,17 +67,7 @@
                     android:labelFor="@id/loginPasswordInput"
                     android:text="@string/login_password_label" />
 
-                <!-- endIconMode="password_toggle" puts the eye icon inside the right edge of the
-                     box. Material swaps the icon between "eye" and "eye with a stroke through it" as
-                     the field is revealed and hidden, so the icon always shows the current state, and
-                     each field keeps its own toggle — revealing one never reveals another.
-
-                     Showing a password on request is not a weakening: it is the standard answer to
-                     typos in a masked field, it is the user's own choice made on their own screen,
-                     and the alternative — typing a long password blind — reliably produces *weaker*
-                     passwords, because people pick ones that are easy to type.
-
-                     actionDone on the keyboard submits the form, wired in AuthFragment. -->
+                <!-- endIconMode="password_toggle" puts the eye icon inside the right edge of the box. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/loginPasswordLayout"
                     style="@style/PetCare.Auth.Field"
@@ -142,10 +93,7 @@
                     android:layout_marginTop="@dimen/auth_label_gap"
                     android:text="@string/login_password_helper" />
 
-                <!-- The wrong-password warning, between the helper line and the reset link exactly as
-                     the mockups place it: directly under the field it is about, and directly above
-                     the way out of the problem it describes. Starts GONE and takes no space until
-                     AuthFragment has something to report. -->
+                <!-- The wrong-password warning. -->
                 <include
                     android:id="@+id/loginAlert"
                     layout="@layout/view_auth_alert"
@@ -154,10 +102,7 @@
                     android:layout_marginTop="@dimen/spacing_sm"
                     android:visibility="gone" />
 
-                <!-- layout_gravity="end" right-aligns the link within the column (and flips to the
-                     left in right-to-left languages, which is why "end" rather than "right"). The
-                     negative end margin cancels the button's own inner padding so its text lines up
-                     with the fields' right edge. -->
+                <!-- layout_gravity="end" right-aligns the link within the column. -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/forgotPasswordButton"
                     style="@style/PetCare.Auth.TextLink"
@@ -176,8 +121,7 @@
                     android:text="@string/login_submit" />
             </LinearLayout>
 
-            <!-- ============================ Register fields ============================
-                 Starts GONE; AuthFragment reveals it when the footer link switches modes. -->
+            <!-- ============================ Register fields ============================ -->
 
             <LinearLayout
                 android:id="@+id/registerForm"
@@ -243,35 +187,14 @@
                     android:labelFor="@id/phoneInput"
                     android:text="@string/register_phone_label" />
 
-                <!--
-                    The phone number: a country selector and the local number beside it.
-
-                    **Why two boxes rather than one.** A number only means anything against a country
-                    — how many digits it has, which prefixes exist, what it looks like written
-                    internationally — so asking for the country explicitly is what lets the form check
-                    the number properly instead of guessing, and what lets it be stored in one
-                    canonical international form. The behaviour behind the pair (the country chooser,
-                    the length cap, the inline error) is ui/common/PhoneNumberInput.kt, shared with
-                    every other phone field in the app.
-
-                    A horizontal LinearLayout: the selector at a fixed width so the number box always
-                    starts in the same place (see phone_country_field_width in dimens.xml), and the
-                    number taking the rest with width 0 + weight 1.
-
-                    baselineAligned="false" for the reason set out on the consent row below — a
-                    baseline-aligning row measures a weighted child before it knows its width, which
-                    with two text fields of different content leaves the row the wrong height.
-                -->
+                <!-- The phone number: a country selector and the local number beside it. -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:baselineAligned="false"
                     android:orientation="horizontal">
 
-                    <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it
-                         unfocusable, so it can never summon the keyboard, and gives it a spoken
-                         description naming the country in full — the label itself is a flag and a
-                         number, which a screen reader cannot usefully read out. -->
+                    <!-- Not typed into: tapping it opens the country list. -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/phoneCountryLayout"
                         style="@style/PetCare.Auth.Field"
@@ -287,9 +210,7 @@
                             tools:text="🇳🇵 +977" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- inputType="phone" brings up the dial-pad keyboard. The number of digits it
-                         will accept is capped per country by PhoneNumberInput, so an over-long number
-                         cannot be typed at all. -->
+                    <!-- inputType="phone" brings up the dial-pad keyboard. -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/phoneLayout"
                         style="@style/PetCare.Auth.Field"
@@ -311,10 +232,7 @@
 
                 </LinearLayout>
 
-                <!-- A standalone helper line rather than TextInputLayout's helperText, because the
-                     mockup sets it in the mono helper face, and an error on the field should appear
-                     *above* this note (as TextInputLayout's own error line does) rather than replace
-                     it. -->
+                <!-- A standalone helper line rather than TextInputLayout's helperText. -->
                 <TextView
                     style="@style/PetCare.Auth.Helper"
                     android:layout_width="wrap_content"
@@ -329,15 +247,7 @@
                     android:labelFor="@id/registerPasswordInput"
                     android:text="@string/register_password_label" />
 
-                <!-- The "At least 8 characters" placeholder is set by AuthFragment from the same
-                     constant the validation uses. The eye icon works exactly as on the log in field
-                     above, and independently of it and of the confirmation field below: each
-                     TextInputLayout owns its own toggle and its own masked/revealed state.
-
-                     The maximum length is applied by AuthFragment rather than written here, from the
-                     same AuthValidation constant the rule uses — a number typed into the layout could
-                     drift from the one enforced, and a field that accepted more than the form does
-                     would refuse a paste only after the user pressed the button. -->
+                <!-- The "At least 8 characters" placeholder is set by AuthFragment from the same constant. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/registerPasswordLayout"
                     style="@style/PetCare.Auth.Field"
@@ -346,9 +256,7 @@
                     app:endIconContentDescription="@string/cd_toggle_password_visibility"
                     app:endIconMode="password_toggle">
 
-                    <!-- textPassword rather than textNewPassword: this field is revealed by the eye
-                         icon beside it, and on some keyboards textNewPassword suppresses that in
-                         favour of the keyboard's own suggestion flow. -->
+                    <!-- textPassword rather than textNewPassword. -->
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/registerPasswordInput"
                         style="@style/PetCare.Auth.FieldInput"
@@ -360,11 +268,7 @@
                         tools:hint="At least 8 characters" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- The six rules, ticking off live as the password is typed. Directly under the
-                     field it describes and above the confirmation, which is where someone inventing a
-                     password is already looking. See ui/common/PasswordChecklistView.kt for why the
-                     rules are shown while the password is being chosen rather than reported after it
-                     has been rejected. -->
+                <!-- The six rules, ticking off live as the password is typed. -->
                 <com.prash.petcare.ui.common.PasswordChecklistView
                     android:id="@+id/registerPasswordChecklist"
                     android:layout_width="match_parent"
@@ -397,28 +301,7 @@
                         android:inputType="textPassword" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!--
-                    The consent row: a checkbox and the sentence beside it.
-
-                    The sentence is a separate TextView rather than the checkbox's own text because it
-                    contains a link ("terms"). AuthFragment makes tapping the rest of the sentence
-                    toggle the box, and tapping the link open the terms instead — see bindConsentText().
-
-                    gravity="top" on the row keeps the box aligned with the first line when the
-                    sentence wraps to two, as it does in the mockup. The checkbox's minimum size is
-                    removed so it sits tight against the text; Material's checked colour is the
-                    theme's yellow already.
-
-                    **baselineAligned="false" is load-bearing, not tidiness.** A horizontal
-                    LinearLayout that aligns its children on their baselines measures a *weighted*
-                    child before it knows how wide that child will be, and then keeps the height from
-                    that first measurement. The sentence below is weighted, so it was measured as one
-                    line at full width, wrapped to two when it was actually laid out, and the row kept
-                    the one-line height — leaving the second line to spill out under the row and
-                    behind the "CREATE ACCOUNT" button. Switching baseline alignment off makes the row
-                    take its height from the wrapped text, which is what lets it grow with a longer
-                    translation or a larger font scale instead of overlapping.
-                -->
+                <!-- The consent row: a checkbox and the sentence beside it. -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -456,8 +339,7 @@
                     tools:text="@string/error_consent_required"
                     tools:visibility="visible" />
 
-                <!-- A clear gap above the button, so the consent sentence still reads as a separate
-                     thing to agree to once it has wrapped to two or three lines. -->
+                <!-- A clear gap above the button. -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/registerButton"
                     style="@style/PetCare.Auth.PrimaryButton"
@@ -466,8 +348,7 @@
                     android:text="@string/register_submit" />
             </LinearLayout>
 
-            <!-- Shown only while a sign-in or sign-up is being checked. GONE takes no space, so the
-                 layout does not jump when it appears. -->
+            <!-- Shown only while a sign-in or sign-up is being checked. -->
             <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/progressIndicator"
                 android:layout_width="match_parent"
@@ -479,8 +360,7 @@
 
             <!-- ============================ Shared footer ============================ -->
 
-            <!-- "—— OR ——": two weighted hairlines with the label between them, so the lines stretch
-                 to fill whatever width the label leaves. -->
+            <!-- "—— OR ——": two weighted hairlines with the label between them. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -499,10 +379,7 @@
                 <View style="@style/PetCare.Auth.DividerLine" />
             </LinearLayout>
 
-            <!-- "Continue with Google", shared by both forms. It opens Google's account picker through
-                 Credential Manager (ui/auth/GoogleSignInLauncher.kt), and the account chosen there
-                 signs in to Firebase. On the register form it needs the terms ticked, like "Create
-                 account". It is disabled with the other buttons while a sign-in is running. -->
+            <!-- "Continue with Google". -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/googleButton"
                 style="@style/PetCare.Auth.GoogleButton"
@@ -510,11 +387,7 @@
                 android:layout_marginTop="@dimen/spacing_md"
                 android:text="@string/auth_continue_with_google" />
 
-            <!-- The way to the other form, at the very foot of the page: "New to PetCare? Create an
-                 account" on log in, and "Already have an account? Log in" on register. The sentence is
-                 one TextView with only its last words tappable — AuthFragment attaches the link to the
-                 range marked by an <annotation> in the string, the same technique as the consent
-                 sentence above, so a translation can place the link wherever its grammar needs it. -->
+            <!-- The way to the other form, at the very foot of the page: "New to PetCare? -->
             <TextView
                 android:id="@+id/switchFormText"
                 style="@style/PetCare.Auth.SwitchFormText"
@@ -525,8 +398,7 @@
 
         </LinearLayout>
 
-        <!-- The locked screen, in place of everything above. Starts GONE and takes no space; see the
-             note at the top of view_auth_locked.xml. -->
+        <!-- The locked screen, in place of everything above. Starts GONE and takes no space. -->
         <include
             android:id="@+id/lockedPanel"
             layout="@layout/view_auth_locked"

@@ -10,23 +10,7 @@ import com.prash.petcare.data.local.entity.SyncEntityType
 import com.prash.petcare.data.local.entity.TaskCategory
 import com.prash.petcare.data.local.entity.UserRole
 
-/**
- * Teaches Room how to store the app's enum types in SQLite.
- *
- * SQLite only understands a handful of primitive column types, so an enum constant such as
- * [PetSpecies.DOG] cannot be saved as-is. Each pair of methods below tells Room to write the
- * constant's [Enum.name] ("DOG") into a text column, then rebuild the constant when reading.
- *
- * Names are used rather than [Enum.ordinal] positions on purpose: ordinals are just index
- * numbers, so inserting a new constant in the middle of an enum would silently re-point every
- * existing row at the wrong value. Names survive reordering.
- *
- * The class is registered once on the database with `@TypeConverters`, which makes these
- * conversions available to every entity and DAO query.
- *
- * Dates need no converter here — they are already stored as `Long` epoch milliseconds, a type
- * SQLite handles natively.
- */
+/** Teaches Room how to store the app's enum types in SQLite. */
 class Converters {
 
     @TypeConverter

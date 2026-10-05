@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The tick and the ring of a task card's check button (used for both iconTint and strokeColor).
-
-    Ticked: near-black, the colour guaranteed legible on the yellow fill, in both themes — the fill is
-    the fixed accent, so its content must be fixed too. Not ticked: a muted outline with the tick
-    faint inside it, hinting at what a tap will do without looking already done.
--->
+<!-- The tick and the ring of a task card's check button (used for both iconTint and strokeColor). -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:alpha="0.5" android:color="@color/on_accent_yellow" android:state_checked="true" android:state_enabled="false" />
     <item android:color="@color/on_accent_yellow" android:state_checked="true" />

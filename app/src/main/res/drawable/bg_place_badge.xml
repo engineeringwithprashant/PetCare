@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The rounded square behind a saved place's category badge ("Vet", "Grm") on the Places tab.
-
-    White with no colour of its own, so the backgroundTint SavedPlaceAdapter applies — the accent for
-    the featured place, a muted surface for the rest — comes through unchanged; see bg_pill.xml for why
-    a tinted drawable must start from white.
--->
+<!-- The rounded square behind a saved place's category badge ("Vet", "Grm") on the Places tab. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

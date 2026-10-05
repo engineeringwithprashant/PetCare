@@ -19,18 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-/**
- * The parts of the routine form the ViewModel owns.
- *
- * The typed name lives in its EditText, which restores itself across rotation. What is held here is
- * the chosen schedule, which is a pair of toggle buttons rather than a field, plus the mode, error and
- * progress the screen has to display.
- *
- * @property isEditMode True when changing an existing routine, false when creating one. Controls the
- *   screen title and the save button's wording.
- * @property repeatUnit Whether the routine runs every day or every week.
- * @property isSaving True while a load or write is in flight, so the button can be disabled.
- */
+/** The parts of the routine form the ViewModel owns. */
 data class RoutineFormState(
     val isEditMode: Boolean = false,
     val repeatUnit: RepeatUnit = RepeatUnit.DAY,
@@ -41,12 +30,7 @@ data class RoutineFormState(
 /** A one-off occurrence the routine form reacts to exactly once. */
 sealed interface RoutineEvent {
 
-    /**
-     * Carries a loaded routine's name so the fragment can fill in the text field.
-     *
-     * An event rather than state for the same reason as the pet form's prefill: written on every
-     * state update, it would overwrite whatever the user was part-way through typing.
-     */
+    /** Carries a loaded routine's name so the fragment can fill in the text field. */
     data class PrefillForm(val title: String) : RoutineEvent
 
     /** The routine was created or updated; the screen should close. */
@@ -56,22 +40,7 @@ sealed interface RoutineEvent {
     data class Error(@param:StringRes val messageRes: Int) : RoutineEvent
 }
 
-/**
- * Backs the care routine form, in both its modes: creating a routine and editing one.
- *
- * A routine is the schedule that a group of care tasks share — "every morning", "every Sunday".
- * Which mode the form is in is decided by [routineId]: [NO_ROUTINE_ID] creates a routine for
- * [petId]; anything else loads that routine for editing. One ViewModel rather than two, because the
- * validation and the schedule toggle are identical and splitting them would only duplicate both.
- *
- * Only the name and schedule are edited here. The tasks inside a routine are managed from the
- * routine's own screen, and pausing it is a one-tap action on the pet detail screen.
- *
- * @param careRoutineRepository Data access, injected so tests can supply a fake.
- * @param petId The pet a new routine will belong to. Ignored in edit mode, where the loaded routine
- *   already says which pet it belongs to.
- * @param routineId Which routine to edit, or [NO_ROUTINE_ID] to create one.
- */
+/** Backs the care routine form, in both its modes: creating a routine and editing one. */
 class RoutineViewModel(
     private val careRoutineRepository: CareRoutineRepository,
     private val petId: Long,
@@ -80,15 +49,11 @@ class RoutineViewModel(
 
     private val isEditMode: Boolean = routineId != NO_ROUTINE_ID
 
-    /**
-     * The routine as loaded from the database, kept so a save can preserve everything the form does
-     * not show — its id, pet, start date, paused state and creation time — by copying it.
-     */
+    /** The routine as loaded from the database, kept so a save can preserve everything the form does not show. */
     private var loadedRoutine: CareRoutine? = null
 
     private val _formState = MutableStateFlow(
-        // In edit mode the save button starts disabled until the routine has loaded, so an early
-        // tap cannot create a duplicate instead of updating the original.
+        // In edit mode the save button starts disabled until the routine has loaded.
         RoutineFormState(isEditMode = isEditMode, isSaving = isEditMode)
     )
     val formState: StateFlow<RoutineFormState> = _formState.asStateFlow()
@@ -142,8 +107,7 @@ class RoutineViewModel(
             return
         }
 
-        // In edit mode with nothing loaded there is nothing to update; the load failure has already
-        // been reported.
+        // In edit mode with nothing loaded there is nothing to update; the load failure has already been reported.
         if (isEditMode && loadedRoutine == null) return
 
         viewModelScope.launch {
@@ -153,9 +117,7 @@ class RoutineViewModel(
             val repeatUnit = _formState.value.repeatUnit
 
             if (existing != null) {
-                // `copy` keeps the start date untouched, deliberately. The schedule is counted from
-                // that date, so a weekly routine keeps landing on the weekday it always has — moving
-                // it to today would silently shift every future occurrence.
+                // `copy` keeps the start date untouched, deliberately.
                 careRoutineRepository.updateRoutine(
                     existing.copy(title = trimmedTitle, repeatUnit = repeatUnit)
                 )
@@ -164,14 +126,10 @@ class RoutineViewModel(
                     CareRoutine(
                         petId = petId,
                         title = trimmedTitle,
-                        // The form offers only "every day" and "every week", so the interval is
-                        // always one. The entity supports larger gaps — every three weeks, say — for
-                        // later.
+                        // The form offers only "every day" and "every week", so the interval is always one.
                         repeatInterval = 1,
                         repeatUnit = repeatUnit,
-                        // Anchored to midnight today. The schedule is worked out by counting whole
-                        // days from this point, so a mid-afternoon creation time would make a weekly
-                        // routine land awkwardly between days.
+                        // Anchored to midnight today. The schedule is worked out by counting whole days from this point.
                         startDate = CareSchedule.startOfToday()
                     )
                 )

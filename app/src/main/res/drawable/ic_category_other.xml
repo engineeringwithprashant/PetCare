@@ -1,6 +1,4 @@
-<!--
-    Three dots, marking the OTHER task category — anything the fixed categories do not cover.
--->
+<!-- Three dots, marking the OTHER task category — anything the fixed categories do not cover. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

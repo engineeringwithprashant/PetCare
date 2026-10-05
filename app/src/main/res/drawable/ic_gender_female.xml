@@ -1,22 +1,11 @@
-<!--
-    The Venus symbol (♀): a ring with a cross beneath it. Shown beside the species chip on the pet
-    detail screen for a female pet.
-
-    A vector path rather than the Unicode character "♀", for the reason given in
-    ic_gender_male.xml: the character's appearance depends on the device's fonts, a path does not.
-
-    White fill, tinted pink (@color/gender_female) by the ImageView that shows it. fillType="evenOdd"
-    leaves the centre of the ring empty — see ic_gender_male.xml.
--->
+<!-- The Venus symbol (♀): a ring with a cross beneath it. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- First sub-path: the ring's outer edge (radius 5.5, centred at (12, 9.5)) continuing down
-         into the stem and the cross bar below it. Second: the ring's inner edge (radius 3.5). The
-         standard Material "female" glyph. -->
+    <!-- First sub-path: the ring's outer edge. -->
     <path
         android:fillColor="@android:color/white"
         android:fillType="evenOdd"

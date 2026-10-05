@@ -1,33 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Pet detail: one animal's photo card, what to know about them, and the care routines set up for
-    them. Rebuilt to match design/pet-detail-mockup.png.
-
-    From top to bottom:
-      - **The header** — monogram, the pet's first name, theme toggle and pet count — shared with the
-        tabs through <include>. It stays fixed while the page scrolls under it.
-      - **The photo card** — the pet's photo filling a large dark card, a gradient over its lower
-        half, a round back button and the species chip (with a gender symbol beside it) at the top,
-        and the pet's full name with age, weight and today's-status pills across the bottom.
-      - **The action row** — CHECKLIST, EXPENSES, EDIT PET.
-      - **The "About" card** — five label / value rows.
-      - **Care routines** — a heading with a small "+" button, then one card per routine, or an empty
-        state.
-
-    The bottom navigation bar is not part of this layout; it belongs to activity_main.xml and stays
-    exactly as it is on the tabs.
-
-    **Why a NestedScrollView holding a RecyclerView with wrap_content height.** The whole page scrolls
-    as one, routines included, so the list must not become a small scrolling box inside a scrolling
-    page. nestedScrollingEnabled="false" hands scrolling to the parent and lets the list lay out in
-    full. The cost is that every routine card is inflated at once instead of being recycled, which is
-    fine for the handful of routines a pet realistically has — the Pets tab, whose list has no such
-    bound, is built the other way round.
-
-    **Why a vertical LinearLayout at the root.** The header takes the height it needs and the scroll
-    view takes the rest (0dp with layout_weight="1") — the same structure as fragment_pets.xml, so
-    the header sits in exactly the same place when the user taps from the Pets tab into a pet.
--->
+<!-- Pet detail: one animal's photo card, what to know about them, and the care routines set up for them. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -36,14 +8,12 @@
     android:orientation="vertical"
     tools:context=".ui.pet.PetDetailFragment">
 
-    <!-- The shared header. Its android:id makes ViewBinding expose it as the nested binding
-         `binding.header`. The fragment sets its title to the pet's first name. -->
+    <!-- The shared header. Its android:id makes ViewBinding expose it as the nested binding `binding.header`. -->
     <include
         android:id="@+id/header"
         layout="@layout/view_tab_header" />
 
-    <!-- clipToPadding="false" lets the last routine card scroll up *through* the bottom padding rather
-         than stopping at its edge, so it can clear the bottom navigation bar. -->
+    <!-- clipToPadding="false" lets the last routine card scroll up through the bottom padding. -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -59,14 +29,7 @@
             android:paddingTop="@dimen/spacing_xs"
             android:paddingEnd="@dimen/screen_padding">
 
-            <!-- ============================ Photo card ============================
-                 Dark in both themes, like the Home tab's large pet card: everything written on it
-                 sits on a photograph, and white text over a dark scrim is the only pairing that stays
-                 legible in either mode. See the pet-card note in colors.xml.
-
-                 Not clickable — unlike the list cards, this one is already the destination — so it
-                 declares no ripple and no focus. The larger pet-card corner is applied as a shape
-                 overlay so the photo is clipped to the same outline. -->
+            <!-- ============================ Photo card ============================ -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/heroCard"
                 android:layout_width="match_parent"
@@ -76,29 +39,12 @@
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.XLarge"
                 app:strokeWidth="0dp">
 
-                <!--
-                    A ConstraintLayout used as a stack: the photo, the scrim and the marks on top all
-                    anchor to the same parent, and they are painted in the order they are declared —
-                    photo first, scrim over it, text and buttons over that. Declaring the text before
-                    the scrim would bury it.
-                -->
+                <!-- A ConstraintLayout used as a stack: the photo. -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <!-- The photograph, and the view that now decides how tall this card is.
-
-                         Both dimensions are 0dp and the ratio resolves them: the width fills the
-                         card, the height follows at 4:3 — pet_photo_aspect_ratio, the one shape
-                         every pet photo is framed and drawn in, so the hero shows exactly what the
-                         user cropped rather than trimming it again. It replaces the card's old fixed
-                         300dp, which was within a few dp of the same thing on a normal phone but
-                         could not adapt to a wider screen.
-
-                         centerCrop is kept for images that are not already this shape: a photo saved
-                         before the app cropped on the way in, and the paw-print placeholder. The
-                         dark ground shows behind that placeholder when the pet has no photo. The
-                         bitmap is loaded off the main thread by ui/common/PetPhotoBinder.kt. -->
+                    <!-- The photograph, and the view that now decides how tall this card is. -->
                     <ImageView
                         android:id="@+id/petPhotoImage"
                         android:layout_width="0dp"
@@ -112,23 +58,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <!--
-                        The dark gradient over the lower half of the photo. It fades in rather than
-                        starting as a hard band — see bg_pet_card_scrim.xml.
-
-                        **Why this no longer uses a midline guideline.** A guideline placed at 50% is
-                        a percentage *of the parent*, and the parent used to be a card with a height
-                        written into the layout. Now the photo's ratio decides that height, so a
-                        child measured against the parent while the parent is still being measured
-                        from a child is the kind of circularity ConstraintLayout resolves
-                        unpredictably. Anchoring top and bottom to the photo instead states the
-                        dependency the right way round — the scrim follows the photo, and the photo
-                        follows nothing.
-
-                        height_percent="0.5" with a vertical bias of 1 is what "the lower half" now
-                        means: half the height of the span it is constrained across, pushed to the
-                        bottom of it.
-                    -->
+                    <!-- The dark gradient over the lower half of the photo. -->
                     <View
                         android:layout_width="0dp"
                         android:layout_height="0dp"
@@ -140,9 +70,7 @@
                         app:layout_constraintTop_toTopOf="@id/petPhotoImage"
                         app:layout_constraintVertical_bias="1.0" />
 
-                    <!-- The round back button, top-left over the photo. Returns to wherever the pet
-                         was opened from. Its 48dp view carries a 4dp inset, so an 8dp margin puts the
-                         visible disc 12dp from the card's corner. -->
+                    <!-- The round back button. -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/backButton"
                         style="@style/PetCare.PetDetail.BackButton"
@@ -153,10 +81,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <!-- The species chip, top-right: small, upper-case, yellow. Vertically centred on
-                         the back button (top and bottom constrained to it) so the two marks along the
-                         card's top edge share a line. Upper-cased by its style rather than in the
-                         string, so the label stays correct in a language where capitals are wrong. -->
+                    <!-- The species chip, top-right: small, upper-case, yellow. -->
                     <TextView
                         android:id="@+id/speciesChip"
                         style="@style/PetCare.SpeciesChip.Accent"
@@ -168,11 +93,7 @@
                         app:layout_constraintTop_toTopOf="@id/backButton"
                         tools:text="Cat" />
 
-                    <!-- The Mars or Venus symbol, immediately to the start side of the species chip
-                         and centred on it. The fragment sets the icon, its blue or pink tint and its
-                         spoken description — and hides it altogether when the gender is unknown, in
-                         which case the chip simply stands alone. The contentDescription is @null
-                         only until then: it depends on the pet, so it cannot be fixed here. -->
+                    <!-- The Mars or Venus symbol. -->
                     <ImageView
                         android:id="@+id/genderBadge"
                         style="@style/PetCare.PetDetail.GenderBadge"
@@ -186,18 +107,7 @@
                         tools:tint="@color/gender_female"
                         tools:visibility="visible" />
 
-                    <!--
-                        The pet's full name, large and bold, across the scrim.
-
-                        Anchored *upwards* from the pill row rather than the pills being placed under
-                        it: the pills sit a fixed distance from the card's bottom edge and the name
-                        grows upwards from there, so a one-line and a two-line name both leave the
-                        pills in the same place. Width 0dp between the card's edges, so a long name
-                        wraps (to two lines at most) instead of running off the card.
-
-                        accessibilityHeading lets TalkBack users jump straight to it; the header's
-                        title is only the first name.
-                    -->
+                    <!-- The pet's full name, large and bold, across the scrim. -->
                     <TextView
                         android:id="@+id/petNameText"
                         style="@style/PetCare.PetDetail.Name"
@@ -213,11 +123,7 @@
                         tools:targetApi="p"
                         tools:text="Krishala Pant Thapa Baby" />
 
-                    <!-- The three pills. They carry no constraints of their own: the Flow below
-                         positions them. Age and weight use the translucent dark pill, since they are
-                         standing facts; today's status uses the yellow accent pill, because it is the
-                         one thing on the card that changes day to day. The fragment hides the age or
-                         weight pill when that fact was never recorded. -->
+                    <!-- The three pills. They carry no constraints of their own: the Flow below positions them. -->
                     <TextView
                         android:id="@+id/agePill"
                         style="@style/PetCare.Pill.OnPhoto"
@@ -239,19 +145,7 @@
                         android:layout_height="wrap_content"
                         tools:text="Nothing due today" />
 
-                    <!--
-                        Lays out the three pills in a row that wraps.
-
-                        A ConstraintLayout Flow helper rather than a horizontal LinearLayout. "3 years
-                        old", "24.5 kg" and "Nothing due today" together are very nearly the width of
-                        the card on a small phone, and at a larger font size they are wider. A
-                        LinearLayout would squeeze the last pill until its text was cut off; Flow in
-                        "chain" wrap mode instead moves whatever does not fit onto a second line.
-
-                        horizontalStyle="packed" with a bias of 0 keeps each line's pills together at
-                        the start edge rather than spreading them across the card. Pills the fragment
-                        hides (visibility gone) are skipped, so no gap is left where they were.
-                    -->
+                    <!-- Lays out the three pills in a row that wraps. -->
                     <androidx.constraintlayout.helper.widget.Flow
                         android:id="@+id/pillFlow"
                         android:layout_width="0dp"
@@ -273,14 +167,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ============================ Action row ============================
-                 Three buttons sharing the width equally (0dp + layout_weight="1" each), so the row
-                 lines up with the card above whatever the length of each label. One filled yellow
-                 button and two outlined ones: the checklist is what a user opens this screen for day
-                 to day, so it carries the accent; three filled buttons would give no steer at all.
-
-                 baselineAligned="false" because the buttons are all one height and aligning their
-                 text baselines would cost an extra measuring pass for nothing. -->
+            <!-- ============================ Action row ============================ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -316,16 +203,7 @@
 
             </LinearLayout>
 
-            <!-- ============================ About card ============================
-                 The things a sitter or a vet would need to be told, as a two-column table: a small
-                 upper-case label on the left, the value on the right, hairlines between rows.
-
-                 Every row is always shown. An empty field reads "None recorded" rather than hiding,
-                 so the card has the same shape for every pet and a blank reads as "nobody has told
-                 us" instead of as something that failed to load.
-
-                 The card is the app's default rounded white surface (charcoal in dark mode) with the
-                 pet cards' larger corner, so it pairs with the photo card above. -->
+            <!-- ============================ About card ============================ -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/aboutCard"
                 android:layout_width="match_parent"
@@ -353,15 +231,7 @@
 
                     <View style="@style/PetCare.PetDetail.AboutDivider" />
 
-                    <!--
-                        One row: a horizontal LinearLayout with a fixed-width label and a value taking
-                        the rest (0dp + layout_weight="1").
-
-                        The label's fixed width is what lines every value up in one column down the
-                        card. LinearLayout's default baseline alignment then sets the label level with
-                        the *first line* of the value, so a long dietary note wraps downwards while its
-                        label stays beside its opening words. The four rows below repeat this shape.
-                    -->
+                    <!-- One row: a horizontal LinearLayout with a fixed-width label and a value taking the rest. -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -500,26 +370,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ====================== Vaccination history ======================
-                 What the pet has already been given, and when the next dose of each falls due.
-
-                 **Why it sits here**, between the facts about the animal and the care set up for it:
-                 a vaccination is a fact of the same kind as a date of birth or an allergy — something
-                 true about this pet that a vet or sitter would want — but unlike those it carries a
-                 deadline, so it reads as the bridge between the "About" card above and the routines
-                 below.
-
-                 **The corner is applied as a shape overlay**, not as a bare cardCornerRadius. Every
-                 MaterialCardView in this app already picks up PetCare.Card from the theme, and that
-                 style names a shapeAppearance of its own — so setting only a radius would leave two
-                 attributes describing the same corner and the component free to resolve either. An
-                 overlay is applied *on top of* the style's shape, which settles it. The radius is the
-                 dashboard's largest, which is the design's 28dp. MaterialCardView clips its content
-                 to that outline, so the rows' edge-to-edge hairlines stop at the curve rather than
-                 running out through it.
-
-                 The status pill and the coloured bar on each row are *derived from the due date every
-                 time the row is drawn*, never stored — see ui/pet/VaccinationStatus.kt. -->
+            <!-- ====================== Vaccination history ====================== -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -531,9 +382,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <!-- The header row: the label takes all the leftover width (0dp + weight), which
-                         pushes the accent pill to the far end. center_vertical centres the two
-                         against each other, since the pill is taller than the label. -->
+                    <!-- The header row: the label takes all the leftover width (0dp + weight). -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -565,9 +414,7 @@
 
                     </LinearLayout>
 
-                    <!-- One row per record (item_vaccination.xml), newest given first. Hidden by the
-                         fragment when the pet has none. nestedScrollingEnabled="false" hands
-                         scrolling to the page, for the reason given at the top of this file. -->
+                    <!-- One row per record (item_vaccination.xml), newest given first. -->
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/vaccinationsRecyclerView"
                         android:layout_width="match_parent"
@@ -576,9 +423,7 @@
                         tools:itemCount="2"
                         tools:listitem="@layout/item_vaccination" />
 
-                    <!-- Shown in the list's place when there are no records. It carries the same
-                         hairline the first row would, so the card keeps its shape either way, and it
-                         says what to add and why rather than only "none yet". -->
+                    <!-- Shown in the list's place when there are no records. -->
                     <LinearLayout
                         android:id="@+id/emptyVaccinationsContainer"
                         android:layout_width="match_parent"
@@ -605,10 +450,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ========================== Care routines ==========================
-                 The heading on the left takes all the leftover width (0dp + weight), which pushes the
-                 small "+" to the far end. gravity="center_vertical" centres the two against each
-                 other, since the button is taller than the text. -->
+            <!-- ========================== Care routines ========================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -625,9 +467,7 @@
                     android:text="@string/pet_detail_routines_title"
                     tools:targetApi="p" />
 
-                <!-- Opens the new-routine form for this pet. It replaces the floating action button
-                     the screen used to have, which covered the bottom of the routine list. The 48dp
-                     view draws a 36dp circle — see PetCare.PetDetail.AddRoutineButton. -->
+                <!-- Opens the new-routine form for this pet. It replaces the floating action button the screen used to have. -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/addRoutineButton"
                     style="@style/PetCare.PetDetail.AddRoutineButton"
@@ -647,10 +487,7 @@
                 tools:itemCount="2"
                 tools:listitem="@layout/item_routine" />
 
-            <!-- Shown in the list's place when the pet has no routines: an icon, a heading, and a
-                 sentence explaining what a routine is and that "+" makes one — more use than a bare
-                 "No routines", which says nothing about what to do next. Both this and the list stay
-                 hidden while loading, so the empty state never flashes up first. -->
+            <!-- Shown in the list's place when the pet has no routines: an icon, a heading. -->
             <LinearLayout
                 android:id="@+id/emptyRoutinesContainer"
                 style="@style/PetCare.EmptyState"

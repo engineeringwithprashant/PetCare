@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One message from the assistant: a light card against the cream page, aligned left.
-
-    **Why the root is a FrameLayout with a card inside**, rather than the card being the root. A
-    message bubble must not stretch to the full width of the list — a three-word answer in a card as
-    wide as the screen reads as a panel, not as something someone said. The frame fills the row and
-    the card inside takes wrap_content with a maximum width, which is what gives the bubble its shape
-    and what lets the user's messages sit on the opposite side using the same structure.
-
-    Its mirror image is item_assistant_user_message.xml; the two are kept as separate files rather
-    than one with a swapped gravity because their colours and corner shapes differ as well as their
-    side, and a single layout reconfigured in code would hide that from anyone reading the XML.
--->
+<!-- One message from the assistant: a light card against the cream page, aligned left. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"

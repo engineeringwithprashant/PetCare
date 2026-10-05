@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The rounded yellow square holding the app's "p" monogram, at the far left of the dashboard
-    header.
-
-    A softened square rather than a circle: it reads as an app mark — the shape a launcher icon
-    takes — where a circle beside a name would read as a user's avatar, which is not what it is.
-
-    The radius is roughly a third of the side. Much less looks like a square with the corners filed
-    off; much more is indistinguishable from a circle at 32dp.
-
-    Filled with the accent directly rather than ?attr/colorPrimary. Both resolve to the same value
-    today, but this mark is the brand rather than an action the user can take, so it should not
-    follow the accent if some later screen's primary is ever re-pointed.
--->
+<!-- The rounded yellow square holding the app's "p" monogram, at the far left of the dashboard header. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The capsule behind anything laid over a map: the Places tab's place-name pill, and the Add a
-    place screen's GPS status chip.
-
-    A *translucent* near-black rather than a solid one. The map underneath stays faintly visible
-    through it, which is what makes the pill read as a label belonging to the map rather than as an
-    opaque card parked on top of it — and at roughly 80% the text behind it is still unreadable, so
-    nothing is lost to the transparency.
-
-    The radius is far larger than the pill can ever be tall, which is how a capsule is drawn with a
-    shape drawable: the corners simply run out of room and meet in a semicircle, so the shape stays
-    a capsule at any text size the user's font-size setting produces.
--->
+<!-- The capsule behind anything laid over a map: the Places tab's place-name pill. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

@@ -1,28 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The Money tab: this month's spending, what it went on, and every expense recorded.
-
-    Top to bottom:
-      - **The header** (monogram, "Expenses", theme toggle, pet count), shared with the other tabs.
-      - **The pet chips** — "All pets", then one per pet. Fixed under the header rather than scrolling
-        away, because they say whose spending the page is showing: scrolling back through a year of
-        receipts should not carry off the answer to "whose are these?".
-      - **One scrolling list** holding the dark total card, the category legend, the "ALL EXPENSES"
-        heading and the expense cards — see ExpenseAdapter.
-      - **The floating action button** for recording an expense.
-
-    **This layout serves two screens.** Reached from the bottom bar it is the Money tab. Reached from a
-    pet's detail page it is that animal's spending: the fragment hides the header and the chips, and
-    MainActivity shows the ordinary toolbar with its back arrow instead. See nav_graph.xml.
-
-    **Why one RecyclerView for everything below the chips**, unlike the Places and Tasks tabs' scroll
-    views: those pages hold a bounded handful of items, but an expense list only ever grows. With the
-    card and legend as the first rows of the same list, the whole page scrolls together while the
-    expense cards below still recycle.
-
-    **Why a CoordinatorLayout at the root:** the floating action button floats over the list, and a
-    Snackbar ("Kibble deleted · Undo") anchored to it lifts clear of the button instead of covering it.
--->
+<!-- The Money tab: this month's spending, what it went on, and every expense recorded. -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -41,9 +18,7 @@
             android:id="@+id/header"
             layout="@layout/view_tab_header" />
 
-        <!-- The pet filter: the same horizontally scrolling single-selection chip row as the Tasks
-             tab, built in code by ui/common/FilterChips.kt. The chosen chip is the app's strong
-             "selected" fill — near-black with yellow text in light mode — from PetCare.FilterChip. -->
+        <!-- The pet filter: the same horizontally scrolling single-selection chip row as the Tasks tab. -->
         <HorizontalScrollView
             android:id="@+id/petChipScroll"
             android:layout_width="match_parent"
@@ -63,16 +38,13 @@
 
         </HorizontalScrollView>
 
-        <!-- The list and the empty state share this slot; the fragment shows exactly one. A
-             FrameLayout because the two simply sit on top of each other in the same space. -->
+        <!-- The list and the empty state share this slot; the fragment shows exactly one. -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <!-- clipToPadding="false" with bottom padding is the standard pairing for a list under a
-                 floating action button: the last card can scroll clear of the button, and cards are
-                 still drawn as they pass through the padding rather than cut off at its edge. -->
+            <!-- clipToPadding="false" with bottom padding is the standard pairing for a list under a floating action button. -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/expensesRecyclerView"
                 android:layout_width="match_parent"
@@ -84,8 +56,7 @@
                 android:paddingBottom="@dimen/list_padding_bottom_fab"
                 tools:listitem="@layout/item_expense" />
 
-            <!-- The existing empty state: receipt icon, title and message — or, for an account with no
-                 pets, the pet placeholder and "No pets to show". Worded in code. -->
+            <!-- The existing empty state: receipt icon, title and message — or, for an account with no pets. -->
             <LinearLayout
                 android:id="@+id/emptyExpensesContainer"
                 style="@style/PetCare.EmptyState"
@@ -121,11 +92,7 @@
 
     </LinearLayout>
 
-    <!-- Logs a new expense.
-
-         Raised clear of the floating bottom navigation bar by fab_margin_bottom, for the reason
-         given on that dimension: the button and the bar float over the same corner, so at the
-         standard 16dp gutter the bar sat on top of it. The end margin is unchanged. -->
+    <!-- Logs a new expense. -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addExpenseFab"
         android:layout_width="wrap_content"

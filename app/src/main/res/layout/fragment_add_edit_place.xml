@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Add / edit place form, opened from "+ Add a place" (or a long press on a saved place) on the
-    Places tab.
-
-    One layout serves both modes; the fragment changes the title and shows the delete button when
-    editing, as on the other forms.
-
-    Top to bottom: name, category, area, phone; the opening hours as a pair of time fields; notes; then
-    the **GPS geotag** card, which is the reason this form exists. There are deliberately no latitude
-    or longitude fields — the position is captured from the phone, never typed (see
-    AddEditPlaceViewModel) — so the card shows what was captured and the button that captures it.
-
-    The root is a CoordinatorLayout so the Snackbars this form shows ("Could not get a location fix…")
-    sit above the bottom navigation bar — see fragment_checklist.xml — with a ScrollView inside it,
-    because the form is taller than a small phone once the keyboard is up.
--->
+<!-- Add / edit place form, opened from "+ Add a place" (or a long press on a saved place) on the Places tab. -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -27,9 +12,7 @@
         android:layout_height="match_parent"
         android:fillViewport="true">
 
-        <!-- The bottom padding is deeper than the other three sides because the floating navigation
-             bar is drawn *over* this form — see form_scroll_padding_bottom, which also records what
-             went wrong here without it. -->
+        <!-- The bottom padding is deeper than the other three sides. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -55,8 +38,7 @@
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Category: an exposed dropdown with inputType="none", so the value is always one of the
-                 four PlaceCategory constants the tab's chips filter on — never free text. -->
+            <!-- Category: an exposed dropdown with inputType="none". -->
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
@@ -87,21 +69,7 @@
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!--
-                The place's number: a country selector and the local number beside it.
-
-                Optional — many parks have none — but a number that *is* given is stored in one
-                international form and checked against the country chosen. That matters here because
-                the saved-place row offers to dial this number: a number kept in whatever shape it was
-                typed is a call button that may fail at the moment somebody needs a vet. The behaviour
-                behind the pair is ui/common/PhoneNumberInput.kt, shared with the sign-in and profile
-                forms, and a number saved before this form had a selector is read back into the two
-                boxes on open.
-
-                A horizontal LinearLayout: the selector at a fixed width so the number box always
-                starts in the same place whatever the dialling code, and the number taking the rest
-                (width 0 + weight 1).
-            -->
+            <!-- The place's number: a country selector and the local number beside it. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -109,8 +77,7 @@
                 android:baselineAligned="false"
                 android:orientation="horizontal">
 
-                <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it
-                     unfocusable and gives it a spoken description naming the country in full. -->
+                <!-- Not typed into: tapping it opens the country list. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/phoneCountryLayout"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -127,8 +94,7 @@
                         tools:text="🇳🇵 +977" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- inputType="phone" brings up the dial pad. How many digits it accepts is capped per
-                     country by PhoneNumberInput, so an over-long number cannot be typed at all. -->
+                <!-- inputType="phone" brings up the dial pad. How many digits it accepts is capped per country. -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/phoneInputLayout"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -158,10 +124,7 @@
                 android:layout_marginTop="@dimen/spacing_lg"
                 android:text="@string/place_hours_heading" />
 
-            <!-- Opens and Closes side by side, each half the width through layout_weight — they are
-                 one fact ("8:00 to 20:00") and read best on one line. Tapping either opens a Material
-                 time picker; focusable="true" with the soft keyboard suppressed in code keeps them
-                 reachable by keyboard and switch access without popping up a keyboard. -->
+            <!-- Opens and Closes side by side, each half the width through layout_weight — they are one fact. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -208,8 +171,7 @@
 
             </LinearLayout>
 
-            <!-- One error for the pair rather than one per field, because the problem ("only one of
-                 the two is set") belongs to neither field alone. -->
+            <!-- One error for the pair rather than one per field, because the problem. -->
             <TextView
                 android:id="@+id/hoursErrorText"
                 android:layout_width="match_parent"
@@ -245,22 +207,7 @@
                     android:minLines="2" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- ============================== Location ==============================
-                 The same map picker the Add a place screen uses — see view_location_picker.xml.
-
-                 **What it replaced.** This card used to be a read-out of stored coordinates with a
-                 "Capture current location" button under it, which could do exactly one thing: replace
-                 the saved position with wherever the phone happened to be. Correcting a geotag that
-                 had landed on the wrong side of the road meant standing on the right side of it. The
-                 map opens on the place's own saved coordinates instead, with the pin on the point, so
-                 the position can be kept, dragged, or replaced with the current one — the three things
-                 a person actually wants to do to a saved location — now four, since the picker also
-                 carries a search field: a place whose pin landed in the wrong street can be put right
-                 by typing its name.
-
-                 wrap_content, where this used to ask for the map's height: the picker is a column now
-                 and holds the map's fixed height internally, for the reason given in
-                 fragment_add_place.xml. -->
+            <!-- ============================== Location ============================== -->
             <TextView
                 style="@style/PetCare.SectionLabel"
                 android:layout_width="match_parent"
@@ -289,8 +236,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_md" />
 
-            <!-- The validation message when the form is saved with no location at all — only
-                 reachable when creating rather than editing, since a saved place always has one. -->
+            <!-- The validation message when the form is saved with no location at all — only reachable. -->
             <TextView
                 android:id="@+id/locationErrorText"
                 android:layout_width="match_parent"
@@ -308,8 +254,7 @@
                 android:layout_marginTop="@dimen/spacing_lg"
                 android:text="@string/place_save" />
 
-            <!-- Edit mode only. The theme's error colour marks it as destructive — see
-                 fragment_add_edit_task.xml. -->
+            <!-- Edit mode only. The theme's error colour marks it as destructive. -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/deletePlaceButton"
                 style="@style/Widget.Material3.Button.OutlinedButton"

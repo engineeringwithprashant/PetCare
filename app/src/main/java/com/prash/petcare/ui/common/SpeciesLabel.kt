@@ -4,17 +4,7 @@ import androidx.annotation.StringRes
 import com.prash.petcare.R
 import com.prash.petcare.data.local.entity.PetSpecies
 
-/**
- * Maps a [PetSpecies] to its user-facing label.
- *
- * Kept in the UI layer rather than on the enum itself, so the data layer stays free of Android
- * resource references and remains testable on a plain JVM. It lives in its own file because both
- * the pet list and the add/edit form need it.
- *
- * The `when` has no `else` branch on purpose: Kotlin then requires every constant to be listed, so
- * adding a species to the enum will not compile until a label has been written for it. An `else`
- * would silently show the wrong name instead.
- */
+/** Maps a [PetSpecies] to its user-facing label. */
 @StringRes
 fun PetSpecies.labelRes(): Int = when (this) {
     PetSpecies.DOG -> R.string.species_dog

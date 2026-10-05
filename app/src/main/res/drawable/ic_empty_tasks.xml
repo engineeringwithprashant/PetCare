@@ -1,7 +1,4 @@
-<!--
-    Ticked list, shown in the empty state when a routine has no tasks and when a checklist has
-    nothing due.
--->
+<!-- Ticked list, shown in the empty state when a routine has no tasks and when a checklist has nothing due. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

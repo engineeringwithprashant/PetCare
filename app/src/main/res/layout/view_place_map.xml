@@ -1,21 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The inside of PlaceMapView: the MapLibre map, and the credit line that has to sit on top of it.
-
-    A <merge> rather than a container of its own, because PlaceMapView *is* the frame these two go
-    into — wrapping them in a second FrameLayout would add a level to the hierarchy that measures and
-    lays out identically to the one above it.
-
-    **Why the attribution is here rather than left to the SDK.** MapLibre ships an information button
-    that opens the credits in a dialog, which is the convention the Mapbox-derived SDKs inherited. It
-    is not enough for these tiles: MapTiler's terms and OpenStreetMap's licence both ask for the
-    credit to be *visible on the map*. So the SDK's button and logo are switched off in code and this
-    line is drawn instead — always present, never behind a tap, and itself tappable to reach the full
-    copyright page. See MapStyles.
-
-    Bottom-start rather than bottom-end, so it cannot end up underneath the recentre control the
-    location picker puts in the opposite corner.
--->
+<!-- The inside of PlaceMapView: the MapLibre map, and the credit line that has to sit on top of it. -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="android.widget.FrameLayout">

@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The dark total card at the top of the Money tab: "TOTAL SPENT · SEPTEMBER", the month's total in
-    very large type, a stacked bar of what it went on, and a one-line caption.
-
-    Dark in both themes, like the Places distance strip — see the Money section of colors.xml. It is
-    given its ground explicitly and no elevation: on the near-black page of dark mode a shadow would be
-    invisible, and on the cream page of light mode the dark fill already separates it more strongly
-    than a shadow could.
-
-    A vertical LinearLayout inside, because the four pieces simply stack. The pet cards' softer corner
-    (ShapeAppearance.PetCare.XLarge) marks it as the page's subject, as it does on the other tabs.
--->
+<!-- The dark total card at the top of the Money tab: "TOTAL SPENT · SEPTEMBER". -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -34,8 +23,7 @@
             android:layout_height="wrap_content"
             tools:text="Total spent · September" />
 
-        <!-- The total. Its paise are shrunk with a span in ExpenseAdapter, so this is one TextView and
-             the two parts share a baseline. -->
+        <!-- The total. Its paise are shrunk with a span in ExpenseAdapter. -->
         <TextView
             android:id="@+id/totalAmountText"
             style="@style/PetCare.Expenses.TotalAmount"
@@ -44,8 +32,7 @@
             android:layout_marginTop="@dimen/spacing_md"
             tools:text="Rs 5,240.00" />
 
-        <!-- The stacked bar: a custom drawing, one coloured segment per category. Hidden from TalkBack
-             in code — the legend rows beneath the card say the same in words. -->
+        <!-- The stacked bar: a custom drawing, one coloured segment per category. -->
         <com.prash.petcare.ui.expense.CategoryBarView
             android:id="@+id/categoryBar"
             android:layout_width="match_parent"

@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The label colour paired with auth_primary_button_background.xml.
-
-    Each item is the "on" colour of the fill in the same state of that file, which is the rule that
-    keeps text legible: yellow (or near-black, in dark mode) on the strong fill, pale cream on the
-    resting charcoal. Declared as a pair of files rather than colours set in Kotlin, so the button's
-    appearance lives entirely in resources and follows the theme automatically.
--->
+<!-- The label colour paired with auth_primary_button_background.xml. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:color="?attr/colorOnDisabledContainer" android:state_enabled="false" />

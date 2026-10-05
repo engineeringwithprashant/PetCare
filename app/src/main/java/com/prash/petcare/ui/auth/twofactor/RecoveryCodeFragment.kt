@@ -21,25 +21,7 @@ import com.prash.petcare.ui.auth.show
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
-/**
- * The recovery-code screen: the way into an account whose authenticator app is gone.
- *
- * Reached from "LOST ACCESS?" on [TwoFactorFragment], with the same account id as an argument. The
- * **View** in MVVM, and a near-twin of that fragment by design — it forwards key presses from
- * [CodeKeypadView] to [RecoveryCodeViewModel], draws what comes back, and signs the account in when
- * the ViewModel says the code was good. It checks nothing itself.
- *
- * **Why the same keypad.** A recovery code here is six digits, exactly like an authenticator code,
- * so it is typed on exactly the same component — one way of entering a code in the app, one set of
- * boxes, one set of behaviours. See [com.prash.petcare.data.auth.RecoveryCodes] for the trade that
- * six digits represents and what makes it defensible: single use, ten of them, and the same lockout
- * that guards the password.
- *
- * **Why a separate screen rather than a note under the existing boxes.** The two-factor screen would
- * accept a recovery code perfectly well. But somebody whose phone is at the bottom of a river needs
- * to be *told* there is a way through, at the moment they realise they cannot produce a code — and a
- * screen that says so in its heading does that in a way a footnote does not.
- */
+/** The recovery-code screen: the way into an account whose authenticator app is gone. */
 class RecoveryCodeFragment : Fragment() {
 
     private var _binding: FragmentRecoveryCodeBinding? = null
@@ -71,12 +53,10 @@ class RecoveryCodeFragment : Fragment() {
             getString(R.string.recovery_code_subtitle)
         )
 
-        // Keypad, boxes and verify button, wired by the shared bindCodeEntry helper — the same call
-        // the two-factor screen makes, so the two behave identically down to the box outlines.
+        // Keypad, boxes and verify button, wired by the shared bindCodeEntry helper.
         bindCodeEntry(binding.codeKeypad, binding.verifyButton, viewModel)
 
-        // Back to the two-factor screen, which is still underneath on the back stack. popBackStack
-        // rather than navigate, so a second copy of it is not stacked on top of the first.
+        // Back to the two-factor screen, which is still underneath on the back stack.
         binding.backToCodeButton.setOnClickListener { findNavController().popBackStack() }
 
         observeViewModel()
@@ -94,9 +74,7 @@ class RecoveryCodeFragment : Fragment() {
     private fun handleEvent(event: TwoFactorEvent) {
         when (event) {
             is TwoFactorEvent.Verified -> {
-                // How many codes are left after this one was spent. Said with a Toast rather than a
-                // Snackbar for the reason given in TwoFactorFragment: this view is about to be
-                // destroyed by the navigation below, and a Snackbar would go with it.
+                // How many codes are left after this one was spent. Said with a Toast.
                 event.recoveryCodesRemaining?.let { remaining ->
                     Toast.makeText(
                         requireContext(),
@@ -114,9 +92,7 @@ class RecoveryCodeFragment : Fragment() {
                 findNavController().navigate(R.id.action_recovery_code_to_home)
             }
 
-            // Raised only by the two-factor screen — this *is* the recovery screen, so there is
-            // nowhere further to send anyone. Handled rather than ignored so the `when` stays
-            // exhaustive and a future event cannot be forgotten here.
+            // Raised only by the two-factor screen — this is the recovery screen.
             is TwoFactorEvent.OpenRecovery -> Unit
         }
     }
@@ -128,10 +104,7 @@ class RecoveryCodeFragment : Fragment() {
 
     companion object {
 
-        /**
-         * Navigation argument: the account whose recovery code is being checked. Aliased from the
-         * ViewModel's constant for the reason given on [TwoFactorFragment.ARG_USER_ID].
-         */
+        /** Navigation argument: the account whose recovery code is being checked. */
         const val ARG_USER_ID = TwoFactorCheckViewModel.ARG_USER_ID
     }
 }

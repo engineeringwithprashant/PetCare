@@ -8,35 +8,14 @@ import androidx.core.view.isVisible
 import com.prash.petcare.R
 import com.prash.petcare.databinding.ViewCodeKeypadBinding
 
-/**
- * The six code boxes and the numeric keypad under them, as one reusable component.
- *
- * The two-factor screen places this in its layout with a single tag, and any other code-entry screen
- * can do the same, so the boxes, the keypad and their behaviour exist in exactly one place (this class
- * and res/layout/view_code_keypad.xml) instead of being copied into each screen.
- *
- * **Its part in MVVM.** It is purely View layer, and deliberately "dumb": it does not remember the code
- * itself. Key presses go *out* through [listener] to the fragment, which forwards them to a
- * [CodeEntryViewModel]; the ViewModel's code comes back *in* through [render]. Keeping the digits in
- * the ViewModel rather than in this view is what lets them survive rotation and process death, and lets
- * the enable-the-verify-button rule live somewhere testable.
- *
- * **Why a compound view (a LinearLayout subclass).** The alternative — an `<include>` plus a helper
- * function — would still need somewhere to keep the list of boxes and the key-to-digit wiring. A
- * custom view owns both and gives the screen a typed object (`binding.codeKeypad`) with a small API.
- *
- * The system keyboard is never involved: nothing here is an EditText, so nothing can request it.
- */
+/** The six code boxes and the numeric keypad under them, as one reusable component. */
 class CodeKeypadView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : LinearLayout(context, attrs, defStyleAttr) {
 
-    /**
-     * Receives key presses. One callback per kind of key rather than a single "key" event, so digits
-     * arrive typed as Int and the two editing keys cannot be confused.
-     */
+    /** Receives key presses. One callback per kind of key rather than a single "key" event. */
     interface Listener {
         fun onDigit(digit: Int)
 
@@ -50,8 +29,7 @@ class CodeKeypadView @JvmOverloads constructor(
     /** Where key presses are sent. Set by the fragment; null presses are simply ignored. */
     var listener: Listener? = null
 
-    // view_code_keypad.xml is a <merge> layout, so this binding inflates its children straight into
-    // this LinearLayout rather than wrapping them in another one.
+    // view_code_keypad.xml is a <merge> layout, so this binding inflates its children straight into this LinearLayout.
     private val binding = ViewCodeKeypadBinding.inflate(LayoutInflater.from(context), this)
 
     private val boxes = with(binding) { listOf(box1, box2, box3, box4, box5, box6) }
@@ -59,8 +37,7 @@ class CodeKeypadView @JvmOverloads constructor(
     init {
         orientation = VERTICAL
 
-        // The layout and the rules must agree on the code length; failing loudly here catches a box
-        // added or removed from the XML without CodeEntry.LENGTH changing with it.
+        // The layout and the rules must agree on the code length.
         check(boxes.size == CodeEntry.LENGTH) { "view_code_keypad.xml must have ${CodeEntry.LENGTH} boxes" }
 
         // Index in this list == the digit the key types, so one loop wires all ten.
@@ -69,24 +46,14 @@ class CodeKeypadView @JvmOverloads constructor(
             key.setOnClickListener { listener?.onDigit(digit) }
         }
         binding.keyBackspace.setOnClickListener { listener?.onBackspace() }
-        // CLEAR only reports the press. The boxes empty — and the yellow "next box" outline returns to
-        // the first one — when the ViewModel's now-empty code comes back through render().
+        // CLEAR only reports the press. The boxes empty — and the yellow "next box" outline returns to the first.
         binding.keyClear.setOnClickListener { listener?.onClear() }
 
-        // Draw the empty state straight away, so the preview and the first frame show the first box
-        // outlined before any ViewModel state has arrived.
+        // Draw the empty state straight away.
         render(code = "", errorText = null)
     }
 
-    /**
-     * Draws [code] into the boxes, and [errorText] under them when it is not null. Called by the
-     * fragment every time the ViewModel's code or error changes (see bindCodeEntry).
-     *
-     * Each box's look comes from two standard view states read by bg_auth_code_box.xml:
-     *  - **activated** marks the box the next digit will go into — the yellow "focused" box. When the
-     *    code is full, no box is activated, since there is nowhere left to type.
-     *  - **selected** marks every box as part of a rejected code — the red outline.
-     */
+    /** Draws [code] into the boxes, and [errorText] under them when it is not null. */
     fun render(code: String, errorText: CharSequence?) {
         val hasError = errorText != null
 

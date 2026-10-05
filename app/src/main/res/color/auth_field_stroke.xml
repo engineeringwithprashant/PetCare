@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The outline of a text field on the sign-in screens.
-
-    TextInputLayout requires its boxStrokeColor to be a state list with a `state_focused` entry — it
-    reads the focused colour out of it and uses the default entry otherwise. At rest the outline is the
-    faint hairline from the mockups (colorOutlineVariant), so a column of white fields reads as quiet
-    input wells rather than a stack of boxes. The field being typed into takes the accent, matching the
-    yellow outline on the active code box of the verification screens.
-
-    Error outlines are not described here: TextInputLayout draws those from colorError on its own.
--->
+<!-- The outline of a text field on the sign-in screens. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:color="?attr/colorPrimary" android:state_focused="true" />

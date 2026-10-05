@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The small downward chevron after "MAP TYPE" on the map's corner control.
-
-    It is the one mark that tells the user the pill *opens* something rather than doing something: a
-    label on its own reads as a status ("the map type is…"), and the screen already has pills that are
-    statuses. Drawn as a chevron rather than a filled triangle to match the rest of the app's icon set,
-    which is all stroked shapes.
-
-    Drawn white and recoloured by the button's iconTint, like every other icon here.
--->
+<!-- The small downward chevron after "MAP TYPE" on the map's corner control. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

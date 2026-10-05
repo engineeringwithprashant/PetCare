@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One row in the place-search results list: a pin, the place's name, and where it is.
-
-    **Why two lines rather than one.** A search for "animal hospital" can easily return four places
-    with nearly the same name, and the name alone would make them indistinguishable — the user would
-    be picking at random between identical rows. The second line is what tells them apart, so it is
-    the line that makes the list usable rather than a detail added to it.
-
-    **Why this is not a card.** The rows sit inside one elevated panel (see view_location_picker.xml),
-    which is what makes the list read as a dropdown belonging to the field above it. A card per row
-    would turn it into a list of separate objects floating over the map.
-
-    A plain LinearLayout with a ripple background and `focusable`, so it behaves as one tappable row
-    for touch, for a keyboard and for TalkBack — which reads the two lines as one phrase because the
-    adapter sets a contentDescription on this root.
--->
+<!-- One row in the place-search results list: a pin, the place's name, and where it is. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -33,8 +18,7 @@
     android:paddingTop="@dimen/place_search_row_padding_vertical"
     android:paddingBottom="@dimen/place_search_row_padding_vertical">
 
-    <!-- Decorative: the row's text says everything the pin stands for, and the adapter gives the
-         whole row one spoken description. -->
+    <!-- Decorative: the row's text says everything the pin stands. -->
     <ImageView
         android:layout_width="@dimen/place_search_row_icon_size"
         android:layout_height="@dimen/place_search_row_icon_size"
@@ -49,8 +33,7 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <!-- "Patan Hospital". One line and ellipsized: a long business name must not push the row to
-             three lines and change the height of every row around it. -->
+        <!-- "Patan Hospital". One line and ellipsized. -->
         <TextView
             android:id="@+id/resultNameText"
             style="@style/PetCare.PlaceSearch.ResultName"
@@ -60,9 +43,7 @@
             android:maxLines="1"
             tools:text="Patan Hospital" />
 
-        <!-- "Kumaripati, Lalitpur Metropolitan City". Gone rather than blank for a result MapTiler
-             gave no context for, so the row closes up to one line instead of leaving a gap that reads
-             as a missing value. -->
+        <!-- "Kumaripati, Lalitpur Metropolitan City". Gone. -->
         <TextView
             android:id="@+id/resultAddressText"
             style="@style/PetCare.PlaceSearch.ResultAddress"

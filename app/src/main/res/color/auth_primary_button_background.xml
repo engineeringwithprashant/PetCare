@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The fill of the sign-in screens' main button — "LOG IN", "CREATE ACCOUNT", "SEND RESET LINK",
-    "VERIFY & LOG IN".
-
-    A colour state list keyed on `state_enabled`, so the fragment only ever sets `isEnabled` and this
-    file decides what that looks like. The order matters: a selector returns the *first* item whose
-    states match, so the disabled item must come before the catch-all.
-
-     - Enabled: the app's "strong" fill, near-black in light mode and the accent in dark (see
-       attrs.xml, colorSelectedContainer) — the same fill as the chosen half of the log-in/register
-       toggle, so the thing to press and the thing chosen speak the same visual language.
-     - Disabled: a solid charcoal rather than Material's default low-opacity wash. See attrs.xml,
-       colorDisabledContainer, for why.
--->
+<!-- The fill of the sign-in screens' main button — "LOG IN", "CREATE ACCOUNT", "SEND RESET LINK". -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:color="?attr/colorDisabledContainer" android:state_enabled="false" />

@@ -1,24 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The Money tab's icon: a wallet.
-
-    Stroked, untinted and drawn on the same 24dp grid as the rest of the set — see ic_tab_home.xml.
--->
+<!-- The Money tab's icon: a wallet. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!--
-        Three subpaths: the rounded body, the seam across it that separates the flap from the purse,
-        and the small stud on the right that reads as the clasp.
-
-        The body is written out as lines and corner arcs rather than as a rectangle, for the same
-        reason the circles in ic_tab_pets.xml are two arcs — a VectorDrawable draws paths and nothing
-        else, so a rounded rectangle has to be spelled out: the top edge, a 3-unit corner, the right
-        edge, and so on round the shape.
-    -->
+    <!-- Three subpaths: the rounded body, the seam across it that separates the flap from the purse. -->
     <path
         android:fillColor="@android:color/transparent"
         android:pathData="M6.2,6.4 H17.8 A3,3 0 0 1 20.8,9.4 V15.6 A3,3 0 0 1 17.8,18.6 H6.2 A3,3 0 0 1 3.2,15.6 V9.4 A3,3 0 0 1 6.2,6.4 Z M3.2,10.6 H20.8 M15.4,14.8 A1.2,1.2 0 1 1 17.8,14.8 A1.2,1.2 0 1 1 15.4,14.8 Z"

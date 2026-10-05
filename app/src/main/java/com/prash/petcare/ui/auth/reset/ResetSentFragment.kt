@@ -17,16 +17,7 @@ import com.prash.petcare.ui.auth.keepSystemKeyboardClosed
 import com.prash.petcare.ui.auth.show
 import kotlinx.coroutines.launch
 
-/**
- * The reset confirmation screen: a link has been sent to [ARG_EMAIL]. The user can check their
- * inbox, resend after a cooldown, or go back to log in.
- *
- * The **View** in MVVM. The address, the cooldown and the result of a resend all come from
- * [ResetSentViewModel]. This fragment turns them into text and forwards taps.
- *
- * The screen reads the same whether or not the address has an account. See
- * [com.prash.petcare.data.auth.PasswordResetResult] for why.
- */
+/** The reset confirmation screen: a link has been sent to [ARG_EMAIL]. */
 class ResetSentFragment : Fragment() {
 
     private var _binding: FragmentResetSentBinding? = null
@@ -49,8 +40,7 @@ class ResetSentFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // This screen has no text field, so close the keyboard left open from typing the address on
-        // the previous screen.
+        // This screen has no text field.
         keepSystemKeyboardClosed()
 
         binding.header.show(
@@ -89,8 +79,7 @@ class ResetSentFragment : Fragment() {
 
         binding.sendingIndicator.isVisible = state.isSending
 
-        // Two TextViews with different styles, rather than one whose colour is changed in code, so
-        // the error and the confirmation keep the exact styles they have everywhere else.
+        // Two TextViews with different styles, rather than one whose colour is changed in code.
         val message = state.notice?.let(::getString)
         binding.resentNote.isVisible = message != null && !state.noticeIsError
         binding.resentNote.text = message

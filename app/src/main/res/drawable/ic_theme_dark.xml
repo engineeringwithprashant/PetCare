@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The crescent moon shown in the dashboard's theme toggle while the app is in dark mode. The
-    counterpart to ic_theme_light.xml — see that file for why the toggle shows the current mode
-    rather than the one a tap would bring about.
-
-    **How a crescent is drawn.** Not as two circles with one subtracted: vector drawables have no
-    boolean operations. It is a single closed outline — the outer arc of the moon, then the inner arc
-    curving back the other way — which is what leaves the bite out of it. Tracing it as one path is
-    also why the shape stays correct at any size.
-
-    Untinted here; the ImageView applies the accent, as it does for the sun.
--->
+<!-- The crescent moon shown in the dashboard's theme toggle while the app is in dark mode. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="16dp"
     android:height="16dp"

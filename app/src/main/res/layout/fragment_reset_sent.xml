@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Reset confirmation (ResetSentFragment): the reset link has been sent, so the user should check
-    their email.
-
-    Uses the same shell as the request screen and the rest of the sign-in flow: a ScrollView page
-    around one vertical column, with the shared header at the top. The header's subtitle holds the
-    main message ("A reset link has been sent to …"), so the address appears in the same muted
-    paragraph style as the other screens' subtitles.
-
-    Below it is one row, "Didn't get it?" followed by "RESEND", then status lines that are hidden
-    until needed, then "← BACK TO LOG IN". There is no primary button. The next step happens in the
-    user's email app, not here.
-
-    The same text appears whether or not the address has an account. See PasswordResetResult.
--->
+<!-- Reset confirmation (ResetSentFragment): the reset link has been sent, so the user should check their email. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -32,10 +18,7 @@
             android:id="@+id/header"
             layout="@layout/view_auth_header" />
 
-        <!-- "Didn't get it?  RESEND". A horizontal row, centred as a pair under the centred header.
-             The link is a MaterialButton, for the ripple, touch target and "button" role. Its
-             countdown label ("RESEND IN 0:42") is a little wider than "RESEND", so the pair is
-             re-centred as it changes. -->
+        <!-- "Didn't get it? RESEND". A horizontal row, centred as a pair under the centred header. -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -50,8 +33,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/reset_sent_not_received" />
 
-            <!-- Starts disabled: a link was sent a moment ago, so the cooldown is already running
-                 when this screen opens. The fragment sets its label and enabled state. -->
+            <!-- Starts disabled: a link was sent a moment ago, so the cooldown is already running. -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/resendButton"
                 style="@style/PetCare.Auth.TextLink.Resend"
@@ -73,8 +55,7 @@
             android:visibility="gone"
             app:trackCornerRadius="2dp" />
 
-        <!-- After a successful resend: a muted confirmation. A live region, so TalkBack reads it
-             when it appears, as it does for the error line below. -->
+        <!-- After a successful resend: a muted confirmation. A live region, so TalkBack reads it when it appears. -->
         <TextView
             android:id="@+id/resentNote"
             style="@style/PetCare.Auth.Helper"
@@ -86,8 +67,7 @@
             android:text="@string/reset_sent_resent"
             android:visibility="gone" />
 
-        <!-- After a failed resend: no network, rate limited, and so on. The fragment shows at most one
-             of these two lines. -->
+        <!-- After a failed resend: no network, rate limited, and so on. -->
         <TextView
             android:id="@+id/failureText"
             style="@style/PetCare.Auth.ErrorText"

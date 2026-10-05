@@ -20,28 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-/**
- * The parts of the pet form the ViewModel owns.
- *
- * Note what is *not* here: the name, breed, weight and notes the user types. Those live in the
- * EditTexts themselves, which Android saves and restores across rotation automatically. Mirroring
- * them into state as well would mean writing back into the fields on every update and fighting the
- * user's cursor.
- *
- * What is here is everything the text fields cannot hold on their own: values chosen through a
- * dialog, and the errors and progress the screen has to display.
- *
- * @property isEditMode True when changing an existing pet, false when creating one. Controls the
- *   screen title and whether the delete button appears.
- * @property isLoading True while an existing pet is being fetched.
- * @property isSaving True while a save or delete is in flight, so buttons can be disabled.
- * @property species Currently selected species; the dropdown reflects this.
- * @property gender Currently selected gender; the toggle group reflects this. Held here rather than
- *   read off the buttons at save time for the same reason as [species]: a toggle group does not
- *   restore its own selection across rotation the way an EditText restores its text.
- * @property dateOfBirth Chosen birth date as epoch milliseconds, or null if not set.
- * @property photoPath Path to the photo in internal storage, or null if there is none.
- */
+/** The parts of the pet form the ViewModel owns. */
 data class PetFormState(
     val isEditMode: Boolean = false,
     val isLoading: Boolean = false,
@@ -54,21 +33,10 @@ data class PetFormState(
     @param:StringRes val weightError: Int? = null
 )
 
-/**
- * A one-off occurrence the fragment reacts to exactly once.
- *
- * Kept separate from [PetFormState] because these are moments, not conditions: navigating back
- * after a save should happen once, whereas state is re-applied after every rotation.
- */
+/** A one-off occurrence the fragment reacts to exactly once. */
 sealed interface PetEvent {
 
-    /**
-     * Carries a loaded pet so the fragment can fill in the text fields.
-     *
-     * Sent as an event rather than exposed as state precisely because it must happen once. If the
-     * fragment wrote these values on every state emission it would overwrite whatever the user was
-     * part-way through typing.
-     */
+    /** Carries a loaded pet so the fragment can fill in the text fields. */
     data class PrefillForm(val pet: Pet) : PetEvent
 
     /** The pet was created or updated; the screen should close. */
@@ -81,20 +49,7 @@ sealed interface PetEvent {
     data class Error(@param:StringRes val messageRes: Int) : PetEvent
 }
 
-/**
- * Backs the add/edit pet screen.
- *
- * One ViewModel serves both modes, distinguished by [petId]: a value of [NO_PET_ID] means "create
- * a new pet", anything else means "edit that one". Splitting this into two nearly identical
- * ViewModels would duplicate all the validation and photo handling for the sake of one branch.
- *
- * It holds no views and no Context. Photo *files* are reached through [PetPhotoStorage], which
- * takes plain paths, so cleaning up an orphaned image needs no Android context here.
- *
- * @param petRepository Data access, injected so tests can supply a fake.
- * @param petId Which pet to edit, or [NO_PET_ID] to create one.
- * @param ownerId The signed-in user who will own a newly created pet.
- */
+/** Backs the add/edit pet screen. */
 class PetViewModel(
     private val petRepository: PetRepository,
     private val petId: Long,
@@ -104,19 +59,10 @@ class PetViewModel(
     /** True when editing an existing record rather than creating one. */
     private val isEditMode: Boolean = petId != NO_PET_ID
 
-    /**
-     * The pet as it was loaded from the database, kept so a save can preserve the fields the form
-     * does not show — the id, owner and creation time — and so the original photo can be found and
-     * deleted if it gets replaced.
-     */
+    /** The pet as it was loaded from the database, kept so a save can preserve the fields the form does not show. */
     private var loadedPet: Pet? = null
 
-    /**
-     * Set once the record has been written or deleted.
-     *
-     * [onCleared] uses it to tell an abandoned form from a completed one, so it only deletes a
-     * newly picked photo when the user backs out without saving.
-     */
+    /** Set once the record has been written or deleted. */
     private var wasCompleted: Boolean = false
 
     private val _formState = MutableStateFlow(
@@ -148,8 +94,7 @@ class PetViewModel(
 
             loadedPet = pet
 
-            // Dialog-chosen values become state, because the views holding them cannot restore
-            // themselves the way an EditText can.
+            // Dialog-chosen values become state.
             _formState.value = _formState.value.copy(
                 isLoading = false,
                 species = pet.species,
@@ -178,14 +123,7 @@ class PetViewModel(
         _formState.value = _formState.value.copy(dateOfBirth = dateMillis)
     }
 
-    /**
-     * Records a newly saved photo.
-     *
-     * If the user already picked a photo during this visit and then picked another, the first file
-     * is now referenced by nothing, so it is deleted here. The pet's *original* photo is left
-     * alone — it stays on disk until the save actually succeeds, so backing out of the form
-     * cannot destroy the picture that is still in the database.
-     */
+    /** Records a newly saved photo. */
     fun onPhotoSelected(newPath: String) {
         val current = _formState.value.photoPath
         if (current != null && current != loadedPet?.photoPath) {
@@ -201,12 +139,7 @@ class PetViewModel(
         }
     }
 
-    /**
-     * Validates the form and writes the pet.
-     *
-     * The typed values arrive as parameters because the fragment owns them; everything else comes
-     * from [formState].
-     */
+    /** Validates the form and writes the pet. */
     fun save(
         name: String,
         breed: String,
@@ -218,8 +151,7 @@ class PetViewModel(
         val trimmedName = name.trim()
         val trimmedWeight = weightText.trim()
 
-        // An empty weight is allowed — not every owner knows it. A non-empty one has to be a
-        // positive number.
+        // An empty weight is allowed — not every owner knows it.
         val weight = trimmedWeight.toDoubleOrNull()
         val weightError = when {
             trimmedWeight.isEmpty() -> null
@@ -247,8 +179,7 @@ class PetViewModel(
             val state = _formState.value
             val existing = loadedPet
 
-            // `copy` on the loaded pet keeps id, ownerId and createdAt untouched; building a fresh
-            // Pet would reset them and orphan the record's history.
+            // `copy` on the loaded pet keeps id, ownerId and createdAt untouched.
             val pet = existing?.copy(
                 name = trimmedName,
                 species = state.species,
@@ -291,13 +222,7 @@ class PetViewModel(
         }
     }
 
-    /**
-     * Deletes the pet being edited.
-     *
-     * The confirmation dialog is the fragment's responsibility; by the time this is called the
-     * user has already agreed. Removing the pet also removes its care tasks, routines and expenses
-     * through the CASCADE rules on those tables.
-     */
+    /** Deletes the pet being edited. */
     fun delete() {
         val pet = loadedPet ?: return
 
@@ -314,12 +239,7 @@ class PetViewModel(
         }
     }
 
-    /**
-     * Called when the screen is finished with for good.
-     *
-     * If the user picked a photo and then left without saving, that file is now referenced by
-     * nothing — internal storage would slowly fill with abandoned images without this.
-     */
+    /** Called when the screen is finished with for good. */
     override fun onCleared() {
         super.onCleared()
         if (wasCompleted) return
@@ -338,12 +258,7 @@ class PetViewModel(
         /** [petId] value meaning "create a new pet". Matches the default in the nav graph. */
         const val NO_PET_ID = -1L
 
-        /**
-         * Builds the ViewModel for a particular pet and owner.
-         *
-         * A function rather than a property because both ids are only known at runtime, from the
-         * navigation arguments.
-         */
+        /** Builds the ViewModel for a particular pet and owner. */
         fun factory(petId: Long, ownerId: Long): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =

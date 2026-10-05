@@ -1,48 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    "Add a place": the sub-screen reached from "+ ADD PLACE" in the Places tab's saved-places heading.
-
-    **What the screen is for.** Saving the vet, groomer, park or shop — either the one the user is
-    standing in, or any other point on Earth. Those are the two routes the map above the form offers,
-    and they are equal partners: "I'M HERE" takes the device's position in one tap, and moving the map
-    under its fixed centre pin chooses anywhere else. Whichever was used last is what gets saved; see
-    PlaceLocationPicker.
-
-    **Everything happens here.** There is deliberately no second "choose a location" page to go to and
-    come back from: the map, its controls and the answer they produce all sit in this one scroll, above
-    the fields that describe the place.
-
-    Top to bottom:
-      - **The shared header** (monogram, "Add place", theme toggle, pet count), fixed above the page as
-        on the tabs. It is what keeps this screen recognisably part of the Places tab while the bottom
-        bar keeps that tab lit.
-      - Everything else scrolls as one page:
-          · the **heading block** — a round back button beside "Add a place" and the sentence naming
-            what the screen is for;
-          · the **location picker** — the interactive map with "I'M HERE", the map-type menu, the fixed
-            centre pin and the recentre control (see view_location_picker.xml);
-          · the **selected-location card** — the address and coordinates under the pin
-            (see view_selected_location.xml);
-          · the **fields** — name, category, address, phone, opening hours, note. These are the same
-            fields the full place form offers, so a place can be described completely as it is created
-            rather than only afterwards;
-          · the **summary** of what will be saved, then "SAVE PLACE".
-
-    **What used to be here and is not.** A dark status card reporting on the GPS, with "Try again" and
-    "Use demo location" beside it, sat between the map and the fields. The demo position is gone
-    outright — a place saved at invented coordinates is indistinguishable from a real one, which makes
-    it the most dangerous kind of placeholder — and the status reporting went with it, because with a
-    movable map there is no longer a state in which the screen is stuck waiting for the sky. What
-    replaced it answers the only question left: which place is about to be saved.
-
-    **Why one NestedScrollView** rather than a RecyclerView for the page: the same reasoning as
-    fragment_places.xml. These are a handful of stateful views, not rows. The map inside it keeps its
-    own vertical drags — see PlaceMapView.onInterceptTouchEvent — so panning north does not scroll the
-    form instead.
-
-    **Why a CoordinatorLayout at the root:** so Snackbars attach here and appear above the floating
-    bottom navigation bar rather than underneath it — see fragment_places.xml.
--->
+<!-- "Add a place": the sub-screen reached from "+ ADD PLACE" in the Places tab's saved-places heading. -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -76,10 +33,7 @@
                 android:paddingStart="@dimen/screen_padding"
                 android:paddingEnd="@dimen/screen_padding">
 
-                <!-- ============================== Heading ==============================
-                     The round back button and the text block beside it. gravity top rather than
-                     centre, so the button lines up with the *first* line of a heading that wraps
-                     rather than drifting down beside a two-line block. -->
+                <!-- ============================== Heading ============================== -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -100,8 +54,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <!-- accessibilityHeading marks this as the page's heading, so TalkBack users
-                             can jump straight to it with heading navigation. -->
+                        <!-- accessibilityHeading marks this as the page's heading. -->
                         <TextView
                             style="@style/PetCare.AddPlace.Title"
                             android:layout_width="match_parent"
@@ -122,22 +75,14 @@
 
                 </LinearLayout>
 
-                <!-- ========================== The location picker ==========================
-                     The search field, the map and its four controls, shared with the full place form.
-
-                     wrap_content, where this used to ask for the map's height: the picker is a column
-                     now — a field with its suggestions hanging under it, above the map — and it holds
-                     the map's fixed height internally. Asking for a height here would squash the
-                     field or stretch the map. See view_location_picker.xml. -->
+                <!-- ========================== The location picker ========================== -->
                 <com.prash.petcare.ui.place.LocationPickerView
                     android:id="@+id/locationPicker"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_md" />
 
-                <!-- The one line that says the map is a control rather than a picture. It has to be
-                     said: a movable map looks exactly like a fixed one, and without this the only
-                     position most users would ever save is the one the GPS handed them. -->
+                <!-- The one line that says the map is a control rather than a picture. -->
                 <TextView
                     android:id="@+id/mapHintText"
                     style="@style/PetCare.AddPlace.MapHint"
@@ -154,11 +99,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_md" />
 
-                <!-- ============================ The save fields ============================
-                     The same set the full place form offers, so that everything a saved place can be
-                     edited to hold can also be given at the moment it is created — see requirement 15.
-                     Only the name and a location are required; the rest can be left for later, which
-                     is what keeps the two-tap save from becoming a form to fill in. -->
+                <!-- ============================ The save fields ============================ -->
 
                 <TextView
                     style="@style/PetCare.AddPlace.FieldLabel"
@@ -189,11 +130,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/add_place_category_label" />
 
-                <!-- Vet · Grooming · Park · Store. The Tasks tab's filter chips, built in code from
-                     PlaceCategory — see ui/common/FilterChips.kt — so the chosen pill gets exactly the
-                     treatment every other chosen thing in the app does. A wrapping ChipGroup rather
-                     than a scrolling row: four short pills fit two-and-two on the narrowest phone, and
-                     a category hidden off the edge of a scroller is one that never gets chosen. -->
+                <!-- Vet · Grooming · Park · Store. The Tasks tab's filter chips, built in code from PlaceCategory. -->
                 <com.google.android.material.chip.ChipGroup
                     android:id="@+id/categoryChipGroup"
                     android:layout_width="match_parent"
@@ -202,9 +139,7 @@
                     app:selectionRequired="true"
                     app:singleSelection="true" />
 
-                <!-- The address. Filled in from the map's own lookup and editable afterwards — see
-                     AddPlaceViewModel.onAreaChanged for how a typed answer stops the lookup writing
-                     over it. -->
+                <!-- The address. Filled in from the map's own lookup and editable afterwards. -->
                 <TextView
                     style="@style/PetCare.AddPlace.FieldLabel"
                     android:layout_width="match_parent"
@@ -228,19 +163,7 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!--
-                    The place's number: a country selector and the local number beside it, exactly as
-                    the full place form draws them.
-
-                    Optional — many parks have none — but a number that *is* given is stored in one
-                    international form and checked against the country chosen, because the saved-place
-                    row offers to dial it. The behaviour behind the pair is ui/common/PhoneNumberInput.kt,
-                    shared with the sign-in and profile forms.
-
-                    A horizontal LinearLayout: the selector at a fixed width so the number box always
-                    starts in the same place whatever the dialling code, and the number taking the rest
-                    (width 0 + weight 1).
-                -->
+                <!-- The place's number: a country selector and the local number beside. -->
                 <TextView
                     style="@style/PetCare.AddPlace.FieldLabel"
                     android:layout_width="match_parent"
@@ -253,8 +176,7 @@
                     android:baselineAligned="false"
                     android:orientation="horizontal">
 
-                    <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it
-                         unfocusable and gives it a spoken description naming the country in full. -->
+                    <!-- Not typed into: tapping it opens the country list. -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/phoneCountryLayout"
                         style="@style/PetCare.AddPlace.Field"
@@ -272,8 +194,7 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- inputType="phone" brings up the dial pad. How many digits it accepts is capped
-                         per country by PhoneNumberInput, so an over-long number cannot be typed. -->
+                    <!-- inputType="phone" brings up the dial pad; PhoneNumberInput caps the digits per country. -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/phoneInputLayout"
                         style="@style/PetCare.AddPlace.Field"
@@ -297,11 +218,7 @@
 
                 </LinearLayout>
 
-                <!-- ============================ Opening hours ============================
-                     Opens and Closes side by side, each half the width through layout_weight — they
-                     are one fact ("8:00 to 20:00") and read best on one line. Tapping either opens a
-                     Material time picker; focusable="true" with the soft keyboard suppressed in code
-                     keeps them reachable by keyboard and switch access without popping up a keyboard. -->
+                <!-- ============================ Opening hours ============================ -->
                 <TextView
                     style="@style/PetCare.AddPlace.FieldLabel"
                     android:layout_width="match_parent"
@@ -357,8 +274,7 @@
 
                 </LinearLayout>
 
-                <!-- One error for the pair rather than one per field, because the problem ("only one
-                     of the two is set") belongs to neither field alone. -->
+                <!-- One error for the pair rather than one per field, because the problem. -->
                 <TextView
                     android:id="@+id/hoursErrorText"
                     android:layout_width="match_parent"
@@ -402,13 +318,7 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- ============================ Summary and save ============================
-                     Two lines: what is about to be saved, and the position it will carry — the exact
-                     coordinates once a point has been chosen, and a line saying so until then. The
-                     second line is the screen's honesty about itself, shown before the user commits.
-
-                     accessibilityLiveRegion polite: it changes as the form is filled in, and a screen
-                     reader should mention the change without interrupting what is being typed. -->
+                <!-- ============================ Summary and save ============================ -->
                 <TextView
                     android:id="@+id/summaryText"
                     style="@style/PetCare.AddPlace.Summary"
@@ -418,9 +328,7 @@
                     android:accessibilityLiveRegion="polite"
                     tools:text="Untitled place · Vet\nNo location chosen yet" />
 
-                <!-- Disabled until the place has both a name and a location. Disabled here means a
-                     solid resting slab with pale ink, not a faded button — see attrs.xml,
-                     colorDisabledContainer — and the label says which of the two is missing. -->
+                <!-- Disabled until the place has both a name and a location. -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/savePlaceButton"
                     style="@style/PetCare.AddPlace.SaveButton"

@@ -4,19 +4,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Unit tests for [GeoDistance], the arithmetic behind every distance on the Places tab.
- *
- * Plain JVM tests with no device, possible because [GeoDistance] uses no Android classes. They matter
- * for the same reason as CareScheduleTest: a distance formula with a sign error or a degrees/radians
- * mix-up still produces a plausible-looking "3.4 km" on screen, and nobody clicking through the app
- * would notice it was wrong.
- */
+/** Unit tests for [GeoDistance], the arithmetic behind every distance on the Places tab. */
 class GeoDistanceTest {
 
-    // ---------------------------------------------------------------------------------------
-    // distanceKm
-    // ---------------------------------------------------------------------------------------
+    // distanceKm.
 
     @Test
     fun `the same point is zero kilometres away`() {
@@ -33,8 +24,7 @@ class GeoDistanceTest {
 
     @Test
     fun `a degree of longitude shrinks towards the poles`() {
-        // At 60° north a degree of longitude is half its length at the equator (cos 60° = 0.5) —
-        // the case that catches forgetting the cos(latitude) term.
+        // At 60° north a degree of longitude is half its length at the equator (cos 60° = 0.5).
         val atEquator = GeoDistance.distanceKm(Coordinates(0.0, 0.0), Coordinates(0.0, 1.0))
         val atSixty = GeoDistance.distanceKm(Coordinates(60.0, 0.0), Coordinates(60.0, 1.0))
         assertEquals(atEquator / 2, atSixty, 0.1)
@@ -50,8 +40,7 @@ class GeoDistanceTest {
 
     @Test
     fun `short walking distances stay accurate`() {
-        // 0.009° of latitude is almost exactly 1 km — the range the Places tab actually shows, and
-        // where a less stable formula would drown in rounding error.
+        // 0.009° of latitude is almost exactly 1 km — the range the Places tab actually shows.
         val distance = GeoDistance.distanceKm(Coordinates(27.6700, 85.3200), Coordinates(27.6790, 85.3200))
         assertEquals(1.0, distance, 0.01)
     }
@@ -63,9 +52,7 @@ class GeoDistanceTest {
         assertEquals(GeoDistance.distanceKm(a, b), GeoDistance.distanceKm(b, a), 1e-9)
     }
 
-    // ---------------------------------------------------------------------------------------
-    // tickStepKm and axisMaxKm
-    // ---------------------------------------------------------------------------------------
+    // tickStepKm and axisMaxKm.
 
     @Test
     fun `walking distances use the design's half-kilometre ticks`() {

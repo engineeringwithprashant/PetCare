@@ -1,33 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The top app bar's overflow menu: the account actions.
-
-    `app:showAsAction="never"` on both is what puts them behind the three-dot button rather than
-    inline in the bar. That is the right place for them: they are reached rarely, and the four
-    things reached constantly already have a permanent home in the bottom navigation bar. Promoting
-    either to the bar itself would put a sign-out button one mis-tap away at all times.
-
-    `app:` rather than `android:` for showAsAction, because the bar is a Material `MaterialToolbar`
-    driven by AppCompat rather than the platform action bar, and AppCompat reads its own namespaced
-    attribute.
-
-    MainActivity hides this whole menu on the sign-in screens, where there is no account to show a
-    profile for and nothing to sign out of.
--->
+<!-- The top app bar's overflow menu: the account actions. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- The signed-in account's details. The id matches the profileFragment destination in
-         nav_graph.xml, so MainActivity can hand the tap straight to NavigationUI rather than
-         writing out the navigation itself. -->
+    <!-- The signed-in account's details. The id matches the profileFragment destination in nav_graph.xml. -->
     <item
         android:id="@+id/profileFragment"
         android:icon="@drawable/ic_profile"
         android:title="@string/menu_profile"
         app:showAsAction="never" />
 
-    <!-- Signing out. Not a navigation destination — it clears the session and sends the user back
-         to the sign-in screen — so MainActivity handles this one itself. -->
+    <!-- Signing out. Not a navigation destination. -->
     <item
         android:id="@+id/action_sign_out"
         android:icon="@drawable/ic_logout"

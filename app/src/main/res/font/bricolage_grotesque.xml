@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Bricolage Grotesque — the app's *character* face, used only for big headlines, names and
-    numbers ("Good evening, Prashant", "Biscuit", "Rs 4,250").
-
-    A font-family resource groups one or more font files under a single name, so layouts and styles
-    say @font/bricolage_grotesque and Android picks the right file for the requested weight. This
-    family deliberately holds a single weight, ExtraBold (800): the face is only ever used large and
-    heavy, so shipping lighter weights would add megabytes nobody sees. A "bold" request still lands
-    on this file — Android chooses the closest weight, and at 800 it is already heavier than bold, so
-    no synthetic emboldening is applied on top.
-
-    Each attribute is declared twice. The android: ones are read by Android 8.0 (API 26) and later;
-    the app: ones are read by AppCompat on older devices, which this app supports down to API 24.
-
-    Licensed under the SIL Open Font License — see assets/licenses/.
--->
+<!-- Bricolage Grotesque — the app's character face, used only for big headlines, names and numbers. -->
 <font-family xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 

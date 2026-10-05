@@ -12,41 +12,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.color.MaterialColors
 import com.prash.petcare.R
 
-/**
- * Swipe gestures for a list, shared by every screen that uses them.
- *
- * Hooked up through [ItemTouchHelper], which detects the drag, animates the row and calls back
- * here. This class owns the parts that should look and behave identically wherever swiping appears
- * — the colours, the icons, and what is drawn behind a moving row. Which rows may be swiped, and
- * what a swipe means, are left to the caller, because that differs by screen.
- *
- * **The direction convention is fixed across the app**, so a gesture never means different things
- * in different places:
- *  - swipe **left** is destructive (bin icon, error colours);
- *  - swipe **right** is affirmative (tick icon, primary colours).
- *
- * A screen that only supports one of the two simply never allows the other, and that half is never
- * drawn.
- *
- * **Accessibility.** Swipes are invisible to a screen reader, so they are deliberately shortcuts
- * rather than the only route to anything: every action reachable by swiping is also reachable by a
- * button or a checkbox that TalkBack can find.
- *
- * @param context Used to load the icons and resolve theme colours.
- * @param allowedDirections Returns the [ItemTouchHelper] direction flags permitted for a given
- *   adapter position, or zero to make that row unswipeable. Called for every row, so a list mixing
- *   headings with content can protect the headings.
- * @param onSwipe Called with the position and the direction once a swipe completes.
- */
+/** Swipe gestures for a list, shared by every screen that uses them. */
 class SwipeActionCallback(
     context: Context,
     private val allowedDirections: (position: Int) -> Int,
     private val onSwipe: (position: Int, direction: Int) -> Unit
 ) : ItemTouchHelper.Callback() {
 
-    // Colours come from the Material 3 theme rather than being hard-coded, so the backgrounds
-    // follow the app's palette and stay legible in dark mode. The "container" roles are the muted
-    // variants intended to sit behind content.
+    // Colours come from the Material 3 theme rather than being hard-coded.
     private val deleteBackgroundColor = MaterialColors.getColor(
         context,
         com.google.android.material.R.attr.colorErrorContainer,
@@ -69,20 +42,14 @@ class SwipeActionCallback(
         com.google.android.material.R.attr.colorOnPrimaryContainer
     )
 
-    // Allocated once and reused. Creating a Paint inside onChildDraw would allocate on every frame
-    // of every swipe, which is exactly the kind of churn that causes stutter.
+    // Allocated once and reused. Creating a Paint inside onChildDraw would allocate on every frame of every swipe.
     private val backgroundPaint = Paint()
 
     private val iconMargin = context.resources.getDimensionPixelSize(
         R.dimen.checklist_swipe_icon_margin
     )
 
-    /**
-     * Decides which gestures a row allows.
-     *
-     * Returning zero disables swiping for that row entirely, which is how list headings and
-     * already-actioned rows are protected.
-     */
+    /** Decides which gestures a row allows. */
     override fun getMovementFlags(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder
@@ -108,16 +75,7 @@ class SwipeActionCallback(
         onSwipe(position, direction)
     }
 
-    /**
-     * Draws the coloured background and icon revealed behind a row as it slides.
-     *
-     * Without this the row would slide away over blank space, giving no clue what the gesture is
-     * about to do — and no chance to change your mind by sliding back.
-     *
-     * [dX] is how far the row has been dragged: positive rightwards, negative leftwards. The
-     * background is drawn only across the gap the row has actually vacated, so the colour appears
-     * to be revealed from underneath rather than flashing in fully formed.
-     */
+    /** Draws the coloured background and icon revealed behind a row as it slides. */
     override fun onChildDraw(
         canvas: Canvas,
         recyclerView: RecyclerView,
@@ -206,9 +164,7 @@ class SwipeActionCallback(
     ): Drawable? {
         val drawable = ContextCompat.getDrawable(context, drawableRes) ?: return null
 
-        // `mutate` gives this instance its own state before tinting. Drawables loaded from the same
-        // resource share one constant state by default, so tinting without it would recolour every
-        // other use of the same icon in the app.
+        // `mutate` gives this instance its own state before tinting.
         val tintable = DrawableCompat.wrap(drawable.mutate())
         DrawableCompat.setTint(
             tintable,

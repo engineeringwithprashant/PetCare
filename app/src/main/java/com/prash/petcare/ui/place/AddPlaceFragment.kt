@@ -34,29 +34,7 @@ import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
-/**
- * "Add a place": save the vet, groomer, park or shop — the one you are standing in, or any other.
- *
- * In MVVM this is the **View**. [AddPlaceViewModel] holds the form and writes the place, and the
- * [PlaceLocationPicker] it owns holds where that place is; this class draws both, formats their text
- * (which needs a Context) and owns the three things that genuinely need an Activity — the location
- * permission prompt, the time pickers and navigation.
- *
- * **The position has two equal sources, and the screen never prefers one.** "I'M HERE" over the map
- * takes the device's position; moving the map under its fixed centre pin chooses anywhere else. A user
- * who presses "I'm here" and then pans two streets over saves the two streets over, because nothing on
- * this screen re-reads the device unless asked to. That rule lives in [PlaceLocationPicker] rather than
- * here, so the full place form obeys it too.
- *
- * **Everything is on this one screen.** There is no separate location page to travel to and back from;
- * the map, its controls, the address it resolves and the fields describing the place are one scroll.
- *
- * **Why this screen draws the shared tab header rather than taking the app bar's title.** It is a step
- * *deeper* into the Places tab rather than a step sideways out of it: the bottom bar keeps Places lit
- * the whole time (see NavTab.PLACES), and the header carrying "Add place" is what makes that read as
- * one journey rather than as two screens. MainActivity hides the shared app bar here for the same
- * reason it does on the tabs — see its updateChromeFor.
- */
+/** "Add a place": save the vet, groomer, park or shop — the one you are standing in, or any other. */
 class AddPlaceFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
@@ -70,21 +48,10 @@ class AddPlaceFragment : Fragment() {
         AddPlaceViewModel.factory(ownerId = sessionViewModel.userId.value)
     }
 
-    /**
-     * The country selector and number box, driven as one control.
-     *
-     * Created in [onViewCreated] and dropped in [onDestroyView] with the binding, since it holds views
-     * from this hierarchy.
-     */
+    /** The country selector and number box, driven as one control. */
     private var phoneInput: PhoneNumberInput? = null
 
-    /**
-     * Location access, asked for only when one of the two current-location controls is pressed.
-     *
-     * A property so it registers its launcher while the fragment is being created, which is the only
-     * time Android allows it. Both answers are ordinary: granting one takes the fix that was asked
-     * for, refusing puts a line on screen and leaves the map to be moved by hand.
-     */
+    /** Location access, asked for only when one of the two current-location controls is pressed. */
     private val locationPermission = LocationPermissionRequester(
         fragment = this,
         rationaleMessage = R.string.permission_location_capture_message,
@@ -104,8 +71,7 @@ class AddPlaceFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // The same header the Places tab draws, with this screen's name. The badge and monogram lead
-        // where they do everywhere else.
+        // The same header the Places tab draws, with this screen's name.
         binding.header.setUp(
             title = R.string.add_place_header_title,
             onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
@@ -113,8 +79,7 @@ class AddPlaceFragment : Fragment() {
         )
         bindHeaderFromSession(binding.header, sessionViewModel)
 
-        // The two phone boxes behave as one control. Editing either clears the error left by a
-        // previous save attempt.
+        // The two phone boxes behave as one control. Editing either clears the error left by a previous save attempt.
         phoneInput = PhoneNumberInput(
             countryLayout = binding.phoneCountryLayout,
             countryInput = binding.phoneCountryInput,
@@ -129,21 +94,9 @@ class AddPlaceFragment : Fragment() {
         observeViewModel()
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Wiring
-    // ---------------------------------------------------------------------------------------
+    // Wiring.
 
-    /**
-     * Attaches the text boxes.
-     *
-     * Each reports what was typed to the ViewModel, which is where the value lives — the name drives
-     * the summary card and the save button, and the address box is written into by the map's own
-     * lookup, so neither box can be the only one who knows its value. See the note on
-     * [AddPlaceFormState] for why this screen departs from the app's other forms in that respect.
-     *
-     * The category pills are not here: they are rebuilt from state in [renderForm], because a chip
-     * row's selection is drawn from the state rather than held by the view.
-     */
+    /** Attaches the text boxes. */
     private fun setUpFields() {
         binding.nameInput.doOnTextChanged { text, _, _, _ ->
             viewModel.onNameChanged(text?.toString().orEmpty())
@@ -180,13 +133,7 @@ class AddPlaceFragment : Fragment() {
         binding.savePlaceButton.setOnClickListener { save() }
     }
 
-    /**
-     * Hands every gesture on the map straight to the picker that owns the decision.
-     *
-     * Nothing is interpreted here, which is the point: this fragment holds no coordinate of its own, so
-     * the map and the card under it cannot come to disagree about where the place is. The one thing
-     * this side keeps is the link out of the map's credits, which needs an Intent.
-     */
+    /** Hands every gesture on the map straight to the picker that owns the decision. */
     private fun setUpLocationPicker() {
         val picker = viewModel.picker
 
@@ -202,10 +149,7 @@ class AddPlaceFragment : Fragment() {
         binding.locationPicker.onExternalLink = { url -> openLink(url) }
     }
 
-    /**
-     * Opens a Material time picker in the device's own 12- or 24-hour style, starting from the time
-     * already chosen or a sensible default.
-     */
+    /** Opens a Material time picker in the device's own 12- or 24-hour style. */
     private fun showTimePicker(
         titleRes: Int,
         current: Int?,
@@ -239,9 +183,7 @@ class AddPlaceFragment : Fragment() {
         }
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Rendering
-    // ---------------------------------------------------------------------------------------
+    // Rendering.
 
     private fun render(state: AddPlaceUiState) {
         binding.locationPicker.render(state.location)
@@ -249,15 +191,7 @@ class AddPlaceFragment : Fragment() {
         renderForm(state)
     }
 
-    /**
-     * The fields, the summary and the save button.
-     *
-     * The text boxes are written back to only when they actually differ from the state. Setting an
-     * EditText's text to what it already contains would move the cursor to the end mid-word, and this
-     * state is re-emitted on every keystroke — so the guard is what makes the fields usable at all. It
-     * is also what lets the address box be filled in by the map's lookup without fighting the user;
-     * see [AddPlaceViewModel.onAreaChanged].
-     */
+    /** The fields, the summary and the save button. */
     private fun renderForm(state: AddPlaceUiState) {
         val form = state.form
 
@@ -265,11 +199,7 @@ class AddPlaceFragment : Fragment() {
         setTextIfChanged(binding.areaInput, form.area, moveCursorToEnd = true)
         setTextIfChanged(binding.noteInput, form.note, moveCursorToEnd = false)
 
-        // 🏥 Vet · ✂️ Grooming · 🌳 Park · 🏪 Shop, built from the enum so adding a category needs no
-        // layout change. Each chip leads with the emoji that will end up on the saved place's row, so
-        // the symbol is part of the choice rather than a surprise afterwards. The chips are only
-        // rebuilt when the options differ, so calling this on every emission costs nothing — see
-        // ui/common/FilterChips.kt.
+        // 🏥 Vet · ✂️ Grooming · 🌳 Park · 🏪 Shop, built from the enum so adding a category needs no layout change.
         binding.categoryChipGroup.bindOptions(
             options = PlaceCategory.entries.map {
                 ChipOption(it.name, it.emojiLabel(requireContext()))
@@ -297,8 +227,7 @@ class AddPlaceFragment : Fragment() {
 
         binding.summaryText.text = buildSummary(state)
 
-        // The label names the missing condition rather than only greying out, so a user who cannot
-        // press the button knows whether to keep typing or to choose a point on the map.
+        // The label names the missing condition rather than only greying out.
         binding.savePlaceButton.setText(
             when {
                 form.name.isBlank() -> R.string.add_place_save_needs_name
@@ -309,13 +238,7 @@ class AddPlaceFragment : Fragment() {
         binding.savePlaceButton.isEnabled = state.canSave
     }
 
-    /**
-     * Writes a value into a text box only if it is not already there — see [renderForm].
-     *
-     * The cursor is moved to the end for the boxes the state can change underneath the user (the
-     * address, filled in by the map's lookup) and left alone for the note, where a multi-line box
-     * jumping to the end would be the more jarring of the two.
-     */
+    /** Writes a value into a text box only if it is not already there — see [renderForm]. */
     private fun setTextIfChanged(
         input: com.google.android.material.textfield.TextInputEditText,
         value: String,
@@ -326,15 +249,7 @@ class AddPlaceFragment : Fragment() {
         if (moveCursorToEnd) input.setSelection(value.length)
     }
 
-    /**
-     * The two-line readback above the save button: what will be saved, then the position it will
-     * carry.
-     *
-     * The second line is the screen being honest about itself. Until a point has been chosen it says
-     * so plainly rather than showing a plausible-looking coordinate, which is the same reason the save
-     * button stays disabled: an invented geotag is worse than an unsaved place, because it looks
-     * exactly like a real one.
-     */
+    /** The two-line readback above the save button: what will be saved, then the position it will carry. */
     private fun buildSummary(state: AddPlaceUiState): String {
         val name = state.form.name.trim().ifEmpty { getString(R.string.add_place_summary_untitled) }
 
@@ -357,17 +272,9 @@ class AddPlaceFragment : Fragment() {
         return "$headline\n$position"
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Actions
-    // ---------------------------------------------------------------------------------------
+    // Actions.
 
-    /**
-     * Hands the ViewModel the two things it cannot produce: the phone number as the country selector
-     * and the number box left it, and the note to store when the box was empty.
-     *
-     * Both are passed in rather than looked up there because they come from views or from string
-     * resources, and a ViewModel holds neither.
-     */
+    /** Hands the ViewModel the two things it cannot produce. */
     private fun save() {
         val phone = phoneInput ?: return
 
@@ -378,14 +285,7 @@ class AddPlaceFragment : Fragment() {
         )
     }
 
-    /**
-     * The picker needs something only a fragment can do.
-     *
-     * The permission prompt is the interesting one: the picker decides *that* access is needed and
-     * stops, this shows the dialog, and whichever way the user answers comes back through
-     * [locationPermission] into the picker again. Nothing about the permission flow is duplicated
-     * between the two Places forms as a result — they both forward the same event.
-     */
+    /** The picker needs something only a fragment can do. */
     private fun handleLocationEvent(event: LocationPickerEvent) {
         when (event) {
             is LocationPickerEvent.MoveCamera ->
@@ -404,18 +304,7 @@ class AddPlaceFragment : Fragment() {
         }
     }
 
-    /**
-     * The place is in the database. Hands its id and name back to the Places tab and closes.
-     *
-     * The values travel through the *previous* back stack entry's [androidx.lifecycle.SavedStateHandle],
-     * which is the Navigation component's way of returning a result: it belongs to the destination
-     * being returned to, survives that screen being recreated, and needs neither a shared ViewModel nor
-     * a fragment result listener. The tab uses them to select the new place — which re-centres its map
-     * and points Directions at it — and to offer the undo. See PlacesFragment.observeSavedPlaceResult.
-     *
-     * The name is written first and the id second, because the tab watches the id: writing them the
-     * other way round would wake it before the name had arrived.
-     */
+    /** The place is in the database. Hands its id and name back to the Places tab and closes. */
     private fun onSaved(event: AddPlaceEvent.Saved) {
         val controller = findNavController()
         controller.previousBackStackEntry?.savedStateHandle?.apply {
@@ -438,8 +327,7 @@ class AddPlaceFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // The map holds a GPU surface and a native renderer until it is told otherwise, so it is
-        // torn down with the view rather than left to the garbage collector.
+        // The map holds a GPU surface and a native renderer until it is told otherwise.
         binding.locationPicker.destroy()
         // Dropped with the binding: it holds views from this hierarchy.
         phoneInput = null
@@ -448,10 +336,7 @@ class AddPlaceFragment : Fragment() {
 
     companion object {
 
-        /**
-         * The keys the saved place travels back to the Places tab under. Named here, beside the code
-         * that writes them, and read by PlacesFragment — one definition, so the two cannot drift.
-         */
+        /** The keys the saved place travels back to the Places tab under. */
         const val RESULT_SAVED_PLACE_ID = "savedPlaceId"
         const val RESULT_SAVED_PLACE_NAME = "savedPlaceName"
 

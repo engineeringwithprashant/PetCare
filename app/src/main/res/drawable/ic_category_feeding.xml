@@ -1,9 +1,4 @@
-<!--
-    Food bowl, marking the FEEDING task category.
-
-    No tint is set here: every category icon is tinted at the point of use so it can match whatever
-    surface it is drawn on, which differs between a checklist heading and a list row.
--->
+<!-- Food bowl, marking the FEEDING task category. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

@@ -20,15 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Everything the reset confirmation screen draws, apart from the address, which never changes.
- *
- * @property secondsUntilResend Seconds left before "RESEND" works again. 0 means it works now.
- * @property isSending True while a resend is in progress.
- * @property notice A line to show under the resend row, or null for none. It is either the
- *   "sent again" confirmation or a failure, and [noticeIsError] says which.
- * @property noticeIsError Draw [notice] in the error colour (true) or the muted helper colour.
- */
+/** Everything the reset confirmation screen draws, apart from the address, which never changes. */
 data class ResetSentUiState(
     val secondsUntilResend: Int = 0,
     val isSending: Boolean = false,
@@ -40,23 +32,7 @@ data class ResetSentUiState(
         get() = !isSending && secondsUntilResend == 0
 }
 
-/**
- * The **ViewModel** behind the reset confirmation screen (ResetSentFragment). It holds the address
- * the link went to, runs the resend cooldown, and sends the email again when asked.
- *
- * **The cooldown starts on arrival.** This screen only opens after a successful send, so a link
- * went out moments ago. "RESEND" starts disabled and counts down, and it counts down again after
- * every resend.
- *
- * **Why SavedStateHandle.** The time the cooldown ends is saved there. If the app is killed in the
- * background (while the user checks their email, for example) and later restored, the countdown
- * continues from where it was. Without this, the restored screen would start a fresh countdown, or
- * allow an immediate resend.
- *
- * @param savedStateHandle The `email` navigation argument and the saved cooldown end time.
- * @param repository Sends the email again. The ViewModel's only route to Firebase.
- * @param now The current time in milliseconds. A parameter so a test could supply a fake clock.
- */
+/** The ViewModel behind the reset confirmation screen (ResetSentFragment). */
 class ResetSentViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val repository: PasswordResetRepository,
@@ -75,8 +51,7 @@ class ResetSentViewModel(
     private var countdown: Job? = null
 
     init {
-        // Start the cooldown on the first visit only. After a restore, the saved end time is
-        // already there, and the countdown just continues from it.
+        // Start the cooldown on the first visit only. After a restore, the saved end time is already there.
         if (!savedStateHandle.contains(KEY_READY_AT)) {
             savedStateHandle[KEY_READY_AT] = now() + ResendCooldown.DURATION_MILLIS
         }
@@ -101,9 +76,7 @@ class ResetSentViewModel(
                 }
 
                 else -> {
-                    // After a rate-limit error, retrying straight away would only fail again, so the
-                    // cooldown restarts. After other failures, such as no network, the user can
-                    // retry as soon as the problem is fixed.
+                    // After a rate-limit error, retrying straight away would only fail again.
                     if (result == PasswordResetResult.RateLimited) startCooldown()
                     _uiState.update {
                         it.copy(notice = result.failureMessage(), noticeIsError = true)
@@ -119,16 +92,7 @@ class ResetSentViewModel(
         runCountdown()
     }
 
-    /**
-     * Updates [ResetSentUiState.secondsUntilResend] once per second until it reaches 0.
-     *
-     * Each wait lasts until the displayed number next changes, not a fixed 1000 ms. This keeps the
-     * countdown in step with the real end time. With 42.3 s left, the display reads 43, and the next
-     * wait is 300 ms, until it should read 42.
-     *
-     * It runs in viewModelScope, so it keeps going through a rotation and stops when the screen is
-     * closed.
-     */
+    /** Updates [ResetSentUiState.secondsUntilResend] once per second until it reaches 0. */
     private fun runCountdown() {
         countdown?.cancel()
         countdown = viewModelScope.launch {
@@ -148,13 +112,7 @@ class ResetSentViewModel(
         /** SavedStateHandle key for the time the current cooldown ends, in epoch milliseconds. */
         private const val KEY_READY_AT = "reset_sent.ready_at"
 
-        /**
-         * Builds the ViewModel with its SavedStateHandle and repository.
-         *
-         * `createSavedStateHandle()` gives the same handle the default factory would, already
-         * holding the fragment's navigation arguments. A custom factory has to ask for it
-         * explicitly, because it also needs the repository from PetCareApplication.
-         */
+        /** Builds the ViewModel with its SavedStateHandle and repository. */
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =

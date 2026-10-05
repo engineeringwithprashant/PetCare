@@ -20,18 +20,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Everything the reset request screen draws.
- *
- * @property email What is typed in the field. The ViewModel keeps it because [canSend] depends on
- *   it.
- * @property emailError The format error under the field, or null. A resource id, not text, so the
- *   ViewModel needs no Context.
- * @property isSending True while Firebase is handling the request. The button is disabled during
- *   this time so a second tap cannot send a second email.
- * @property failure A message for a failure that is not about the address format (no network, rate
- *   limit), shown under the button. Null when there is nothing to report.
- */
+/** Everything the reset request screen draws. */
 data class ResetRequestUiState(
     val email: String = "",
     @param:StringRes val emailError: Int? = null,
@@ -50,28 +39,7 @@ sealed interface ResetRequestEvent {
     data class LinkSent(val email: String) : ResetRequestEvent
 }
 
-/**
- * The **ViewModel** behind the reset request screen (ResetRequestFragment). It checks the typed
- * address, then asks [PasswordResetRepository] to send the reset email.
- *
- * **When the error appears, and when the button turns on.**
- *  - The button follows every keystroke. It is enabled exactly while the address is well formed,
- *    so pressing it never fails on format.
- *  - The error message waits until the user has finished with the field: it loses focus, or they
- *    press "done". Showing "Enter a valid email address" after the first letter would scold someone
- *    who has not finished typing. Once shown, the message goes away as soon as the address is valid.
- *
- * **Same result for every address.** The repository reports an unregistered address as
- * [PasswordResetResult.Sent], so this ViewModel moves to the confirmation either way and never
- * shows an "account not found" error.
- *
- * The typed text is not saved for process death. The EditText restores its own text and reports it
- * again through the same change listener, which rebuilds this state.
- *
- * @param repository The only way this ViewModel reaches Firebase, as MVVM requires.
- * @param loginAttemptStore The log in screen's failed-attempt counter, cleared for an address once a
- *   reset link has gone to it — see [onSendLink].
- */
+/** The ViewModel behind the reset request screen (ResetRequestFragment). */
 class ResetRequestViewModel(
     private val repository: PasswordResetRepository,
     private val loginAttemptStore: LoginAttemptStore
@@ -84,12 +52,7 @@ class ResetRequestViewModel(
     private val _events = Channel<ResetRequestEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    /**
-     * The text in the field changed. This updates the button. If an error is already showing, it is
-     * re-checked against the new text, so it disappears as soon as the address becomes valid. If no
-     * error is showing, typing never adds one. An older failure message is also cleared, since the
-     * user is now working on the address.
-     */
+    /** The text in the field changed. This updates the button. */
     fun onEmailChanged(text: String) {
         _uiState.update { state ->
             state.copy(
@@ -101,25 +64,14 @@ class ResetRequestViewModel(
         }
     }
 
-    /**
-     * The user has finished with the field. Show its format error now, if it has one.
-     *
-     * An empty field is left alone. The disabled button already shows that something is missing,
-     * and a red "required" under a field the user has not typed in yet would come too early.
-     */
+    /** The user has finished with the field. Show its format error now, if it has one. */
     fun onEmailFinished() {
         val email = _uiState.value.email
         if (email.isBlank()) return
         _uiState.update { it.copy(emailError = AuthValidation.validateEmail(email)) }
     }
 
-    /**
-     * "SEND RESET LINK".
-     *
-     * The format is checked again here even though the button is disabled while it is invalid. The
-     * keyboard's "done" key also calls this, so the rule has to hold here and not only in the
-     * button's state.
-     */
+    /** "SEND RESET LINK". */
     fun onSendLink() {
         val state = _uiState.value
         if (state.isSending) return
@@ -133,30 +85,19 @@ class ResetRequestViewModel(
         val email = state.email.trim()
         _uiState.update { it.copy(isSending = true, failure = null) }
 
-        // viewModelScope, so the request keeps running through a rotation and is cancelled only if
-        // the user leaves the screen.
+        // viewModelScope, so the request keeps running through a rotation and is cancelled only if the user leaves.
         viewModelScope.launch {
             val result = repository.sendResetEmail(email)
             _uiState.update { it.copy(isSending = false) }
 
             when (result) {
                 PasswordResetResult.Sent -> {
-                    // Resetting the password gets the user back in straight away, as the locked
-                    // screen promises: sending the link clears any lock and failure count this
-                    // device was holding against the address.
-                    //
-                    // Sending the email is the last thing the *app* can observe — the new password
-                    // is set on Firebase's own web page, which never tells the app it happened — so
-                    // this is the moment the lock has to go. That is deliberately generous, and
-                    // costs nothing: someone who can ask for a link at this address is either its
-                    // owner or is no worse off than before, and Firebase's own server-side
-                    // throttling is what actually protects the account. See LoginAttemptStore.
+                    // Resetting the password gets the user back in straight away, as the locked screen promises.
                     loginAttemptStore.clear(email)
                     _events.send(ResetRequestEvent.LinkSent(email))
                 }
 
-                // Firebase rejected the address itself, so the error goes under the field, just
-                // like the app's own format check.
+                // Firebase rejected the address itself, so the error goes under the field.
                 PasswordResetResult.InvalidEmail ->
                     _uiState.update { it.copy(emailError = R.string.error_email_invalid) }
 
@@ -168,10 +109,7 @@ class ResetRequestViewModel(
 
     companion object {
 
-        /**
-         * Builds the ViewModel with its repository from PetCareApplication. A factory is needed
-         * because the default one can only build ViewModels whose constructor takes no arguments.
-         */
+        /** Builds the ViewModel with its repository from PetCareApplication. */
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application =

@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The badge on the profile screen's "Password" row: a closed padlock.
-
-    Closed rather than open, deliberately. An open padlock is the universal mark for "this is not
-    protected", and the row it sits beside is the one that *changes* the password rather than one warning
-    that something is unguarded — so a broken-open shackle here would say the opposite of the truth.
-
-    See ic_profile_person.xml for why these badges are glyphs rather than the four-letter codes they
-    replaced, and why none of them sets its own tint.
--->
+<!-- The badge on the profile screen's "Password" row: a closed padlock. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

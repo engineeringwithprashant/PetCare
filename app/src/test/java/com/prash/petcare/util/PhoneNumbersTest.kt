@@ -6,25 +6,13 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Unit tests for [PhoneNumbers], the per-country rules behind every phone field in the app.
- *
- * Plain JVM tests: the object holds no Android types and libphonenumber is pure Java, which is
- * exactly why the rules live in `util` rather than being wired into a view.
- *
- * What these guard is the behaviour the old hand-written "seven to fifteen digits" check got wrong,
- * and the two things the app now *depends* on being right: that a valid number always reduces to one
- * canonical stored form, and that a number stored in any of the shapes an older version left behind
- * still reduces to the same one — because sign-in by phone number is a comparison between those two.
- */
+/** Unit tests for [PhoneNumbers], the per-country rules behind every phone field in the app. */
 class PhoneNumbersTest {
 
     /** A real Nepali mobile number's national part. */
     private val nepaliMobile = "9812345678"
 
-    // ---------------------------------------------------------------------------------------
-    // Checking a number against its country
-    // ---------------------------------------------------------------------------------------
+    // Checking a number against its country.
 
     @Test
     fun `a real number for the country selected is valid`() {
@@ -42,8 +30,7 @@ class PhoneNumbersTest {
 
     @Test
     fun `an empty box is reported as empty rather than invalid`() {
-        // The distinction matters: registration treats empty as an error and the profile form does
-        // not, and neither could tell the two apart from a single "invalid".
+        // The distinction matters: registration treats empty as an error and the profile form does.
         assertEquals(PhoneCheck.EMPTY, PhoneNumbers.check("NP", ""))
         assertEquals(PhoneCheck.EMPTY, PhoneNumbers.check("NP", "   "))
         assertEquals(PhoneCheck.EMPTY, PhoneNumbers.check("NP", "()-"))
@@ -51,8 +38,7 @@ class PhoneNumbersTest {
 
     @Test
     fun `a number that is real for one country is not accepted for another`() {
-        // The whole reason the country is asked for. A ten-digit Nepali mobile is not a UK number,
-        // and the old digit-counting check had no way of knowing that.
+        // The whole reason the country is asked for. A ten-digit Nepali mobile is not a UK number.
         assertEquals(PhoneCheck.VALID, PhoneNumbers.check("NP", nepaliMobile))
         assertEquals(PhoneCheck.INVALID, PhoneNumbers.check("GB", nepaliMobile))
     }
@@ -68,14 +54,11 @@ class PhoneNumbersTest {
         assertEquals(PhoneCheck.INVALID, PhoneNumbers.check("NP", "98123abcd45"))
     }
 
-    // ---------------------------------------------------------------------------------------
-    // The stored form
-    // ---------------------------------------------------------------------------------------
+    // The stored form.
 
     @Test
     fun `every way of writing one number reduces to the same stored form`() {
-        // This is the property sign-in by phone number rests on: the number typed at the log-in
-        // screen has to match the number saved on the profile, however either was written.
+        // This is the property sign-in by phone number rests.
         val expected = "+9779812345678"
 
         listOf(nepaliMobile, "981 234 5678", "0981-2345678", "+977 9812345678", "+9779812345678")
@@ -90,9 +73,7 @@ class PhoneNumbersTest {
         assertNull(PhoneNumbers.toE164("NP", "98123"))
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Reading a stored number back into a form
-    // ---------------------------------------------------------------------------------------
+    // Reading a stored number back into a form.
 
     @Test
     fun `a stored international number is split back into its own country`() {
@@ -104,17 +85,14 @@ class PhoneNumbersTest {
 
     @Test
     fun `a bare number saved by an older version is read as a Nepali one`() {
-        // The case that stops an existing profile's number vanishing from the form the first time it
-        // is opened after the country selector was added.
+        // The case that stops an existing profile's number vanishing from the form the first time it is opened.
         val split = requireNotNull(PhoneNumbers.split(nepaliMobile))
 
         assertEquals("NP", split.first.regionCode)
         assertEquals(nepaliMobile, split.second)
     }
 
-    // ---------------------------------------------------------------------------------------
-    // The log-in field, which has no country selector
-    // ---------------------------------------------------------------------------------------
+    // The log-in field, which has no country selector.
 
     @Test
     fun `an email address is never read as a phone number`() {
@@ -126,8 +104,7 @@ class PhoneNumbersTest {
 
     @Test
     fun `digits that are not a real number are recognised as an attempt at one`() {
-        // So the log-in field can say "that is not a valid number" instead of complaining about an
-        // email address the user plainly was not typing.
+        // So the log-in field can say "that is not a valid number" instead of complaining about an email address.
         assertNull(PhoneNumbers.parseLoginNumber("98123"))
         assertTrue(PhoneNumbers.looksLikePhoneAttempt("98123"))
         assertTrue(PhoneNumbers.looksLikePhoneAttempt("+977 981"))
@@ -139,9 +116,7 @@ class PhoneNumbersTest {
         assertFalse(PhoneNumbers.looksLikePhoneAttempt("prashant"))
     }
 
-    // ---------------------------------------------------------------------------------------
-    // The country list and the input cap
-    // ---------------------------------------------------------------------------------------
+    // The country list and the input cap.
 
     @Test
     fun `the country list carries Nepal and is not empty`() {
@@ -159,8 +134,7 @@ class PhoneNumbersTest {
 
     @Test
     fun `the digit cap can never be short enough to reject a valid number`() {
-        // The cap exists to stop an over-long number being typed at all, so the one thing it must
-        // never do is stop somebody typing their real one.
+        // The cap exists to stop an over-long number being typed at all.
         listOf("NP" to nepaliMobile, "GB" to "7400123456", "US" to "4155550100").forEach {
             val (region, number) = it
             assertTrue(region, PhoneNumbers.maxNationalDigits(region) >= number.length)

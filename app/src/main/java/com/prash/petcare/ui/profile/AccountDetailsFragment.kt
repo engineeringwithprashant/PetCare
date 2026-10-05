@@ -20,17 +20,7 @@ import com.prash.petcare.ui.common.PhoneNumberInput
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
-/**
- * The form behind the profile screen's "EDIT" pill: the account's own name, contact number and role.
- *
- * In MVVM this is the **View**: it fills the fields from what [AccountDetailsViewModel] publishes and
- * forwards what the user typed. No validation happens here — the ViewModel decides whether a name is
- * acceptable and this class only renders the answer, which is what keeps that rule testable without a
- * device.
- *
- * It takes no navigation arguments. The account is the signed-in one, read from [SessionViewModel] as
- * on every other screen.
- */
+/** The form behind the profile screen's "EDIT" pill: the account's own name, contact number and role. */
 class AccountDetailsFragment : Fragment() {
 
     private var _binding: FragmentAccountDetailsBinding? = null
@@ -42,24 +32,10 @@ class AccountDetailsFragment : Fragment() {
         AccountDetailsViewModel.factory(sessionViewModel.userId.value)
     }
 
-    /**
-     * Whether the fields have been filled from the database yet.
-     *
-     * The account is observed as a flow, so it can emit again while the form is open — and re-filling
-     * the fields on a later emission would wipe out whatever the user had typed in the meantime. This
-     * flag makes the fill happen exactly once, on the first emission that carries an account.
-     *
-     * A field rather than a check for "are the fields empty": the user may legitimately have cleared
-     * the phone field, and that is a state worth preserving rather than treating as "not filled yet".
-     */
+    /** Whether the fields have been filled from the database yet. */
     private var hasFilledForm = false
 
-    /**
-     * The country selector and number box, driven as one control.
-     *
-     * Created in [onViewCreated] and dropped in [onDestroyView] with the binding, since it holds
-     * views from this hierarchy.
-     */
+    /** The country selector and number box, driven as one control. */
     private var phoneInput: PhoneNumberInput? = null
 
     override fun onCreateView(
@@ -74,8 +50,7 @@ class AccountDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // The two phone boxes behave as one control. Editing either clears the error left by a
-        // previous save attempt, so a corrected field stops complaining.
+        // The two phone boxes behave as one control. Editing either clears the error left by a previous save attempt.
         phoneInput = PhoneNumberInput(
             countryLayout = binding.phoneCountryLayout,
             countryInput = binding.phoneCountryInput,
@@ -106,18 +81,13 @@ class AccountDetailsFragment : Fragment() {
 
         binding.nameInput.setText(user.fullName)
 
-        // Splits the stored number back into a country and the local digits. A number saved before
-        // this form had a selector is bare digits and is read as a Nepali number, which is what stops
-        // an existing profile's number disappearing the first time this screen is opened.
+        // Splits the stored number back into a country and the local digits.
         phoneInput?.setStoredNumber(user.phone)
 
-        // The email is shown but not editable. The field is disabled rather than absent, because the
-        // address is one of the account's defining facts and a form that simply omitted it would look
-        // as though it had been forgotten; the helper text underneath says why it cannot change here.
+        // The email is shown but not editable. The field is disabled rather than absent.
         binding.emailInput.setText(user.email)
 
-        // The role, as a two-button toggle. checkedButtonId is set rather than each button's checked
-        // state, so the group can never end up with both selected or neither.
+        // The role, as a two-button toggle. checkedButtonId is set rather than each button's checked state.
         binding.roleToggleGroup.check(
             if (user.role == UserRole.CARER) R.id.roleCarerButton else R.id.roleOwnerButton
         )
@@ -128,8 +98,7 @@ class AccountDetailsFragment : Fragment() {
 
         viewModel.onSave(
             fullName = binding.nameInput.text?.toString().orEmpty(),
-            // The country and the digits go over separately: whether the two make a real number, and
-            // what its international form is, are the ViewModel's decisions rather than this screen's.
+            // The country and the digits go over separately: whether the two make a real number.
             phoneRegion = phone.regionCode(),
             phone = phone.nationalNumber(),
             role = if (binding.roleToggleGroup.checkedButtonId == R.id.roleCarerButton) {
@@ -140,21 +109,14 @@ class AccountDetailsFragment : Fragment() {
         )
     }
 
-    /**
-     * Reacts to the save attempt.
-     *
-     * The name error is shown on the field itself rather than as a Snackbar, because it belongs to one
-     * particular input and a message at the bottom of the screen would leave the user hunting for
-     * which. The error is cleared on every attempt, so a fixed field stops complaining.
-     */
+    /** Reacts to the save attempt. */
     private fun handleEvent(event: AccountDetailsEvent) {
         binding.nameInputLayout.error = null
         binding.phoneInputLayout.error = null
 
         when (event) {
             is AccountDetailsEvent.Saved -> {
-                // Back to the profile screen, which re-reads the account from Room and redraws itself
-                // — so there is nothing to hand back and no result to deliver.
+                // Back to the profile screen, which re-reads the account from Room and redraws itself.
                 showMessage(getString(R.string.account_details_saved))
                 findNavController().navigateUp()
             }
@@ -162,8 +124,7 @@ class AccountDetailsFragment : Fragment() {
             is AccountDetailsEvent.NameRequired ->
                 binding.nameInputLayout.error = getString(R.string.account_details_name_required)
 
-            // Under the number rather than the country, because the number is usually the part to
-            // change — and the message itself names the country as the other possibility.
+            // Under the number rather than the country, because the number is usually the part to change.
             is AccountDetailsEvent.PhoneInvalid ->
                 binding.phoneInputLayout.error = getString(R.string.error_phone_invalid)
 

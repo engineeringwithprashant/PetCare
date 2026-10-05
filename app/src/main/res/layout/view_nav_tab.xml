@@ -1,23 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One tab of the floating bottom navigation bar: an icon, the label that appears beside it while
-    the tab is active, and — on the Tasks tab alone — the open-task count.
-
-    Inflated five times by FloatingNavBar, once per entry in its NavTab list, rather than written out
-    five times in activity_main.xml. Five near-identical copies of this file would be five places to
-    change whenever a tab's metrics move, and four of them would eventually be missed; the tabs
-    differ only in their icon, their label and where they navigate to, and those three facts live in
-    the NavTab enum where they can be read in one glance.
-
-    **Why a FrameLayout.** The tab has two independent pieces of content: the icon-and-label row,
-    centred, and the badge, pinned to the top-right corner. That is a stack with two differently
-    gravitied children, which is exactly what FrameLayout is for. It also clips its children to its
-    own bounds, which is the spec's `overflow: hidden` — the thing that lets the label be revealed by
-    the pill widening rather than appearing all at once.
-
-    The tab's *width* is not set here. It is given by the parent as a layout weight and animated
-    between two values when the selection changes — see FloatingNavBar.
--->
+<!-- One tab of the floating bottom navigation bar: an icon, the label that appears beside. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -29,30 +11,7 @@
     android:focusable="true"
     android:minHeight="@dimen/nav_tab_min_touch_target">
 
-    <!--
-        The icon and its label, side by side and centred in the tab.
-
-        Horizontal, so the label sits to the *right* of the icon rather than beneath it: the pill
-        grows sideways, and a label under the icon would need a taller bar the design does not have.
-
-        wrap_content with center gravity is the spec's `justify-content: center` — at rest the pair
-        sits in the middle of whatever width the tab currently has. While the tab is inactive the
-        label is gone and the icon is centred alone.
-
-        **The active tab's horizontal padding is applied here, not on the tab itself.** It has to
-        squeeze the content — that is what padding is for — but it must *not* move the badge, which
-        is pinned to the tab's own edge and knows nothing about the room the icon and label have. On
-        the tab root the two are the same property: FrameLayout lays every child out inside the
-        padding, so 14dp of it would push the badge 14dp further in and, on a pill this size, over
-        the end of the label. Padding the row instead separates them, and matches what the design
-        describes — content inset, badge measured from the edge. FloatingNavBar sets it.
-
-        **UseCompoundDrawables is suppressed deliberately.** Lint sees an icon beside a label and
-        suggests collapsing the two into one TextView with a compound drawable, which is normally
-        right and here is not: the icon has to stay visible when the label is `gone`, the padding
-        above has to land on the row rather than on the text, and the icon is swapped between two
-        stroke weights — none of which a compound drawable on a hidden TextView can do.
-    -->
+    <!-- The icon and its label, side by side and centred in the tab. -->
     <LinearLayout
         android:id="@+id/navTabContent"
         android:layout_width="wrap_content"
@@ -62,15 +21,7 @@
         android:orientation="horizontal"
         tools:ignore="UseCompoundDrawables">
 
-        <!--
-            duplicateParentState is what makes the tint follow selection with no code: it hands this
-            view the tab's own states, so @color/nav_tab_ink resolves to the active ink the moment
-            the tab is selected. The icon *drawable* is still swapped in code, because the active
-            icon is the same outline drawn at a heavier stroke and a VectorDrawable's stroke width
-            cannot be changed after inflation.
-
-            The source is set by FloatingNavBar; tools:src only populates the preview.
-        -->
+        <!-- duplicateParentState is what makes the tint follow selection with no code. -->
         <ImageView
             android:id="@+id/navTabIcon"
             android:layout_width="@dimen/nav_tab_icon_size"
@@ -81,16 +32,7 @@
             app:tint="@color/nav_tab_ink"
             tools:src="@drawable/ic_tab_home" />
 
-        <!--
-            The tab's name, hidden until the tab is active.
-
-            `gone` rather than `invisible`: an invisible label would still be measured, so every
-            inactive tab would reserve room for a word it never draws and the icons would sit
-            off-centre. FloatingNavBar makes it visible at the *start* of the widening animation, so
-            it is uncovered by the pill growing around it.
-
-            The start margin is the gap between icon and label.
-        -->
+        <!-- The tab's name, hidden until the tab is active. -->
         <TextView
             android:id="@+id/navTabLabel"
             style="@style/PetCare.NavTab.Label"
@@ -105,20 +47,7 @@
 
     </LinearLayout>
 
-    <!--
-        The open-task count, on the Tasks tab only.
-
-        Pinned to the top-right corner rather than laid out beside the icon, so it reads as a mark
-        *on* the tab rather than as a second piece of its content — and so it does not shift the icon
-        off centre when it appears.
-
-        minWidth with horizontal padding rather than a fixed width: a single digit sits in a circle,
-        and two digits stretch it into a short pill instead of being squeezed. Its end margin is
-        tightened by FloatingNavBar when the tab becomes active, because the tab is wider then and
-        the badge would otherwise drift away from the icon it belongs to.
-
-        Gone by default. FloatingNavBar shows it only while there is at least one open task.
-    -->
+    <!-- The open-task count, on the Tasks tab only. -->
     <TextView
         android:id="@+id/navTabBadge"
         style="@style/PetCare.NavTab.Badge"

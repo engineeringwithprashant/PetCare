@@ -18,13 +18,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * Everything the routine detail screen displays.
- *
- * @property routine The routine being viewed, or null while loading.
- * @property tasks The care tasks it contains, ordered through the day.
- * @property isLoading True until the first database results arrive.
- */
+/** Everything the routine detail screen displays. */
 data class RoutineDetailUiState(
     val routine: CareRoutine? = null,
     val tasks: List<CareTask> = emptyList(),
@@ -40,17 +34,7 @@ sealed interface RoutineDetailEvent {
     data object Deleted : RoutineDetailEvent
 }
 
-/**
- * Supplies the routine detail screen with a routine and the tasks inside it, and handles pausing
- * and deleting it.
- *
- * Adding a task is still handled by the form the user moves on to; what lives here are the two
- * actions that operate on the routine as a whole.
- *
- * @param careRoutineRepository Source of the routine, and where pause and delete are written.
- * @param careTaskRepository Source of the tasks belonging to it, and used to clear them on delete.
- * @param routineId Which routine to show, passed in as a navigation argument.
- */
+/** Supplies the routine detail screen with a routine and the tasks inside it, and handles pausing and deleting it. */
 class RoutineDetailViewModel(
     private val careRoutineRepository: CareRoutineRepository,
     private val careTaskRepository: CareTaskRepository,
@@ -75,64 +59,28 @@ class RoutineDetailViewModel(
     private val _events = Channel<RoutineDetailEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    /**
-     * Pauses or resumes the routine.
-     *
-     * Pausing is the reversible alternative to deleting: the routine and its tasks stay exactly as
-     * they are, but [com.prash.petcare.util.CareSchedule.occursOn] stops treating it as due, so
-     * none of its tasks appear on any checklist until it is switched back on. That suits care that
-     * stops for a while — a course of medication that has finished, walks paused after surgery.
-     *
-     * A targeted UPDATE through the repository rather than rewriting the whole row, so a concurrent
-     * edit elsewhere cannot be undone by this toggle.
-     */
+    /** Pauses or resumes the routine. */
     fun setActive(isActive: Boolean) {
         viewModelScope.launch {
             careRoutineRepository.setRoutineActive(routineId, isActive)
         }
     }
 
-    /**
-     * Deletes a single task from this routine, as the swipe-left gesture does.
-     *
-     * No confirmation here: the caller offers an undo instead. A swipe is easy to trigger by
-     * accident, but a dialog on every one would make the shortcut slower than opening the task and
-     * using its delete button — which remains the deliberate, screen-reader-reachable route.
-     */
+    /** Deletes a single task from this routine, as the swipe-left gesture does. */
     fun deleteTask(task: CareTask) {
         viewModelScope.launch {
             careTaskRepository.deleteTask(task)
         }
     }
 
-    /**
-     * Puts back a task removed by [deleteTask], for the undo action.
-     *
-     * Re-inserting the original object restores its id as well as its contents, because Room only
-     * generates a new primary key when the one it is given is zero. Keeping the id matters: the row
-     * returns exactly as it was rather than as a lookalike copy with a new identity.
-     */
+    /** Puts back a task removed by [deleteTask], for the undo action. */
     fun restoreTask(task: CareTask) {
         viewModelScope.launch {
             careTaskRepository.addTask(task)
         }
     }
 
-    /**
-     * Deletes the routine and every task inside it.
-     *
-     * The tasks are removed first, deliberately. The foreign key on `routineId` is SET_NULL, so
-     * deleting the routine on its own would leave its tasks behind pointing at nothing — and a task
-     * with no routine has no days on which it is due, making it permanently invisible rather than
-     * preserved.
-     *
-     * The order also decides what a partial failure looks like. Clearing tasks first means an
-     * interruption leaves an empty routine the user can simply delete again; the other order would
-     * leave orphaned tasks with no route back to them.
-     *
-     * The confirmation dialog is the fragment's responsibility — by the time this runs the user has
-     * already agreed.
-     */
+    /** Deletes the routine and every task inside it. */
     fun delete() {
         val routine = uiState.value.routine ?: return
 

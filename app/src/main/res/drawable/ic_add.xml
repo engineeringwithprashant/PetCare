@@ -1,13 +1,4 @@
-<!--
-    Plus icon for the "add a pet" floating action button.
-
-    A vector drawable rather than a PNG: it is drawn from path data at runtime, so it stays sharp
-    on every screen density from a single small file, instead of needing one bitmap per density
-    bucket.
-
-    fillColor is white here, but the FloatingActionButton re-tints it to match the Material 3
-    theme, so the icon follows the app's colours and dark mode automatically.
--->
+<!-- Plus icon for the "add a pet" floating action button. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The tick beside a satisfied password rule.
-
-    A filled circle with the tick knocked out of it rather than a bare tick, so a met rule reads as a
-    solid mark against the open ring of an unmet one (ic_rule_unmet.xml) — the two are told apart by
-    their *shape* as well as by their colour, which is what keeps the checklist readable for a
-    red/green colour-blind reader.
-
-    No colour is set here: PasswordChecklistView tints it, because "met" and "not met" are states the
-    drawable cannot know. android:fillType="evenOdd" is what makes the tick a hole in the disc instead
-    of a shape drawn on top of it, so the tint shows the page through the tick.
--->
+<!-- The tick beside a satisfied password rule. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="16dp"
     android:height="16dp"

@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Google's four-colour "G", shown on the "Continue with Google" button.
-
-    This is Google's own brand mark, reproduced as their sign-in branding guidelines require for a
-    "Sign in with Google" button — it is not PetCare artwork. Its colours are Google's fixed brand
-    values, so they are written here directly rather than taken from the app's theme: the mark must look
-    identical in light and dark mode, and the button's MaterialButton style sets iconTint to null so the
-    theme cannot recolour it.
-
-    Four paths, one per coloured arc, on Google's standard 48×48 grid.
--->
+<!-- Google's four-colour "G", shown on the "Continue with Google" button. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="18dp"
     android:height="18dp"

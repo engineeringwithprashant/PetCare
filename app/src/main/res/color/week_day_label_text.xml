@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The two-letter weekday ("MO") in a week-strip cell, and the dot under the date. Quieter than the
-     date when unselected, because the number is what the eye looks for; on the selected cell it takes
-     the same accent as the number so the pill reads as one unit. See week_day_date_text.xml. -->
+<!-- The two-letter weekday ("MO") in a week-strip cell, and the dot under the date. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="?attr/colorOnSelectedContainer" android:state_selected="true" />
     <item android:color="?attr/colorOnSurfaceVariant" />

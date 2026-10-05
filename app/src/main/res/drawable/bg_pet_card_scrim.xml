@@ -1,21 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The dark gradient laid over the lower portion of a pet's photo card, so the name and pills
-    written across it stay readable whatever the photograph underneath happens to be.
-
-    **Why a gradient and not a flat panel.** A solid dark band would draw a hard horizontal line
-    across every photo at the same height, which the eye reads as damage to the picture. Fading in
-    from nothing lets the text sit on enough darkness to be legible while the photo appears to carry
-    on behind it.
-
-    **Why both ends are the same colour.** The transparent end is the *opaque* colour with a zero
-    alpha channel, not #00000000. Android interpolates the whole ARGB value across the gradient, so
-    fading from transparent black to a warm near-black would pass through grey on the way and show as
-    a dirty band through the middle of the card. Matching the RGB makes only the alpha move.
-
-    The angle is 270°, which in Android's convention runs top to bottom: clear at the top, darkest at
-    the bottom edge where the pet's name sits.
--->
+<!-- The dark gradient laid over the lower portion of a pet's photo card. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

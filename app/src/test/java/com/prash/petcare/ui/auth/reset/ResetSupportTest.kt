@@ -6,13 +6,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/**
- * Unit tests for the password-reset helpers in ResetSupport.kt: the countdown arithmetic behind the
- * "RESEND" cooldown, and the message chosen for each way a reset request can fail.
- *
- * Both are plain Kotlin with no Android types, which is why they can be checked here on the JVM
- * without an emulator.
- */
+/** Unit tests for the password-reset helpers in ResetSupport.kt. */
 class ResetSupportTest {
 
     private val cooldown = ResendCooldown.DURATION_MILLIS

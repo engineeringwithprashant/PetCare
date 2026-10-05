@@ -1,22 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The label colour for one half of a two-option preference toggle on the profile screen.
-
-    A colour state list rather than two colours set in code: the fragment marks one half selected and
-    both the fill (bg_profile_segment.xml) and this file answer that single state, so nothing about
-    how the control looks lives in Kotlin. The filter chips on the Tasks tab are built the same way —
-    see res/color/filter_chip_text.xml.
-
-    **The chosen half takes `colorOnSelectedContainer`**, which is the accent in light mode and the
-    near-black in dark. That pairing is not arbitrary: the fill it sits on is
-    `colorSelectedContainer`, which is near-black in light mode and the accent in dark, and these two
-    roles are defined as a matched pair precisely so that text placed on one is guaranteed legible
-    (see attrs.xml). Naming a literal colour here instead would produce yellow-on-yellow in dark mode.
-
-    The unchosen half takes the muted text colour on the track showing through behind it, so the two
-    halves differ in weight as well as in fill — which is what makes the chosen one findable without
-    reading either word.
--->
+<!-- The label colour for one half of a two-option preference toggle on the profile screen. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item

@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The body of the "Add a delegation contact" dialog: a name, a phone number and an optional note.
-
-    A dialog rather than a destination of its own, because it is three short fields and a save — a
-    whole screen with a toolbar and a back-stack entry would be more ceremony than the task deserves.
-    The dialog's title and its two buttons come from MaterialAlertDialogBuilder, so this file is only
-    the fields between them.
-
-    **Material 3 text fields (`TextInputLayout` + `TextInputEditText`), not bare `EditText`s**, as on
-    every form in the app: the component supplies the floating label, the outline, the error slot and
-    the accessibility labelling that a plain EditText with a hint has none of — a hint disappears as
-    soon as the user types, leaving a filled field with nothing saying what it holds.
-
-    A vertical LinearLayout with the dialog's own side padding: three stacked fields, nothing
-    positioned relative to anything but its neighbour.
--->
+<!-- The body of the "Add a delegation contact" dialog: a name, a phone number and an optional note. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -41,19 +26,7 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!--
-        The number to text, as a country selector and the local number beside it.
-
-        **Why the country is asked for here too.** A delegation message is sent to this number by the
-        SMS manager, and a number saved in whatever shape it was typed is one that may or may not
-        reach anybody — a local number with no dialling code will not leave the country it was typed
-        in. Storing it in one international form, checked against the country the user picked, is what
-        makes "text this person" work for a carer with a number from anywhere. The behaviour behind
-        the pair is ui/common/PhoneNumberInput.kt, shared with the register and profile forms.
-
-        A horizontal LinearLayout: the selector at a fixed width so the number box always starts in
-        the same place whatever the dialling code, and the number taking the rest (width 0 + weight 1).
-    -->
+    <!-- The number to text, as a country selector and the local number beside it. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -61,8 +34,7 @@
         android:baselineAligned="false"
         android:orientation="horizontal">
 
-        <!-- Not typed into: tapping it opens the country list. PhoneNumberInput makes it unfocusable
-             and gives it a spoken description naming the country in full. -->
+        <!-- Not typed into: tapping it opens the country list. -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/contactPhoneCountryLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -80,8 +52,7 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- inputType="phone" brings up the dialling keypad. How many digits it accepts is capped per
-             country by PhoneNumberInput, so an over-long number cannot be typed at all. -->
+        <!-- inputType="phone" brings up the dialling keypad. How many digits it accepts is capped per country. -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/contactPhoneInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -109,8 +80,7 @@
         android:layout_marginTop="@dimen/spacing_md"
         android:hint="@string/profile_add_contact_note_hint">
 
-        <!-- The optional note. textCapSentences and two lines, because this is a sentence the user
-             writes ("Feeds the cats at weekends") rather than a label. -->
+        <!-- The optional note. textCapSentences and two lines, because this is a sentence the user writes. -->
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/contactNoteInput"
             android:layout_width="match_parent"

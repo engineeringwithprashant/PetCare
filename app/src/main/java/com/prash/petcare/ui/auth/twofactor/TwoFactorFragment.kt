@@ -23,16 +23,7 @@ import com.prash.petcare.ui.auth.showStep
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
-/**
- * The two-factor check: the second step of logging in, for an account protected by an authenticator.
- *
- * The **View** in MVVM. It forwards key presses from [CodeKeypadView] to [TwoFactorViewModel], draws
- * the code and the verify button's state from it, and navigates when it reports an outcome. It checks
- * no code itself.
- *
- * Reached from the log in screen with the account's id as an argument ([ARG_USER_ID]); the account is
- * *not* signed in until this screen says so — see [TwoFactorViewModel], which does the checking.
- */
+/** The two-factor check: the second step of logging in, for an account protected by an authenticator. */
 class TwoFactorFragment : Fragment() {
 
     private var _binding: FragmentTwoFactorBinding? = null
@@ -40,11 +31,7 @@ class TwoFactorFragment : Fragment() {
     /** Valid only between [onCreateView] and [onDestroyView]; see AuthFragment for why. */
     private val binding get() = _binding!!
 
-    /**
-     * Built by the factory that supplies the two-factor repository and the shared attempt store. The
-     * factory's `createSavedStateHandle()` still carries this fragment's arguments, which is how the
-     * ViewModel reads [ARG_USER_ID].
-     */
+    /** Built by the factory that supplies the two-factor repository and the shared attempt store. */
     private val viewModel: TwoFactorViewModel by viewModels { TwoFactorViewModel.Factory }
 
     private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
@@ -65,16 +52,14 @@ class TwoFactorFragment : Fragment() {
         keepSystemKeyboardClosed()
 
         binding.header.show(R.string.two_factor_title, getString(R.string.two_factor_subtitle))
-        // "STEP 2 OF 2" — the password was step 1. The mockup draws this bar with three segments, all
-        // filled, and that is matched exactly.
+        // "STEP 2 OF 2" — the password was step 1. The mockup draws this bar with three segments, all filled.
         binding.stepProgress.showStep(step = 2, total = 2, segments = 3)
 
         // Keypad, boxes and verify button, wired by the shared bindCodeEntry helper.
         bindCodeEntry(binding.codeKeypad, binding.verifyButton, viewModel)
         binding.lostAccessButton.setOnClickListener { viewModel.onLostAccess() }
 
-        // Back to the log in screen, which is still underneath on the back stack with whatever was
-        // typed there. popBackStack rather than navigate, so a second log in screen is not stacked.
+        // Back to the log in screen, which is still underneath on the back stack with whatever was typed there.
         binding.differentAccountButton.setOnClickListener {
             findNavController().popBackStack(R.id.authFragment, false)
         }
@@ -94,11 +79,7 @@ class TwoFactorFragment : Fragment() {
     private fun handleEvent(event: TwoFactorEvent) {
         when (event) {
             is TwoFactorEvent.Verified -> {
-                // A recovery code was spent to get in. Said with a Toast rather than a Snackbar for
-                // one reason: a Snackbar belongs to the view it is shown on, and this view is about
-                // to be destroyed by the navigation on the next line, so it would flash and vanish.
-                // A Toast outlives the screen and is still readable on the dashboard, which is where
-                // the user will be by the time they read it.
+                // A recovery code was spent to get in. Said with a Toast rather than a Snackbar for one reason.
                 event.recoveryCodesRemaining?.let { remaining ->
                     Toast.makeText(
                         requireContext(),
@@ -111,8 +92,7 @@ class TwoFactorFragment : Fragment() {
                     ).show()
                 }
 
-                // Only now is the account signed in — recorded before navigating, for the same reason
-                // as in AuthFragment.
+                // Only now is the account signed in — recorded before navigating.
                 sessionViewModel.signIn(event.userId)
                 findNavController().navigate(R.id.action_two_factor_to_home)
             }
@@ -131,13 +111,7 @@ class TwoFactorFragment : Fragment() {
 
     companion object {
 
-        /**
-         * Navigation argument: the id of the account whose second factor is being checked.
-         *
-         * Aliased from [TwoFactorCheckViewModel.ARG_USER_ID] rather than spelled again, because the
-         * ViewModel reads the argument out of the SavedStateHandle by that name — two literals that
-         * had to match would be one rename away from a screen that silently checks nobody's account.
-         */
+        /** Navigation argument: the id of the account whose second factor is being checked. */
         const val ARG_USER_ID = TwoFactorCheckViewModel.ARG_USER_ID
     }
 }

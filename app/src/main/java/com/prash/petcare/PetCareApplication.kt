@@ -41,42 +41,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
-/**
- * The app's [Application] class, used here as a simple dependency container.
- *
- * ViewModels need repositories, and repositories need DAOs from the database. Something has to
- * create those objects once and hand them out; a full dependency-injection framework such as
- * Hilt would do it automatically, but for an app this size the Application class is the
- * standard lightweight alternative and keeps the wiring visible in one readable place.
- *
- * Every property is `by lazy`, so nothing is constructed until something actually asks for it —
- * opening the database during app start-up would slow the first screen down for no reason. Each
- * `lazy` also caches its result, which is what makes these effectively singletons.
- *
- * ViewModels reach this class through `ViewModelProvider`'s APPLICATION_KEY rather than storing
- * a static reference, which keeps them testable.
- *
- * It is also the only place with a home for work that belongs to the app as a whole rather than to
- * any screen — see [onCreate], which starts the care reminders. That work needs a lifetime longer
- * than any Activity, and this class is the only thing that has one.
- *
- * Registered in AndroidManifest.xml via `android:name=".PetCareApplication"` — without that
- * entry Android would use the default Application and none of this would ever run.
- */
+/** The app's [Application] class, used here as a simple dependency container. */
 class PetCareApplication : Application() {
 
     /** The single Room database instance for the whole process. */
     private val database: PetCareDatabase by lazy { PetCareDatabase.getInstance(this) }
 
-    /**
-     * The app's single route to Firebase Authentication, shared by the account repository and the
-     * password-reset repository so there is one Firebase connection and one place that handles its
-     * errors.
-     *
-     * `FirebaseAuth.getInstance()` needs no setup call, for the same reason given for Firestore on
-     * [syncManager]. Firebase Authentication and Firestore share one FirebaseApp, so once a user
-     * logs in, every Firestore request is made as that user automatically.
-     */
+    /** The app's single route to Firebase Authentication. */
     private val firebaseAuthService: FirebaseAuthService by lazy {
         FirebaseAuthService(FirebaseAuth.getInstance())
     }
@@ -86,31 +57,11 @@ class PetCareApplication : Application() {
         UserRepository(database.userDao(), firebaseAuthService)
     }
 
-    /**
-     * The account's second factor: the authenticator secret, the recovery codes, and the checking of
-     * both.
-     *
-     * A repository of its own rather than more methods on [userRepository], because it owns a table
-     * that class knows nothing about and a piece of cryptography it has no other reason to hold. The
-     * two overlap only on the `users` row, which each reaches through the same DAO.
-     *
-     * Reached by the sign-in screen (to decide whether the code screen is needed), the code screen
-     * itself, the recovery screen, the setup flow and the profile screen — five ViewModels, one
-     * instance, so there is one answer to "is this account protected?".
-     *
-     * See [TwoFactorRepository] for what storing the secret on the device does and does not protect
-     * against; it is a boundary worth knowing before reading the screens.
-     */
+    /** The account's second factor: the authenticator secret, the recovery codes, and the checking of both. */
     val twoFactorRepository: TwoFactorRepository by lazy {
         TwoFactorRepository(database.userDao(), database.recoveryCodeDao())
     }
-
-    /**
-     * The queue of deleted rows waiting to be removed from Firestore.
-     *
-     * The five repositories below each take the same DAO, because every one of them can delete
-     * something — see [PetRepository] for why recording a deletion belongs in that layer.
-     */
+    /** The queue of deleted rows waiting to be removed from Firestore. */
     val syncDeletionRepository: SyncDeletionRepository by lazy {
         SyncDeletionRepository(database.syncDeletionDao())
     }
@@ -136,14 +87,7 @@ class PetCareApplication : Application() {
         ExpenseRepository(database.expenseDao(), database.syncDeletionDao())
     }
 
-    /**
-     * Each pet's vaccination history, for the card on its detail screen and the screen that adds to
-     * it.
-     *
-     * Takes no deletion DAO, unlike the five repositories above: this table is not part of the
-     * Firestore sync, so a deleted record has no tombstone to record. See
-     * [com.prash.petcare.data.local.entity.VaccinationRecord] for why.
-     */
+    /** Each pet's vaccination history, for the card on its detail screen and the screen that adds to it. */
     val vaccinationRepository: VaccinationRepository by lazy {
         VaccinationRepository(database.vaccinationRecordDao())
     }
@@ -153,26 +97,10 @@ class PetCareApplication : Application() {
         PlaceRepository(database.placeDao(), database.syncDeletionDao())
     }
 
-    /**
-     * Which alerts the user has already read, for the notifications screen.
-     *
-     * Created here for the same reason [weatherRepository] is: it holds its set in a
-     * [kotlinx.coroutines.flow.StateFlow], and a per-ViewModel instance would lose it on rotation and
-     * make already-read alerts turn unread again. See [AlertReadStore] for why read state is kept in
-     * SharedPreferences rather than in the database the alerts are derived from.
-     */
+    /** Which alerts the user has already read, for the notifications screen. */
     val alertReadStore: AlertReadStore by lazy { AlertReadStore(this) }
 
-    /**
-     * What the user should be told about, derived from the pets, tasks, expenses and routines they
-     * already have — see [AlertRepository].
-     *
-     * One instance for the whole process, and for a stronger reason than convenience. Two things read
-     * it at once: the notifications screen, and the bell in the header of every other screen in the
-     * app. A per-ViewModel instance would open the same per-pet Room queries over and over, and —
-     * worse — would leave the number on the bell and the list behind it as two separate derivations
-     * that could drift apart.
-     */
+    /** What the user should be told about, derived from the pets, tasks, expenses and routines they already have. */
     val alertRepository: AlertRepository by lazy {
         AlertRepository(
             petRepository = petRepository,
@@ -183,67 +111,19 @@ class PetCareApplication : Application() {
         )
     }
 
-    /**
-     * How many wrong passwords each email address has collected on this device, and whether one of
-     * them is currently locked out of the log in screen.
-     *
-     * One instance for the whole process, like the stores above, and here for a reason of its own:
-     * the log in screen and the password-reset screen both touch it — the first counts failures, the
-     * second clears them once a reset email goes out — and two instances would let a reset leave a
-     * lock standing on the screen behind it.
-     *
-     * See [LoginAttemptStore] for why this is a *local* speed bump rather than account security, and
-     * why it is not in the Room database.
-     */
+    /** How many wrong passwords each email address has collected on this device. */
     val loginAttemptStore: LoginAttemptStore by lazy { LoginAttemptStore(this) }
 
-    /**
-     * The display and security settings the profile screen controls.
-     *
-     * Shared across the whole process for the same reason [alertReadStore] is, and more strongly: it
-     * is read by nearly every screen. The Pets tab asks it which unit to write a weight in, the Money
-     * tab which symbol to put before an amount, the Tasks tab which day the week starts on — and each
-     * holds its value in a [kotlinx.coroutines.flow.StateFlow], so a per-ViewModel instance would mean
-     * a setting changed on the profile screen never reaching the tab behind it.
-     *
-     * See [SettingsStore] for why these live in SharedPreferences rather than in the Room database.
-     */
+    /** The display and security settings the profile screen controls. */
     val settingsStore: SettingsStore by lazy { SettingsStore(this) }
 
-    /**
-     * The people the user hands a checklist to, for the profile screen's delegation card.
-     *
-     * One instance for the same reason as the stores above: it publishes its list as a flow, and the
-     * profile card has to redraw the moment a contact is added or removed.
-     */
+    /** The people the user hands a checklist to, for the profile screen's delegation card. */
     val delegationContactStore: DelegationContactStore by lazy { DelegationContactStore(this) }
 
-    /**
-     * Where the phone is, for capturing a new place's geotag and measuring distances to saved ones.
-     *
-     * Given the Application rather than an Activity: it outlives every screen, and a location client
-     * holding an Activity would leak it. See [LocationRepository] for why location is treated as a
-     * data source like Room rather than as something a screen reads directly.
-     */
+    /** Where the phone is, for capturing a new place's geotag and measuring distances to saved ones. */
     val locationRepository: LocationRepository by lazy { LocationRepository(this) }
 
-    /**
-     * The name of the point under the map's pin, for the Places forms.
-     *
-     * Beside [locationRepository] rather than folded into it because the two answer different
-     * questions of different services: one asks the device where *it* is, the other asks what is
-     * *there*. Given the Application for the same reason — it outlives every screen.
-     *
-     * It is handed two things rather than building them. [MapTilerGeocodingApi.create] is called once
-     * here because a Retrofit instance carries an HTTP client with its own connection and thread
-     * pools, which should exist once per process — the same reasoning as [weatherRepository] below.
-     * And the key is passed in rather than read from `BuildConfig` inside the repository, so that the
-     * class holds no build-time global and could be given a test double or a blank key deliberately.
-     *
-     * **The key may be blank**, for anyone who cloned the project without adding one to
-     * local.properties. That is handled rather than prevented: the repository falls back to the
-     * device's own geocoder, which can still name the city — see [GeocodingRepository].
-     */
+    /** The name of the point under the map's pin, for the Places forms. */
     val geocodingRepository: GeocodingRepository by lazy {
         GeocodingRepository(
             context = this,
@@ -252,19 +132,7 @@ class PetCareApplication : Application() {
         )
     }
 
-    /**
-     * The live temperature behind the home screen's walk-window card.
-     *
-     * Created here, like everything else, but for one reason beyond consistency: this repository
-     * holds the current reading in a [kotlinx.coroutines.flow.StateFlow] of its own, so sharing a
-     * single instance is what lets the card redraw instantly when the user returns to the home tab
-     * instead of re-fetching. A per-ViewModel instance would throw that away on every rotation.
-     *
-     * It is given the other two data sources it arbitrates between rather than building them: the
-     * location repository is the app's single location client, and [WeatherApi.create] is called
-     * once here because a Retrofit instance carries an HTTP client, a connection pool and a thread
-     * pool that should exist once per process rather than once per request.
-     */
+    /** The live temperature behind the home screen's walk-window card. */
     val weatherRepository: WeatherRepository by lazy {
         WeatherRepository(
             weatherApi = WeatherApi.create(),
@@ -273,19 +141,7 @@ class PetCareApplication : Application() {
         )
     }
 
-    /**
-     * Where the assistant screen's answers come from.
-     *
-     * Declared as the [AssistantRepository] interface rather than the concrete class, which is the
-     * point of the interface: this line is the only place in the app that names an implementation,
-     * so the backend was swapped from an on-device stub to OpenAI without a single screen, ViewModel
-     * or layout changing.
-     *
-     * **The key may be blank, and that is handled rather than prevented.** BuildConfig.OPENAI_API_KEY
-     * is empty for anyone who has cloned the project without adding one to local.properties — see
-     * app/build.gradle.kts — so the app still builds and runs, and the assistant says plainly that
-     * the key is missing instead of failing silently or crashing.
-     */
+    /** Where the assistant screen's answers come from. */
     val assistantRepository: AssistantRepository by lazy {
         OpenAiAssistantRepository(
             api = OpenAiApi.create(),
@@ -293,28 +149,12 @@ class PetCareApplication : Application() {
         )
     }
 
-    /**
-     * Sends password-reset emails through Firebase Authentication.
-     *
-     * Typed as the [PasswordResetRepository] interface, like [assistantRepository], so this is the
-     * only line in the app that names the Firebase version.
-     */
+    /** Sends password-reset emails through Firebase Authentication. */
     val passwordResetRepository: PasswordResetRepository by lazy {
         FirebasePasswordResetRepository(firebaseAuthService)
     }
 
-    /**
-     * Mirrors the signed-in account's data between Room and Firestore.
-     *
-     * Public because the home screen's ViewModel needs two things from it: to say who has signed
-     * in, and to observe the status shown in the indicator. Nothing else in the app refers to it —
-     * screens read from Room exactly as they did before this layer existed.
-     *
-     * `FirebaseFirestore.getInstance()` is safe to call at this point: the google-services Gradle
-     * plugin turns app/google-services.json into resources that FirebaseApp reads through its own
-     * content provider, which the system runs before this class is even constructed. There is
-     * therefore no initialisation call to make here.
-     */
+    /** Mirrors the signed-in account's data between Room and Firestore. */
     val syncManager: SyncManager by lazy {
         SyncManager(
             userRepository = userRepository,
@@ -325,25 +165,12 @@ class PetCareApplication : Application() {
             placeRepository = placeRepository,
             syncDeletionRepository = syncDeletionRepository,
             firestoreSyncService = FirestoreSyncService(FirebaseFirestore.getInstance()),
-            // `this` is the Application, so the network callback it registers lives as long as the
-            // process rather than as long as whichever screen happened to be open.
+            // `this` is the Application, so the network callback it registers lives as long as the process.
             networkMonitor = NetworkMonitor(this)
         )
     }
 
-    /**
-     * A coroutine scope that lives as long as the process.
-     *
-     * Care reminders have to stay correct while no screen is open — that is the whole point of them
-     * — so their work cannot hang off a `viewModelScope` or a fragment's lifecycle, both of which are
-     * cancelled as soon as the user leaves. It is also the scope the reminder broadcast receivers use
-     * while they hold the process open with `goAsync`.
-     *
-     * [SupervisorJob] rather than a plain `Job` so one failed child does not cancel the others: a
-     * reminder failing to reschedule must not take the rest of the app's background work with it.
-     * There is deliberately no `cancel()` anywhere — an Application is never destroyed in a way that
-     * would give the app a chance to run one, since the process is simply killed.
-     */
+    /** A coroutine scope that lives as long as the process. */
     val applicationScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     /** Builds and posts reminder notifications; also owns their notification channel. */
@@ -352,13 +179,7 @@ class PetCareApplication : Application() {
     /** Registers and cancels the system alarms that fire the reminders. */
     private val reminderScheduler: ReminderScheduler by lazy { ReminderScheduler(this) }
 
-    /**
-     * Keeps the registered alarms matching the care tasks in the database.
-     *
-     * Public because the two reminder [android.content.BroadcastReceiver]s reach it through this
-     * class — a receiver is created by the system with nothing injected into it, so the Application
-     * is how it finds the objects it needs.
-     */
+    /** Keeps the registered alarms matching the care tasks in the database. */
     val reminderManager: ReminderManager by lazy {
         ReminderManager(
             careTaskRepository = careTaskRepository,
@@ -368,36 +189,19 @@ class PetCareApplication : Application() {
         )
     }
 
-    /**
-     * Runs once per process, before any Activity or receiver exists.
-     *
-     * Both calls here have to happen this early. The notification channel must exist before any
-     * reminder could be posted, or the notification is dropped without a word; and the reminder
-     * observer has to be collecting before the user can reach a screen that changes a task.
-     *
-     * This runs on every process start, including one the system creates purely to deliver a
-     * reminder broadcast — which is exactly what makes a reminder work when the app is not open.
-     */
+    /** Runs once per process, before any Activity or receiver exists. */
     override fun onCreate() {
         super.onCreate()
 
-        // Before anything else, and before the first Activity exists. The user's light/dark choice
-        // decides which resources every screen resolves against, so applying it after a screen had
-        // been created would draw that screen in the wrong mode and then recreate it — visible as a
-        // flash on every launch. See ThemePreference for why this one setting lives outside Room.
+        // Before anything else, and before the first Activity exists.
         ThemePreference.apply(this)
 
         reminderNotifier.createNotificationChannel()
 
-        // From here on, every change to a task, routine or pet re-plans the alarms by itself. See
-        // ReminderManager for why reminders are derived from the data rather than updated by hand at
-        // each place a task is saved.
+        // From here on, every change to a task, routine or pet re-plans the alarms by itself.
         reminderManager.startObserving(applicationScope)
 
-        // The sync watches the data the same way, and for the same reason. It does nothing at all
-        // until someone signs in — there is no account yet whose data could be synced — and from
-        // that moment it uploads and downloads by itself whenever anything changes. Starting it
-        // here rather than from a screen is what lets a sync outlive the screen that triggered it.
+        // The sync watches the data the same way, and for the same reason.
         syncManager.startObserving(applicationScope)
     }
 }

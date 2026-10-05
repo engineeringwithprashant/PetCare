@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Form for creating a care routine, or editing an existing one's name and schedule.
-
-    A routine is just a name and a repeat schedule; the care tasks that make it up are added
-    afterwards from the routine's own screen. One layout serves both modes — AddRoutineFragment
-    changes the title and the save button's label, and every field is otherwise identical.
--->
+<!-- Form for creating a care routine, or editing an existing one's name and schedule. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -43,12 +37,7 @@
             android:layout_marginTop="@dimen/spacing_lg"
             android:text="@string/routine_schedule_label" />
 
-        <!--
-            MaterialButtonToggleGroup with singleSelection="true" behaves like a set of radio
-            buttons: choosing one clears the other, so the schedule can never be both or neither.
-            selectionRequired="true" stops the user de-selecting the highlighted option and leaving
-            nothing chosen.
-        -->
+        <!-- MaterialButtonToggleGroup with singleSelection="true" behaves like a set of radio buttons. -->
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/scheduleToggleGroup"
             android:layout_width="match_parent"

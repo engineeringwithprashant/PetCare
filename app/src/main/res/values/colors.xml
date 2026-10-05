@@ -1,102 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The app's colour palette.
-
-    These are raw colour values only. They are never referenced from a layout directly — themes.xml
-    maps them onto Material 3 *role* attributes (colorPrimary, colorSurface and so on), and layouts
-    use those roles via ?attr/. That indirection is what makes dark mode work: the roles stay the
-    same, and only the values behind them change.
-
-    **The scheme.** PetCare is built on warm cream and white with a single bright lemon-yellow
-    accent. The reasoning behind each decision:
-
-     - *Cream, not white, as the page.* A pure #FFFFFF background makes every white card on it
-       invisible. Backing the app with a warm cream (#FFFBF3) and giving cards true white lets the
-       cards lift off the page through colour alone, before a single pixel of shadow is drawn.
-     - *One accent, and only one.* [accent_yellow] is the app's single accent, and it is the *same*
-       value in light and dark mode rather than a pair — see the note on that colour for why this
-       one role breaks the light/dark pattern every other colour here follows. Yellow reads as
-       friendly and animal-adjacent rather than clinical, and nothing else in the app competes with
-       it, so wherever it appears, that is the thing to press. It is a *light* colour, which is why
-       colorOnPrimary is near-black: white text on this yellow would fail contrast badly.
-     - *Pastel stat pills.* A separate family of soft tinted chips (see the pill section below) used
-       for small facts — a pet's age, weight, species. They are deliberately low-saturation so a row
-       of them reads as information rather than as five competing buttons.
-
-    **Naming.** Each name states its scheme and role: md_theme_light_primaryContainer is the
-    "primary container" role in the light scheme. The pairing matters — every "on" colour is the
-    one guaranteed to be legible on top of the role it names, so text placed on colorPrimary must
-    use colorOnPrimary and nothing else.
--->
+<!-- The app's colour palette. -->
 <resources>
 
-    <!-- ================================ The accent ================================
-         The one bright colour in the app, and the only colour here that is deliberately *identical*
-         in light and dark mode.
-
-         Every other value in this file comes as a light/dark pair, because a colour that works on a
-         cream page rarely works on a near-black one. The accent is the exception on purpose: it is
-         never a background for body text and never a page — it is always a *fill* with near-black
-         content on top of it (a button, the selected tab's pill, a pet card's status pill). That
-         relationship is unchanged by the theme around it, so splitting it into two values would
-         make the brand shift shade between modes for no gain.
-
-         It is referenced by both values/themes.xml and values-night/themes.xml, which is what makes
-         "one accent throughout" a fact about the code rather than a convention to remember. -->
+    <!-- ================================ The accent ================================ -->
     <color name="accent_yellow">#F5E050</color>
 
-    <!-- The content colour guaranteed legible on the accent. Near-black, not white: the accent is a
-         light colour and white on it measures around 1.5:1, far below the 4.5:1 text needs. -->
+    <!-- The content colour guaranteed legible on the accent. -->
     <color name="on_accent_yellow">#1C1A05</color>
 
-    <!-- The ground the opening animation is played on — see the overlay in activity_main.xml and
-         Theme.PetCare.Splash in themes.xml.
+    <!-- The ground the opening animation is played. -->
 
-         It is the app's own cream page colour, the same #FFFBF3 as md_theme_light_background below.
-         Written out as its own value rather than pointed at that one because the two answer
-         different questions: that colour is "what is the page behind the app's content", this one is
-         "what is behind the opening animation", and the day the splash artwork changes only one of
-         them should move.
-
-         **It does two jobs, and the first is the one that matters most.** The system paints a
-         placeholder window before a single line of the app has run, and whatever colour that is, is
-         the first thing the user ever sees. Theme.PetCare.Splash pins it to this value, so the window
-         opens in the same cream the overlay then holds: nothing flashes, because nothing changes.
-
-         That holds while the system is in its light theme, which is the case this was asked to fix.
-         In dark mode the device repaints the launch window near-black regardless of what the app
-         asks for, and the app cannot decline it — the measurements and the two things tried are
-         recorded on Theme.PetCare.Splash in themes.xml, so nobody has to rediscover them.
-
-         **The second job is the moment before the first frame.** The overlay holds this colour from
-         the instant it is laid out until the decoder produces a picture, so it is what bridges the
-         launch window and the video. The two being the same colour is what makes that handover
-         nothing to look at.
-
-         It is deliberately *not* the animation's own ground, which is a bright yellow. Matching the
-         artwork would matter if the video were letterboxed, because then this would be the colour of
-         the bands around it — but the clip is scaled to *cover* the screen precisely so that no band
-         exists at any screen shape (see MainActivity.fillVideoToView), which leaves this colour
-         showing only before playback and behind the closing fade. At both of those moments the app's
-         own cream is the right answer and yellow would be a flash of something else.
-
-         Deliberately *not* themed, either. In the dark theme the app underneath is near-black, but
-         the animation is a light one, and opening a light window on a dark theme for two seconds is
-         far less jarring than a near-black frame arriving before a bright yellow video. -->
-
-    <!-- A note on what is *not* here: the animation's own ground, #FDE227. Nothing needs it while the
-         video covers the screen, and a colour nothing reads is a colour that goes stale. If the clip
-         is ever letterboxed again, it belongs back here. -->
+    <!-- A note on what is not here: the animation's own ground, #FDE227. -->
     <color name="splash_ground">#FFFBF3</color>
 
     <!-- ============================== Light scheme ============================== -->
 
-    <!-- Primary: the accent. Carries the main actions — the FAB, filled buttons, the selected
-         bottom-navigation tab. -->
+    <!-- Primary: the accent. Carries the main actions — the FAB, filled buttons. -->
     <color name="md_theme_light_primary">@color/accent_yellow</color>
     <color name="md_theme_light_onPrimary">@color/on_accent_yellow</color>
-    <!-- The muted variant, used behind content that should read as *related* to the accent without
-         shouting: highlighted chips, the tint behind a category icon. -->
+    <!-- The muted variant, used behind content that should read as related to the accent without shouting. -->
     <color name="md_theme_light_primaryContainer">#FBF2C4</color>
     <color name="md_theme_light_onPrimaryContainer">#2A2604</color>
 
@@ -112,19 +34,13 @@
     <color name="md_theme_light_tertiaryContainer">#D3EDD1</color>
     <color name="md_theme_light_onTertiaryContainer">#0C2010</color>
 
-    <!-- Error: reserved for destructive actions and validation failures. Kept close to the
-         Material default red, because a warning that looks like the brand stops reading as a
-         warning. -->
+    <!-- Error: reserved for destructive actions and validation failures. -->
     <color name="md_theme_light_error">#BA1A1A</color>
     <color name="md_theme_light_onError">#FFFFFF</color>
     <color name="md_theme_light_errorContainer">#FFDAD6</color>
     <color name="md_theme_light_onErrorContainer">#410002</color>
 
-    <!-- Neutrals — the heart of the redesign.
-
-         background is the warm cream the whole app is laid on; surface is the true white the cards
-         are drawn in. They are deliberately *different* here, where before they were the same
-         value: that single point of separation is what lets a card read as a card. -->
+    <!-- Neutrals — the heart of the redesign. -->
     <color name="md_theme_light_background">#FFFBF3</color>
     <color name="md_theme_light_onBackground">#1F1B13</color>
     <color name="md_theme_light_surface">#FFFFFF</color>
@@ -133,24 +49,15 @@
     <color name="md_theme_light_surfaceVariant">#F3EADB</color>
     <color name="md_theme_light_onSurfaceVariant">#6B6152</color>
     <color name="md_theme_light_outline">#9C9182</color>
-    <!-- Hairline dividers and card strokes. Very close to the background on purpose: the card's
-         shadow does the separating, and a visible border on top of it would look drawn twice. -->
+    <!-- Hairline dividers and card strokes. Very close to the background on purpose. -->
     <color name="md_theme_light_outlineVariant">#E8DECB</color>
 
-    <!-- Inverse roles: used by Snackbars, which sit on a surface opposite to the rest of the app
-         so they read as temporary and layered above it. -->
+    <!-- Inverse roles: used by Snackbars, which sit on a surface opposite to the rest of the app. -->
     <color name="md_theme_light_inverseSurface">#34302A</color>
     <color name="md_theme_light_inverseOnSurface">#F8EFE2</color>
     <color name="md_theme_light_inversePrimary">#F0DB6A</color>
 
-    <!-- =============================== Dark scheme ===============================
-         Not simply the light scheme inverted. In dark mode the cream page becomes a near-black and
-         the white cards become a *lighter* charcoal, keeping the same relationship: the card is
-         still the lighter of the two, so it still lifts off the page. The role pairings are
-         unchanged, which is exactly why layouts need no dark-mode variants of their own.
-
-         The accent is the one thing that does not change between the schemes — see [accent_yellow]
-         above. -->
+    <!-- =============================== Dark scheme =============================== -->
 
     <color name="md_theme_dark_primary">@color/accent_yellow</color>
     <color name="md_theme_dark_onPrimary">@color/on_accent_yellow</color>
@@ -172,13 +79,7 @@
     <color name="md_theme_dark_errorContainer">#93000A</color>
     <color name="md_theme_dark_onErrorContainer">#FFDAD6</color>
 
-    <!-- The dark equivalent of the cream-page / white-card split above.
-
-         Pulled down to a genuine near-black for the redesign. The dashboard's pet cards are dark in
-         *both* themes — a photo needs a dark ground under its scrim whatever the surrounding page is
-         doing, see the pet-card section below — and against the warmer, lighter charcoal this scheme
-         used before, those cards read as barely distinguishable from the page they sit on. A
-         near-black page restores the separation without touching the cards. -->
+    <!-- The dark equivalent of the cream-page / white-card split above. -->
     <color name="md_theme_dark_background">#0E0F0A</color>
     <color name="md_theme_dark_onBackground">#E8E6DA</color>
     <color name="md_theme_dark_surface">#1B1C14</color>
@@ -192,30 +93,11 @@
     <color name="md_theme_dark_inverseOnSurface">#2F3026</color>
     <color name="md_theme_dark_inversePrimary">#6E6410</color>
 
-    <!-- =============================== Accent text ===============================
-         The colour for text and icons that should read as *accented* — a task's time of day, an
-         expense's amount, a category heading.
-
-         These cannot simply use colorPrimary, and the reason is the whole point of the redesign's
-         palette. The accent is a bright yellow, chosen because it is light and cheerful; light is
-         exactly what text on a white card must not be. #FFC53D on white is roughly 1.6:1, far below
-         the 4.5:1 that ordinary text needs, and a user would be squinting at every amount in the
-         app.
-
-         So the accent has two forms: the bright yellow that *fills* things — buttons, the selected
-         tab, the floating action button, all of which carry dark text on top — and this deeper olive
-         that *is* text. Same hue, so they read as the same accent; very different lightness, so both
-         are legible in the role they play. In dark mode the problem reverses and the yellow itself
-         becomes the legible choice, which is why the dark value below is the accent again.
-
-         Exposed to layouts as ?attr/colorAccentText — see attrs.xml. -->
+    <!-- =============================== Accent text =============================== -->
     <color name="accent_text_light">#6B5C00</color>
     <color name="accent_text_dark">@color/accent_yellow</color>
 
-    <!-- ============================ Selected container ============================
-         The fill for a chosen day, a chosen filter chip and the Delegate button on the Tasks tab.
-         Exposed as ?attr/colorSelectedContainer — see attrs.xml for why the light and dark values
-         are not simply a lighter and darker version of each other. -->
+    <!-- ============================ Selected container ============================ -->
     <color name="selected_container_light">#17180F</color>
     <color name="on_selected_container_light">@color/accent_yellow</color>
     <color name="on_selected_container_neutral_light">#FFFFFF</color>
@@ -223,27 +105,13 @@
     <color name="on_selected_container_dark">@color/on_accent_yellow</color>
     <color name="on_selected_container_neutral_dark">@color/on_accent_yellow</color>
 
-    <!-- The resting (disabled) partner of the selected container, for the sign-in screens' main
-         button. Light: the charcoal and pale cream from the auth mockups. Dark: a charcoal a step above
-         the near-black page, with the theme's muted text. See attrs.xml. -->
+    <!-- The resting (disabled) partner of the selected container, for the sign-in screens' main button. -->
     <color name="disabled_container_light">#3A3830</color>
     <color name="on_disabled_container_light">#ECE9DE</color>
     <color name="disabled_container_dark">#34352A</color>
     <color name="on_disabled_container_dark">#9A998A</color>
 
-    <!-- ============================== Pastel stat pills ==============================
-         The soft tinted chips that carry a single small fact — a pet's age, its weight, how many
-         tasks are left today.
-
-         These sit outside the Material role system deliberately. The roles answer "how important is
-         this?", and every pill is equally unimportant; what a pill needs instead is a colour that
-         *distinguishes* it from the pill beside it, so a row of three facts can be told apart at a
-         glance without reading the labels. Four hues, each with the text colour guaranteed legible
-         on it, exposed to layouts as theme attributes — see attrs.xml and themes.xml.
-
-         Light-mode pills are pale washes with dark text. Dark-mode pills invert that relationship:
-         a deep, desaturated ground with pale text. Keeping the same *hue* across both is what makes
-         "the mint one is age" stay true in either theme. -->
+    <!-- ============================== Pastel stat pills ============================== -->
 
     <!-- Mint — used for age. -->
     <color name="pill_light_mint">#D9F2E4</color>
@@ -269,160 +137,74 @@
     <color name="pill_dark_peach">#43291C</color>
     <color name="pill_dark_on_peach">#F5C9B0</color>
 
-    <!-- ========================== Dashboard pet cards ==========================
-         The dashboard's pet cards carry a photograph with a dark gradient scrim over the lower half,
-         and the pet's name written across it.
-
-         **These are single values rather than light/dark pairs, and that is the point.** Everything
-         else in this file is themed, because a colour sitting behind body text has to change with
-         the page. These colours sit on top of a *photograph*, which does not change with the theme —
-         a white name over a dark scrim is legible over any photo in either mode, and swapping to a
-         dark name in light mode would make it disappear into the picture behind it. The card is
-         therefore dark in both themes by design, and reads as a photographic object on the page
-         rather than as another sheet of paper.
-
-         The same logic covers the card with no photo yet: the placeholder ground is dark too, so a
-         pet gaining a photo does not change the card's character. -->
+    <!-- ========================== Dashboard pet cards ========================== -->
 
     <!-- The card's ground, seen where a photo has not been added and behind the scrim. -->
     <color name="pet_card_ground">#17180F</color>
 
-    <!-- The scrim laid over the photo's lower portion so the name stays readable on a light or busy
-         picture. Drawn as a gradient between these two — see drawable/bg_pet_card_scrim.xml.
-
-         The transparent end has to be the *same* RGB as the opaque end with a zero alpha channel.
-         Fading to #00000000 instead would pass through grey on the way, which shows as a dirty band
-         across the middle of every photo. -->
+    <!-- The scrim laid over the photo's lower portion so the name stays readable on a light or busy picture. -->
     <color name="pet_card_scrim_transparent">#0017180F</color>
     <color name="pet_card_scrim_opaque">#E617180F</color>
 
     <!-- Text drawn on the card: the pet's name and the chips' labels. -->
     <color name="on_pet_card">#FFFFFF</color>
 
-    <!-- The dark capsule holding a pet's age and weight, and the species chip in the card's top
-         corner. Semi-transparent, so a little of the photo shows through and they read as sitting
-         *on* the picture rather than as opaque tiles punched out of it. -->
+    <!-- The dark capsule holding a pet's age and weight, and the species chip in the card's top corner. -->
     <color name="pet_card_chip">#7A0E0F0A</color>
 
-    <!-- ========================== Pet detail: photo card ==========================
-         The pet detail screen's large photo card follows the pet-card rules above — dark in both
-         themes, white on a scrim — and adds three marks of its own on top of the photograph. They are
-         single values rather than light/dark pairs for the same reason: the photo behind them does not
-         change with the theme. -->
+    <!-- ========================== Pet detail: photo card ========================== -->
 
-    <!-- The round back button in the photo's top-left corner: a near-white disc with the dark arrow
-         on it. Light rather than the translucent dark chip, because it is the one control on the
-         photo and has to be found instantly, over a dark scrim-free patch of picture or a pale one. -->
+    <!-- The round back button in the photo's top-left corner: a near-white disc with the dark arrow on it. -->
     <color name="pet_detail_back_button">#F2EFE3</color>
     <color name="on_pet_detail_back_button">@color/on_accent_yellow</color>
 
-    <!-- The gender symbol beside the species chip. Blue for male and pink for female, the
-         conventions people already read these symbols in, so the colour confirms the shape rather than
-         asking to be learned. Both sit on the translucent dark chip (pet_card_chip), so they are the
-         lighter, brighter end of each hue: a mid blue would sink into the dark chip. -->
+    <!-- The gender symbol beside the species chip. Blue for male and pink for female. -->
     <color name="gender_male">#6CB4FF</color>
     <color name="gender_female">#FF8AC4</color>
 
-    <!-- ========================= Bottom navigation bar =========================
-         The bar is a floating control: a translucent, hairline-bordered slab hovering over whatever
-         page is scrolling beneath it, with the current tab widened into a filled pill.
+    <!-- ========================= Bottom navigation bar ========================= -->
 
-         **These are light/dark pairs, where the old dark capsule was a single treatment.** The bar
-         is no longer an opaque object with a world of its own inside it — it is a *surface*, and a
-         surface that lets the page show through has to belong to the page's theme. A near-white slab
-         over the near-black night page would glare; a near-black slab over the cream day page would
-         read as a solid bar again, which is the thing this design is not.
-
-         They are still declared here rather than taken from the Material roles, because the roles
-         carry no alpha and the pill's fill has no role at all: "the strongest possible mark on this
-         page" flips from near-black to yellow between the themes. Each pair is bound to a theme
-         attribute in values/themes.xml and values-night/themes.xml — see attrs.xml. -->
-
-    <!-- The slab itself: white at 86% in the day theme, near-black at 90% at night. The alpha is
-         what makes the bar read as floating *over* content rather than as a band cut out of it — a
-         hint of the page's colour comes through and moves as the page scrolls. -->
+    <!-- The slab itself: white at 86% in the day theme, near-black at 90% at night. -->
     <color name="nav_bar_surface_light">#DBFFFFFF</color>
     <color name="nav_bar_surface_dark">#E6141412</color>
 
-    <!-- The active tab's pill, and the icon and label written on it. The pairs are inverses of each
-         other: near-black pill with yellow on it by day, yellow pill with near-black on it at night.
-         Either way the active tab is the highest-contrast thing on the bar, which is the property
-         that has to survive the theme — a near-black pill on the night page would disappear into it. -->
+    <!-- The active tab's pill, and the icon and label written on it. -->
     <color name="nav_tab_active_light">#14130F</color>
     <color name="nav_tab_active_dark">@color/accent_yellow</color>
     <color name="on_nav_tab_active_light">@color/accent_yellow</color>
     <color name="on_nav_tab_active_dark">#14130F</color>
 
-    <!-- The four inactive tabs' icons.
-
-         **Solid values, deliberately, rather than the on-surface ink at 70% alpha.** They are the
-         same colour to the eye, but not the same thing: an alpha would let the scrolling page show
-         through the glyphs themselves, so a tab icon would change shade as a dark photo passed
-         underneath it — and a translucent icon over a translucent bar compounds to something too
-         faint to read. These are the blend already done, measured against the bar's own tone: about
-         6:1 against the day slab and about 8:1 against the night one, so they stay legible while
-         staying clearly quieter than the active tab. -->
+    <!-- The four inactive tabs' icons. -->
     <color name="nav_tab_muted_light">#625F57</color>
     <color name="nav_tab_muted_dark">#A8A79E</color>
 
-    <!-- The Tasks tab's open-count badge while that tab is *inactive*: a red dot with white on it,
-         the one place in the bar the accent is not used. It is not a "selected" mark but an alert,
-         and the accent already means "you are here" two tabs away — the same colour saying both
-         would make the count read as a second active tab. Single values: a warning keeps its colour
-         in either theme. -->
+    <!-- The Tasks tab's open-count badge while that tab is inactive: a red dot with white. -->
     <color name="nav_badge_ground">#FF4D2E</color>
     <color name="on_nav_badge">#FFFFFF</color>
 
-    <!-- The same badge once the Tasks tab *is* active. Red on the near-black pill is legible but
-         reads as an error inside the control the user has just pressed, so on the pill the badge
-         drops to the pill's own inverse — accent on near-black by day, near-black on accent at
-         night — and is simply a number the user is already looking at. -->
+    <!-- The same badge once the Tasks tab is active. Red on the near-black pill is legible but reads as an error. -->
     <color name="nav_badge_active_light">@color/accent_yellow</color>
     <color name="on_nav_badge_active_light">#14130F</color>
     <color name="nav_badge_active_dark">#14130F</color>
     <color name="on_nav_badge_active_dark">@color/accent_yellow</color>
 
-    <!-- ============================== Places tab ==============================
-         The app's shared dark-panel pair, and the "open now" pill.
+    <!-- ============================== Places tab ============================== -->
 
-         **Single values rather than light/dark pairs,** for the same reason as the pet cards and the
-         bottom bar above: these colour panels that are dark in *both* themes. They are named for the
-         Places tab because its distance strip was the first thing to use them; that strip has since
-         been replaced by the map card, but the two values below are now the app's standard dark-card
-         ground and its muted ink on it, borrowed by the Expenses total, the Home "next up" card, the
-         Profile card and the locked-out sign-in screen — which is why they stay. -->
-
-    <!-- The dark-panel ground — the same near-black as the bottom bar, so every dark element on a
-         page reads as one family. -->
+    <!-- The dark-panel ground — the same near-black as the bottom bar. -->
     <color name="places_strip_ground">#17180F</color>
     <!-- Small labels on that ground: quiet but legible, measuring about 6:1. -->
     <color name="places_strip_muted">#9A998A</color>
-    <!-- The "OPEN NOW" pill on the featured place. Green, because open/closed is a status and green is
-         what "open" looks like on every shop door and maps listing. A fill with near-black text, like
-         the accent, so it works unchanged on a white card and a charcoal one. -->
+    <!-- The "OPEN NOW" pill on the featured place. Green. -->
     <color name="open_now_container">#34C77B</color>
     <color name="on_open_now">#062B17</color>
 
-    <!-- ================================= Money tab =================================
-         The dark total card, and the colour that stands for each spending category.
-
-         **The card is dark in both themes**, for the reason given for the Places strip above: it is a
-         small chart, and coloured segments read most clearly on a dark ground. Its colours are the
-         strip's, referenced rather than repeated, so the two dark cards stay one family. -->
+    <!-- ================================= Money tab ================================= -->
     <color name="total_card_ground">@color/places_strip_ground</color>
     <color name="total_card_amount">#FFFFFF</color>
-    <!-- The empty bar, before a month has any spending: a step lighter than the card, just visible,
-         and nothing like a category colour. -->
+    <!-- The empty bar, before a month has any spending: a step lighter than the card, just visible. -->
     <color name="total_card_track">#33352A</color>
 
-    <!-- **Category colours.** Single values rather than light/dark pairs: each colour is drawn as a bar
-         segment on the dark card *and* as a dot on the page, and the page changes with the theme while
-         the card does not. They were therefore picked mid-light — saturated enough to stand out on
-         the near-black card, dark enough that a 10dp dot still shows on the cream page — and far enough
-         apart in hue that neighbouring segments never blur together.
-
-         Medication takes the accent, Food a warm grey and Grooming green, as in the design; the rest
-         continue round the colour wheel. -->
+    <!-- Category colours. Single values rather than light/dark pairs. -->
     <color name="expense_category_medication">@color/accent_yellow</color>
     <color name="expense_category_food">#A39D8A</color>
     <color name="expense_category_grooming">#34C77B</color>
@@ -433,50 +215,28 @@
     <color name="expense_category_training">#EC6AA2</color>
     <color name="expense_category_other">#76725F</color>
 
-    <!-- ============================== Home dashboard ==============================
-         The redesigned Home tab: the dark "next up" card, the yellow insight card, the header's unread
-         dot, the sync dot and the coloured bars in "coming up this week".
+    <!-- ============================== Home dashboard ============================== -->
 
-         **The two feature cards do not follow the theme,** for the reason given for the pet cards and
-         the Money tab's total card above: each is a single deliberate treatment. The next-up card is the
-         one dark panel on the page in either mode, so the eye lands on "what to do now" first; the
-         insight card is the one yellow panel, the accent used as a fill with near-black content on it,
-         exactly as the accent is used everywhere else. Their colours are therefore fixed values, and
-         several are *references* to existing ones so the dark cards across the app stay one family. -->
-
-    <!-- The next-up card's ground, title, supporting text and ring track: the Places strip and Money
-         card values, referenced rather than repeated. -->
+    <!-- The next-up card's ground, title, supporting text and ring track: the Places strip and Money card values. -->
     <color name="next_up_card_ground">@color/places_strip_ground</color>
     <color name="next_up_card_title">@color/total_card_amount</color>
     <color name="next_up_card_muted">@color/places_strip_muted</color>
     <color name="next_up_ring_track">@color/total_card_track</color>
 
-    <!-- The insight card: the accent as the ground, its guaranteed-legible dark for the sentence, and a
-         softened olive for the small "TODAY'S INSIGHT" label (about 5:1 on the yellow, enough for a
-         caption while staying visibly quieter than the sentence). The "AI" badge is the dark card
-         ground, with the accent written on it. -->
+    <!-- The insight card: the accent as the ground, its guaranteed-legible dark for the sentence. -->
     <color name="insight_card_ground">@color/accent_yellow</color>
     <color name="on_insight_card">@color/on_accent_yellow</color>
     <color name="on_insight_card_muted">#5A5314</color>
     <color name="insight_badge_ground">@color/pet_card_ground</color>
 
-    <!-- The dot on the header badge when care is overdue. A clear red, the colour every app uses for
-         "something needs you", in both themes: it shows against the cream page and the near-black one
-         alike. -->
+    <!-- The dot on the header badge when care is overdue. A clear red. -->
     <color name="header_unread_dot">#FF4D3D</color>
 
-    <!-- The dot beside "All synced". Green when everything is backed up (the "open now" green, so the
-         app has one green for "all good"), and the accent while changes are still waiting. The offline
-         case uses the theme's outline colour, set in code. -->
+    <!-- The dot beside "All synced". Green when everything is backed up. -->
     <color name="sync_dot_synced">@color/open_now_container</color>
     <color name="sync_dot_pending">@color/accent_yellow</color>
 
-    <!-- **Care category colours**, for the thin bar on each "coming up this week" row. Single values
-         rather than light/dark pairs: a 3dp bar on a white or charcoal card needs a mid-light,
-         saturated colour to show either way, like the spending category colours above.
-
-         Grooming takes the accent, vet visits red and medication blue, as in the design; the rest reuse
-         the spending palette's hues so a colour means roughly the same thing on both tabs. -->
+    <!-- Care category colours, for the thin bar on each "coming up this week" row. -->
     <color name="care_category_grooming">@color/accent_yellow</color>
     <color name="care_category_vet">#E5484D</color>
     <color name="care_category_medication">#4F93F0</color>
@@ -486,231 +246,117 @@
     <color name="care_category_play">#FF8457</color>
     <color name="care_category_other">#76725F</color>
 
-    <!-- ================================ Profile screen ================================
-         The large dark header card carrying the photo, the name and the two pills, and the pale green
-         "VERIFIED" pill on the account rows.
+    <!-- ================================ Profile screen ================================ -->
 
-         **The header card does not follow the theme**, for the reason given for the pet cards, the
-         Places strip and the Money tab's total card above: it is a single deliberate treatment — the
-         one dark panel on the page in either mode, so the eye lands on "this is you" first — and it
-         carries a *photograph*, which does not change with the theme. Its values are therefore fixed,
-         and several are references to existing ones so the dark panels across the app stay one family. -->
-
-    <!-- The card's ground and the text on it: the Places strip and Money card values, referenced
-         rather than repeated. -->
+    <!-- The card's ground and the text on it: the Places strip and Money card values, referenced. -->
     <color name="profile_card_ground">@color/places_strip_ground</color>
     <color name="on_profile_card">@color/total_card_amount</color>
-    <!-- The email and phone lines under the name. Quiet against the card but comfortably legible,
-         measuring about 6:1 on the ground above. -->
+    <!-- The email and phone lines under the name. Quiet against the card but comfortably legible. -->
     <color name="on_profile_card_muted">@color/places_strip_muted</color>
 
-    <!-- The circular photo well. A step lighter than the card so an empty well reads as a space for a
-         picture, with a faint rim marking its edge where the two are close. -->
+    <!-- The circular photo well. A step lighter than the card so an empty well reads as a space for a picture. -->
     <color name="profile_photo_well">#24261A</color>
     <color name="profile_photo_well_stroke">#3A3C2C</color>
 
-    <!-- The dark pet-count pill beside the yellow role pill. The translucent chip the pet cards use,
-         so a dark pill on a dark panel is the same object here as it is on a photograph. -->
+    <!-- The dark pet-count pill beside the yellow role pill. -->
     <color name="profile_count_pill">@color/pet_card_chip</color>
 
-    <!-- The "VERIFIED" pill on the email and phone rows. A pale green wash with dark green text: green
-         because verified is a *status* and green is what "confirmed" looks like, pale because these
-         pills are read and never pressed — a saturated fill would make four quiet rows look like four
-         buttons. It is a pastel stat pill in everything but name, so it follows those rules (see the
-         pill section above) and comes as a light/dark pair. -->
+    <!-- The "VERIFIED" pill on the email and phone rows. A pale green wash with dark green text: green. -->
     <color name="verified_pill_light">#DCF2E1</color>
     <color name="on_verified_pill_light">#14401F</color>
     <color name="verified_pill_dark">#1C3624</color>
     <color name="on_verified_pill_dark">#B9E5C6</color>
 
-    <!-- ===================== Log in: wrong-password warnings and the lock =====================
-         The yellow card after a wrong password, the red one on the last attempt before the lock, and
-         the dark panel that replaces the form once sign-in is locked.
+    <!-- ===================== Log in: wrong-password warnings and the lock ===================== -->
 
-         **The two alert cards come as light/dark pairs** (reached through the roles in attrs.xml),
-         unlike the dark panels elsewhere in the app: these sit *inline in the form*, between the
-         password field and the button, so they have to belong to the page around them in either
-         theme. A fixed pale yellow wash would glare on the near-black page, and a fixed dark one
-         would look like a hole punched in the light one.
-
-         The **badge fills and the lock red are single values**, for the reason the pet cards and the
-         bottom bar are: an exclamation mark in a coloured square and a countdown ring on a dark panel
-         are marks rather than page content, and their contrast comes from the colour they are drawn
-         on, which does not change with the theme. -->
-
-    <!-- The yellow warning card, attempts 1–3: a wash a shade warmer than the page with a visible
-         edge, so it reads as an inserted notice rather than as another field. -->
+    <!-- The yellow warning card, attempts 1–3: a wash a shade warmer than the page with a visible edge. -->
     <color name="auth_alert_warning_fill_light">#FCF6D8</color>
     <color name="auth_alert_warning_edge_light">#E3D06A</color>
     <color name="auth_alert_warning_fill_dark">#2E2A11</color>
     <color name="auth_alert_warning_edge_dark">#5C5320</color>
 
-    <!-- The red card on the last attempt. The same construction in the error hue, so the two cards
-         are plainly the same object with the volume turned up rather than two different notices. -->
+    <!-- The red card on the last attempt. The same construction in the error hue. -->
     <color name="auth_alert_danger_fill_light">#FDECE8</color>
     <color name="auth_alert_danger_edge_light">#EFB3A6</color>
     <color name="auth_alert_danger_fill_dark">#33201C</color>
     <color name="auth_alert_danger_edge_dark">#6B3A31</color>
 
-    <!-- The red card's bold title. Not colorError: that red is tuned for a thin line of text on the
-         page, and on this pale red wash it sits too close to the fill. These are a step darker in
-         light mode and a step lighter in dark, measuring comfortably over 4.5:1 on the fill above. -->
+    <!-- The red card's bold title. Not colorError: that red is tuned for a thin line of text on the page. -->
     <color name="auth_alert_danger_title_light">#B03A22</color>
     <color name="auth_alert_danger_title_dark">#FFB4A0</color>
 
-    <!-- The exclamation badge on each card. The warning's is the app's accent with its guaranteed
-         legible near-black on it, exactly as the accent is used everywhere else; the danger's is the
-         lock red below, with white on it. -->
+    <!-- The exclamation badge on each card. The warning's is the app's accent with its guaranteed legible near-black. -->
     <color name="auth_alert_warning_badge">@color/accent_yellow</color>
     <color name="on_auth_alert_warning_badge">@color/on_accent_yellow</color>
     <color name="auth_alert_danger_badge">@color/auth_lock_red</color>
     <color name="on_auth_alert_danger_badge">#FFFFFF</color>
 
-    <!-- The one red the lockout is drawn in: the countdown ring, the "ACCOUNT LOCKED" label and the
-         danger badge above. A warm red rather than the Material error red, which would read as a
-         validation failure; this is a state the account is in, not a mistake in a field. Light enough
-         to hold up against the near-black panel it is drawn on. -->
+    <!-- The one red the lockout is drawn in: the countdown ring. -->
     <color name="auth_lock_red">#E5664A</color>
 
-    <!-- The locked panel. Dark in both themes for the reason given for the dashboard's next-up card
-         and the profile header above — it is a single deliberate treatment, and the one dark panel on
-         the page either way, so the eye lands on it before the two info rows beneath. Its values are
-         the existing dark-card family, referenced rather than repeated, so all the app's dark panels
-         stay one family. -->
+    <!-- The locked panel. Dark in both themes for the reason given for the dashboard's next-up card and the profile header above. -->
     <color name="auth_lock_card_ground">@color/places_strip_ground</color>
     <color name="on_auth_lock_card">@color/total_card_amount</color>
     <color name="on_auth_lock_card_muted">@color/places_strip_muted</color>
-    <!-- The unfilled remainder of the countdown ring: a step lighter than the panel, just visible,
-         and nothing like the red that fills it. -->
+    <!-- The unfilled remainder of the countdown ring: a step lighter than the panel, just visible. -->
     <color name="auth_lock_ring_track">@color/total_card_track</color>
 
-    <!-- A satisfied rule in the password checklist (ui/common/PasswordChecklistView.kt).
-
-         The "open now" green, referenced rather than repeated, because the app deliberately has one
-         green meaning "all good" — the same one behind the Places tab's OPEN NOW pill and the
-         dashboard's "All synced" dot. A single value rather than a light/dark pair, for the reason
-         the other accents are single: it is a small mark on a page, saturated enough to read against
-         the cream and the near-black alike.
-
-         The *unmet* rows take no colour of their own. They use the theme's muted text colour, which
-         is exactly what they are — text that has not become important yet. -->
+    <!-- A satisfied rule in the password checklist (ui/common/PasswordChecklistView.kt). -->
     <color name="password_rule_met">@color/open_now_container</color>
 
-    <!-- ============================== "Add a place" screen ==============================
-         The sub-screen reached from the Places tab, where a place is saved from the device's GPS,
-         and the map card the Places tab itself now leads with.
+    <!-- ============================== "Add a place" screen ============================== -->
 
-         Two groups, split by the same rule the rest of this file follows. The first are light/dark
-         *pairs* exposed through theme attributes (see attrs.xml), because they sit on the page and
-         must follow it. The second are single values, because the things they colour sit on a map or
-         on a dark panel and look the same in either theme — exactly the reasoning behind the bottom
-         bar above. -->
-
-    <!-- The ground a map card shows *while it loads*, on both the Places tab and this screen. A pale
-         sage by day and a deep slate by night: the map is a surface being drawn on, so it follows the
-         theme — a bright panel on the near-black page would be the loudest thing in the app, and a
-         white flash before the tiles arrive is exactly what this colour exists to prevent. Used by
-         the card the map sits in; see PlaceMapView. -->
+    <!-- The ground a map card shows while it loads, on both the Places tab and this screen. -->
     <color name="map_ground_light">#DFE5D8</color>
     <color name="map_ground_dark">#15191A</color>
 
-    <!-- The "you are here" dot: on the map placeholder, on the current-location card, and in the
-         status chip over the live map.
-
-         Blue in both themes, and the same blue the Places tab has always used for the same reason: a
-         blue dot in a halo is the universal "you are here" mark, and recognition is worth more than
-         palette purity. A white ring separates it from whichever ground it lands on. -->
+    <!-- The "you are here" dot: on the map placeholder, on the current-location card. -->
     <color name="here_dot">#2E7DFF</color>
     <color name="here_dot_ring">#FFFFFF</color>
 
-    <!-- The status chip's dot when there is *no* fix — permission refused, or the attempt failed. A
-         warm coral rather than a red: this is a condition to resolve, not an error the user caused,
-         and the screen still works through the demo location beside it. -->
+    <!-- The status chip's dot when there is no fix — permission refused, or the attempt failed. -->
     <color name="gps_status_unavailable">#FF8A6B</color>
 
-    <!-- The translucent near-black behind anything laid *over* a map — the Places tab's name pill and
-         the Add a place screen's status chip — with its pale ink. Fixed in both themes rather than
-         following the page: these sit on Google's tiles, not on the app's surface, and a light pill
-         would vanish into a map that is pale by day and inverted-pale by night.
-
-         One value for both, at about 80%: translucent enough that the map reads through it as ground,
-         opaque enough that the tiles behind never compete with the text on it. -->
+    <!-- The translucent near-black behind anything laid over a map. -->
     <color name="map_overlay_ground">#CC14130F</color>
     <color name="on_map_overlay">#F5F2E8</color>
 
-    <!-- The map's secondary action ("GOOGLE MAPS"), a solid near-black capsule beside the accent
-         "DIRECTIONS". Fixed in both themes for the same reason as the overlays above. -->
+    <!-- The map's secondary action ("GOOGLE MAPS"), a solid near-black capsule beside the accent "DIRECTIONS". -->
     <color name="map_action_secondary">#14130F</color>
     <color name="on_map_action_secondary">#F5F2E8</color>
 
-    <!-- The current-location card. Dark in both themes: it is a single strong statement — "this is
-         where you are" — and a white card would make it one more field in the form. The muted ink is
-         a solid value rather than the light ink at reduced opacity, which is the rule this screen
-         follows throughout. -->
+    <!-- The current-location card. Dark in both themes: it is a single strong statement — "this is where you. -->
     <color name="gps_card_ground">#14130F</color>
     <color name="on_gps_card">#F5F2E8</color>
     <color name="on_gps_card_muted">#C7F5F2E8</color>
-    <!-- The outline on the card's "Refresh location" pill — the card's own ink, softened, so the
-         quiet action reads as secondary to the accent "Use demo location" that can sit beside it. -->
+    <!-- The outline on the card's "Refresh location" pill — the card's own ink, softened. -->
     <color name="gps_card_button_stroke">#66F5F2E8</color>
-    <!-- The tinted well the blue dot sits in, on the card and on the map placeholder: the same blue
-         at a little under a fifth. -->
+    <!-- The tinted well the blue dot sits in, on the card and on the map placeholder. -->
     <color name="gps_card_dot_well">#2E2E7DFF</color>
 
-    <!-- The pin that hangs over the middle of the map while it is being dragged to choose a point (see
-         ic_map_pin.xml). The accent for the balloon and the app's near-black for its outline and hole,
-         fixed in both themes for the same reason as the overlays above: it sits on Google's tiles
-         rather than on the app's surface, and a pin that followed the page would vanish into a map
-         that is pale by day and inverted-pale by night. -->
+    <!-- The pin that hangs over the middle of the map while it is being dragged to choose a point. -->
     <color name="map_pin_fill">@color/accent_yellow</color>
     <color name="map_pin_ink">#14130F</color>
 
-    <!-- ========================= Vaccination history =========================
-         The status pill at the end of each row on a pet's vaccination card, and the thin bar down its
-         left-hand edge. Three states — clear (green), overdue (red), due soon (the accent) — worked
-         out from the due date every time the card is drawn; see ui/pet/VaccinationStatus.kt.
+    <!-- ========================= Vaccination history ========================= -->
 
-         The split between what is a light/dark *pair* and what is a single value is the same rule the
-         rest of this file follows, and it falls differently for the two marks:
-
-          - **The pills are pairs.** A pill is a filled panel with text on it, sitting on a white card
-            by day and a charcoal one at night. A pale mint wash with dark green text is right on the
-            first and glaring on the second, so each state has a wash-with-dark-ink value for the light
-            theme and a deep-ground-with-pale-ink value for the dark one — exactly the relationship the
-            pastel stat pills above use. The hue is held constant across both, which is what makes
-            "the red one needs attention" stay true in either theme.
-          - **The bars are single values.** A 3dp capsule carries no text and is read purely as a
-            colour, so it needs a saturated mid-light value that shows against the cream page and the
-            near-black one alike — the same reasoning as the care-category bars above. -->
-
-    <!-- Clear: a one-off dose that never repeats, and a booster comfortably in the future. Green,
-         because the app already has one green that means "all good" (the OPEN NOW pill, the
-         "All synced" dot, a satisfied password rule) and this is another reading of it. -->
+    <!-- Clear: a one-off dose that never repeats, and a booster comfortably in the future. -->
     <color name="vaccination_clear_light">#E4F5EA</color>
     <color name="on_vaccination_clear_light">#0B5133</color>
     <color name="vaccination_clear_dark">#1E2B23</color>
     <color name="on_vaccination_clear_dark">#8FE3B8</color>
 
-    <!-- Overdue: the due date has passed. Red, and the only red on the card — which is the point. It
-         is deliberately not colorError: that red is tuned for a line of validation text on the page,
-         and this is a filled pill saying a real-world appointment has been missed. -->
+    <!-- Overdue: the due date has passed. Red, and the only red on the card — which is the point. -->
     <color name="vaccination_overdue_light">#FDEAE5</color>
     <color name="on_vaccination_overdue_light">#B7301A</color>
     <color name="vaccination_overdue_dark">#2B1E1A</color>
     <color name="on_vaccination_overdue_dark">#FF8A6B</color>
 
-    <!-- Due today, or due inside the next month.
-
-         **The one pair here that is identical in both themes**, and for the reason given for the
-         accent itself at the top of this file: it is the app's accent used exactly as the accent is
-         always used — a bright fill with near-black content on it — and that relationship does not
-         change with the page behind it. The ink is a touch deeper than on_accent_yellow, matching the
-         near-black the design uses wherever the accent fills a small control. -->
+    <!-- Due today, or due inside the next month. -->
     <color name="vaccination_due">@color/accent_yellow</color>
     <color name="on_vaccination_due">#14130F</color>
 
-    <!-- The bars. Brighter and more saturated than the pills they sit opposite, because a 3dp sliver
-         needs more colour than a filled panel to register at all. -->
+    <!-- The bars. Brighter and more saturated than the pills they sit opposite. -->
     <color name="vaccination_bar_clear">#2BD98A</color>
     <color name="vaccination_bar_overdue">#FF6B4A</color>
     <color name="vaccination_bar_due">@color/accent_yellow</color>

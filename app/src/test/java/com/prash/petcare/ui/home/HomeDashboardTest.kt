@@ -19,23 +19,10 @@ import org.junit.Test
 import java.util.Calendar
 import java.util.TimeZone
 
-/**
- * Unit tests for [HomeDashboard], the arithmetic behind every card on the Home tab.
- *
- * They run on a plain JVM because [HomeDashboard] is pure — the clock is a parameter and nothing touches
- * Android — and they are worth having for the same reason CareScheduleTest is: the failures here are
- * quiet ones. A streak that counts yesterday's tick on today, a walk that shows "later" when it is
- * already late, or a "coming up" list flooded with tomorrow's breakfast all look like reasonable
- * screens; only a test notices they are wrong.
- *
- * Every test is set on **Thursday 17 September 2026 at 17:38** in Kathmandu, like the design's "5:38 PM"
- * evening, unless it says otherwise.
- */
+/** Unit tests for [HomeDashboard], the arithmetic behind every card on the Home tab. */
 class HomeDashboardTest {
 
-    // -------------------------------------------------------------------------------------------
     // Time zone control — see CareScheduleTest for why the zone is fixed.
-    // -------------------------------------------------------------------------------------------
 
     private lateinit var realTimeZone: TimeZone
 
@@ -50,9 +37,7 @@ class HomeDashboardTest {
         TimeZone.setDefault(realTimeZone)
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Greeting
-    // -------------------------------------------------------------------------------------------
+    // Greeting.
 
     @Test
     fun `part of day follows the hour`() {
@@ -72,9 +57,7 @@ class HomeDashboardTest {
         assertFalse(state.isLoading)
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Next up, overdue and the walk window
-    // -------------------------------------------------------------------------------------------
+    // Next up, overdue and the walk window.
 
     @Test
     fun `next up is the earliest open task, with minutes counted from now`() {
@@ -134,15 +117,9 @@ class HomeDashboardTest {
         assertEquals(WalkWindow.GoodNow(null), HomeDashboard.walkWindow(anyTime, minutesNow))
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Care streak
-    // -------------------------------------------------------------------------------------------
+    // Care streak.
 
-    /**
-     * The streak is the current calendar week, so which box is today depends on what day it is when
-     * the test runs. Every assertion below therefore finds a day by its midnight rather than by a
-     * fixed index — indices would pass on a Wednesday and fail on a Sunday.
-     */
+    /** The streak is the current calendar week, so which box is today depends on what day. */
     private fun List<StreakDay>.day(daysAgo: Int): StreakDay? =
         firstOrNull { it.dayStart == dayStart(daysAgo) }
 
@@ -191,8 +168,7 @@ class HomeDashboardTest {
 
         val streak = HomeDashboard.streak(listOf(care), completions, now(), Calendar.MONDAY)
 
-        // Only days inside the current week are present, so each is checked when it is there. Run on
-        // a Monday, "two days ago" belongs to last week and is legitimately absent.
+        // Only days inside the current week are present, so each is checked when it is there.
         streak.day(daysAgo = 2)?.let { assertTrue(it.isFull) }
         streak.day(daysAgo = 1)?.let { assertFalse(it.isFull) }
         assertFalse(streak.first { it.isToday }.isFull)  // today, nothing done yet
@@ -256,9 +232,7 @@ class HomeDashboardTest {
         assertEquals(1, state.streakFullDays)
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Insight
-    // -------------------------------------------------------------------------------------------
+    // Insight.
 
     @Test
     fun `insight says nothing is scheduled, or that everything is done`() {
@@ -312,9 +286,7 @@ class HomeDashboardTest {
         assertEquals(Insight.Overdue(taskTitle = "Lunch", petName = "Krishala", overdueCount = 1), insight)
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Coming up this week, and the next vet visit
-    // -------------------------------------------------------------------------------------------
+    // Coming up this week, and the next vet visit.
 
     @Test
     fun `coming up skips daily care and lists each task once on its next day`() {
@@ -376,9 +348,7 @@ class HomeDashboardTest {
         assertNull(HomeDashboard.nextVetVisit(emptyList(), now()))
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------------------------
+    // Helpers.
 
     /** Thursday 17 September 2026, 17:38 local. */
     private fun now(): Long = Calendar.getInstance().apply {

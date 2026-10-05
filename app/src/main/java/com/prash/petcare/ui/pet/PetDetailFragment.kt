@@ -43,24 +43,7 @@ import com.prash.petcare.ui.routine.RoutineDetailFragment
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
-/**
- * Shows one pet: a large photo card, the facts a sitter would need, and the care routines set up for
- * it — built to match design/pet-detail-mockup.png.
- *
- * This is the hub for everything to do with a single animal. From here the user can open the pet's
- * checklist or spending, edit the pet, record a vaccination, create a routine, and open, edit, pause
- * or delete an existing routine.
- *
- * The vaccination card between the two is read-only here: it lists what the pet has had and how
- * urgent each next dose is, and its "+ RECORD" button opens [AddVaccinationFragment]. The urgency is
- * derived from each record's due date rather than stored — see [VaccinationStatus] — which is why a
- * screen left open overnight is correct in the morning without anything being written.
- *
- * As the **View** in MVVM it holds no business logic. It renders whatever [PetDetailViewModel]
- * publishes, and forwards taps: navigation it performs itself (that needs a NavController, which a
- * ViewModel must not hold), while the two routine actions that change data — pause/resume and delete
- * — are handed to the ViewModel, after a confirmation dialog in the case of delete.
- */
+/** Shows one pet: a large photo card, the facts a sitter would need, and the care routines set up. */
 class PetDetailFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
@@ -73,28 +56,13 @@ class PetDetailFragment : Fragment() {
         PetDetailViewModel.factory(petId)
     }
 
-    /**
-     * The Activity-wide record of who is signed in, used here only for the profile photo drawn in
-     * the shared header — this screen's own data is about the pet, not the account. Scoped to the
-     * Activity, so it is the same instance every other screen reads the photo from.
-     */
+    /** The Activity-wide record of who is signed. */
     private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
-    /**
-     * Guards against re-decoding the same photo on every state emission.
-     *
-     * The state re-emits whenever anything on the screen changes — a task ticked on another tab, a
-     * routine paused — and without this check the photo would be read from disk again each time,
-     * flashing the placeholder for the result that is already showing. Cleared in [onDestroyView]
-     * so a rebuilt view draws the photo again.
-     */
+    /** Guards against re-decoding the same photo on every state emission. */
     private var renderedPhotoPath: String? = null
 
-    /**
-     * The routine cards' adapter. Holds no view or coroutine scope of its own, so — unlike the Pets
-     * tab's photo adapter — it can safely live as long as the fragment and be re-attached to each new
-     * view.
-     */
+    /** The routine cards' adapter. Holds no view or coroutine scope of its own. */
     private val routineAdapter = RoutineAdapter(
         onRoutineClick = { routine -> openRoutineDetail(routine.id) },
         onEditClick = { routine -> openRoutineForm(routineId = routine.id) },
@@ -102,11 +70,7 @@ class PetDetailFragment : Fragment() {
         onDeleteClick = { routine -> confirmDeleteRoutine(routine) }
     )
 
-    /**
-     * The vaccination card's rows. Takes no callbacks: the history is read-only in this pass, so
-     * there is nothing for a row to report. Like the routine adapter it holds no view or scope of
-     * its own, so it can safely outlive each view and be re-attached to the next.
-     */
+    /** The vaccination card's rows. Takes no callbacks: the history is read-only in this pass. */
     private val vaccinationAdapter = VaccinationAdapter()
 
     override fun onCreateView(
@@ -121,18 +85,14 @@ class PetDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // The header shared with the tabs. Its title starts empty and becomes the pet's first name
-        // as soon as the pet loads (see render). The badge opens the profile screen, as it does on
-        // the tabs — this screen hides the shared toolbar too, and with it the overflow menu that
-        // was the other way there.
+        // The header shared with the tabs. Its title starts empty and becomes the pet's first name as soon as the pet loads.
         binding.header.setUp(
             title = "",
             onBadgeClick = ::openNotifications,
             onMonogramClick = ::openProfile
         )
 
-        // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        // Keeps the header's mark showing the user's profile photo, falling back to the app's monogram.
         bindHeaderFromSession(binding.header, sessionViewModel)
 
         setUpRecyclerView()
@@ -141,21 +101,7 @@ class PetDetailFragment : Fragment() {
         observeSavedVaccinationResult()
     }
 
-    /**
-     * Confirms a vaccination recorded on the screen above this one, and offers the undo.
-     *
-     * The values arrive through this destination's own [androidx.lifecycle.SavedStateHandle], which
-     * is the Navigation component's way of returning a result — see
-     * [AddVaccinationFragment.handleEvent] for the other end of it.
-     *
-     * **Why the values are cleared as they are read.** A [androidx.lifecycle.LiveData] replays its
-     * last value to a new observer, so without removing them the confirmation would appear again
-     * every time the user came back to this pet — announcing a record saved an hour ago.
-     *
-     * The row itself needs no help to appear: the card observes Room, so the history has already
-     * redrawn by the time this runs. All this does is confirm what happened and offer the way back
-     * out of it.
-     */
+    /** Confirms a vaccination recorded on the screen above this one, and offers the undo. */
     private fun observeSavedVaccinationResult() {
         val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
 
@@ -176,14 +122,7 @@ class PetDetailFragment : Fragment() {
             }
     }
 
-    /**
-     * "Rabies recorded for Krishala", with an undo.
-     *
-     * Undo rather than a confirmation before saving, the same choice the Places tab makes: the save
-     * is deliberate and almost always right, so asking first would tax every correct save to catch
-     * the rare wrong one. Taking it back afterwards costs nothing and only appears when it is
-     * wanted. A second, briefer message confirms the undo itself, so pressing it is not silence.
-     */
+    /** "Rabies recorded for Krishala", with an undo. */
     private fun showRecordedConfirmation(
         recordId: Long,
         taskId: Long,
@@ -201,8 +140,7 @@ class PetDetailFragment : Fragment() {
                 viewModel.undoVaccinationRecord(recordId, taskId)
                 showMessage(getString(R.string.record_saved_undone, vaccineName))
             }
-            // Without this the message would appear *behind* the floating navigation bar, leaving
-            // "Undo" unreadable and untappable — see anchorAboveNavBar.
+            // Without this the message would appear behind the floating navigation bar.
             .anchorAboveNavBar(this)
             .show()
     }
@@ -217,12 +155,10 @@ class PetDetailFragment : Fragment() {
         binding.routinesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = routineAdapter
-            // Deliberately not setHasFixedSize(true): this list sits inside a NestedScrollView with
-            // wrap_content height, so it must be allowed to re-measure as routines come and go.
+            // Deliberately not setHasFixedSize(true).
         }
 
-        // The vaccination card's rows, set up the same way and for the same reasons — it is the
-        // second list inside the one scrolling page.
+        // The vaccination card's rows, set up the same way and for the same reasons.
         binding.vaccinationsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = vaccinationAdapter
@@ -231,13 +167,11 @@ class PetDetailFragment : Fragment() {
 
     private fun setUpClickListeners() {
         // The back button on the photo stands in for the toolbar's up arrow, which is hidden here.
-        // navigateUp returns to whichever screen opened the pet — the Pets tab or the dashboard.
         binding.backButton.setOnClickListener { findNavController().navigateUp() }
 
         binding.addRoutineButton.setOnClickListener { openRoutineForm(routineId = null) }
 
-        // "+ RECORD" on the vaccination card. Only the pet travels: the record screen always creates
-        // a new record, so unlike the routine form there is no "which one am I editing?" to pass.
+        // "+ RECORD" on the vaccination card. Only the pet travels: the record screen always creates a new record.
         binding.addVaccinationButton.setOnClickListener {
             findNavController().navigate(
                 R.id.action_pet_detail_to_add_vaccination,
@@ -260,9 +194,7 @@ class PetDetailFragment : Fragment() {
         }
 
         binding.editPetButton.setOnClickListener {
-            // The owner comes from the loaded pet rather than being passed down from the previous
-            // screen, so the two can never disagree about who owns this animal. If the pet has not
-            // loaded yet there is nothing to edit, so the tap is ignored.
+            // The owner comes from the loaded pet rather than being passed down from the previous screen.
             val pet = viewModel.uiState.value.pet ?: return@setOnClickListener
 
             findNavController().navigate(
@@ -282,13 +214,7 @@ class PetDetailFragment : Fragment() {
         )
     }
 
-    /**
-     * Opens the routine form: empty for the "+" button, filled in for a card's "Edit".
-     *
-     * One destination serves both, told apart by whether a routine id is passed — the same convention
-     * the pet, task and expense forms use. With no id the argument falls back to its nav-graph default
-     * of -1, which the form reads as "create".
-     */
+    /** Opens the routine form: empty for the "+" button, filled in for a card's "Edit". */
     private fun openRoutineForm(routineId: Long?) {
         val arguments = bundleOf(AddRoutineFragment.ARG_PET_ID to petId)
         if (routineId != null) {
@@ -302,13 +228,7 @@ class PetDetailFragment : Fragment() {
         findNavController().navigate(R.id.notificationsFragment)
     }
 
-    /**
-     * Asks before deleting a routine.
-     *
-     * Deleting also removes every task inside it and cannot be undone, so the dialog spells out that
-     * consequence and points at Pause — in the same menu the user has just come from — as the
-     * reversible alternative, since that is often what someone reaching for delete actually wants.
-     */
+    /** Asks before deleting a routine. */
     private fun confirmDeleteRoutine(routine: CareRoutine) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.delete_routine_dialog_title)
@@ -321,12 +241,7 @@ class PetDetailFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Collects state for as long as the screen is visible.
-     *
-     * `repeatOnLifecycle(STARTED)` starts collecting when the screen appears and cancels when it
-     * stops, so no work happens in the background and no view is touched after it is destroyed.
-     */
+    /** Collects state for as long as the screen is visible. */
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -346,13 +261,11 @@ class PetDetailFragment : Fragment() {
 
         routineAdapter.submitList(state.routines)
 
-        // The list and the empty state occupy the same slot, so exactly one shows. Both stay hidden
-        // while loading, which stops "No care routines yet" flashing up before the first result.
+        // The list and the empty state occupy the same slot, so exactly one shows.
         binding.routinesRecyclerView.isVisible = state.routines.isNotEmpty()
         binding.emptyRoutinesContainer.isVisible = state.hasNoRoutines
 
-        // The vaccination card, on exactly the same footing: the rows and the "nothing recorded yet"
-        // message share one slot, and neither shows until the first result is in.
+        // The vaccination card, on exactly the same footing.
         vaccinationAdapter.submitList(state.vaccinations)
         binding.vaccinationsRecyclerView.isVisible = state.vaccinations.isNotEmpty()
         binding.emptyVaccinationsContainer.isVisible = state.hasNoVaccinations
@@ -364,21 +277,17 @@ class PetDetailFragment : Fragment() {
 
         binding.petNameText.text = pet.name
 
-        // The species enum stores database values (DOG, CAT), so it is translated to a readable label
-        // first. The chip's style upper-cases it at draw time.
+        // The species enum stores database values (DOG, CAT), so it is translated to a readable label first.
         binding.speciesChip.text = getString(pet.species.labelRes())
 
         bindGenderBadge(pet.gender)
 
-        // Age is derived from the date of birth rather than stored — see ui.common.formatAge — and
-        // uses the long form ("3 years old") the design shows. Each of the two fact pills hides itself
-        // when its fact was never recorded; the Flow in the layout closes the gap it leaves.
+        // Age is derived from the date of birth rather than stored — see ui.common.formatAge — and uses the long form.
         val age = pet.dateOfBirth?.let { formatAge(requireContext(), it) }
         binding.agePill.text = age.orEmpty()
         binding.agePill.isVisible = age != null
 
-        // Through the shared formatter, so this pet's weight reads exactly as it does on the Pets and
-        // Home cards ("25 kg", "4.5 kg") — see ui/common/WeightFormatting.kt.
+        // Through the shared formatter, so this pet's weight reads exactly as it does on the Pets and Home cards.
         val weight = pet.weightKg?.let {
             formatWeightWithUnit(requireContext(), it, state.weightUnit)
         }
@@ -388,13 +297,7 @@ class PetDetailFragment : Fragment() {
         binding.statusPill.text = statusText(state)
     }
 
-    /**
-     * The yellow pill's wording: "Nothing due today", "2 left today" — or "All done today".
-     *
-     * The third message is the dashboard's, reused so that a pet whose tasks are all ticked off reads
-     * the same here as on the card the user tapped to arrive. Without it that case would read
-     * "0 left today", which looks like a bug on a day that was actually completed.
-     */
+    /** The yellow pill's wording: "Nothing due today", "2 left today" — or "All done today". */
     private fun statusText(state: PetDetailUiState): String = when {
         state.tasksOutstanding > 0 -> resources.getQuantityString(
             R.plurals.home_pet_tasks_left,
@@ -407,16 +310,7 @@ class PetDetailFragment : Fragment() {
         else -> getString(R.string.home_pet_nothing_due)
     }
 
-    /**
-     * Shows the Mars symbol in blue for a male pet, the Venus symbol in pink for a female one, and
-     * nothing at all when the gender is unknown.
-     *
-     * Hidden rather than showing a "?" for unknown: a question mark on the photo would read as
-     * something the user needs to fix, when an unrecorded gender is perfectly normal.
-     *
-     * The tint is applied through [ImageViewCompat] so it works identically back to minSdk 24, and the
-     * content description is set with it, since TalkBack cannot describe a symbol from its shape.
-     */
+    /** Shows the Mars symbol in blue for a male pet, the Venus symbol in pink for a female one, and nothing at all. */
     private fun bindGenderBadge(gender: PetGender) {
         val (iconRes, colorRes, labelRes) = when (gender) {
             PetGender.MALE -> Triple(R.drawable.ic_gender_male, R.color.gender_male, R.string.gender_male)
@@ -437,12 +331,7 @@ class PetDetailFragment : Fragment() {
         binding.genderBadge.isVisible = true
     }
 
-    /**
-     * Fills the "About" card's five rows.
-     *
-     * Every row is always visible and an empty value becomes "None recorded", so the card keeps the
-     * same shape for every pet — see the note on the card in fragment_pet_detail.xml.
-     */
+    /** Fills the "About" card's five rows. */
     private fun bindAboutCard(pet: Pet, ownerName: String) {
         binding.dobValueText.showValue(pet.dateOfBirth?.let { formatStoredDate(it) })
         binding.dietaryValueText.showValue(pet.dietaryNotes)
@@ -456,12 +345,7 @@ class PetDetailFragment : Fragment() {
         text = value?.takeIf { it.isNotBlank() } ?: getString(R.string.pet_detail_none_recorded)
     }
 
-    /**
-     * Loads and shows the pet's photo, or the placeholder when there is none.
-     *
-     * The load itself is shared with the list cards, which need the same care about a view being
-     * rebound mid-decode; see ui/common/PetPhotoBinder.kt.
-     */
+    /** Loads and shows the pet's photo, or the placeholder when there is none. */
     private fun renderPhoto(path: String?) {
         if (path == renderedPhotoPath) return
         renderedPhotoPath = path
@@ -471,8 +355,7 @@ class PetDetailFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Detach the adapter from the dying RecyclerView: the adapter outlives the view, and the
-        // RecyclerView would otherwise be kept alive through the adapter's observer list.
+        // Detach the adapter from the dying RecyclerView: the adapter outlives the view.
         binding.routinesRecyclerView.adapter = null
         binding.vaccinationsRecyclerView.adapter = null
         renderedPhotoPath = null

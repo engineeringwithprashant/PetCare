@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The Pets tab's paw as drawn on the *active* pill: the outline in ic_tab_pets.xml at the heavier
-    stroke width. See ic_tab_home_active.xml for why the pair exists as two files.
--->
+<!-- The Pets tab's paw as drawn on the active pill: the outline in ic_tab_pets.xml at the heavier stroke width. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

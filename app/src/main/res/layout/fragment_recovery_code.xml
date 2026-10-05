@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The recovery-code screen (RecoveryCodeFragment): the way in when the authenticator app is gone.
-
-    Reached from "LOST ACCESS?" on the two-factor screen, and deliberately built from the same pieces
-    in the same order — the shared auth header, the code boxes with their keypad, a helper note, the
-    verify button, and a way back. Somebody arriving here is already anxious; a screen that looks like
-    a different app would not help. What changes is only the wording.
-
-    Top to bottom: the header (its heading and subtitle set by the fragment), the CodeKeypadView (the
-    same reusable six boxes and keypad the two-factor screen uses — see view_code_keypad.xml), a note
-    saying plainly that the code will be used up, the verify button, and "← BACK TO CODE ENTRY".
-
-    **No step bar**, unlike the two-factor screen. That bar says "STEP 2 OF 2" — a position in the
-    ordinary sign-in sequence. This screen is a detour out of it, not a step along it, and drawing a
-    progress bar on a detour would misdescribe where the user is.
-
-    There is deliberately no text field anywhere, so the system keyboard has nothing to open for.
-
-    ScrollView so the keypad stays reachable on short screens, in landscape, and at large font sizes,
-    where the whole column is taller than the window.
--->
+<!-- The recovery-code screen (RecoveryCodeFragment): the way in when the authenticator app is gone. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/PetCare.Auth.Page"
@@ -37,17 +17,14 @@
             android:id="@+id/header"
             layout="@layout/view_auth_header" />
 
-        <!-- auth_header_gap rather than spacing_md, because with no step bar between them this sits
-             directly under the header and takes the gap the header expects beneath it. -->
+        <!-- auth_header_gap rather than spacing_md. -->
         <com.prash.petcare.ui.auth.CodeKeypadView
             android:id="@+id/codeKeypad"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/auth_header_gap" />
 
-        <!-- Says the code is spent by using it. Worth stating before the tap rather than after: a
-             user working down a printed list needs to know to cross the line off, and someone who
-             only has two left should find that out while they can still do something about it. -->
+        <!-- Says the code is spent by using it. Worth stating before the tap rather. -->
         <TextView
             style="@style/PetCare.Auth.Helper"
             android:layout_width="match_parent"

@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One preset chip on the "Record a vaccination" screen — "FVRCP", "Rabies", "DHPP".
-
-    A layout holding a single view, for the reason given in item_category_chip.xml: a Material
-    component takes its appearance from the style applied at *inflation*, so a Chip built in code
-    would get platform defaults and look nothing like the app. ui/common/FilterChips.kt inflates one
-    of these per option and sets its text.
-
-    The whole chosen/unchosen appearance is in PetCare.Record.PresetChip, which is the Tasks tab's
-    filter chip at a smaller size — mechanically the same control, in a quieter role.
--->
+<!-- One preset chip on the "Record a vaccination" screen — "FVRCP", "Rabies", "DHPP". -->
 <com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/PetCare.Record.PresetChip"

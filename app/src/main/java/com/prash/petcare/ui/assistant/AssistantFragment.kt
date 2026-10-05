@@ -27,35 +27,14 @@ import com.prash.petcare.ui.common.setUp
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
-/**
- * The Assistant screen, opened from the dashboard's "Ask the assistant" button and its AI pill.
- *
- * In MVVM this is the **View**. It draws whatever [AssistantViewModel] publishes and forwards what
- * the user types — it decides nothing about the conversation. What it *does* own is everything that
- * needs a Context: resolving each message and chip into words from string resources, keeping the
- * list scrolled to the newest message, and enabling the send button.
- *
- * **Why the chips' text lives here rather than in the state.** A suggestion is published as a
- * [Suggestion] — a kind, and a pet's name where one applies — and the wording is resolved here. That
- * is the same split every other screen in this app uses, and it is what keeps the ViewModel free of
- * a Context and the words translatable.
- */
+/** The Assistant screen, opened from the dashboard's "Ask the assistant" button and its AI pill. */
 class AssistantFragment : Fragment() {
 
-    /**
-     * ViewBinding for fragment_assistant.xml.
-     *
-     * Nullable because a fragment's view can be destroyed while the fragment itself lives on;
-     * holding the binding past that point would leak the whole view hierarchy. Cleared in
-     * [onDestroyView].
-     */
+    /** ViewBinding for fragment_assistant.xml. */
     private var _binding: FragmentAssistantBinding? = null
     private val binding get() = _binding!!
 
-    /**
-     * Which account is signed in, read from the Activity-wide session — this screen is reached by
-     * destination id from the dashboard and has no navigation argument to carry it.
-     */
+    /** Which account is signed in, read from the Activity-wide session. */
     private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: AssistantViewModel by viewModels {
@@ -77,17 +56,14 @@ class AssistantFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // The shared header, as on every redesigned screen. The AI pill is deliberately *not* shown
-        // here: it is the control that opens this screen, and a button that reopens the screen it is
-        // already on reads as broken.
+        // The shared header, as on every redesigned screen. The AI pill is deliberately not shown here.
         binding.header.setUp(
             title = R.string.nav_assistant,
             onBadgeClick = ::openNotifications,
             onMonogramClick = ::openProfile
         )
 
-        // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        // Keeps the header's mark showing the user's profile photo, falling back to the app's monogram.
         bindHeaderFromSession(binding.header, sessionViewModel)
 
         setUpList()
@@ -97,28 +73,7 @@ class AssistantFragment : Fragment() {
         observeViewModel()
     }
 
-    /**
-     * Keeps the question field and the send button out from under the floating navigation bar.
-     *
-     * The bar is a genuine overlay — it is drawn over the screen rather than taking a row of its own,
-     * which is the whole of that design (see activity_main.xml) — and every other screen deals with it
-     * by giving its scrolling content a deep bottom padding so the last card can scroll clear. This
-     * screen cannot: its input row is *pinned* to the bottom and never scrolls, so without a clearance
-     * it simply sat behind the tabs.
-     *
-     * **Why it is not a fixed margin in the layout.** The Activity hides the bar while the keyboard is
-     * up, and reserves the keyboard's height on the root instead — see MainActivity.applyWindowInsets.
-     * A permanent 76dp gap would then leave the input row hovering with a band of empty page beneath
-     * it, exactly where the tabs no longer are. So the clearance is applied only while the bar is
-     * actually on screen, which is precisely "while the keyboard is not".
-     *
-     * **Why the listener is on the row rather than on the fragment's root.** An
-     * `OnApplyWindowInsetsListener` *replaces* the default dispatch for the view it is set on, so one
-     * on the root would stop insets reaching anything inside this screen — the trap noted on
-     * [keepNewestMessageVisibleWhenListShrinks]. On the row itself the only views cut off are the text
-     * field and the send button, neither of which reads an inset. The insets are returned untouched, so
-     * the Activity's own handling is unaffected.
-     */
+    /** Keeps the question field and the send button out from under the floating navigation bar. */
     private fun keepInputClearOfNavBar() {
         val clearance = resources.getDimensionPixelSize(R.dimen.assistant_input_nav_clearance)
 
@@ -129,27 +84,7 @@ class AssistantFragment : Fragment() {
         }
     }
 
-    /**
-     * Keeps the newest message in view when the list is made shorter — which is what the keyboard
-     * opening amounts to.
-     *
-     * The Activity makes the room: it applies the keyboard's inset as padding on the root, so the
-     * whole layout re-measures and this list is handed a shorter box. See
-     * MainActivity.applyWindowInsets.
-     *
-     * **Why a layout listener rather than an inset listener here.** Both would work, but an
-     * `OnApplyWindowInsetsListener` on a fragment's root *replaces* the default dispatch and would
-     * stop insets reaching anything inside it — a trap for whatever is added to this screen later.
-     * Watching the height instead needs no such care, and it is also the more honest trigger: the
-     * list should return to the bottom whenever it shrinks, whatever shrank it.
-     *
-     * `stackFromEnd` already holds the bottom through an ordinary re-measure. This covers the case
-     * it does not: when the last message is taller than the space left, the anchor is kept but the
-     * end of a long bubble can finish below the viewport.
-     *
-     * The scroll is posted so it runs after the layout pass that triggered it, rather than against
-     * the geometry being replaced.
-     */
+    /** Keeps the newest message in view when the list is made shorter. */
     private fun keepNewestMessageVisibleWhenListShrinks() {
         binding.messagesRecyclerView.addOnLayoutChangeListener {
             view, _, top, _, bottom, _, oldTop, _, oldBottom ->
@@ -167,14 +102,7 @@ class AssistantFragment : Fragment() {
         }
     }
 
-    /**
-     * Prepares the conversation list.
-     *
-     * `stackFromEnd` pins the list to its bottom, which is what a chat wants: with few messages they
-     * sit at the bottom near the input rather than floating at the top, and with many the newest is
-     * already in view. It is the layout manager's job rather than a scroll call, so it holds through
-     * rotation without the fragment having to restore a position.
-     */
+    /** Prepares the conversation list. */
     private fun setUpList() {
         messageAdapter = AssistantAdapter()
         binding.messagesRecyclerView.apply {
@@ -183,12 +111,7 @@ class AssistantFragment : Fragment() {
         }
     }
 
-    /**
-     * Wires the question field and the send button.
-     *
-     * The field's own "send" key does the same thing as the button, because a user who has just
-     * typed a question expects the keyboard's action to send it rather than to insert a newline.
-     */
+    /** Wires the question field and the send button. */
     private fun setUpInput() {
         binding.sendButton.setOnClickListener { sendTypedQuestion() }
 
@@ -201,8 +124,7 @@ class AssistantFragment : Fragment() {
             }
         }
 
-        // The send button's enabled state depends on the field as well as on the ViewModel, and the
-        // field changes far more often than the state does — so it is refreshed on every keystroke.
+        // The send button's enabled state depends on the field as well as on the ViewModel.
         binding.questionInput.doAfterTextChanged { updateSendEnabled() }
     }
 
@@ -215,12 +137,7 @@ class AssistantFragment : Fragment() {
         binding.questionInput.text?.clear()
     }
 
-    /**
-     * Subscribes to the ViewModel.
-     *
-     * `repeatOnLifecycle(STARTED)` collects while the screen is visible and cancels when it stops,
-     * so the fragment never touches views in the background.
-     */
+    /** Subscribes to the ViewModel. */
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -237,13 +154,7 @@ class AssistantFragment : Fragment() {
         updateSendEnabled(state.isReplying)
     }
 
-    /**
-     * "Ask about Krishala & Ddjw", built from the account's actual pets.
-     *
-     * The separator is a string resource rather than a literal "&": it carries the spaces around it,
-     * and a language that joins names differently can change it without touching this code. An
-     * account with no pets yet gets its own sentence rather than "Ask about " trailing into nothing.
-     */
+    /** "Ask about Krishala & Ddjw", built from the account's actual pets. */
     private fun renderTitle(petNames: List<String>) {
         binding.assistantTitleText.text = if (petNames.isEmpty()) {
             getString(R.string.assistant_header_title_no_pets)
@@ -255,27 +166,13 @@ class AssistantFragment : Fragment() {
         }
     }
 
-    /**
-     * Submits the conversation and keeps the newest message in view.
-     *
-     * The scroll is deferred to `submitList`'s completion callback, which runs after the new item
-     * has been laid out. Scrolling before that would target a position the list does not have yet,
-     * and the answer would land just off the bottom edge.
-     */
+    /** Submits the conversation and keeps the newest message in view. */
     private fun renderMessages(messages: List<AssistantMessage>) {
-        // The scroll runs in submitList's completion callback, which fires after the new item has
-        // been laid out — scrolling before that would target a position the list does not have yet,
-        // and a message sent with the keyboard open would land just off the bottom edge.
+        // The scroll runs in submitList's completion callback, which fires after the new item has been laid out.
         messageAdapter?.submitList(messages) { scrollToNewestMessage() }
     }
 
-    /**
-     * Rebuilds the suggested-question row, or hides it once the conversation has started.
-     *
-     * The chips are recreated rather than updated in place: there are at most three, they change
-     * only when the pet list does, and rebuilding is what keeps this from having to reconcile an
-     * existing row against a new list of suggestions.
-     */
+    /** Rebuilds the suggested-question row, or hides it once the conversation has started. */
     private fun renderSuggestions(state: AssistantUiState) {
         binding.suggestionsScroll.isVisible = state.showSuggestions
         binding.suggestionsGroup.removeAllViews()
@@ -291,32 +188,20 @@ class AssistantFragment : Fragment() {
             ) as Chip
 
             chip.text = question
-            // Tapping a chip sends its question as though the user had typed it, which is what makes
-            // the row a shortcut rather than a separate mechanism.
+            // Tapping a chip sends its question as though the user had typed.
             chip.setOnClickListener { viewModel.send(question) }
             binding.suggestionsGroup.addView(chip)
         }
     }
 
-    /**
-     * The wording for one suggestion.
-     *
-     * Null for a per-pet chip with no pet to name, which cannot normally happen — the ViewModel only
-     * offers that suggestion when there is a pet — but returning null rather than asking about a
-     * blank keeps the two independent of each other.
-     */
+    /** The wording for one suggestion. */
     private fun questionFor(suggestion: Suggestion): String? = when (suggestion.kind) {
         SuggestionKind.OPEN_TASKS -> getString(R.string.assistant_chip_open_tasks)
         SuggestionKind.MONTH_SPEND -> getString(R.string.assistant_chip_month_spend)
         SuggestionKind.PET -> suggestion.petName?.let { getString(R.string.assistant_chip_pet, it) }
     }
 
-    /**
-     * Enables the send button only when there is something to send and nothing already in flight.
-     *
-     * Called both from the state and from every keystroke, so the reply-in-flight flag is read from
-     * the latest state rather than passed in from the text watcher, which does not know it.
-     */
+    /** Enables the send button only when there is something to send and nothing already in flight. */
     private fun updateSendEnabled(isReplying: Boolean = viewModel.uiState.value.isReplying) {
         val hasQuestion = !binding.questionInput.text.isNullOrBlank()
         binding.sendButton.isEnabled = hasQuestion && !isReplying
@@ -329,8 +214,7 @@ class AssistantFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Detach the adapter: a RecyclerView keeps its adapter and the adapter its holders, which
-        // would keep the destroyed hierarchy alive behind them.
+        // Detach the adapter: a RecyclerView keeps its adapter and the adapter its holders.
         binding.messagesRecyclerView.adapter = null
         messageAdapter = null
         _binding = null

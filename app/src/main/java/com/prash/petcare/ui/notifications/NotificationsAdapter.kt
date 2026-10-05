@@ -25,28 +25,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-/**
- * Draws the notifications list: the "TODAY" and "EARLIER" headings and every alert card under them.
- *
- * Part of the **View** layer, and it is where every alert becomes *words*. [NotificationsViewModel]
- * publishes structured facts — this pet, that task, this many expenses, that many months — and this
- * class turns them into the sentence on the card, the code on its badge and the age beside its type,
- * using string resources and the device's locale. That division is what keeps the ViewModel free of a
- * Context and the wording out of the business rules.
- *
- * It decides nothing else: which alerts exist, what order they are in and whether each has been read
- * are all settled before the list reaches here.
- *
- * Two row layouts share one list through RecyclerView *view types* — [getItemViewType] labels each
- * position and the adapter keeps a separate recycling pool per type, so a heading is never reused as
- * a card.
- *
- * A [ListAdapter], which diffs each new list against the previous one off the main thread and redraws
- * only the rows that changed. That matters more here than on most screens: marking one alert read
- * republishes the whole list, and without diffing every card on screen would flash.
- *
- * @property onAlertClick Called with a tapped alert. A lambda so navigation stays in the fragment.
- */
+/** Draws the notifications list: the "TODAY" and "EARLIER" headings and every alert card under them. */
 class NotificationsAdapter(
     private val onAlertClick: (Alert) -> Unit
 ) : ListAdapter<AlertListItem, RecyclerView.ViewHolder>(AlertDiffCallback) {
@@ -69,8 +48,7 @@ class NotificationsAdapter(
                 onAlertClick
             )
 
-            // Unreachable: getItemViewType only returns the two constants above. Throwing means a
-            // future row type fails loudly here instead of silently drawing as the wrong thing.
+            // Unreachable: getItemViewType only returns the two constants above.
             else -> throw IllegalArgumentException("Unknown alert view type: $viewType")
         }
     }
@@ -106,8 +84,7 @@ class NotificationsAdapter(
         fun bind(alert: Alert) {
             val context = binding.root.context
 
-            // Re-set on every bind: rows are recycled, and a listener left from a previous bind would
-            // open whichever alert used to occupy this card.
+            // Re-set on every bind: rows are recycled.
             binding.root.setOnClickListener { onAlertClick(alert) }
 
             val title = titleOf(context, alert.content)
@@ -124,9 +101,7 @@ class NotificationsAdapter(
 
             applyReadState(alert.isRead)
 
-            // One spoken sentence per card, in place of a code, a title and a meta line read as three
-            // unrelated fragments. The unread mark is a shape with no text, so what it means is added
-            // here — otherwise a TalkBack user would have no way to tell a new alert from an old one.
+            // One spoken sentence per card, in place of a code.
             binding.root.contentDescription = listOfNotNull(
                 title,
                 meta,
@@ -134,17 +109,7 @@ class NotificationsAdapter(
             ).joinToString(context.getString(R.string.list_separator))
         }
 
-        /**
-         * Colours the card for whether it has been read.
-         *
-         * An unread card takes the pale accent wash and an accent badge; a read one the plain surface
-         * and a grey badge. The same treatment the Places tab gives its featured row, and resolved
-         * from theme attributes for the same reason: the wash is a pale yellow in light mode and a
-         * deep olive in dark, and hard-coding either would break the other.
-         *
-         * Every branch sets every property. A view holder is recycled, so leaving one out would let
-         * an unread card's yellow badge survive onto the read alert that reuses it.
-         */
+        /** Colours the card for whether it has been read. */
         private fun applyReadState(isRead: Boolean) {
             val context = binding.root.context
 
@@ -163,8 +128,7 @@ class NotificationsAdapter(
                     MaterialColors.getColor(binding.root, MaterialR.attr.colorOnSurfaceVariant)
                 )
             } else {
-                // The accent is a fixed value rather than a theme role: it is the same yellow in both
-                // modes, with the near-black guaranteed legible on it — see colors.xml.
+                // The accent is a fixed value rather than a theme role: it is the same yellow in both modes.
                 binding.alertBadgeText.backgroundTintList =
                     ContextCompat.getColorStateList(context, R.color.accent_yellow)
                 binding.alertBadgeText.setTextColor(
@@ -176,11 +140,7 @@ class NotificationsAdapter(
         }
     }
 
-    /**
-     * Rows are the same row when they have the same [AlertListItem.itemId]; their contents have
-     * changed when anything drawn has, which the data classes' generated `equals` covers — including
-     * the read flag, so marking one alert read animates that card alone.
-     */
+    /** Rows are the same row when they have the same [AlertListItem.itemId]; their contents have changed. */
     private object AlertDiffCallback : DiffUtil.ItemCallback<AlertListItem>() {
         override fun areItemsTheSame(oldItem: AlertListItem, newItem: AlertListItem): Boolean =
             oldItem.itemId == newItem.itemId
@@ -195,13 +155,7 @@ class NotificationsAdapter(
 
         private const val MONTHS_PER_YEAR = 12
 
-        /**
-         * The sentence on the card.
-         *
-         * One exhaustive `when` over [AlertContent], which is what makes adding a sixth kind of alert
-         * a compile error here until it has been given words — rather than a card that silently draws
-         * blank.
-         */
+        /** The sentence on the card. */
         private fun titleOf(context: Context, content: AlertContent): String = when (content) {
             is AlertContent.CareReminder -> context.getString(
                 R.string.alert_title_care_reminder,
@@ -250,13 +204,7 @@ class NotificationsAdapter(
             is AlertContent.Tip -> R.string.alert_type_tip
         }
 
-        /**
-         * The short code on the badge.
-         *
-         * A care reminder takes one of two, chosen by the task's category: the badge is the only place
-         * the card says whether this is a jab or a check-up, which is the difference between "VAX" and
-         * "VET" being worth drawing at all.
-         */
+        /** The short code on the badge. */
         @StringRes
         private fun badgeOf(content: AlertContent): Int = when (content) {
             is AlertContent.CareReminder ->
@@ -269,21 +217,14 @@ class NotificationsAdapter(
             is AlertContent.Tip -> R.string.alert_badge_tip
         }
 
-        /**
-         * "today", "tomorrow" or "on 22 Sep" — the end of a care reminder's sentence.
-         *
-         * Compared by *day* rather than by the hours between the two moments, because that is what the
-         * words mean: an appointment at 9am tomorrow is "tomorrow" whether it is asked about at
-         * midnight or at 8pm tonight, and a 20-hour difference is not what decides it.
-         */
+        /** "today", "tomorrow" or "on 22 Sep" — the end of a care reminder's sentence. */
         private fun duePhrase(context: Context, dueAt: Long): String {
             val today = CareSchedule.startOfToday()
             val dueDay = CareSchedule.startOfDay(dueAt)
 
             return when (dueDay) {
                 today -> context.getString(R.string.alert_due_today)
-                // The next day's start is asked of the calendar rather than assumed to be 24 hours
-                // later, so the phrase is still right on the night the clocks change.
+                // The next day's start is asked of the calendar rather than assumed to be 24 hours later.
                 CareSchedule.startOfDay(today + TimeUnit.DAYS.toMillis(1) + HALF_DAY_MILLIS) ->
                     context.getString(R.string.alert_due_tomorrow)
 
@@ -300,19 +241,7 @@ class NotificationsAdapter(
                 context.resources.getQuantityString(R.plurals.alert_milestone_months, months, months)
             }
 
-        /**
-         * How long ago an alert happened: "Just now", "45m ago", "2h ago" — or its date once it is no
-         * longer today.
-         *
-         * **Why the switch to a date, and why at midnight rather than at some number of hours.** A
-         * relative age is how a notification is read while it is still current; past that, "51h ago"
-         * is arithmetic the user should not have to do. Midnight is the natural place to change over
-         * because it is where the list's own grouping changes: every card under "TODAY" reads
-         * relatively and every card under "EARLIER" carries a date, so the two never disagree.
-         *
-         * The date is deliberately year-less — "Sep 10" — because nothing here is older than a
-         * fortnight, and a year on every card would be noise.
-         */
+        /** How long ago an alert happened: "Just now", "45m ago", "2h ago". */
         private fun formatAge(context: Context, occurredAt: Long): String {
             val now = System.currentTimeMillis()
 
@@ -331,19 +260,7 @@ class NotificationsAdapter(
             }
         }
 
-        /**
-         * A date with no year, in the user's own convention — "Sep 10", or "10 Sept" where that is
-         * how dates are written.
-         *
-         * [DateFormat.getBestDateTimePattern] is asked for the pattern rather than one being written
-         * out, because the *order* of day and month differs by locale and a hard-coded "MMM d" would
-         * be wrong in most of the world. The skeleton says which fields are wanted; the locale decides
-         * how to arrange them.
-         *
-         * Formatted in the device's own time zone, unlike
-         * [com.prash.petcare.ui.common.formatStoredDate]: these are wall-clock moments — a task's due
-         * time, an expense's creation — rather than calendar dates stored at midnight UTC.
-         */
+        /** A date with no year, in the user's own convention — "Sep 10". */
         private fun formatShortDate(context: Context, millis: Long): String {
             val locale = Locale.getDefault()
             val pattern = DateFormat.getBestDateTimePattern(locale, DAY_AND_MONTH_SKELETON)
@@ -353,11 +270,7 @@ class NotificationsAdapter(
         /** Day and abbreviated month, in whichever order the locale writes them. */
         private const val DAY_AND_MONTH_SKELETON = "MMMd"
 
-        /**
-         * Twelve hours, added before asking for a day's start so that "a day later" lands safely in
-         * the middle of tomorrow rather than on its boundary — which is what keeps the calculation
-         * right on the 23-hour day when the clocks go forward.
-         */
+        /** Twelve hours, added before asking for a day's start. */
         private val HALF_DAY_MILLIS = TimeUnit.HOURS.toMillis(12)
     }
 }

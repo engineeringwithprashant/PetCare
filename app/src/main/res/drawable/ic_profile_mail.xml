@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The badge on the profile screen's "Email address" row: a sealed envelope, seen from the front with
-    its flap folded down.
-
-    Drawn as an outline rather than a solid block so it reads as an envelope at 22dp: filled, the flap's
-    diagonals disappear into the body and the shape becomes an anonymous rectangle. See
-    ic_profile_person.xml for why these badges are glyphs rather than the four-letter codes they replaced,
-    and why none of them sets its own tint.
--->
+<!-- The badge on the profile screen's "Email address" row: a sealed envelope. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

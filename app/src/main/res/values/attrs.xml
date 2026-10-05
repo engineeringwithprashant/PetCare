@@ -1,66 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Custom theme attributes for the pastel stat pills.
-
-    **Why these exist.** Material 3 ships a fixed set of colour *roles* — primary, secondary,
-    tertiary, error and the surfaces. Those answer the question "how important is this?", and the
-    app already uses them for exactly that. A stat pill asks a different question: a row showing
-    age, weight and species needs three colours that are *distinguishable from one another*, all
-    equally quiet, none of them implying one fact matters more than the next. There is no Material
-    role for "one of several equal categories", so the app declares its own.
-
-    **Why attributes rather than colours.** A layout could name @color/pill_light_mint directly, but
-    that colour is only correct in light mode — the pill would keep its pale wash on a dark
-    background and the text on it would vanish. Declaring an *attribute* here and giving it a value
-    in both values/themes.xml and values-night/themes.xml means a layout writes
-    ?attr/colorPillMint once and gets the right value in either theme, which is the same mechanism
-    the Material roles themselves use.
-
-    Each pill has a pair: the background, and the text colour guaranteed legible on it. They are
-    always used together — text on colorPillMint must be colorOnPillMint and nothing else.
--->
+<!-- Custom theme attributes for the pastel stat pills. -->
 <resources>
 
-    <!--
-        The accent as a *foreground* colour, for text and icons that should read as accented.
-
-        Declared for the same reason as the pills: Material has no role for it. colorPrimary is the
-        accent, but this app's accent is a bright yellow chosen to be filled behind dark text — and
-        it is far too light to *be* text on a white card. colorOnPrimary is the wrong answer too,
-        since that colour is guaranteed legible on the yellow, not on the surface.
-
-        So the app declares its own, a deeper amber of the same hue. See colors.xml for the values
-        and the contrast reasoning.
-    -->
+    <!-- The accent as a foreground colour, for text and icons that should read as accented. -->
     <attr name="colorAccentText" format="color" />
 
-    <!--
-        The "this one is chosen" fill, used on the Tasks tab for the selected day in the week strip,
-        the selected filter chips, and the Delegate button.
-
-        Declared because no Material role means "selected, strongly". In the light theme it is the
-        app's near-black with the yellow accent written on it; in the dark theme a near-black fill
-        would vanish into the near-black page, so the pair flips to a yellow fill with dark text. Both
-        are the highest-contrast thing on their page, which is the property that actually matters.
-
-        colorOnSelectedContainer is the accented text on that fill (yellow on black / dark on yellow).
-        colorOnSelectedContainerNeutral is plain text on the same fill (white on black / dark on
-        yellow), for a button label that should read as a word rather than as a highlight.
-    -->
+    <!-- The "this one is chosen" fill, used on the Tasks tab for the selected day in the week strip. -->
     <attr name="colorSelectedContainer" format="color" />
     <attr name="colorOnSelectedContainer" format="color" />
     <attr name="colorOnSelectedContainerNeutral" format="color" />
 
-    <!--
-        The *unavailable* version of that same strong fill, used by the sign-in screens' main button
-        while it cannot be pressed yet ("VERIFY CODE" before all six digits are in).
-
-        Declared because Material's own disabled treatment — the enabled colour at low opacity — turns
-        a near-black button into a washed-out grey smear on the cream page, which reads as broken
-        rather than as "not yet". The design instead shows a solid charcoal with pale text: clearly the
-        same button, clearly resting. In dark mode the enabled fill is yellow, so the resting fill is a
-        muted charcoal a step above the page rather than a dim yellow.
-    -->
+    <!-- The unavailable version of that same strong fill, used by the sign-in screens' main button. -->
     <attr name="colorDisabledContainer" format="color" />
     <attr name="colorOnDisabledContainer" format="color" />
 
@@ -80,120 +30,42 @@
     <attr name="colorPillPeach" format="color" />
     <attr name="colorOnPillPeach" format="color" />
 
-    <!-- Pale green — the profile screen's "VERIFIED" pill. Not part of the four-hue stat-pill family
-         above, which exists so three facts side by side can be told apart; this one always means the
-         same thing, and green is what it means. It is exposed the same way for the same reason: the
-         light and dark values are not a lighter and darker version of each other, so a layout has to
-         reach them through a role rather than naming a colour. -->
+    <!-- Pale green — the profile screen's "VERIFIED" pill. -->
     <attr name="colorPillVerified" format="color" />
     <attr name="colorOnPillVerified" format="color" />
 
-    <!--
-        The log in screen's wrong-password warning cards: the yellow one for attempts 1–3, the red one
-        for the last attempt before sign-in locks.
-
-        Exposed as roles for the same reason as the pills above: each card's light and dark values are
-        not a lighter and darker version of one another — the light theme washes the page colour, the
-        dark theme darkens it — so a layout has to ask for the role rather than name a colour. Three
-        roles per card, because a card is a fill, an edge and (for the red one) a title colour that all
-        have to move together; see the log in section of colors.xml for the values.
-    -->
+    <!-- The log in screen's wrong-password warning cards: the yellow one for attempts 1–3. -->
     <attr name="colorAuthAlertWarning" format="color" />
     <attr name="colorAuthAlertWarningEdge" format="color" />
     <attr name="colorAuthAlertDanger" format="color" />
     <attr name="colorAuthAlertDangerEdge" format="color" />
     <attr name="colorOnAuthAlertDanger" format="color" />
 
-    <!--
-        ===================== The floating bottom navigation bar =====================
-
-        Six roles for one control, which needs a word of justification given how few things in the
-        app declare any.
-
-        The bar is drawn almost entirely from *drawables* — a rounded slab, a pill behind the active
-        tab, a rounded badge, plus two colour state lists for the ink on them. A drawable cannot ask
-        "which theme am I in?"; it can only name a colour or read a theme attribute. So every value
-        in the bar that differs between light and dark has to be reachable as an attribute, or the
-        whole set would have to be duplicated into res/drawable-night and res/color-night — six more
-        files saying the same thing twice, and six more chances for one to be updated and its twin
-        forgotten.
-
-        None of the six maps onto a Material role. colorSurface has no alpha and the slab needs one;
-        colorPrimary is the accent, but the *active pill* is near-black by day and the accent only at
-        night, which is the exact inverse; and Material has no role at all for "an alert count drawn
-        inside the control it belongs to". See the bottom-navigation section of colors.xml for the
-        values and the contrast reasoning behind them.
-    -->
+    <!-- ===================== The floating bottom navigation bar ===================== -->
 
     <!-- The translucent slab the bar is drawn on. -->
     <attr name="colorNavBarSurface" format="color" />
 
-    <!-- The active tab's pill, and the icon and label written on it. Always used as a pair: ink that
-         is not colorOnNavTabActive is not guaranteed legible on the pill. -->
+    <!-- The active tab's pill, and the icon and label written on it. -->
     <attr name="colorNavTabActive" format="color" />
     <attr name="colorOnNavTabActive" format="color" />
 
-    <!-- The four inactive tabs' icons — a solid value, never the active ink at reduced opacity; see
-         colors.xml for why that distinction is load-bearing here. -->
+    <!-- The four inactive tabs' icons — a solid value, never the active ink at reduced opacity. -->
     <attr name="colorNavTabMuted" format="color" />
 
-    <!-- The open-task badge as it appears *on the active pill*. Its inactive colours are fixed rather
-         than themed (a red dot with white on it), so they need no roles. -->
+    <!-- The open-task badge as it appears on the active pill. -->
     <attr name="colorNavBadgeActive" format="color" />
     <attr name="colorOnNavBadgeActive" format="color" />
 
-    <!--
-        ============================= The map cards =============================
-
-        One role, shared by the Places tab's map card and the Add a place screen's.
-
-        It is here rather than named as a colour in the two layouts for the reason this file exists at
-        all: it is a light/dark *pair* that is not a lighter and darker version of the other — a pale
-        sage ground becomes a deep slate one — so a layout has to reach it through a role.
-
-        What it colours is the ground a map card shows *while the map loads*: the card is what shows
-        through for the second or two before the style and the first tiles arrive over the network.
-        See PlaceMapView.
-    -->
+    <!-- ============================= The map cards ============================= -->
     <attr name="colorMapGround" format="color" />
 
-    <!--
-        PlaceMapView's one configurable dimension.
-
-        The credit line for the map's tiles has to stay *visible* — see view_place_map.xml — and it
-        sits in the bottom-start corner, which is free on the location picker but not on the Places
-        tab, where "DIRECTIONS" and "GOOGLE MAPS" span the foot of the card. Rather than move the
-        credit somewhere it reads as a caption, the screen that covers that corner says how far to
-        lift it clear.
-
-        Declared as a styleable rather than exposed only in Kotlin because it is a layout decision,
-        and it belongs beside the layout that creates the collision.
-    -->
+    <!-- PlaceMapView's one configurable dimension. -->
     <declare-styleable name="PlaceMapView">
         <attr name="attributionBottomInset" format="dimension" />
     </declare-styleable>
 
-    <!--
-        ====================== The vaccination status pills ======================
-
-        Three pairs, one per state of a pet's next due date: clear (green), overdue (red) and due
-        soon (the accent). Each is a fill with the ink guaranteed legible on it, and the two are
-        always used together — ink that is not the partner of its fill is not guaranteed to be
-        readable on it.
-
-        The first two are here for the reason every role in this file is: each is a light/dark pair
-        that is not a lighter and darker version of the other — a pale wash with dark ink becomes a
-        deep ground with pale ink — so a layout cannot name a colour and has to ask for a role. No
-        Material role fits, either: colorError is a validation red tuned for a line of text, and there
-        is no role at all meaning "this appointment has been missed".
-
-        **The third pair does not change between the themes, and is still declared here.** By the rule
-        the rest of this file follows it could be named as a colour directly. It is a role anyway so
-        that a status is *one kind of lookup*: ui/pet/VaccinationStatus.kt stores an attribute per
-        state and the adapter resolves it the same way for all three, rather than branching on which
-        states happen to be themed — a branch that would have to be revisited the moment a fourth
-        state were added. See the vaccination section of colors.xml for the values.
-    -->
+    <!-- ====================== The vaccination status pills ====================== -->
     <attr name="colorVaccinationClear" format="color" />
     <attr name="colorOnVaccinationClear" format="color" />
     <attr name="colorVaccinationOverdue" format="color" />

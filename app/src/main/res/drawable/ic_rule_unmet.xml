@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The empty ring beside a password rule that is not satisfied yet.
-
-    An outline rather than a cross: a rule the user has not met *yet* is an outstanding item, not a
-    mistake, and a red cross on every line the moment they start typing would read as a page full of
-    errors. The ring becomes the solid disc of ic_rule_met.xml when the rule is satisfied, which is the
-    same open-to-filled change a checkbox makes.
-
-    Tinted by PasswordChecklistView, for the reason given in ic_rule_met.xml.
--->
+<!-- The empty ring beside a password rule that is not satisfied yet. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="16dp"
     android:height="16dp"

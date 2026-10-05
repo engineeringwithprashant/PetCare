@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The Pets tab: every animal the user has, one large card each, and the way in to adding another.
-
-    From top to bottom:
-      - **The header** — monogram, "Pets", theme toggle and pet count — shared with the Home tab
-        through <include>. It stays fixed while the page scrolls under it: it is the app's identity
-        and two controls, not content, and scrolling it away would put the theme toggle out of reach.
-      - **The list**, which scrolls: the headline ("Two pets, one household"), a card per pet, and
-        the "+ Add a pet" row. All three live inside one RecyclerView — see PetsFragment for how a
-        ConcatAdapter joins them.
-      - **The empty state**, shown in the list's place when there are no pets.
-
-    **Why a single RecyclerView rather than a scroll view.** This list has no fixed upper size:
-    somebody fostering has a dozen animals, and every card carries a photo to decode. A RecyclerView
-    recycles cards as they scroll off, so only the visible ones are ever inflated. The dashboard is
-    built the other way round because its sections are short and known — see fragment_home.xml.
-
-    **Why a vertical LinearLayout at the root.** The header takes the height it needs and the region
-    below takes the rest (0dp height with layout_weight="1"). The list and the empty state share that
-    region, so it is a FrameLayout holding both, and the fragment shows exactly one of them.
--->
+<!-- The Pets tab: every animal the user has, one large card each, and the way in to adding another. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -27,8 +7,7 @@
     android:orientation="vertical"
     tools:context=".ui.pet.PetsFragment">
 
-    <!-- The shared header. The android:id is what makes ViewBinding expose it as a nested binding,
-         `binding.header`. See view_tab_header.xml. -->
+    <!-- The shared header. The android:id is what makes ViewBinding expose it as a nested binding. -->
     <include
         android:id="@+id/header"
         layout="@layout/view_tab_header" />
@@ -38,17 +17,7 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <!--
-            The headline, the cards and the add row.
-
-            clipToPadding="false" lets content scroll *through* the bottom padding rather than being
-            cut off at its edge, which is what lets the add row clear the bottom navigation bar
-            instead of finishing underneath it. The padding no longer has to clear a floating action
-            button, so it is the smaller list_padding_bottom.
-
-            The top padding is small because the headline should sit directly under the header, as
-            it does on the dashboard.
-        -->
+        <!-- The headline, the cards and the add row. -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/petsRecyclerView"
             android:layout_width="match_parent"
@@ -62,15 +31,7 @@
             tools:listitem="@layout/item_pet"
             tools:visibility="visible" />
 
-        <!--
-            Shown instead of the list when the user has no pets.
-
-            An icon, a sentence saying what to do next, and the same outlined "Add a pet" row that
-            ends the list when there are pets — rather than a bare line of grey text. An empty screen
-            with one short message leaves the user unsure whether there is nothing here or it simply
-            has not loaded, and with the floating button gone this is the only way to add a first pet
-            from this tab, so the action has to be here.
-        -->
+        <!-- Shown instead of the list when the user has no pets. -->
         <LinearLayout
             android:id="@+id/emptyStateContainer"
             style="@style/PetCare.EmptyState"

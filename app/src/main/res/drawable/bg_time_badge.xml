@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The rounded square behind a task card's time ("8:00 AM").
-
-    Shape only, in white: the colour comes from a backgroundTint state list on the view
-    (task_time_badge_background.xml), which switches between yellow for a done task and a pale
-    neutral for an outstanding one. A tint multiplies against the solid colour, so the solid must be
-    white for the tint to come through as itself.
-
-    Squarer than the pills around it, so it reads as a clock face or a calendar tile rather than as
-    another tag.
--->
+<!-- The rounded square behind a task card's time ("8:00 AM"). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

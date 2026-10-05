@@ -1,29 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The wrong-password warning on the log in screen: an exclamation badge, a bold title, and a muted
-    line saying how many attempts are left before the account locks.
-
-    It sits inline in the form, between the password helper line and "FORGOT PASSWORD?", which is
-    where the mockups put it — beside the thing that went wrong rather than as a Snackbar over the
-    bottom of the screen, because the user has to be able to read it while typing the next attempt.
-
-    **One layout for both the yellow and the red card.** The design has two versions — yellow for the
-    first three attempts, red for the last one before the lock — differing only in colour, so
-    AuthFragment applies the fill, the edge, the badge and the title colour to this single layout
-    (see renderAlert). Two near-identical layouts would be two places to change every future edit.
-
-    **Why a MaterialCardView and not a background drawable.** The card needs a fill *and* a
-    differently-coloured 1dp edge, and both have to change together at runtime. MaterialCardView
-    exposes those as two separate properties (cardBackgroundColor, strokeColor); a `<shape>` would
-    need one drawable per variant, since tinting a shape tints its stroke along with its fill.
-
-    Inside, a horizontal LinearLayout: the badge at a fixed size, then the text column taking the rest
-    (width 0dp + weight 1) so a long sentence wraps within the column rather than pushing the badge
-    off the card. The same row grammar as an alert on the notifications screen, deliberately.
-
-    accessibilityLiveRegion on the root makes TalkBack announce the card when it appears, without the
-    user having to go looking for it — this is the feedback for the button they just pressed.
--->
+<!-- The wrong-password warning on the log in screen: an exclamation badge, a bold title. -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -44,9 +20,7 @@
         android:orientation="horizontal"
         android:padding="@dimen/auth_alert_padding">
 
-        <!-- The exclamation. Its fill and the mark's own colour are set per card style by the
-             fragment; the mark is punctuation rather than a translatable word, so it is written
-             here. -->
+        <!-- The exclamation. Its fill and the mark's own colour are set per card style by the fragment. -->
         <TextView
             android:id="@+id/loginAlertBadge"
             style="@style/PetCare.Auth.AlertBadge"
@@ -70,8 +44,7 @@
                 android:layout_height="wrap_content"
                 tools:text="@string/login_alert_wrong_password" />
 
-            <!-- "4 of 5 attempts left · locks for 15 minutes after the 5th". Wraps to two lines at
-                 most widths, which the mockup also shows. -->
+            <!-- "4 of 5 attempts left · locks for 15 minutes after the 5th". -->
             <TextView
                 android:id="@+id/loginAlertDetail"
                 style="@style/PetCare.Auth.AlertDetail"

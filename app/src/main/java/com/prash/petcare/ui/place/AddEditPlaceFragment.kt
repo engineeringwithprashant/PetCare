@@ -34,30 +34,7 @@ import com.prash.petcare.ui.common.setToolbarTitle
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
-/**
- * Form for saving a new place, or changing or deleting a saved one.
- *
- * In MVVM this is the **View**: [AddEditPlaceViewModel] validates and saves, and the
- * [PlaceLocationPicker] it owns holds where the place is. This class owns the three things that need
- * an Activity — the location permission prompt, the two time pickers and the delete confirmation — and
- * forwards their answers.
- *
- * **The map is the same one the Add a place screen uses**, which is the point: a place created there
- * and corrected here is worked with in exactly the same way. Opening an existing place centres it on
- * that place's own saved coordinates with the pin on the point, so the three things a person wants to
- * do to a saved position are all one gesture — keep it, drag the map to move it, or press "I'm here"
- * to replace it with where they are standing now.
- *
- * **The location permission flow**, which only runs when one of the two current-location controls is
- * pressed:
- *  1. The picker finds that access is not held and asks this class for it.
- *  2. A dialog explains why the app wants it — to geotag this place so distances and directions
- *     work — and only then does the system prompt appear.
- *  3. **Refused:** nothing breaks. A line says what was lost, and if the refusal is permanent the
- *     Snackbar offers the settings screen. Everything typed stays in the form, and the map is still
- *     there to be moved by hand — a refused permission costs the shortcut, not the screen.
- *  4. **Approximate only:** accepted, with a note under the coordinates that the position may be off.
- */
+/** Form for saving a new place, or changing or deleting a saved one. */
 class AddEditPlaceFragment : Fragment() {
 
     private var _binding: FragmentAddEditPlaceBinding? = null
@@ -74,23 +51,10 @@ class AddEditPlaceFragment : Fragment() {
         AddEditPlaceViewModel.factory(ownerId = sessionViewModel.userId.value, placeId = placeId)
     }
 
-    /**
-     * The country selector and number box, driven as one control.
-     *
-     * Created in [onViewCreated] and dropped in [onDestroyView] with the binding, since it holds
-     * views from this hierarchy.
-     */
+    /** The country selector and number box, driven as one control. */
     private var phoneInput: PhoneNumberInput? = null
 
-    /**
-     * The text this screen last wrote into the name and area boxes on the map's behalf.
-     *
-     * The record that keeps a suggestion from overwriting something a person typed — see
-     * [applySuggestion] for how it is read. Dropped in [onDestroyView] along with the boxes they
-     * describe, so a recreated view starts with both null and therefore treats whatever text the
-     * fields restored as the user's — the safe end of the trade, since a filled box is then left
-     * alone rather than overwritten.
-     */
+    /** The text this screen last wrote into the name and area boxes on the map's behalf. */
     private var lastSuggestedName: String? = null
     private var lastSuggestedArea: String? = null
 
@@ -114,8 +78,7 @@ class AddEditPlaceFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // The two phone boxes behave as one control. Editing either clears the error left by a
-        // previous save attempt, exactly as the name field does below.
+        // The two phone boxes behave as one control. Editing either clears the error left by a previous save attempt.
         phoneInput = PhoneNumberInput(
             countryLayout = binding.phoneCountryLayout,
             countryInput = binding.phoneCountryInput,
@@ -130,14 +93,7 @@ class AddEditPlaceFragment : Fragment() {
         observeViewModel()
     }
 
-    /**
-     * Hands every gesture on the map straight to the picker that owns the decision.
-     *
-     * Line for line the same wiring as AddPlaceFragment, because it is the same control doing the same
-     * job — the behaviour behind it lives in [PlaceLocationPicker] rather than being written twice.
-     * Moving the map also clears a "location required" complaint left by an earlier save attempt,
-     * which is what every other field on this form does when it is edited.
-     */
+    /** Hands every gesture on the map straight to the picker that owns the decision. */
     private fun setUpLocationPicker() {
         val picker = viewModel.picker
 
@@ -147,8 +103,7 @@ class AddEditPlaceFragment : Fragment() {
             viewModel.clearLocationError()
         }
         binding.locationPicker.onSearchQueryChanged = { picker.onSearchQueryChanged(it) }
-        // Choosing a searched place is choosing a location, so it clears a "location required"
-        // complaint from an earlier save attempt exactly as moving the map does.
+        // Choosing a searched place is choosing a location.
         binding.locationPicker.onSearchResultSelected = {
             picker.onSearchResultSelected(it)
             viewModel.clearLocationError()
@@ -161,13 +116,9 @@ class AddEditPlaceFragment : Fragment() {
         binding.locationPicker.onExternalLink = { url -> openLink(url) }
     }
 
-    /**
-     * Fills the category dropdown. Labels and [PlaceCategory.entries] come from the same list in the
-     * same order, so a tapped position maps straight back to a constant — see AddEditTaskFragment.
-     */
+    /** Fills the category dropdown. Labels and [PlaceCategory.entries] come from the same list in the same order. */
     private fun setUpCategoryDropdown() {
-        // "🏥  Vet" — the emoji the place's row badge will carry, shown while the choice is being
-        // made rather than only afterwards in the list.
+        // "🏥 Vet" — the emoji the place's row badge will carry, shown while the choice is being made.
         val labels = PlaceCategory.entries
             .map { it.emojiLabel(requireContext()) }
             .toTypedArray()
@@ -199,8 +150,7 @@ class AddEditPlaceFragment : Fragment() {
             viewModel.save(
                 name = binding.nameInput.text?.toString().orEmpty(),
                 area = binding.areaInput.text?.toString().orEmpty(),
-                // The country and the digits go over separately: whether the two make a real number,
-                // and what its international form is, are the ViewModel's decisions.
+                // The country and the digits go over separately: whether the two make a real number.
                 phoneRegion = phone.regionCode(),
                 phone = phone.nationalNumber(),
                 notes = binding.notesInput.text?.toString().orEmpty()
@@ -211,10 +161,7 @@ class AddEditPlaceFragment : Fragment() {
         binding.nameInput.doOnTextChanged { _, _, _, _ -> viewModel.clearNameError() }
     }
 
-    /**
-     * Opens a Material time picker in the device's own 12- or 24-hour style, starting from the time
-     * already chosen or a sensible default.
-     */
+    /** Opens a Material time picker in the device's own 12- or 24-hour style. */
     private fun showTimePicker(titleRes: Int, current: Int?, default: Int, onPicked: (Int, Int) -> Unit) {
         val start = current ?: default
         val picker = MaterialTimePicker.Builder()
@@ -244,12 +191,9 @@ class AddEditPlaceFragment : Fragment() {
         val context = requireContext()
 
         binding.nameInputLayout.error = state.nameError?.let { getString(it) }
-        // Under the number rather than the country, because the number is usually the part to change
-        // — and the message itself names the country as the other possibility.
+        // Under the number rather than the country, because the number is usually the part to change.
         binding.phoneInputLayout.error = state.phoneError?.let { getString(it) }
-        // The same emoji-and-name pair the dropdown rows show, so the closed field matches the row
-        // that was picked. `false` stops the dropdown filtering its own list as if the label had
-        // been typed.
+        // The same emoji-and-name pair the dropdown rows show, so the closed field matches the row that was picked.
         binding.categoryInput.setText(state.category.emojiLabel(context), false)
 
         binding.openingTimeInput.setText(state.openingMinutes?.let { formatTimeOfDay(context, it) }.orEmpty())
@@ -268,22 +212,13 @@ class AddEditPlaceFragment : Fragment() {
         binding.deletePlaceButton.isEnabled = !isBusy
     }
 
-    /**
-     * The map and the card under it, drawn by the shared picker's own code so that the two Places
-     * forms describe a selected location identically — see [SelectedLocationCard].
-     */
+    /** The map and the card under it, drawn by the shared picker's own code. */
     private fun renderLocation(state: LocationPickerState) {
         binding.locationPicker.render(state)
         binding.selectedLocation.render(state)
     }
 
-    /**
-     * The picker needs something only a fragment can do.
-     *
-     * The permission prompt goes through [locationPermission], which is where this screen's extra
-     * behaviour lives: unlike the Add a place screen, a permanent refusal here offers the settings
-     * page — see [onLocationDenied].
-     */
+    /** The picker needs something only a fragment can do. */
     private fun handleLocationEvent(event: LocationPickerEvent) {
         when (event) {
             is LocationPickerEvent.MoveCamera ->
@@ -310,45 +245,13 @@ class AddEditPlaceFragment : Fragment() {
         }
     }
 
-    /**
-     * Offers the map's findings to the two boxes that can take them.
-     *
-     * The map now recognises the place under its pin where it can — a pin on a hospital resolves to
-     * "Patan Hospital" rather than to the city — and putting that in an empty name box saves the user
-     * typing what the screen already knows. The address goes to the area box for the same reason.
-     *
-     * Delegated to [applySuggestion] per box, which is where the rule about what may be overwritten
-     * lives, and the two [lastSuggested] fields are what let that rule tell this screen's own writing
-     * from the user's.
-     */
+    /** Offers the map's findings to the two boxes that can take them. */
     private fun applySuggestions(event: PlaceFormEvent.SuggestPlaceDetails) {
         lastSuggestedName = applySuggestion(binding.nameInput, event.name, lastSuggestedName)
         lastSuggestedArea = applySuggestion(binding.areaInput, event.area, lastSuggestedArea)
     }
 
-    /**
-     * Writes a suggestion into one box, if that box is this screen's to write in.
-     *
-     * **Two conditions let it through, and they are the same condition said twice**: the box is empty,
-     * or it still contains exactly the text this method last put there. Either way nothing a person
-     * typed is at stake — and anything else is theirs, so the suggestion is dropped and every later
-     * one with it, because [lastApplied] is returned unchanged and can then never match again.
-     *
-     * **Why the box's text is the record rather than an "edited" flag.** The typed text on this form
-     * lives in its views, which is what lets the fields restore themselves after a rotation — so there
-     * is no state here to carry a flag on. Comparing against what was last written answers the same
-     * question from the only record that exists, and answers it conservatively: after a rotation
-     * [lastApplied] is null again, so a filled box is simply left alone.
-     *
-     * A null suggestion clears a box this method filled, which is the half worth having: without it a
-     * pin dragged off the hospital would leave "Patan Hospital" in the name box above a card reading
-     * "Dropped pin", and saving would file a patch of road under the hospital's name.
-     *
-     * The fields stay ordinary editable inputs throughout — nothing here locks one, and typing over a
-     * suggestion is what hands the box to the user for good.
-     *
-     * @return the suggestion now standing in the box, or [lastApplied] untouched if it was refused.
-     */
+    /** Writes a suggestion into one box, if that box is this screen's to write in. */
     private fun applySuggestion(
         input: TextInputEditText,
         suggestion: String?,
@@ -360,8 +263,7 @@ class AddEditPlaceFragment : Fragment() {
         val text = suggestion.orEmpty()
         if (current != text) {
             input.setText(text)
-            // Setting the text leaves the cursor at the start, which looks like a half-filled box
-            // when the suggestion is longer than the view; the end is where a person would continue.
+            // Setting the text leaves the cursor at the start, which looks like a half-filled box.
             input.setSelection(text.length)
         }
         return suggestion
@@ -371,9 +273,7 @@ class AddEditPlaceFragment : Fragment() {
     private fun prefill(place: Place) {
         binding.nameInput.setText(place.name)
         binding.areaInput.setText(place.area.orEmpty())
-        // Splits the stored number back into a country and the local digits. A number saved before
-        // this form had a selector is bare digits and is read as a Nepali number, so an existing
-        // place's number does not disappear the first time it is edited after this change.
+        // Splits the stored number back into a country and the local digits.
         phoneInput?.setStoredNumber(place.phone)
         binding.notesInput.setText(place.notes.orEmpty())
     }
@@ -389,11 +289,7 @@ class AddEditPlaceFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Location was refused. The form stays exactly as it was — nothing typed is lost — and the user is
-     * told why the place cannot be saved yet, with a way to the settings screen if the system will not
-     * ask again.
-     */
+    /** Location was refused. The form stays exactly as it was — nothing typed is lost. */
     private fun onLocationDenied(permanently: Boolean) {
         val root = _binding?.root ?: return
         val snackbar = Snackbar.make(root, R.string.permission_location_capture_denied, Snackbar.LENGTH_LONG)

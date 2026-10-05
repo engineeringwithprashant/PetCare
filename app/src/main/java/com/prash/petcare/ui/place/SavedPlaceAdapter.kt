@@ -16,22 +16,7 @@ import com.prash.petcare.ui.common.emojiRes
 import com.prash.petcare.ui.common.formatDistanceKm
 import com.prash.petcare.ui.common.placeSubtitle
 
-/**
- * Draws the "SAVED PLACES" list on the Places tab: one row per place, with a category badge, the
- * name, what and where it is, and how far away.
- *
- * Part of the **View** layer. It binds [PlaceRow]s the ViewModel has already filtered, sorted and
- * measured, and reports taps; it decides nothing.
- *
- * A [ListAdapter] so that when state changes — a new featured place, a distance updated by a fresh
- * location fix — DiffUtil works out which rows actually changed and redraws only those, instead of
- * `notifyDataSetChanged` rebinding and flashing the whole list.
- *
- * @param onPlaceClick A row was tapped — the fragment features that place.
- * @param onPlaceLongClick A row was long-pressed — the fragment opens it for editing. A long press
- *   rather than a visible button because editing a saved place is rare, and a pencil on every row
- *   would clutter a list the user mostly reads.
- */
+/** Draws the "SAVED PLACES" list on the Places tab: one row per place, with a category badge, the name. */
 class SavedPlaceAdapter(
     private val onPlaceClick: (placeId: Long) -> Unit,
     private val onPlaceLongClick: (placeId: Long) -> Unit
@@ -54,9 +39,7 @@ class SavedPlaceAdapter(
             val context = binding.root.context
             val place = row.place
 
-            // The category's emoji rather than "Vet" / "Grm" / "Shop": the subtitle underneath
-            // already says what the place is, so the badge can be the symbol instead of repeating it
-            // in four cramped letters.
+            // The category's emoji rather than "Vet" / "Grm" / "Shop".
             binding.placeBadge.setText(place.category.emojiRes())
             binding.placeNameText.text = place.name
             binding.placeSubtitleText.text = placeSubtitle(context, place)
@@ -65,9 +48,7 @@ class SavedPlaceAdapter(
             binding.placeDistanceText.isVisible = row.distanceKm != null
             binding.placeDistanceText.text = row.distanceKm?.let { formatDistanceKm(context, it) }
 
-            // The featured place is marked the same way here as on the distance axis: its badge takes
-            // the accent, and its row a pale accent wash. Colours are resolved from theme attributes so
-            // the wash follows dark mode; the badge's accent is fixed, see colors.xml.
+            // The featured place is marked the same way here as on the distance axis: its badge takes the accent.
             val rowColor = MaterialColors.getColor(
                 binding.root,
                 if (row.isFeatured) MaterialR.attr.colorPrimaryContainer
@@ -75,10 +56,7 @@ class SavedPlaceAdapter(
             )
             binding.root.setCardBackgroundColor(rowColor)
 
-            // Only the tile behind the emoji is coloured. A text colour is not set any more because
-            // an emoji is a colour glyph in its own right: the system draws it from the emoji font
-            // and ignores whatever colour the view asks for, so setting one would have looked like
-            // it did something.
+            // Only the tile behind the emoji is coloured. A text colour is not set any more.
             binding.placeBadge.backgroundTintList = if (row.isFeatured) {
                 ContextCompat.getColorStateList(context, R.color.accent_yellow)
             } else {
@@ -87,8 +65,7 @@ class SavedPlaceAdapter(
                 )
             }
 
-            // One spoken sentence for the row, in place of "Vet", the name, the subtitle and the
-            // distance read as four separate fragments. TalkBack adds "selected" from isSelected.
+            // One spoken sentence for the row, in place of "Vet", the name.
             binding.root.contentDescription = listOfNotNull(
                 place.name,
                 placeSubtitle(context, place),
@@ -104,11 +81,7 @@ class SavedPlaceAdapter(
         }
     }
 
-    /**
-     * Rows are the same row when they are the same place; their contents have changed when anything
-     * drawn has — which the data class's generated `equals` covers, including the featured flag and
-     * the distance.
-     */
+    /** Rows are the same row when they are the same place; their contents have changed when anything drawn has. */
     private object PlaceRowDiffCallback : DiffUtil.ItemCallback<PlaceRow>() {
         override fun areItemsTheSame(oldItem: PlaceRow, newItem: PlaceRow): Boolean =
             oldItem.place.id == newItem.place.id

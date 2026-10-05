@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The upward arrow on the assistant's send button.
-
-    A vector rather than a bitmap, so one file is sharp at every screen density and can be tinted by
-    the button's own icon colour instead of shipping a light and a dark copy. The path is drawn on
-    the 24dp grid every icon in the app uses; fillColor is the placeholder Android requires, and the
-    real colour comes from the style's iconTint.
--->
+<!-- The upward arrow on the assistant's send button. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

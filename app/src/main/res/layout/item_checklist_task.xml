@@ -1,23 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One task card on the Tasks tab.
-
-    Left to right: a rounded time badge ("8:00 AM"), the task's details (its category emoji and title,
-    then "pet · category", then a pale supplies tag), and a round check button.
-
-    **Done and not-done are a single state switch.** The adapter calls setActivated(isDone) on the
-    card's content row. "Activated" is passed down to every child, and the badge's fill, the badge's
-    text and the title's colour each have a state list in res/color keyed on it — so a completed task
-    turns its badge yellow and mutes its title without the adapter recolouring anything. The only
-    change XML cannot express is the strike-through, which the adapter adds to the title's paint.
-
-    **Why a horizontal LinearLayout, not a ConstraintLayout.** Three blocks side by side with the
-    middle one taking the leftover width is exactly what a LinearLayout with one weighted child
-    describes. This card is inflated per row of a list, so it is kept as shallow as the design allows.
-
-    The card itself is the app's default MaterialCardView with the large corner and a hairline stroke;
-    the adapter tints that stroke faintly yellow for a completed task, as in the design.
--->
+<!-- One task card on the Tasks tab. -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -41,9 +23,7 @@
         android:orientation="horizontal"
         android:padding="@dimen/card_spacing">
 
-        <!-- The time badge: a fixed square so every card's details start at the same x, whatever the
-             time's width. Its fill is a white shape tinted by a state list (yellow when done). The
-             texts are hidden from TalkBack because the card's description already says the time. -->
+        <!-- The time badge: a fixed square so every card's details start at the same x. -->
         <LinearLayout
             android:layout_width="@dimen/task_time_badge_size"
             android:layout_height="@dimen/task_time_badge_size"
@@ -53,8 +33,7 @@
             android:importantForAccessibility="noHideDescendants"
             android:orientation="vertical">
 
-            <!-- The time, in IBM Plex Mono: the app's face for times and other read-off figures,
-                 and fixed-width digits keep "8:00" and "10:30" optically centred in the badge. -->
+            <!-- The time, in IBM Plex Mono: the app's face for times and other read-off figures. -->
             <TextView
                 android:id="@+id/taskTimeText"
                 android:layout_width="wrap_content"
@@ -88,26 +67,13 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- The title line: the category's emoji, then the task's name.
-
-                 The emoji sits here, right beside the time badge, rather than down on the subtitle
-                 with the category's name, because this is the line the eye lands on — scanning a day
-                 of care becomes "find the 💊" instead of reading every second line. The symbol is set
-                 by ChecklistAdapter from the task's category; the subtitle still spells that category
-                 out in words, which is what keeps the emoji a shortcut rather than the only clue.
-
-                 A horizontal LinearLayout left baseline-aligned (the default), so the emoji sits on
-                 the title's first baseline however many lines the title runs to. The title takes the
-                 leftover width through weight, so it still ellipsises instead of pushing the emoji
-                 out of the card. -->
+            <!-- The title line: the category's emoji, then the task's name. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <!-- Hidden from TalkBack: the subtitle below names the category in words, and an
-                     emoji is read out as its full Unicode name ("pill"), which would only add noise
-                     in front of every task. -->
+                <!-- Hidden from TalkBack: the subtitle below names the category in words. -->
                 <TextView
                     android:id="@+id/taskCategoryEmoji"
                     android:layout_width="wrap_content"
@@ -141,8 +107,7 @@
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 tools:text="Ddjw · Medication" />
 
-            <!-- The supplies tag. wrap_content width so it hugs its text like a tag rather than
-                 stretching into a bar; hidden by the adapter when no supplies are recorded. -->
+            <!-- The supplies tag. wrap_content width so it hugs its text like a tag. -->
             <TextView
                 android:id="@+id/taskSuppliesText"
                 style="@style/PetCare.Pill.Supplies"
@@ -155,9 +120,7 @@
 
         </LinearLayout>
 
-        <!-- The quick check-off. A checkable MaterialButton — see PetCare.TaskCheckButton for why —
-             whose contentDescription is set by the adapter to include the task's title, so TalkBack
-             says which task a toggle belongs to. -->
+        <!-- The quick check-off. A checkable MaterialButton — see PetCare.TaskCheckButton for why. -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/taskCheckButton"
             style="@style/PetCare.TaskCheckButton"

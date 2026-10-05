@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One pet in the dashboard's sideways "Your pets" row: a dark portrait card with the pet's photo, a
-    small species chip in the top-left corner, and the pet's name across the bottom. Tapping it opens the
-    pet's detail screen.
-
-    **Why the card is dark in both themes.** Everything written on it sits on a photograph, and a
-    photograph does not change with the display mode — so white text over a dark scrim is the only
-    pairing legible in both. It is the same object as the pet cards on the Pets tab and the pet detail
-    screen, just smaller. See the pet-card note in colors.xml.
-
-    **How the layers stack.** A ConstraintLayout used as a stack, because the photo, the scrim and
-    the two labels are genuinely piled on top of one another, each pinned to a corner or edge. The
-    order they are *declared* in is the order they are painted: photo, then scrim over it, then the
-    text on top. Declaring the text before the scrim would bury it.
-
-    **Why the card no longer states its own height.** The photo the user framed is 4:3
-    (pet_photo_aspect_ratio), and this card shows it at that shape so their framing is not trimmed a
-    second time. Only the width is fixed; the photo derives its height from it, and the card wraps
-    to the photo. That is what keeps this card, the Pets tab card and the detail hero all showing
-    the same picture — see the note on pet_photo_aspect_ratio in dimens.xml.
--->
+<!-- One pet in the dashboard's sideways "Your pets" row: a dark portrait card with the pet's photo. -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -38,15 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- The photograph. Both dimensions are 0dp and the ratio resolves them: the width fills the
-             card, the height follows at 4:3. Everything else on the card anchors to this view, so
-             the photo is what decides the card's height.
-
-             centerCrop is kept for the two images that are *not* already 4:3 — a photo saved before
-             the app cropped on the way in, and the paw-print placeholder. The card's rounded outline
-             clips it, so the image needs no shape of its own. The adapter loads it asynchronously —
-             see ui/common/PetPhotoBinder.kt for why a recycled card needs more than one
-             assignment. -->
+        <!-- The photograph. Both dimensions are 0dp and the ratio resolves them: the width fills the card. -->
         <ImageView
             android:id="@+id/petPhotoImage"
             android:layout_width="0dp"
@@ -60,8 +32,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- The gradient that keeps the name legible over a pale photo. Pinned to the photo's bottom
-             with a fixed height, so the top of the picture is left untouched. -->
+        <!-- The gradient that keeps the name legible over a pale photo. -->
         <View
             android:layout_width="0dp"
             android:layout_height="@dimen/home_pet_card_scrim_height"

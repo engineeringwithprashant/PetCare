@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Routine detail screen: the tasks that make up one routine, in the order they happen.
-
-    The routine's name is set on the app bar by the fragment, so only its schedule appears here.
-
-    Unlike the pet detail screen, the task list is the whole point of the page, so it gets a proper
-    scrolling RecyclerView constrained to the remaining height rather than being nested in a scroll
-    view. That keeps rows recycling however many tasks a routine grows to.
--->
+<!-- Routine detail screen: the tasks that make up one routine, in the order they happen. -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -34,14 +26,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Every day" />
 
-        <!--
-            Pause switch. A switch rather than a button because it shows a state as well as
-            changing it — the user can see at a glance whether this routine is currently running,
-            which a button labelled "Pause" could not convey.
-
-            Switching it off is the reversible alternative to deleting: the routine and its tasks
-            stay intact but stop appearing on checklists.
-        -->
+        <!-- Pause switch. A switch rather than a button because it shows a state as well as changing. -->
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/activeSwitch"
             android:layout_width="0dp"
@@ -55,8 +40,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/routineScheduleText" />
 
-        <!-- Coloured with the theme's error role, the Material 3 signal for a destructive action,
-             so it reads differently from every other control on the screen. -->
+        <!-- Coloured with the theme's error role, the Material 3 signal for a destructive action. -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/deleteRoutineButton"
             style="@style/Widget.Material3.Button.OutlinedButton"
@@ -134,13 +118,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Adds a task to this routine.
-
-         The bottom margin is fab_margin_bottom rather than the screen gutter: the button and the
-         floating bottom navigation bar are drawn over the same corner of the screen, and at the
-         usual 16dp the bar covered the button entirely. Only the bottom side is raised — the end
-         margin stays the standard gutter, so the button still lines up with the content beside
-         it. -->
+    <!-- Adds a task to this routine. -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addTaskFab"
         android:layout_width="wrap_content"

@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One care task inside the routine detail screen's list.
-
-    Shows what the task is, when in the day it happens, and what is needed to do it. The supplies
-    line is hidden when the user did not record any, so rows stay compact.
--->
+<!-- One care task inside the routine detail screen's list. -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -29,9 +24,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Morning meal" />
 
-        <!-- The time sits on the same baseline as the title, at the opposite edge. It is given a
-             wrap_content width and the title 0dp, so a long title truncates rather than pushing
-             the time off screen. Set in IBM Plex Mono, the app's face for times. -->
+        <!-- The time sits on the same baseline as the title, at the opposite edge. -->
         <TextView
             android:id="@+id/taskTimeText"
             android:layout_width="wrap_content"

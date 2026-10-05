@@ -3,14 +3,7 @@ package com.prash.petcare.util
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/**
- * Checks the one rule in the weather feature: which temperatures suit a walk.
- *
- * A plain JVM test with no Android dependencies, which is exactly why [WalkComfort] was kept free of
- * them. Everything else in the feature — the HTTP call, the SharedPreferences cache, the location
- * fix — needs a device or a fake to exercise; this is the part where an off-by-one would actually
- * mislead a user, so it is the part worth pinning down.
- */
+/** Checks the one rule in the weather feature: which temperatures suit a walk. */
 class WalkComfortTest {
 
     @Test
@@ -34,8 +27,6 @@ class WalkComfortTest {
     @Test
     fun `the verdict follows the rounded figure the card shows`() {
         // 25.4 prints as "25°C", so it must not be judged too hot; 25.5 prints as "26°C" and must be.
-        // This is the pairing described in WalkComfort.at — the pill can never contradict the number
-        // beside it.
         assertEquals(WalkComfort.GOOD, WalkComfort.at(25.4))
         assertEquals(WalkComfort.TOO_HOT, WalkComfort.at(25.5))
 

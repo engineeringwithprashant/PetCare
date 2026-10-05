@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The track of the checklist switch on the record screen.
-
-    **On: the accent.** The switch is the one thing on that row that says "yes, do this", and the app
-    has a single colour for an affirmative fill. **Off: the sunk surface**, the same groove colour the
-    segmented control above it sits in, so an unset switch reads as an empty slot rather than as a
-    second colour competing with the accent.
-
-    A colour state list rather than two tints set in code, for the reason given on
-    res/color/profile_segment_text.xml: the state already exists on the widget, so nothing about how
-    the control looks needs to live in Kotlin.
--->
+<!-- The track of the checklist switch on the record screen. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item

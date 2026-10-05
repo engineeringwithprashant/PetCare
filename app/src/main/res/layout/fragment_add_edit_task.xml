@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Add / edit care task form.
-
-    One layout serves both modes. The fragment changes the title and shows or hides the delete
-    button; every field is otherwise identical, so a second near-duplicate layout would only be
-    another file to keep in step.
-
-    A task records what to do and when in the day, but never on which date — the routine it belongs
-    to decides that. There is therefore a time field here but no date field.
--->
+<!-- Add / edit care task form. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -17,9 +8,7 @@
     android:fillViewport="true"
     tools:context=".ui.task.AddEditTaskFragment">
 
-    <!-- The bottom padding is deeper than the other three sides because the floating navigation bar
-         is drawn *over* this form — see form_scroll_padding_bottom. Without it the last button on the
-         page comes to rest behind the bar, which then takes the tap meant for it. -->
+    <!-- The bottom padding is deeper than the other three sides. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -45,9 +34,7 @@
                 android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Category picker. inputType="none" makes the field un-typeable, so the value always maps
-             to a TaskCategory constant — free text could not guarantee that, and the checklist
-             groups by exactly this value. -->
+        <!-- Category picker. inputType="none" makes the field un-typeable. -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/categoryInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
@@ -63,8 +50,7 @@
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Time of day. focusable="false" stops the keyboard opening and stops the user typing a
-             time the app would then have to parse; tapping opens the Material time picker. -->
+        <!-- Time of day. focusable="false" stops the keyboard opening; tapping opens the time picker. -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/timeInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -126,8 +112,7 @@
             android:layout_marginTop="@dimen/spacing_lg"
             android:text="@string/task_save" />
 
-        <!-- Only shown in edit mode. Coloured with the theme's error role, the Material 3 signal
-             for a destructive action, so it reads differently from the save button above. -->
+        <!-- Only shown in edit mode. Coloured with the theme's error role. -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/deleteTaskButton"
             style="@style/Widget.Material3.Button.OutlinedButton"

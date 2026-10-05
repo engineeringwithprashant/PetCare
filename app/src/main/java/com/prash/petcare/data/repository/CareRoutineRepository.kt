@@ -8,15 +8,7 @@ import com.prash.petcare.data.local.entity.SyncEntityType
 import com.prash.petcare.data.local.relation.CareRoutineWithTasks
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Supplies repeating care schedules to the ViewModel layer.
- *
- * See [UserRepository] for why this layer exists and how it fits the MVVM chain, and
- * [PetRepository] for why the sync timestamps and tombstones are maintained in this layer.
- *
- * @property careRoutineDao Injected through the constructor so tests can substitute a fake.
- * @property syncDeletionDao Where deletions are recorded for the sync layer to send on.
- */
+/** Supplies repeating care schedules to the ViewModel layer. */
 class CareRoutineRepository(
     private val careRoutineDao: CareRoutineDao,
     private val syncDeletionDao: SyncDeletionDao
@@ -50,22 +42,11 @@ class CareRoutineRepository(
         routine.copy(updatedAt = System.currentTimeMillis(), isPendingSync = true)
     )
 
-    /**
-     * Pauses or resumes a routine without deleting it.
-     *
-     * This is the preferred way to stop a schedule: [deleteRoutine] discards the routine
-     * permanently, whereas pausing keeps it available to switch back on later.
-     */
+    /** Pauses or resumes a routine without deleting it. */
     suspend fun setRoutineActive(routineId: Long, isActive: Boolean) =
         careRoutineDao.setActive(routineId, isActive, System.currentTimeMillis())
 
-    /**
-     * Deletes a routine permanently. Tasks it already generated survive as history, with their
-     * link to this routine cleared.
-     *
-     * The tombstone is written first, while the routine's id is still readable from a row that
-     * exists.
-     */
+    /** Deletes a routine permanently. Tasks it already generated survive as history. */
     suspend fun deleteRoutine(routine: CareRoutine) {
         syncDeletionDao.insert(
             SyncDeletion(entityType = SyncEntityType.CARE_ROUTINE, entityId = routine.id)
@@ -73,9 +54,7 @@ class CareRoutineRepository(
         careRoutineDao.delete(routine)
     }
 
-    // -------------------------------------------------------------------------------------------
     // Used by the sync layer — see the equivalent section of PetRepository.
-    // -------------------------------------------------------------------------------------------
 
     /** Every routine belonging to an owner, paused ones included, as a one-off read. */
     suspend fun getRoutinesForOwner(ownerId: Long): List<CareRoutine> =

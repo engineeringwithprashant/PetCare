@@ -4,12 +4,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Unit tests for [OpeningHours.isOpen], which decides whether the featured place shows "OPEN NOW".
- *
- * The edges are where this goes wrong, so that is mostly what is tested: the exact opening and closing
- * minutes, and hours that run past midnight.
- */
+/** Unit tests for [OpeningHours.isOpen], which decides whether the featured place shows "OPEN NOW". */
 class OpeningHoursTest {
 
     private fun at(hour: Int, minute: Int = 0) = hour * 60 + minute

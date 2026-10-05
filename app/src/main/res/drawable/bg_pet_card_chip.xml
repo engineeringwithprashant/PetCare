@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The dark translucent capsule used twice on a pet card: for the species chip in the top corner,
-    and for the pill carrying the pet's age and weight.
-
-    **Translucent rather than solid.** A little of the photograph shows through, so the chip reads as
-    something resting *on* the picture rather than as an opaque tile cut out of it — which is the
-    difference between a label on a photo and a hole in one. The alpha is high enough that white text
-    on it clears the contrast threshold even over a pale photo.
-
-    The radius produces a capsule at any height, for the reason described in bg_pill.xml.
-
-    Fixed colours rather than theme roles, because this always sits on a photograph and a
-    photograph does not change with the theme — see the pet-card note in colors.xml.
--->
+<!-- The dark translucent capsule used twice on a pet card: for the species chip in the top corner. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

@@ -9,20 +9,7 @@ import com.prash.petcare.data.local.entity.SyncEntityType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/**
- * Supplies spending records to the ViewModel layer.
- *
- * See [UserRepository] for why this layer exists and how it fits the MVVM chain.
- *
- * As well as passing queries through, this repository normalises the SUM results: SQL returns
- * NULL for a total over zero rows, which would force every screen to handle a null. Mapping it
- * to `0.0` here means "no expenses yet" arrives at the UI as a number it can format directly.
- *
- * See [PetRepository] for why the sync timestamps and tombstones are maintained in this layer.
- *
- * @property expenseDao Injected through the constructor so tests can substitute a fake.
- * @property syncDeletionDao Where deletions are recorded for the sync layer to send on.
- */
+/** Supplies spending records to the ViewModel layer. */
 class ExpenseRepository(
     private val expenseDao: ExpenseDao,
     private val syncDeletionDao: SyncDeletionDao
@@ -79,9 +66,7 @@ class ExpenseRepository(
         expenseDao.delete(expense)
     }
 
-    // -------------------------------------------------------------------------------------------
     // Used by the sync layer — see the equivalent section of PetRepository.
-    // -------------------------------------------------------------------------------------------
 
     /** Every expense belonging to an owner, as a one-off read. */
     suspend fun getExpensesForOwner(ownerId: Long): List<Expense> = expenseDao.getByOwner(ownerId)

@@ -1,60 +1,29 @@
-<!--
-    All user-facing text lives here rather than being hard-coded in layouts or Kotlin.
-    Keeping it centralised means a wording change happens in one place, and the app can be
-    translated later by adding a values-<language> folder without touching any other file.
--->
+<!-- All user-facing text lives here rather than being hard-coded in layouts or Kotlin. -->
 <resources>
     <string name="app_name">PetCare</string>
 
-    <!-- ============================= Top app bar titles =============================
-         Used as the android:label on navigation destinations, which NavigationUI puts into the
-         toolbar automatically. Screens whose title depends on their data — a pet's name, a
-         routine's name — replace these in code; the label is what shows for the instant before
-         that data loads, so it has to read sensibly on its own. -->
+    <!-- ============================= Top app bar titles ============================= -->
     <string name="nav_label_pet">Pet</string>
     <string name="nav_label_routine">Care routine</string>
 
-    <!-- ========================== Bottom navigation tabs ==========================
-         Each of these is used three times, and has to work in all three places: as the label inside
-         the active tab's pill, as every tab's spoken name and long-press tooltip, and as the app bar
-         title for the screen the tab leads to. That is why they are single words — the pill is only
-         wide enough for one, and a longer phrase would be clipped there even if it read well at the
-         top of the screen.
-
-         Sentence case, and drawn that way. The bar used to upper-case them at display time; it no
-         longer does, because only one label is ever visible at a time and it sits inside the control
-         the user just pressed. A single word in capitals there reads as a system label rather than
-         as the name of the place they have arrived at. Storing the case the user sees also keeps the
-         capitalisation right in languages where blanket upper-casing is wrong. -->
+    <!-- ========================== Bottom navigation tabs ========================== -->
     <string name="nav_home">Home</string>
     <string name="nav_pets">Pets</string>
     <string name="nav_tasks">Tasks</string>
-    <!-- "Money" rather than "Expenses": the screen reports totals and a breakdown as well as the
-         individual costs, and the shorter word leaves the five labels evenly weighted in the bar. -->
+    <!-- "Money" rather than "Expenses": the screen reports totals and a breakdown as well as the individual costs. -->
     <string name="nav_money">Money</string>
 
-    <!-- What TalkBack reads for the Tasks tab while its badge is showing a count.
-
-         The badge itself is excluded from accessibility, because "Tasks" followed by "3" tells a
-         screen-reader user that there are three of something without saying three of what. %1$s is
-         the tab's own name, so the sentence still begins the way every other tab's does. -->
+    <!-- What TalkBack reads for the Tasks tab while its badge is showing a count. -->
     <plurals name="nav_tab_open_tasks">
         <item quantity="one">%1$s, %2$d task left today</item>
         <item quantity="other">%1$s, %2$d tasks left today</item>
     </plurals>
 
-    <!-- ======================== Top app bar overflow menu ========================
-         The account actions. "Sign out" rather than "Log out" to match the sign-in screen's own
-         wording — an app that invites you to sign in should not then offer to log you out. -->
+    <!-- ======================== Top app bar overflow menu ======================== -->
     <string name="menu_profile">Profile</string>
     <string name="menu_sign_out">Sign out</string>
 
-    <!-- ================================ Sign-in screens ================================
-         Log in / register (one screen with a toggle), two-factor, and the two email password-reset screens.
-
-         Labels, links and button text are written in normal case and upper-cased by their styles
-         (textAllCaps), so TalkBack reads "Forgot password?" as words rather than spelling out
-         capitals, and a translation that should not be capitalised can opt out in its own style. -->
+    <!-- ================================ Sign-in screens ================================ -->
 
     <!-- The shared header. "PetCare" is the product name and is not translated. -->
     <string name="auth_brand_name" translatable="false">PetCare</string>
@@ -62,9 +31,7 @@
     <!-- What TalkBack says for the logo. -->
     <string name="auth_brand_mark_description">PetCare</string>
 
-    <!-- The line at the foot of each form that leads to the other one. The <annotation> marks which
-         words become the tappable link, exactly as in register_consent below, so a translation can
-         place the link wherever its grammar needs it without any code changing. -->
+    <!-- The line at the foot of each form that leads to the other one. -->
     <string name="login_register_prompt">New to PetCare? <annotation link="register">Create an account</annotation></string>
     <string name="register_login_prompt">Already have an account? <annotation link="login">Log in</annotation></string>
 
@@ -78,43 +45,31 @@
     <string name="login_forgot_password">Forgot password?</string>
     <string name="login_submit">Log in</string>
 
-    <!-- ~~~~~~~~~~ Wrong-password warnings and the lockout ~~~~~~~~~~
-         See data/local/LoginAttemptStore.kt for what is being counted, and for why this lock is a
-         local speed bump rather than account security. -->
+    <!-- ~~~~~~~~~~ Wrong-password warnings and the lockout ~~~~~~~~~~ -->
 
-    <!-- The warning card's title: the first three wrong passwords, then the last one before the
-         lock. -->
+    <!-- The warning card's title: the first three wrong passwords, then the last one before the lock. -->
     <string name="login_alert_wrong_password">Wrong password</string>
     <string name="login_alert_last_try">Last try before a 15-minute lock</string>
-    <!-- The muted second line, on both cards. %1$d is how many tries are left and %2$d how many
-         there are in total (LoginAttemptStore.MAX_ATTEMPTS), %3$d the lock in minutes.
-
-         "the 5th" is written out rather than built from %2$d: English ordinals are irregular, so
-         "%2$dth" would produce "3th" if the limit ever changed. It must therefore be kept in step
-         with MAX_ATTEMPTS by hand — change the constant and this sentence together. -->
+    <!-- The muted second line. -->
     <string name="login_alert_detail">%1$d of %2$d attempts left · locks for %3$d minutes after the 5th</string>
 
     <!-- The locked screen. -->
     <string name="login_locked_label">Account locked</string>
     <string name="login_locked_title">Too many wrong passwords</string>
-    <!-- %1$d is how many attempts failed, %2$s the clock time sign-in reopens at ("5:53 PM"). A
-         plural because which forms exist differs by language, even though on this screen the count is
-         always the full five. -->
+    <!-- %1$d is how many attempts failed, %2$s the clock time sign-in reopens at ("5:53 PM"). -->
     <plurals name="login_locked_body">
         <item quantity="one">%1$d failed attempt on this device. Sign-in reopens at %2$s. Reset your password to get straight back in.</item>
         <item quantity="other">%1$d failed attempts on this device. Sign-in reopens at %2$s. Reset your password to get straight back in.</item>
     </plurals>
     <!-- Under the number in the countdown ring. -->
     <string name="login_locked_min_left">Min left</string>
-    <!-- What TalkBack reads for the ring, which is otherwise two unlabelled numbers. %1$d is the
-         minutes remaining. -->
+    <!-- What TalkBack reads for the ring, which is otherwise two unlabelled numbers. -->
     <plurals name="login_locked_ring_description">
         <item quantity="one">%1$d minute left</item>
         <item quantity="other">%1$d minutes left</item>
     </plurals>
 
-    <!-- The two info rows under the card. Each has a square code badge, a bold title and a muted
-         line, like an alert card on the notifications screen. -->
+    <!-- The two info rows under the card. Each has a square code badge, a bold title and a muted line. -->
     <string name="login_locked_attempts_badge">Try</string>
     <plurals name="login_locked_attempts_title">
         <item quantity="one">%1$d failed attempt</item>
@@ -126,8 +81,7 @@
     <string name="login_locked_safe_title">Your pet records are untouched</string>
     <string name="login_locked_safe_detail">Nothing was accessed. The lock is only a precaution</string>
 
-    <!-- The two buttons. The second is disabled until the wait is over, and counts down while it
-         waits; %1$d is the minutes remaining. -->
+    <!-- The two buttons. The second is disabled until the wait is over, and counts down while it waits. -->
     <string name="login_locked_reset">Reset password instead</string>
     <string name="login_locked_retry">Try again in %1$d min</string>
 
@@ -142,48 +96,34 @@
     <string name="register_phone_hint">98XXXXXXXX</string>
     <string name="register_phone_helper">Pick your country, then type the number without the dialling code</string>
 
-    <!-- ~~~~~~~~~~ The country-code selector ~~~~~~~~~~
-         Shared by every form that asks for a phone number — see ui/common/PhoneNumberInput.kt. -->
+    <!-- ~~~~~~~~~~ The country-code selector ~~~~~~~~~~ -->
     <string name="phone_country_label">Country</string>
     <string name="phone_country_dialog_title">Choose a country</string>
-    <!-- %1$s is the country's name in the user's own language, %2$d its dialling code. The label on
-         screen is a flag and a number, which a screen reader would otherwise read as "flag plus nine
-         seven seven". -->
+    <!-- %1$s is the country's name in the user's own language, %2$d its dialling code. -->
     <string name="cd_phone_country">Country code: %1$s, plus %2$d. Double tap to change.</string>
 
-    <!-- ~~~~~~~~~~ The password checklist ~~~~~~~~~~
-         The six rules shown live under every field where a password is chosen. See
-         ui/common/PasswordChecklistView.kt. -->
-    <!-- %1$d and %2$d are AuthValidation.MIN_PASSWORD_LENGTH and MAX_PASSWORD_LENGTH, filled in at
-         runtime so the figures shown are always the figures enforced. -->
+    <!-- ~~~~~~~~~~ The password checklist ~~~~~~~~~~ -->
+    <!-- %1$d and %2$d are AuthValidation.MIN_PASSWORD_LENGTH and MAX_PASSWORD_LENGTH, filled in at runtime. -->
     <string name="password_rule_length">%1$d–%2$d characters</string>
     <string name="password_rule_uppercase">An upper case letter (A–Z)</string>
     <string name="password_rule_lowercase">A lower case letter (a–z)</string>
     <string name="password_rule_digit">A number (0–9)</string>
     <string name="password_rule_special">A symbol (!, ?, #, …)</string>
     <string name="password_rule_pattern">Not all one character or a straight run (aaaa, 1234)</string>
-    <!-- The whole checklist is announced as one summary rather than as six live rows, because it is
-         redrawn on every keystroke. %1$d met out of %2$d. -->
+    <!-- The whole checklist is announced as one summary rather than as six live rows. -->
     <string name="cd_password_rules_progress">Password requirements: %1$d of %2$d met</string>
 
-    <!-- ~~~~~~~~~~ Show / hide a password ~~~~~~~~~~
-         The eye icon inside the right edge of every password field. Material swaps the icon itself;
-         this is what TalkBack reads, and it names the action rather than the state, which is the
-         convention for a control that does something when activated. -->
+    <!-- ~~~~~~~~~~ Show / hide a password ~~~~~~~~~~ -->
     <string name="cd_toggle_password_visibility">Show or hide password</string>
     <string name="register_password_label">Password</string>
-    <!-- %1$d is AuthValidation.MIN_PASSWORD_LENGTH, filled in at runtime so the placeholder can never
-         disagree with the rule actually enforced. A plural because "At least 1 characters" would be
-         wrong, and which plural forms exist differs by language. -->
+    <!-- %1$d is AuthValidation.MIN_PASSWORD_LENGTH, filled in at runtime. -->
     <plurals name="register_password_hint">
         <item quantity="one">At least %1$d character</item>
         <item quantity="other">At least %1$d characters</item>
     </plurals>
     <string name="register_confirm_password_label">Confirm password</string>
     <string name="register_confirm_password_hint">Repeat password</string>
-    <!-- The <annotation> marks which words become the tappable "terms" link. The fragment finds the
-         annotation and attaches the link to exactly that range, so a translation can put the link
-         wherever its grammar needs it without any code changing. -->
+    <!-- The <annotation> marks which words become the tappable "terms" link. -->
     <string name="register_consent">I agree to keep my pets\' records on this device and accept the <annotation link="terms">terms</annotation>.</string>
     <string name="register_submit">Create account</string>
 
@@ -191,8 +131,7 @@
     <string name="auth_or">Or</string>
     <string name="auth_continue_with_google">Continue with Google</string>
 
-    <!-- Account failures that are not about any one field. Firebase Authentication checks every
-         password, so these can appear on log in, register, change password and delete account. -->
+    <!-- Account failures that are not about any one field. -->
     <string name="auth_error_network">No internet connection. Check you\'re online and try again.</string>
     <string name="auth_error_rate_limited">Too many attempts. Wait a few minutes, then try again.</string>
     <string name="auth_error_sign_in_again">Your session has expired. Log out, log back in, then try again.</string>
@@ -228,18 +167,10 @@
     <string name="two_factor_submit">Verify &amp; log in</string>
     <string name="two_factor_different_account">← Use a different account</string>
 
-    <!-- Wrong code, and the lock that follows too many of them.
-
-         The lock message quotes the same fifteen minutes LoginAttemptStore.LOCK_DURATION_MILLIS
-         enforces, so the two have to be kept in step — as login_alert_detail already has to be. It
-         deliberately does not say how many attempts are left beforehand: the code screen has no room
-         for the warning card the log in form shows, and a half-told version of that ("2 left") on its
-         own is more alarming than useful. -->
+    <!-- Wrong code, and the lock that follows too many of them. -->
     <string name="two_factor_locked">Too many wrong codes. Sign-in is locked on this device for 15 minutes.</string>
 
-    <!-- A recovery code that is genuinely one of the user's, but has already been spent. Points them
-         at the next line of their list rather than at the code they just typed, which is correct and
-         simply used up. -->
+    <!-- A recovery code that is genuinely one of the user's, but has already been spent. -->
     <string name="two_factor_recovery_already_used">You\'ve already used that recovery code. Try the next one on your list.</string>
 
     <!-- Recovery codes: the way in when the authenticator app is gone. -->
@@ -248,11 +179,9 @@
     <string name="recovery_code_note">Each code works once. Cross it off your list after using it.</string>
     <string name="recovery_code_submit">Use code &amp; log in</string>
     <string name="recovery_code_back">← Back to code entry</string>
-    <!-- Wrong code here means "not one of yours", not "check your authenticator" — the user is
-         reading a printed list, and telling them to look at their phone would be no help at all. -->
+    <!-- Wrong code here means "not one of yours", not "check your authenticator". -->
     <string name="two_factor_recovery_incorrect">That isn\'t one of your recovery codes. Check your saved list.</string>
-    <!-- Said after a recovery code gets someone in. The count is the point: somebody down to their
-         last one or two needs to know now, while they can still generate a fresh set. -->
+    <!-- Said after a recovery code gets someone in. The count is the point. -->
     <plurals name="two_factor_recovery_used">
         <item quantity="one">Recovery code used. %d code left — turn two-factor off and on again for a new set.</item>
         <item quantity="other">Recovery code used. %d codes left.</item>
@@ -269,15 +198,12 @@
     <string name="two_factor_setup_secret_label">PetCare setup key</string>
     <string name="two_factor_setup_secret_copied">Setup key copied.</string>
     <string name="cd_two_factor_qr">QR code for adding PetCare to your authenticator app</string>
-    <!-- Shown only if the code could not be drawn. Setup is still possible by hand, and saying so
-         matters more than the failure itself. -->
+    <!-- Shown only if the code could not be drawn. Setup is still possible by hand, and saying. -->
     <string name="two_factor_setup_qr_failed">The QR code couldn\'t be drawn. Enter the key below by hand instead.</string>
     <string name="two_factor_setup_unavailable">This account is no longer available on this device.</string>
 
     <string name="two_factor_setup_step_confirm">Step 2 · Confirm</string>
-    <!-- Says why the second step exists. Without this it reads as busywork, when it is in fact the
-         only thing standing between the user and an account protected by a scan that silently
-         failed. -->
+    <!-- Says why the second step exists. Without this it reads as busywork. -->
     <string name="two_factor_setup_confirm_body">Enter the code your authenticator now shows. Nothing is switched on until it matches, so a scan that didn\'t work can\'t lock you out.</string>
     <string name="two_factor_setup_confirm">Confirm code</string>
     <string name="two_factor_setup_code_wrong">That code doesn\'t match. Check the entry in your authenticator, or scan the code again.</string>
@@ -286,15 +212,13 @@
     <!-- The recovery codes, shown once at the end of setup. -->
     <string name="recovery_codes_label">Step 3 · Save these</string>
     <string name="recovery_codes_title">Your recovery codes</string>
-    <!-- The warning, and it comes before the codes on purpose: a user who has started copying has
-         stopped reading. -->
+    <!-- The warning, and it comes before the codes on purpose. -->
     <string name="recovery_codes_body">These are the only way into your account if you lose your phone. You won\'t be shown them again — the app stores only a scrambled copy it can check against, not the codes themselves.</string>
     <string name="recovery_codes_where">Keep them somewhere other than this phone: a password manager, or written down and put away.</string>
     <string name="recovery_codes_index">%1$d.</string>
     <string name="recovery_codes_confirm_saved">I\'ve saved these codes somewhere safe</string>
     <string name="recovery_codes_finish">Finish setup</string>
-    <!-- Leaving early. The message says what is really at stake: nothing is broken, two-factor is
-         simply not turned on, and setup can be started again. -->
+    <!-- Leaving early. The message says what is really at stake: nothing is broken. -->
     <string name="recovery_codes_leave_title">Leave without saving your codes?</string>
     <string name="recovery_codes_leave_message">Two-factor authentication won\'t be turned on, and these codes will be discarded. You can start setup again from the profile screen whenever you like.</string>
     <string name="recovery_codes_leave_stay">Keep setting up</string>
@@ -308,76 +232,53 @@
     <string name="two_factor_disable_code_required">Enter a code to confirm.</string>
     <string name="two_factor_disable_done">Two-factor authentication is off. Your recovery codes have been deleted.</string>
 
-    <!-- Password reset, by email only. Firebase Authentication sends the email and hosts the page
-         where the new password is chosen, so the app has just two screens: ask for the address, then
-         confirm it was sent. -->
+    <!-- Password reset, by email only. Firebase sends the email and hosts the new-password page. -->
     <string name="reset_request_title">Reset your password</string>
     <string name="reset_request_subtitle">Enter the email on your account and we\'ll email you a link to choose a new password.</string>
-    <!-- Upper-cased by its style, so it reads "ACCOUNT EMAIL" on screen. The placeholder is the
-         register form's, so both forms show the same example address. -->
+    <!-- Upper-cased by its style, so it reads "ACCOUNT EMAIL" on screen. -->
     <string name="reset_account_email_label">Account email</string>
     <string name="reset_account_email_helper">Must match the email address on your account.</string>
     <string name="reset_send_link">Send reset link</string>
     <string name="auth_back_to_login">← Back to log in</string>
 
-    <!-- Reset confirmation. %1$s is the address as the user typed it.
-         Deliberately the same whether or not that address has an account: saying "no account found"
-         would let anyone check which addresses are registered. -->
+    <!-- Reset confirmation. %1$s is the address as the user typed it. -->
     <string name="reset_sent_title">Check your email</string>
     <string name="reset_sent_message">A reset link has been sent to %1$s. Check your inbox and your spam folder.</string>
     <string name="reset_sent_not_received">Didn\'t get it?</string>
     <string name="reset_sent_resend">Resend</string>
-    <!-- The resend link during the cooldown, as a clock: "Resend in 0:42". %1$d is minutes, %2$02d
-         the seconds padded to two digits. A clock rather than "42s", because the link's style
-         upper-cases its text and "42S" would look wrong. -->
+    <!-- The resend link during the cooldown, as a clock: "Resend in 0:42". -->
     <string name="reset_sent_resend_wait">Resend in %1$d:%2$02d</string>
     <string name="reset_sent_resent">Sent again. It can take a minute or two to arrive.</string>
 
-    <!-- Why a reset email could not be sent. Shown on either reset screen. A malformed address uses
-         error_email_invalid instead, under the field itself. -->
+    <!-- Why a reset email could not be sent. Shown on either reset screen. -->
     <string name="reset_error_network">No internet connection. Check you\'re online and try again.</string>
     <string name="reset_error_rate_limited">Too many reset requests. Wait a few minutes, then try again.</string>
     <string name="reset_error_invalid_email">That email address isn\'t valid. Go back and check it.</string>
     <string name="reset_error_unknown">The reset link couldn\'t be sent. Try again in a moment.</string>
 
-    <!-- ============================== Home dashboard ==============================
-         The screen the app opens on once signed in, top to bottom: the greeting and clock, three stat
-         cards, what is next, today's care and the streak, the pets, an insight, the week ahead, and
-         three quick actions.
+    <!-- ============================== Home dashboard ============================== -->
 
-         Upper-case labels are written in sentence case here and capitalised by their styles
-         (textAllCaps), so the same words stay correct in a language where blanket capitals are wrong.
-         Every "·" separator is a plain middle dot with spaces, as elsewhere in the app. -->
-
-    <!-- The greeting's first line, chosen by the time of day. "Hello," at night rather than "Good
-         night," — that phrase is a goodbye, and the app is being opened, not closed. -->
+    <!-- The greeting's first line, chosen by the time of day. -->
     <string name="home_greeting_morning">Good morning,</string>
     <string name="home_greeting_afternoon">Good afternoon,</string>
     <string name="home_greeting_evening">Good evening,</string>
     <string name="home_greeting_night">Hello,</string>
-    <!-- The whole greeting across two lines: %1$s is one of the lines above, %2$s the user's first
-         name. The name falls back to the first line alone until it has loaded. -->
+    <!-- The whole greeting across two lines: %1$s is one of the lines above, %2$s the user's first name. -->
     <string name="home_greeting_format">%1$s\n%2$s</string>
 
-    <!-- The sync line under the greeting when everything is backed up. %1$s is a relative time such as
-         "3 min. ago", produced by the device so it arrives already translated. The other states reuse
-         the sync indicator strings further down. -->
+    <!-- The sync line under the greeting when everything is backed up. -->
     <string name="home_sync_synced">All synced · %1$s</string>
 
-    <!-- The single letter in the app's monogram, top left of the header. A string resource rather
-         than a literal so it can be transliterated along with the app's name. -->
+    <!-- The single letter in the app's monogram, top left of the header. -->
     <string name="home_monogram">p</string>
 
-    <!-- The theme toggle, which names the mode currently in use rather than the one a tap would
-         switch to — a control that reports its own state is misread far less often than one that
-         reports its effect. -->
+    <!-- The theme toggle, which names the mode currently in use rather than the one a tap would switch. -->
     <string name="home_theme_light">Light</string>
     <string name="home_theme_dark">Dark</string>
 
     <!-- The header's "AI" pill and the insight card's badge. -->
     <string name="home_ai_pill">AI</string>
-    <!-- Shown when the AI pill or "Ask the assistant" is pressed. The app has no assistant yet, and a
-         control that silently did nothing would read as broken. -->
+    <!-- Shown when the AI pill or "Ask the assistant" is pressed. -->
     <string name="home_assistant_coming_soon">The assistant is coming soon.</string>
 
     <!-- ============================ Stat cards ============================ -->
@@ -385,22 +286,17 @@
     <!-- %1$s is the current month's short name, e.g. "Spent · Sep". -->
     <string name="home_stat_spent_format">Spent · %1$s</string>
     <string name="home_stat_next_vet">Next vet</string>
-    <!-- A stat card with nothing to report. A dash rather than "0" or "None", so an absent figure
-         never reads as a real one. -->
+    <!-- A stat card with nothing to report. A dash rather than "0" or "None". -->
     <string name="home_stat_empty_value">–</string>
 
-    <!-- The walk window card's live temperature. %1$d is the reading rounded to whole degrees; the
-         degree sign is a real ° (U+00B0), never a masculine ordinal or a superscript o. -->
+    <!-- The walk window card's live temperature. %1$d is the reading rounded to whole degrees. -->
     <string name="home_weather_temperature">%1$d°C</string>
-    <!-- The pill under that temperature: whether it suits a walk. See util/WalkComfort.kt for where
-         the comfortable range is set and why. -->
+    <!-- The pill under that temperature: whether it suits a walk. -->
     <string name="home_weather_too_hot">Too hot</string>
     <string name="home_weather_too_cold">Too cold</string>
-    <!-- Shown in the pill on a first launch, while the very first reading is being fetched and there
-         is no cached one to show in the meantime. -->
+    <!-- Shown in the pill on a first launch. -->
     <string name="home_weather_checking">Checking</string>
-    <!-- The walk window card's fallback, used when no temperature can be had. The figure is then the
-         next walk's time; these are its pill, and the figure when there is no time to show. -->
+    <!-- The walk window card's fallback, used when no temperature can be had. -->
     <string name="home_walk_good_now">Good now</string>
     <string name="home_walk_later">Later</string>
     <string name="home_walk_any_time">Any time</string>
@@ -408,24 +304,11 @@
     <string name="home_walk_done_pill">Walked</string>
     <string name="home_walk_none_pill">None today</string>
 
-    <!-- The spending card's pill: the change against last month. %1$d is the whole percentage without
-         a sign (the sign is in the text) and %2$s last month's short name. The "down" form uses a true
-         minus sign, not a hyphen. The last is for a previous month with no spending, where a
-         percentage would divide by zero. -->
+    <!-- The spending card's pill: the change against last month. -->
     <string name="home_spent_change_up">+%1$d%% vs %2$s</string>
     <string name="home_spent_change_down">−%1$d%% vs %2$s</string>
     <string name="home_spent_change_flat">%1$d%% vs %2$s</string>
-    <!--
-        The pill when the previous month recorded no spending at all, so no percentage can be worked
-        out without dividing by zero.
-
-        **Why it is this short.** A stat pill is one line with `ellipsize="end"` inside a 120dp card,
-        which leaves about 80dp for text after the card's and the pill's own padding. "Nothing in
-        Aug" is fourteen upper-case monospaced characters and overflowed that, so the card read
-        "NOTHING IN …". "None in Aug" is eleven — the same length as "+12% vs Aug", the pill that
-        already fits in this exact slot — which is what makes it safe for every month name rather
-        than only the short ones.
-    -->
+    <!-- The pill when the previous month recorded no spending at all. -->
     <string name="home_spent_no_previous">None in %1$s</string>
 
     <!-- The next vet card's pill when no visit is scheduled. When one is, the pill is the pet's name. -->
@@ -458,10 +341,7 @@
     <!-- ============================ Today's care card ============================ -->
     <string name="home_today_title">Today\'s care</string>
 
-    <!-- The care card's headline, reporting what is *left* rather than what is done: an owner opens
-         the app to find out what still needs doing. The zero case is a separate string because
-         "0 things left for today" states an absence where the point is that there is nothing to
-         do — which is good news and should read like it. -->
+    <!-- The care card's headline, reporting what is left rather than what is done. -->
     <plurals name="home_things_left">
         <item quantity="one">%1$d thing left for today</item>
         <item quantity="other">%1$d things left for today</item>
@@ -469,8 +349,7 @@
     <string name="home_all_caught_up">All caught up for today</string>
     <string name="home_nothing_scheduled">Nothing scheduled today</string>
 
-    <!-- The label under the completed count in the middle of the progress ring — "OF 6". Upper-cased
-         by its style at display time. %1$d is the total number of tasks due today. -->
+    <!-- The label under the completed count in the middle of the progress ring — "OF 6". -->
     <string name="home_ring_of_total">of %1$d</string>
 
     <!-- The streak line. %1$d is how many of the last seven days had every task done. -->
@@ -489,9 +368,7 @@
     <string name="home_pets_title">Your pets</string>
     <string name="home_pets_hint">tap to open</string>
 
-    <!-- ============================ Insight card ============================
-         The sentence is chosen by rules from today's tasks (see HomeDashboard.insightFor) and filled
-         in here, so it can be translated like any other text. -->
+    <!-- ============================ Insight card ============================ -->
     <string name="home_insight_label">Today\'s insight</string>
     <string name="home_ask_assistant">Ask the assistant</string>
     <string name="home_insight_nothing_scheduled">No care is scheduled today. A good moment to plan a walk or set up a routine.</string>
@@ -500,14 +377,7 @@
         <item quantity="one">Everything is done for today. That\'s %1$d full day this week.</item>
         <item quantity="other">Everything is done for today. That\'s %1$d full days this week.</item>
     </plurals>
-    <!-- One pet holds most of what is left. %1$s the pet, %2$d its open tasks, %3$d all open tasks,
-         %4$s a possessive pronoun for the pet (below), %5$s that pet's first task, %6$s the time of
-         %7$s, a later task for another pet. Two endings, because "so the evening is clear" only makes
-         sense when the later task is in the evening.
-
-         Plurals chosen by %3$d, the total. It is always at least two in English — the rule needs two
-         open tasks for one pet — but languages such as Polish or Russian word 2–4 differently from 5+,
-         so the count still has to pick the form. -->
+    <!-- One pet holds most of what is left. %1$s the pet, %2$d its open tasks, %3$d all open tasks. -->
     <plurals name="home_insight_busiest_evening">
         <item quantity="one">%1$s has %2$d of today\'s %3$d open task. Front-load %4$s %5$s before the %6$s %7$s so the evening is clear.</item>
         <item quantity="other">%1$s has %2$d of today\'s %3$d open tasks. Front-load %4$s %5$s before the %6$s %7$s so the evening is clear.</item>
@@ -516,8 +386,7 @@
         <item quantity="one">%1$s has %2$d of today\'s %3$d open task. Front-load %4$s %5$s before the %6$s %7$s so the rest of the day is clear.</item>
         <item quantity="other">%1$s has %2$d of today\'s %3$d open tasks. Front-load %4$s %5$s before the %6$s %7$s so the rest of the day is clear.</item>
     </plurals>
-    <!-- The pronoun in the sentences above, from the pet's recorded gender; "their" when it was not
-         recorded. -->
+    <!-- The pronoun in the sentences above, from the pet's recorded gender; "their" when it was not recorded. -->
     <string name="home_pronoun_his">his</string>
     <string name="home_pronoun_her">her</string>
     <string name="home_pronoun_their">their</string>
@@ -548,16 +417,12 @@
     <!-- TalkBack's reading of a row, which opens the routine. %1$s the task, %2$s the pet, %3$s the day. -->
     <string name="cd_coming_up_row">%1$s for %2$s, %3$s. Open routine.</string>
 
-    <!-- ============================== Quick actions ==============================
-         The three cards at the foot of the dashboard. Verb-first, so each reads as the thing it does
-         rather than as the name of a screen. -->
+    <!-- ============================== Quick actions ============================== -->
     <string name="home_action_add_task">Add task</string>
     <string name="home_action_log_expense">Log expense</string>
     <string name="home_action_add_pet">Add pet</string>
 
-    <!-- The abbreviated age used on a pet card, where the full "2 years old" would not fit beside
-         the weight. Plurals because which forms exist differs by language, even for abbreviations.
-         %1$d is the number of years or months. -->
+    <!-- The abbreviated age used on a pet card, where the full "2 years old" would not fit beside the weight. -->
     <plurals name="home_pet_age_years_short">
         <item quantity="one">%1$d yr</item>
         <item quantity="other">%1$d yrs</item>
@@ -572,9 +437,7 @@
     <string name="home_empty_message">Add your first pet to start tracking their care.</string>
     <string name="home_empty_action">Add a pet</string>
 
-    <!-- One pet's day in a short phrase, used on the pet detail screen's photo card. Three different
-         messages because "3 left", "all done" and "nothing scheduled" are genuinely different things
-         to tell someone, and a single count would blur the last two into "0". -->
+    <!-- One pet's day in a short phrase, used on the pet detail screen's photo card. -->
     <plurals name="home_pet_tasks_left">
         <item quantity="one">%1$d left today</item>
         <item quantity="other">%1$d left today</item>
@@ -582,50 +445,23 @@
     <string name="home_pet_all_done">All done today</string>
     <string name="home_pet_nothing_due">Nothing due today</string>
 
-    <!-- ============================== Sync indicator ==============================
-         A single line on the home screen saying how the Firestore backup is getting on. Worded
-         from the user's point of view — what has happened to their data — rather than after the
-         states in the code, and deliberately low-key: syncing is not something they asked for or
-         have to act on, so it reports rather than interrupts.
-
-         There is no string for the idle state: before anyone signs in there is nothing to say, and
-         the line is hidden instead of explaining its own absence. -->
+    <!-- ============================== Sync indicator ============================== -->
     <string name="sync_status_syncing">Syncing…</string>
-    <!-- %1$s is a relative time such as "2 minutes ago", produced by the device so it arrives
-         already translated. -->
+    <!-- %1$s is a relative time such as "2 minutes ago", produced by the device so it arrives already translated. -->
     <string name="sync_status_synced">Backed up %1$s</string>
-    <!-- Shown while changes are waiting to upload, which is the normal state with no connection.
-         It says what is true of the data rather than what the network is doing, and promises the
-         upload will happen by itself — which it now does, the moment the device is back online.
-
-         A plurals resource because the wording changes with the count, and which forms exist
-         differs by language. %1$d is the number of records waiting. -->
+    <!-- Shown while changes are waiting to upload, which is the normal state with no connection. -->
     <plurals name="sync_status_pending">
         <item quantity="one">%1$d change saved here, will upload when online</item>
         <item quantity="other">%1$d changes saved here, will upload when online</item>
     </plurals>
-    <!-- The quiet case: no connection, but nothing is waiting either, so there is nothing at risk
-         and nothing for the user to do. -->
+    <!-- The quiet case: no connection, but nothing is waiting. -->
     <string name="sync_status_offline">Offline, nothing waiting to upload</string>
 
-    <!-- ================================ Pets tab ================================
-         The second bottom-navigation tab: every pet the user has. -->
+    <!-- ================================ Pets tab ================================ -->
     <string name="pets_empty_title">No pets yet</string>
     <string name="pets_empty_message">Add your first pet to start tracking their care, routines and spending.</string>
 
-    <!--
-        The headline under the Pets tab's header: "Two pets,\none household".
-
-        Built from two resources because the count is spelled out as a word, which neither a plurals
-        resource nor NumberFormat can do. The array supplies the word — item 0 is "One", item 1
-        "Two" and so on — and the plurals resource supplies the sentence with "pet" or "pets" agreeing
-        with the count. Past the end of the array the fragment falls back to digits ("14 pets"),
-        because a dozen is about where a spelled-out number stops reading as friendly.
-
-        Both are ordinary translatable resources, so a translation can supply its own number words
-        and its own plural forms. The \n is the deliberate line break after the comma in the design.
-        %1$s is the number, as a word or digits.
-    -->
+    <!-- The headline under the Pets tab's header: "Two pets,\none household". -->
     <string-array name="pets_headline_count_words">
         <item>One</item>
         <item>Two</item>
@@ -648,30 +484,23 @@
     <!-- The muted line under a pet's name on its card. %1$s is the owner's name. -->
     <string name="pets_card_cared_for_by">Cared for by %1$s</string>
 
-    <!-- The labels under the three figures on a pet card. Sentence case here and upper-cased by their
-         style at draw time, so the words stay correct in a language where blanket capitals are
-         wrong. -->
+    <!-- The labels under the three figures on a pet card. Sentence case here and upper-cased by their style at draw time. -->
     <string name="pets_stat_age">Age</string>
     <string name="pets_stat_weight">Weight</string>
     <string name="pets_stat_due_today">Due today</string>
-    <!-- Stands in for an age or weight that was never recorded, so the three blocks keep their
-         shape. A dash rather than "Unknown", which would not fit a third of a card's width. -->
+    <!-- Stands in for an age or weight that was never recorded, so the three blocks keep their shape. -->
     <string name="pets_stat_unknown">–</string>
-    <!-- What a screen reader says in place of that dash, which would otherwise be read out as a
-         punctuation mark. -->
+    <!-- What a screen reader says in place of that dash, which would otherwise be read out as a punctuation mark. -->
     <string name="cd_pets_stat_unknown">Not recorded</string>
 
     <!-- The outlined row at the foot of the list. Upper-cased by its style; the "+" is an icon. -->
     <string name="pets_add_pet_row">Add a pet</string>
 
-    <!-- ============================== No pets to pick ==============================
-         The Tasks and Money tabs filter by pet with a row of chips. When the account has no pets at
-         all, both show this in place of their content. -->
+    <!-- ============================== No pets to pick ============================== -->
     <string name="pet_picker_empty_title">No pets to show</string>
     <string name="pet_picker_empty_message">Add a pet from the Pets tab, and their care will appear here.</string>
 
-    <!-- Display names for the PetSpecies enum. The enum constants themselves (DOG, CAT) are
-         database values and must never be shown to the user. -->
+    <!-- Display names for the PetSpecies enum. The enum constants themselves. -->
     <string name="species_dog">Dog</string>
     <string name="species_cat">Cat</string>
     <string name="species_bird">Bird</string>
@@ -696,24 +525,18 @@
     <!-- The heading above the Male / Female / Unknown buttons. Upper-cased by its style. -->
     <string name="pet_gender_label">Gender</string>
 
-    <!-- Display names for the PetGender enum, used on the form's buttons and as the spoken
-         description of the gender symbol on the pet detail screen. The constants themselves (MALE,
-         FEMALE) are database values and must never be shown to the user. -->
+    <!-- Display names for the PetGender enum. -->
     <string name="gender_male">Male</string>
     <string name="gender_female">Female</string>
     <string name="gender_unknown">Unknown</string>
 
     <string name="pet_photo_choose">Choose photo</string>
     <string name="pet_photo_change">Change photo</string>
-    <!-- The framing dialog shown after a photo is picked. Every pet card draws its photo in one
-         fixed shape, so the user decides which part of the picture fills it rather than the app
-         cropping to the centre and cutting the pet's head off. -->
+    <!-- The framing dialog shown after a photo is picked. Every pet card draws its photo in one fixed shape. -->
     <string name="pet_photo_crop_title">Frame the photo</string>
     <string name="pet_photo_crop_hint">Drag to move and pinch to zoom. This is how the photo will appear on your pet\'s cards.</string>
     <string name="pet_photo_crop_confirm">Use photo</string>
-    <!-- Its own string rather than a shared "Cancel", matching how every other dialog in this app
-         declares its buttons — which is what lets one dialog's wording be softened later without
-         changing the rest. -->
+    <!-- Its own string rather than a shared "Cancel". -->
     <string name="pet_photo_crop_cancel">Cancel</string>
     <!-- Shown when the picked file could not be read at all — not an image, or an unreadable URI. -->
     <string name="pet_photo_crop_unreadable">That image could not be opened. Try choosing another.</string>
@@ -721,45 +544,34 @@
     <string name="pet_save">Save</string>
     <string name="pet_delete">Delete pet</string>
 
-    <!-- Confirmation before a destructive action. The message spells out the knock-on effect,
-         because deleting a pet also removes its care history through the database's cascade
-         rules and that is not obvious from the button alone. %1$s is the pet's name. -->
+    <!-- Confirmation before a destructive action. The message spells out the knock-on effect. -->
     <string name="delete_pet_dialog_title">Delete pet?</string>
     <string name="delete_pet_dialog_message">%1$s will be permanently deleted, along with all of their care tasks, routines and expenses. This cannot be undone.</string>
     <string name="delete_pet_dialog_confirm">Delete</string>
     <string name="delete_pet_dialog_cancel">Cancel</string>
 
-    <!-- ============================= Validation errors =============================
-         Referenced by AuthViewModel as string resource ids, then resolved to text by the
-         fragments. -->
+    <!-- ============================= Validation errors ============================= -->
     <string name="error_name_required">Please enter your name</string>
     <string name="error_email_required">Please enter your email address</string>
     <string name="error_email_invalid">Enter a valid email address</string>
     <string name="error_email_taken">An account already uses this email address</string>
     <string name="error_password_required">Please enter your password</string>
     <string name="error_password_too_short">Password must be at least 8 characters</string>
-    <!-- The upper bound from AuthValidation.MAX_PASSWORD_LENGTH. Reached only by a paste, since the
-         fields cap typing at the same length. -->
+    <!-- The upper bound from AuthValidation.MAX_PASSWORD_LENGTH. -->
     <string name="error_password_too_long">Password must be 64 characters or fewer</string>
-    <!-- One message for all four variety rules rather than four. The checklist under the field names
-         exactly which are outstanding, so repeating that here would be saying the same thing twice in
-         two places at once. -->
+    <!-- One message for all four variety rules rather than four. -->
     <string name="error_password_missing_variety">Your password needs an upper case letter, a lower case letter, a number and a symbol</string>
     <string name="error_password_predictable">Choose something less predictable than a repeated or sequential run of characters</string>
     <string name="error_confirm_password_required">Please confirm your password</string>
     <string name="error_password_mismatch">Passwords do not match</string>
-    <!-- Firebase Authentication refused the password under the project's password policy, which can
-         be stricter than the app's own minimum length. -->
+    <!-- Firebase Authentication refused the password under the project's password policy. -->
     <string name="error_password_weak">That password is too weak. Try a longer one with a mix of letters, numbers and symbols.</string>
-    <!-- Deliberately vague: it does not reveal whether the email exists. A message such as
-         "no account with that email" would let someone test addresses one at a time to discover
-         who has an account. -->
+    <!-- Deliberately vague: it does not reveal whether the email exists. -->
     <string name="error_invalid_credentials">Incorrect email or password</string>
     <string name="error_identifier_required">Please enter your email or phone number</string>
     <string name="error_identifier_invalid">Enter a valid email address or phone number</string>
     <string name="error_phone_required">Please enter your phone number</string>
-    <!-- Deliberately points at the country as well as the number: the commonest cause of a number
-         that will not validate is the selector still sitting on the country the form opened with. -->
+    <!-- Deliberately points at the country as well as the number. -->
     <string name="error_phone_invalid">That is not a valid number for the country selected. Check the number and the dialling code.</string>
     <string name="error_consent_required">Please accept the terms to create an account</string>
     <!-- Ready for the code screens once verification is connected; see CodeEntryViewModel. -->
@@ -778,9 +590,7 @@
     <string name="error_task_time_required">Please choose a time of day</string>
     <string name="error_task_not_found">That task could not be found</string>
 
-    <!-- ============================== Care categories ==============================
-         Display names for the TaskCategory enum. The constants themselves (VET_VISIT) are
-         database values and must never be shown to the user. -->
+    <!-- ============================== Care categories ============================== -->
     <string name="category_feeding">Feeding</string>
     <string name="category_walk">Walk</string>
     <string name="category_grooming">Grooming</string>
@@ -790,14 +600,7 @@
     <string name="category_play">Play</string>
     <string name="category_other">Other</string>
 
-    <!-- The symbol shown in front of a care category's name, on the Tasks tab's filter chips and in
-         the task form's dropdown. The same idea as the spending and place emoji further down this
-         file, and the same two rules: all eight are from the original 2015 emoji set so none can
-         come out as an empty box on an older phone, and a category that exists in more than one of
-         the app's three lists keeps the same symbol in each — grooming is ✂️, medication 💊 and a vet
-         🏥 whether it is care being planned, a place being saved or money being recorded.
-
-         Not translatable: a picture is not language. -->
+    <!-- The symbol shown in front of a care category's name. -->
     <string name="category_emoji_feeding" translatable="false">🍖</string>
     <!-- Paw prints rather than a walking figure: the one doing the walking is the pet. -->
     <string name="category_emoji_walk" translatable="false">🐾</string>
@@ -808,24 +611,20 @@
     <string name="category_emoji_play" translatable="false">🎾</string>
     <string name="category_emoji_other" translatable="false">📦</string>
 
-    <!-- ============================= Routine schedules =============================
-         Display names for the RepeatUnit enum, worded as the user would say them. -->
+    <!-- ============================= Routine schedules ============================= -->
     <string name="schedule_daily">Every day</string>
     <string name="schedule_weekly">Every week</string>
     <string name="schedule_monthly">Every month</string>
     <string name="schedule_yearly">Every year</string>
 
     <!-- ============================= Pet detail screen ============================= -->
-    <!-- The three pastel stat pills under the pet's name. Each is one fact at a glance, so each is
-         as short as it can be while staying unambiguous. -->
-    <!-- %1$d is the pet's age in whole years, worked out from its date of birth. A plurals resource
-         because the wording changes with the count. -->
+    <!-- The three pastel stat pills under the pet's name. Each is one fact at a glance. -->
+    <!-- %1$d is the pet's age in whole years, worked out from its date of birth. -->
     <plurals name="pet_detail_age_years">
         <item quantity="one">%1$d year old</item>
         <item quantity="other">%1$d years old</item>
     </plurals>
-    <!-- For an animal not yet a year old, where "0 years old" would be both wrong-sounding and
-         much less informative than the months. %1$d is the age in whole months. -->
+    <!-- For an animal not yet a year old. -->
     <plurals name="pet_detail_age_months">
         <item quantity="one">%1$d month old</item>
         <item quantity="other">%1$d months old</item>
@@ -833,41 +632,30 @@
     <!-- The small letter-spaced label at the top of the "About" card. Upper-cased by its style. -->
     <string name="pet_detail_about_title">About</string>
 
-    <!-- The three buttons under the photo. Sentence case here and upper-cased by their style at draw
-         time, so the words stay correct in a language where blanket capitals are wrong. Kept to one
-         or two words each, because the three share one row. -->
+    <!-- The three buttons under the photo. Sentence case here and upper-cased by their style at draw time. -->
     <string name="pet_detail_edit">Edit pet</string>
     <string name="pet_detail_checklist">Checklist</string>
     <string name="pet_detail_routines_title">Care routines</string>
     <string name="pet_detail_no_routines_title">No care routines yet</string>
-    <!-- Says what a routine *is* by example as well as how to make one, since "routine" alone does not
-         tell a new user why they would want one. -->
+    <!-- Says what a routine is by example as well as how to make. -->
     <string name="pet_detail_no_routines_message">Tap + to set up a routine, such as morning feeding or a weekly groom. The tasks you add to it will appear on the checklist on the days it runs.</string>
 
-    <!-- The row labels in the "About" card, upper-cased by their style. No "Weight" row: weight is
-         shown as a pill on the photo, which carries its own unit ("24.5 kg"). -->
+    <!-- The row labels in the "About" card, upper-cased by their style. -->
     <string name="pet_detail_dob_label">Date of birth</string>
     <string name="pet_detail_dietary_label">Dietary notes</string>
     <string name="pet_detail_allergies_label">Allergies</string>
     <string name="pet_detail_toys_label">Favourite toys</string>
     <string name="pet_detail_cared_for_by_label">Cared for by</string>
-    <!-- Shown in place of a value the owner never filled in. Every row stays visible with this in it,
-         rather than hiding, so the card has the same shape for every pet and an empty field reads as
-         "nobody has told us" rather than as a row that failed to load. -->
+    <!-- Shown in place of a value the owner never filled in. -->
     <string name="pet_detail_none_recorded">None recorded</string>
     <!-- %1$s is the weight value; the unit is kept out of the number so it can be translated. -->
     <string name="pet_detail_weight_format">%1$s kg</string>
-    <!-- The same weight in pounds, when the profile screen's "Weight units" preference is set to
-         Imperial. The number is converted at display time only; the database always holds kilograms.
-         A separate string rather than a placeholder for the unit, because a translator needs to see
-         the whole phrase — some languages put the unit before the figure. -->
+    <!-- The same weight in pounds, when the profile screen's "Weight units" preference is set to Imperial. -->
     <string name="pet_detail_weight_format_imperial">%1$s lb</string>
     <!-- Marks a routine the user has switched off. %1$s is its schedule, e.g. "Every day". -->
     <string name="routine_paused_format">%1$s · Paused</string>
 
-    <!-- A routine card's schedule line on the pet detail screen: "Every day", "Weekly". Shorter than
-         the schedule_* names above ("Every week") because the card also has to fit the task count and
-         the overflow button on the same width. -->
+    <!-- A routine card's schedule line on the pet detail screen: "Every day", "Weekly". -->
     <string name="routine_card_schedule_daily">Every day</string>
     <string name="routine_card_schedule_weekly">Weekly</string>
     <string name="routine_card_schedule_monthly">Monthly</string>
@@ -878,15 +666,12 @@
         <item quantity="other">%1$d tasks</item>
     </plurals>
 
-    <!-- The overflow menu on a routine card. Pause and Resume swap depending on the routine's state,
-         so the menu always offers the action that would change something. -->
+    <!-- The overflow menu on a routine card. Pause and Resume swap depending on the routine's state. -->
     <string name="routine_menu_edit">Edit</string>
     <string name="routine_menu_pause">Pause</string>
     <string name="routine_menu_resume">Resume</string>
     <string name="routine_menu_delete">Delete</string>
-    <!-- The delete confirmation when it is opened from that menu. It points at Pause, which sits in
-         the same menu, rather than at the routine screen's "Active" switch. %1$s is the routine's
-         name. -->
+    <!-- The delete confirmation when it is opened from that menu. -->
     <string name="delete_routine_dialog_message_from_menu">%1$s will be permanently deleted, along with every care task in it. This cannot be undone. To stop it for a while instead, choose Pause.</string>
 
     <!-- ========================= Create / edit routine screen ========================= -->
@@ -902,13 +687,10 @@
 
     <!-- ============================ Routine detail screen ============================ -->
     <string name="routine_detail_tasks_title">Tasks in this routine</string>
-    <!-- Label on the pause/resume switch. Worded as the state it controls rather than as an
-         action, which is the convention for a switch: "Active" is on, off means paused. -->
+    <!-- Label on the pause/resume switch. Worded as the state it controls rather than as an action. -->
     <string name="routine_active_label">Active</string>
     <string name="routine_delete">Delete routine</string>
-    <!-- Confirmation before a destructive action. The message states the knock-on effect, because
-         deleting a routine also removes the tasks inside it and that is not obvious from the
-         button. %1$s is the routine's name. -->
+    <!-- Confirmation before a destructive action. The message states the knock-on effect. -->
     <string name="delete_routine_dialog_title">Delete routine?</string>
     <string name="delete_routine_dialog_message">%1$s will be permanently deleted, along with every care task in it. This cannot be undone. To stop it temporarily instead, switch it to inactive.</string>
     <string name="delete_routine_dialog_confirm">Delete</string>
@@ -936,28 +718,21 @@
     <!-- Prefixes the supplies line in task lists. %1$s is what the user recorded. -->
     <string name="task_supplies_format">Needs: %1$s</string>
 
-    <!-- =============================== Checklist screen ===============================
-         The Tasks tab, and the same screen opened for one pet from its detail page. -->
-    <!-- The app bar title when opened for one pet. Not "Today for…": the week strip lets the user
-         look at other days, so the title names whose care it is rather than which day. %1$s is the
-         pet's name. -->
+    <!-- =============================== Checklist screen =============================== -->
+    <!-- The app bar title when opened for one pet. Not "Today for…". -->
     <string name="checklist_title_format">Tasks for %1$s</string>
 
-    <!-- The progress card. %1$d is the number done and %2$d the total; plurals because which forms a
-         count needs varies by language, even where English uses one form for both. -->
+    <!-- The progress card. %1$d is the number done and %2$d the total; plurals. -->
     <plurals name="tasks_progress_count">
         <item quantity="one">%1$d of %2$d done</item>
         <item quantity="other">%1$d of %2$d done</item>
     </plurals>
-    <!-- Replaces the count on a day, or a filter, with nothing scheduled — "0 of 0 done" would state
-         an absence as if it were a score. -->
+    <!-- Replaces the count on a day, or a filter, with nothing scheduled. -->
     <string name="tasks_progress_none">Nothing scheduled</string>
     <string name="tasks_reset_day">Reset day</string>
-    <!-- The gesture guide under the progress bar. The swipes are invisible until tried, so the one
-         place they are explained is kept on screen rather than in a one-off tutorial. -->
+    <!-- The gesture guide under the progress bar. The swipes are invisible until tried. -->
     <string name="tasks_progress_help">Swipe a card right to complete it, left to delete. Tap the circle for a quick check-off.</string>
-    <!-- The same guide on any day but today, where ticking off is unavailable — a completion is
-         recorded as happening now, so ticking Friday\'s feed on Wednesday would mark Wednesday\'s. -->
+    <!-- The same guide on any day but today, where ticking off is unavailable. -->
     <string name="tasks_progress_help_other_day">Ticking off is available on the day itself. Swipe a card left to delete it.</string>
     <!-- What TalkBack reads for the segmented bar and the count together. %1$d done, %2$d total. -->
     <plurals name="cd_tasks_progress">
@@ -969,8 +744,7 @@
     <string name="tasks_filter_all_categories">All</string>
     <string name="tasks_filter_all_pets">All pets</string>
 
-    <!-- Section headers grouping the day's tasks. Upper-cased by their style. "Anytime" holds a task
-         with no recorded time, which the form never creates but the database column allows. -->
+    <!-- Section headers grouping the day's tasks. Upper-cased by their style. -->
     <string name="tasks_section_morning">Morning</string>
     <string name="tasks_section_afternoon">Afternoon</string>
     <string name="tasks_section_evening">Evening</string>
@@ -981,8 +755,7 @@
     <!-- The line under a task's title. %1$s is the pet's name, %2$s the category. -->
     <string name="tasks_card_subtitle">%1$s · %2$s</string>
 
-    <!-- A week-strip cell's spoken label, since "TH 11" is not something a screen reader should
-         spell out. %1$s is the full date. -->
+    <!-- A week-strip cell's spoken label, since "TH 11" is not something a screen reader should spell out. -->
     <string name="cd_week_day">%1$s</string>
     <string name="cd_week_day_has_tasks">%1$s, care scheduled</string>
 
@@ -990,8 +763,7 @@
     <string name="tasks_empty_title">Nothing scheduled</string>
     <string name="tasks_empty_message">No care matches this day and these filters.</string>
 
-    <!-- The two actions at the foot of the tab. "Add task" is upper-cased by its style; the "+" is
-         the button\'s icon. -->
+    <!-- The two actions at the foot of the tab. "Add task" is upper-cased by its style. -->
     <string name="tasks_add_task">Add task</string>
     <!-- A task always belongs to a routine, so adding one first asks which. -->
     <string name="tasks_add_task_pick_routine">Add a task to which routine?</string>
@@ -999,47 +771,30 @@
     <string name="tasks_add_task_routine_option">%1$s · %2$s</string>
     <!-- Routines are created on a pet's own page, so this points there rather than offering a form. -->
     <string name="tasks_add_task_no_routine">Set up a care routine first. Open a pet from the Pets tab and add one there.</string>
-    <!-- ============================== Checklist gestures ==============================
-         Swipe a row to complete or delete it; shake the phone to start the day over. -->
+    <!-- ============================== Checklist gestures ============================== -->
     <!-- %1$s is the deleted task's title. -->
     <string name="swipe_task_deleted">%1$s deleted</string>
     <string name="action_undo">Undo</string>
     <string name="reset_dialog_title">Start today over?</string>
-    <!-- Spells out both what is cleared and what is not, since a shake is easy to trigger by
-         accident and the wording is the only chance to reassure. %1$s names the pets whose ticks
-         are cleared — one name, or several joined with commas. Only the tasks currently on screen
-         are affected, which is why the dialog says "shown". -->
+    <!-- Spells out both what is cleared. -->
     <string name="reset_dialog_message">This clears the tasks shown as ticked off today for %1$s, so the day starts over. The tasks themselves are not deleted.</string>
     <string name="reset_dialog_confirm">Start over</string>
     <string name="reset_dialog_cancel">Cancel</string>
     <string name="reset_done">Today\'s checklist has been reset</string>
-    <!-- Joins several pet names in one sentence, e.g. "Krishala, Ddjw". A string resource rather than a
-         hard-coded comma so a language with a different list separator can supply its own.
-
-         **The quotes are load-bearing.** Android strips leading and trailing whitespace from a string
-         resource unless the value is quoted, so the unquoted version of this was silently delivered as
-         "," — which is why delegated checklists went out reading "Remaining care for Kuchu
-         Puchu,Sisimanu". The space is the whole point of the separator, so it has to be protected. -->
+    <!-- Joins several pet names in one sentence, e.g. "Krishala, Ddjw". -->
     <string name="list_separator">", "</string>
 
-    <!-- ============================== Care delegation ==============================
-         Handing a pet's checklist to someone who is looking after them, either as a text message
-         sent by the app itself or as an email drafted in the user's own mail app. -->
+    <!-- ============================== Care delegation ============================== -->
     <string name="checklist_delegate">Delegate</string>
     <string name="delegate_nothing_to_send">There is no outstanding care to delegate</string>
 
-    <!-- The channel chooser, shown first so the user picks how the checklist travels before the app
-         asks for anything. The two options are worded as the things themselves rather than as
-         "Send by…", since the dialog's title already asks the question. -->
+    <!-- The channel chooser, shown first. -->
     <string name="delegate_channel_title">How should this be sent?</string>
     <string name="delegate_channel_sms">Text message</string>
     <string name="delegate_channel_email">Email</string>
-    <!-- Shown on the checklist when every task due today has been ticked off, explaining why the
-         delegate action is unavailable rather than leaving it greyed out with no reason given. -->
+    <!-- Shown on the checklist when every task due today has been ticked off. -->
     <string name="checklist_all_done">Everything is done for today. There is nothing left to delegate.</string>
-    <!-- Headline of the confirmation preview, summarising what is about to be sent. Plural because
-         the wording changes with the count. %1$d is the number of outstanding tasks, %2$s the
-         pet's name. -->
+    <!-- Headline of the confirmation preview, summarising what is about to be sent. -->
     <plurals name="delegate_outstanding_summary">
         <item quantity="one">%1$d remaining task for %2$s</item>
         <item quantity="other">%1$d remaining tasks for %2$s</item>
@@ -1054,58 +809,37 @@
     <string name="delegate_contact_unreadable">That contact could not be read</string>
     <!-- %1$s is the contact's name. -->
     <string name="delegate_contact_no_number">%1$s has no phone number saved</string>
-    <!-- Warns what the message will cost to send. Plural because the wording changes with the
-         count, and SMS is normally billed per part. %1$d is the number of parts. -->
+    <!-- Warns what the message will cost to send. Plural because the wording changes with the count. -->
     <plurals name="delegate_part_count">
         <item quantity="one">This will send as %1$d text message.</item>
         <item quantity="other">This will send as %1$d text messages.</item>
     </plurals>
 
-    <!-- Email delegation. Nothing is sent by the app here — the checklist is handed to whichever
-         mail app the user picks, and they address it and send it themselves. -->
+    <!-- Email delegation. Nothing is sent by the app here. -->
     <string name="delegate_email_chooser_title">Send checklist with</string>
 
-    <!-- The email branch's confirmation, shown before the mail app opens.
-
-         **Why it exists.** The text branch has always shown the exact message before sending, because
-         the app sends that one itself and the user would otherwise never see it. The email branch had
-         no preview at all on the reasoning that the compose window *is* one — but by then the user has
-         already been thrown out of PetCare into another app, with a draft they did not write and a
-         send button in front of them. Reading the message where it was composed, and choosing to go,
-         is the same courtesy the text branch already offered.
-
-         The button says "Open email app" rather than "Send", because that is honestly all it does —
-         nothing is sent until the user presses send in their mail app. -->
+    <!-- The email branch's confirmation, shown before the mail app opens. -->
     <string name="delegate_email_preview_title">Send this by email?</string>
     <string name="delegate_email_preview_subject">Subject: %1$s</string>
     <string name="delegate_email_preview_note">Your email app will open with this message ready to send. Nothing is sent until you send it there.</string>
     <string name="delegate_email_continue">Open email app</string>
-    <!-- The email's subject line. %1$s is the pet's name, which is what makes the message findable
-         in an inbox holding checklists for more than one animal. Worded to match the opening line
-         of the body. -->
+    <!-- The email's subject line. %1$s is the pet's name. -->
     <string name="delegate_email_subject">Remaining care for %1$s</string>
     <string name="delegate_no_email_app">No email app is set up on this device</string>
 
-    <!-- The message body itself, shared by both channels. Built up piece by piece by
-         DelegationMessage.kt. The message has to make sense on its own in someone else's inbox,
-         with no access to this app. -->
-    <!-- %1$s is the pet's name, %2$s today's date. Worded as "remaining" because only outstanding
-         tasks are sent — anything already done is left out. -->
+    <!-- The message body itself, shared by both channels. Built up piece by piece by DelegationMessage.kt. -->
+    <!-- %1$s is the pet's name, %2$s today's date. Worded as "remaining" because only outstanding tasks are sent. -->
     <string name="delegate_message_header">Remaining care for %1$s (%2$s)</string>
     <!-- %1$s is the task title, %2$s its time of day. -->
     <string name="delegate_message_task">- %1$s at %2$s</string>
     <string name="delegate_message_task_no_time">- %1$s</string>
-    <!-- The same lines when the checklist covers more than one pet, so each task says whose it is.
-         %3$s (or %2$s in the second) is the pet's name. -->
+    <!-- The same lines when the checklist covers more than one pet, so each task says whose it is. -->
     <string name="delegate_message_task_with_pet">- %1$s at %2$s (%3$s)</string>
     <string name="delegate_message_task_no_time_with_pet">- %1$s (%2$s)</string>
     <string name="delegate_message_supplies">  Needs: %1$s</string>
     <string name="delegate_message_notes">  Note: %1$s</string>
 
-    <!-- ============================ Permission rationale ============================
-         Shown before each runtime permission request. The wording states what is accessed, why it
-         is needed, and what the app will not do with it — a request with no explanation is far
-         more likely to be refused, and rightly so. -->
+    <!-- ============================ Permission rationale ============================ -->
     <string name="permission_contacts_title">Choose a contact?</string>
     <string name="permission_contacts_message">PetCare needs access to your contacts so you can pick who to send this checklist to. Only the contact you choose is read, and your contacts are never uploaded or shared.</string>
     <string name="permission_sms_title">Send a text message?</string>
@@ -1114,22 +848,18 @@
     <string name="permission_not_now">Not now</string>
     <string name="permission_contacts_denied">Without contacts access, PetCare cannot look up who to send the checklist to.</string>
     <string name="permission_sms_denied">Without SMS permission, PetCare cannot send the checklist.</string>
-    <!-- Offered when a permission has been permanently refused, since asking again will no longer
-         show a prompt and the only way back is the system settings screen. -->
+    <!-- Offered when a permission has been permanently refused. -->
     <string name="permission_open_settings">Settings</string>
 
-    <!-- Confirmation before signing out. It says what is *not* lost, because the main worry at this
-         point is whether signing out discards anything. -->
+    <!-- Confirmation before signing out. It says what is not lost. -->
     <string name="profile_sign_out_dialog_title">Sign out?</string>
     <string name="profile_sign_out_dialog_message">You will be returned to the sign-in screen. Nothing is deleted. Your pets and their care will be here when you sign back in.</string>
     <string name="profile_sign_out_dialog_confirm">Sign out</string>
     <string name="profile_sign_out_dialog_cancel">Cancel</string>
 
-    <!-- =========================== Accessibility labels ===========================
-         contentDescription values, read aloud by TalkBack for users who cannot see the icon. -->
+    <!-- =========================== Accessibility labels =========================== -->
     <string name="cd_pet_photo">Pet photo</string>
-    <!-- The framing window in the crop dialog. Names what it is *and* that it responds to touch,
-         since a user who cannot see the picture has no other clue that it can be moved. -->
+    <!-- The framing window in the crop dialog. Names what it is and that it responds to touch. -->
     <string name="cd_pet_photo_crop">Photo framing area. Drag to move, pinch to zoom.</string>
     <string name="cd_add_routine">Add a care routine</string>
     <string name="cd_add_task">Add a care task</string>
@@ -1139,56 +869,33 @@
     <string name="cd_add_expense">Record an expense</string>
     <!-- The round back button over the pet detail screen's photo. -->
     <string name="cd_back">Back</string>
-    <!-- The "⋮" button on a routine card. Names the routine, because a list of identical "More
-         options" buttons gives a TalkBack user no way to tell which card each belongs to. %1$s is
-         the routine's name. -->
+    <!-- The "⋮" button on a routine card. Names the routine. -->
     <string name="cd_routine_options">More options for %1$s</string>
 
-    <!-- The dashboard header's controls.
-
-         The theme toggle's description says what a tap *does*, unlike its visible label, which names
-         the mode currently in use. A sighted user infers the action from a control that shows its
-         state; TalkBack announces the description in place of the label, so it has to carry both. -->
+    <!-- The dashboard header's controls. -->
     <string name="cd_switch_to_dark_theme">Switch to dark theme</string>
     <string name="cd_switch_to_light_theme">Switch to light theme</string>
-    <!-- The header's notifications bell. %1$d is how many alerts are unread.
-
-         The description has to carry the action as well as the count, because a screen reader
-         announces it *instead of* the label — a user who heard only "3 unread alerts" would have no
-         idea what pressing it does. The exact number is spoken even when the bubble has given up and
-         drawn "9+", since speech has room for it. -->
+    <!-- The header's notifications bell. %1$d is how many alerts are unread. -->
     <plurals name="cd_alerts_bell">
         <item quantity="one">%1$d unread alert. Open notifications.</item>
         <item quantity="other">%1$d unread alerts. Open notifications.</item>
     </plurals>
-    <!-- The same bell on the notifications screen itself, where it has been unhooked because it would
-         only reopen the screen already being looked at. It reports the count and promises nothing —
-         see ui/common/TabHeader.kt. -->
+    <!-- The same bell on the notifications screen itself, where it has been unhooked. -->
     <plurals name="cd_alerts_bell_plain">
         <item quantity="one">%1$d unread alert</item>
         <item quantity="other">%1$d unread alerts</item>
     </plurals>
-    <!-- What the bubble draws once the count passes what fits in it: "9+". %1$d is the highest number
-         it will print. Not translatable as a sentence — it is a numeral and a plus sign — but it is a
-         resource rather than a literal so the numeral goes through the same formatting as the counts
-         below it. -->
+    <!-- What the bubble draws once the count passes what fits in it: "9+". -->
     <string name="header_alert_count_overflow">%1$d+</string>
     <!-- The header's AI pill. -->
     <string name="cd_open_assistant">Open the assistant</string>
-    <!-- The progress ring. Announced as one sentence rather than leaving TalkBack to read the count
-         and the "of 6" beneath it as two unrelated numbers. %1$d is the completed count and %2$d the
-         total due today; the plural form is chosen by the *total*, so a day with a single task does
-         not read as "1 of 1 tasks". -->
+    <!-- The progress ring. Announced as one sentence. -->
     <plurals name="cd_today_progress">
         <item quantity="one">%1$d of %2$d task done today</item>
         <item quantity="other">%1$d of %2$d tasks done today</item>
     </plurals>
 
-    <!-- ============================ Spending categories ============================
-         Display names for the ExpenseCategory enum. Kept separate from the care categories above
-         even where a name is repeated, because the two enums are independent: renaming one must
-         not silently rename the other. The constants themselves are database values and must never
-         be shown to the user. -->
+    <!-- ============================ Spending categories ============================ -->
     <string name="expense_category_food">Food</string>
     <string name="expense_category_vet">Vet</string>
     <string name="expense_category_medication">Medication</string>
@@ -1204,20 +911,15 @@
     <!-- %1$s is the pet's name. -->
     <string name="expenses_title_format">Spending on %1$s</string>
 
-    <!-- The Money tab's own header title. The bottom bar calls the tab "Money" (see nav_money), but
-         the screen itself is titled "Expenses", as in the design: the bar needs one short word, and
-         the header has room to name what the list actually holds. -->
+    <!-- The Money tab's own header title. The bottom bar calls the tab "Money" (see nav_money). -->
     <string name="expenses_header_title">Expenses</string>
 
     <!-- The first chip in the pet row, which totals spending across every pet. -->
     <string name="expenses_filter_all_pets">All pets</string>
 
-    <!-- The dark total card. %1$s is the current month's name, e.g. "Total spent · September"; the
-         label is shown in capitals by its style. -->
+    <!-- The dark total card. %1$s is the current month's name, e.g. "Total spent · September". -->
     <string name="expenses_total_label_format">Total spent · %1$s</string>
-    <!-- The caption under the card's bar: "3 expenses · 2 pets · +12% vs August". Built from the
-         pieces below, joined by the separator, so a language can reword each piece and the comparison
-         can be left out when there is nothing to compare against. -->
+    <!-- The caption under the card's bar: "3 expenses · 2 pets · +12% vs August". -->
     <plurals name="expenses_caption_expenses">
         <item quantity="one">%1$d expense</item>
         <item quantity="other">%1$d expenses</item>
@@ -1226,10 +928,7 @@
         <item quantity="one">%1$d pet</item>
         <item quantity="other">%1$d pets</item>
     </plurals>
-    <!-- %1$d is the size of the change as a positive whole number, %2$s the previous month's name.
-         The sign is part of each string, not the number, so "up" and "down" can be translated as
-         words where a language prefers that. The minus is a true minus sign (U+2212), which is the
-         width of the plus beside it. -->
+    <!-- %1$d is the size of the change as a positive whole number, %2$s the previous month's name. -->
     <string name="expenses_caption_change_up">+%1$d%% vs %2$s</string>
     <string name="expenses_caption_change_down">−%1$d%% vs %2$s</string>
     <string name="expenses_caption_change_flat">%1$d%% vs %2$s</string>
@@ -1237,39 +936,25 @@
 
     <!-- The heading over the expense cards; shown in capitals by its style. -->
     <string name="expenses_all_title">All expenses</string>
-    <!-- One category's share of the month, e.g. "89%". %1$d is the percentage. The literal percent
-         sign is doubled because a single one starts a format specifier. -->
+    <!-- One category's share of the month, e.g. "89%". %1$d is the percentage. -->
     <string name="expenses_category_share_format">%1$d%%</string>
 
     <!-- Joins an expense's category and date into one line, e.g. "Medication · Sep 12, 2026". -->
     <string name="expenses_row_subtitle_format">%1$s · %2$s</string>
 
-    <!-- The badge on each expense card, and the symbol shown beside the category's name wherever one
-         is chosen. A picture rather than the three-letter abbreviations ("MED", "GRM") this badge
-         used to carry: a column of emoji is told apart in one glance, where three capitals have to
-         be read, and the reader no longer has to learn what "ACC" stands for.
-
-         Emoji rather than drawn icons because they arrive in colour, need no artwork per category
-         and no dark-mode variant, and are the same symbol the user already sees everywhere else on
-         their phone. Every one chosen here is from the original 2015 emoji set, so it renders on the
-         oldest device the app supports (minSdk 24) rather than appearing as an empty box.
-
-         Not translatable: a picture is not language, and a translator given these would have nothing
-         to do but risk breaking them. -->
+    <!-- The badge on each expense card, and the symbol shown beside the category's name wherever one is chosen. -->
     <string name="expense_emoji_food" translatable="false">🍖</string>
     <string name="expense_emoji_vet" translatable="false">🏥</string>
     <string name="expense_emoji_medication" translatable="false">💊</string>
     <string name="expense_emoji_grooming" translatable="false">✂️</string>
-    <!-- A ball, not a teddy bear: the teddy is a 2018 emoji and would be a blank box on older
-         devices, and a ball is what most pet toys actually are. -->
+    <!-- A ball, not a teddy bear: the teddy is a 2018 emoji and would be a blank box on older devices. -->
     <string name="expense_emoji_toys" translatable="false">🎾</string>
     <string name="expense_emoji_accessories" translatable="false">🎒</string>
     <string name="expense_emoji_insurance" translatable="false">🛡️</string>
     <string name="expense_emoji_training" translatable="false">🎓</string>
     <string name="expense_emoji_other" translatable="false">📦</string>
 
-    <!-- The currency every amount is recorded and shown in: Nepalese rupees. Not translatable — the
-         money is rupees in every language. Kept in step with CURRENCY_PREFIX in ExpenseLabels.kt. -->
+    <!-- The currency every amount is recorded and shown in: Nepalese rupees. -->
     <string name="currency_symbol" translatable="false">Rs</string>
 
     <!-- With "All pets" chosen, the add button has to ask which pet the new expense is for. -->
@@ -1281,8 +966,7 @@
     <!-- Confirms a swipe-delete and offers the undo. %1$s is the expense's title. -->
     <string name="expense_deleted_format">%1$s deleted</string>
 
-    <!-- ========================= Add / edit expense screen =========================
-         The same screen serves both modes, so it has two possible titles. -->
+    <!-- ========================= Add / edit expense screen ========================= -->
     <string name="add_expense_title">Record an expense</string>
     <string name="edit_expense_title">Edit expense</string>
 
@@ -1295,9 +979,7 @@
     <string name="expense_delete">Delete expense</string>
     <string name="expense_date_picker_title">Select the date it was spent</string>
 
-    <!-- Confirmation before a destructive action. The message states the knock-on effect, because
-         removing an expense also changes the pet's total and its breakdown. %1$s is the expense's
-         title. -->
+    <!-- Confirmation before a destructive action. The message states the knock-on effect. -->
     <string name="delete_expense_dialog_title">Delete expense?</string>
     <string name="delete_expense_dialog_message">%1$s will be permanently deleted and removed from this pet\'s spending total. This cannot be undone.</string>
     <string name="delete_expense_dialog_confirm">Delete</string>
@@ -1310,52 +992,34 @@
     <string name="error_expense_date_required">Please choose the date it was spent</string>
     <string name="error_expense_not_found">That expense could not be found</string>
 
-    <!-- ========================= Care reminders =========================
-         Text for the notification a care task's alarm posts, and for the permission that lets it
-         appear at all. -->
+    <!-- ========================= Care reminders ========================= -->
 
-    <!-- Names the notification channel in the system settings screen, where the user can silence
-         these notifications without turning the app's off altogether. Worded from their point of
-         view — what the notifications are — rather than after the code that posts them. -->
+    <!-- Names the notification channel in the system settings screen. -->
     <string name="reminder_channel_name">Care reminders</string>
     <string name="reminder_channel_description">Reminds you when a pet\'s care task is due</string>
 
-    <!-- The notification itself. Pet and task are both in the title because a collapsed or grouped
-         notification may show nothing else, and "Morning meal" alone would not say which animal.
-         %1$s is the pet's name, %2$s the task's title. -->
+    <!-- The notification itself. Pet and task are both in the title. -->
     <string name="reminder_notification_title">%1$s: %2$s</string>
-    <!-- The body's first line. %1$s is the task's time of day, formatted to the device's 12- or
-         24-hour setting. -->
+    <!-- The body's first line. %1$s is the task's time of day, formatted to the device's 12- or 24-hour setting. -->
     <string name="reminder_notification_text">Due at %1$s</string>
-    <!-- The two further lines, each shown only when the task has that text. They are the same
-         labels the delegation message uses, so one task reads the same whether the user sees it in
-         a notification or a sitter reads it in a text message. Only visible once the notification
-         is expanded, which is all the room the shade gives. %1$s is the user's own words. -->
+    <!-- The two further lines, each shown only when the task has that text. -->
     <string name="reminder_notification_supplies">Needs: %1$s</string>
     <string name="reminder_notification_notes">Note: %1$s</string>
 
-    <!-- Shown before the Android 13+ notification permission prompt, so the user is asked for
-         something they have just been given a reason to want. See ChecklistFragment for why a
-         rationale is always shown rather than only when the system suggests one. -->
+    <!-- Shown before the Android 13+ notification permission prompt. -->
     <string name="permission_notifications_title">Get reminded?</string>
     <string name="permission_notifications_message">PetCare can send you a notification when this task is due, so nothing gets forgotten. Tapping it opens the pet\'s checklist.</string>
-    <!-- Refusal is explained, not treated as an error: the task and its schedule are saved either
-         way, and only the notification is lost. -->
+    <!-- Refusal is explained, not treated as an error: the task and its schedule are saved either way. -->
     <string name="permission_notifications_denied">Reminders are off, so this task won\'t notify you. Its schedule is still saved.</string>
 
-    <!-- ================================= Places tab =================================
-         The tab of saved vets, groomers, parks and shops. See PlacesFragment. -->
+    <!-- ================================= Places tab ================================= -->
 
-    <!-- The tab's name in the bottom bar and its header. Sentence case; the bar capitalises it — see
-         the note on the other nav_ strings. -->
+    <!-- The tab's name in the bottom bar and its header. Sentence case; the bar capitalises. -->
     <string name="nav_places">Places</string>
 
-    <!-- The map card. The pill over the map names the selected place and, when the phone's position
-         is known, how far away it is. The middle dot is the design's separator, used the same way in
-         the place subtitles below. %1$s is the place name, %2$s a distance such as "1.2 km". -->
+    <!-- The map card. The pill over the map names the selected place and, when the phone's position is known. -->
     <string name="places_map_pill">%1$s · %2$s</string>
-    <!-- The two links over the map's foot. The arrow is the conventional "opens outside the app"
-         mark; "Google maps" needs none because its name already says where it goes. -->
+    <!-- The two links over the map's foot. The arrow is the conventional "opens outside the app" mark. -->
     <string name="places_map_directions">Directions ↗</string>
     <string name="places_map_open">Google maps</string>
     <!-- Spoken description of the map itself. %1$s is the selected place's name. -->
@@ -1376,11 +1040,9 @@
     <string name="place_hours_unknown">Hours not set</string>
     <string name="place_phone_unknown">Not saved</string>
     <string name="place_gps_tag">GPS tag saved</string>
-    <!-- %1$s is a distance such as "1.2 km". "walk" because these are walking-scale distances; the
-         figure is a straight line, and the maps app plans the real route. -->
+    <!-- %1$s is a distance such as "1.2 km". "walk" because these are walking-scale distances. -->
     <string name="place_gps_tag_with_distance">GPS tag saved · %1$s walk</string>
-    <!-- The same chip when location access has not been granted, which is the one place on this tab
-         that can still ask for it — see PlacesFragment.renderFeatured. -->
+    <!-- The same chip when location access has not been granted. -->
     <string name="place_gps_tag_allow_location">GPS tag saved · tap for distance</string>
     <!-- The arrow is the conventional "opens outside the app" mark. -->
     <string name="places_open_in_maps">Open in maps ↗</string>
@@ -1419,22 +1081,13 @@
     <string name="place_category_grooming_description">Grooming</string>
     <string name="place_category_park_description">Park</string>
     <string name="place_category_store_description">Pet store</string>
-    <!-- The badge on a saved-place row, and the symbol beside the category's name on the chips and in
-         the form's dropdown. These replace the "Vet" / "Grm" / "Shop" abbreviations the badge used to
-         show, for the reasons given on the expense emoji above — and the same rule applies: all four
-         are from the original emoji set, so none of them can come out as an empty box.
-
-         A hospital for the vet and a shop front for the store, matching the expense categories, so
-         one idea has one symbol across the whole app. -->
+    <!-- The badge on a saved-place row. -->
     <string name="place_emoji_vet" translatable="false">🏥</string>
     <string name="place_emoji_grooming" translatable="false">✂️</string>
     <string name="place_emoji_park" translatable="false">🌳</string>
     <string name="place_emoji_store" translatable="false">🏪</string>
 
-    <!-- Puts a category's emoji in front of its name — "💊  Medication" — for a chip or a dropdown
-         row, where the name is needed as well as the symbol. Two spaces, so the pair reads as a
-         symbol *and* a word rather than one run-together token. Not translatable: the emoji leads in
-         every language, and a translator could only reorder or lose it. -->
+    <!-- Puts a category's emoji in front of its name — "💊 Medication" — for a chip or a dropdown row. -->
     <string name="category_emoji_label" translatable="false">%1$s  %2$s</string>
     <!-- "Vet clinic · Pulchowk". %1$s is the category description, %2$s the area. -->
     <string name="place_subtitle_format">%1$s · %2$s</string>
@@ -1455,10 +1108,7 @@
     <string name="place_opening_picker_title">Opening time</string>
     <string name="place_closing_picker_title">Closing time</string>
     <string name="place_notes_label">Notes (optional)</string>
-    <!-- The heading over the map picker on the full place form. The wording that used to sit under it
-         — "Not captured yet", "Capture current location", "Getting a GPS fix…" — went with the button
-         it described: the position is now chosen on a map rather than captured from one button, and
-         the selected-location card below it says what has been chosen. -->
+    <!-- The heading over the map picker on the full place form. -->
     <string name="place_location_heading">Location</string>
     <string name="place_location_approximate">Only approximate location is allowed, so this position may be a few hundred metres out. Allow precise location in settings for an exact one.</string>
     <string name="place_save">Save place</string>
@@ -1473,51 +1123,24 @@
     <string name="error_place_location_required">Capture the place\'s GPS location before saving</string>
     <string name="error_place_not_found">That place could not be found</string>
 
-    <!-- Location permission. Two rationales, because the two screens want it for different reasons
-         and a user deciding whether to allow it deserves the reason that applies right now. -->
+    <!-- Location permission. Two rationales. -->
     <string name="permission_location_title">Use your location?</string>
     <string name="permission_location_capture_message">PetCare saves this place\'s GPS position so it can show how far away it is and open directions in your maps app. Your location is only read when you press capture, and is stored with this place only.</string>
     <string name="permission_location_distance_message">PetCare uses your current location to work out how far each saved place is from you. It is only read while this tab is open and is never stored or shared.</string>
-    <!-- Shown before the home screen asks for approximate location, so the walk-window card can
-         report the weather where the user actually is. It names the fallback, because that is what
-         makes refusing an easy choice rather than a loss. -->
+    <!-- Shown before the home screen asks for approximate location. -->
     <string name="permission_location_weather_message">PetCare uses your approximate location to show the temperature where you are, so the walk window knows whether it is a good time to go out. Without it the card shows the weather for Kathmandu instead.</string>
     <string name="permission_location_capture_denied">Without location access, PetCare cannot geotag this place. Your other details are kept if you allow it later.</string>
     <string name="permission_location_distance_denied">Distances stay hidden without location access. Your saved places and directions still work.</string>
 
-    <!-- ============================ Assistant ============================
-         The screen the AI pill and Home's "Ask the assistant" button open.
-
-         It is a general assistant that also knows the account's pets: it answers questions on any
-         subject, and pulls the stored profiles, routines, checklist and spend into its answers
-         whenever the question is about the user's own animals. See
-         data/assistant/OpenAiAssistantRepository.kt, whose system prompt is where that scope is
-         actually set. Every sentence here is written to be true of that — including the limit, which
-         is that it will talk about a sick animal and say when one needs seeing urgently, but will not
-         diagnose or prescribe. -->
+    <!-- ============================ Assistant ============================ -->
     <string name="nav_assistant">Assistant</string>
 
-    <!-- The dark header card. The pet names in the title are built from the database at runtime and
-         joined with "&amp;", so an account with one pet reads "Ask about Bella". -->
+    <!-- The dark header card. The pet names in the title are built from the database at runtime and joined with "&amp;". -->
     <string name="assistant_header_label">Care assistant</string>
     <string name="assistant_header_title">Ask about %1$s</string>
-    <!-- Shown in place of the title before any pet has been added, so the card never reads
-         "Ask about " with nothing after it. -->
+    <!-- Shown in place of the title before any pet has been added. -->
     <string name="assistant_header_title_no_pets">Ask about your pets</string>
-    <!--
-        What it will answer, why its answers fit these particular animals, and what it is not.
-
-        The old wording said it "reads this app's own pet profiles, checklist and spend data", which
-        described an assistant that could do nothing else. It can: the first sentence now says so, so
-        that nobody is left thinking a question about feeding or training is out of bounds.
-
-        The vet sentence stays, and is not boilerplate. An assistant that will discuss a sick animal
-        has more need of it than one that refused to, not less. It is worded as a limit on what the
-        assistant is rather than as a refusal, which is what it actually does now.
-
-        Four lines is the card's limit (see fragment_assistant.xml), so this stays about the length
-        of the sentence it replaces.
-    -->
+    <!-- What it will answer, why its answers fit these particular animals, and what it is not. -->
     <string name="assistant_header_body">Ask it anything, pet care or not. It knows your pets\' profiles, routines and spend, so answers fit your animals. Private to your account, and never a substitute for a vet.</string>
     <!-- The separator between pet names in the header title. -->
     <string name="assistant_pet_name_separator"> &amp; </string>
@@ -1527,8 +1150,7 @@
     <!-- The same greeting for an account with no name recorded yet. -->
     <string name="assistant_greeting_no_name">Hi. I can see your pet profiles, today\'s checklist and this month\'s spend. What do you want to check?</string>
 
-    <!-- The suggested chips. Each maps to one of the three questions the assistant can actually
-         answer, so a chip never offers something that comes back unanswered. -->
+    <!-- The suggested chips. Each maps to one of the three questions the assistant can actually answer. -->
     <string name="assistant_chip_open_tasks">What\'s left today?</string>
     <string name="assistant_chip_month_spend">How much have I spent?</string>
     <string name="assistant_chip_pet">Is %1$s up to date?</string>
@@ -1538,59 +1160,40 @@
     <string name="cd_assistant_send">Send</string>
     <string name="cd_assistant_thinking">Thinking…</string>
 
-    <!-- The honest fallback. It says what it can do rather than apologising vaguely, because the
-         user's next move is to ask one of the questions it lists. -->
+    <!-- The honest fallback. It says what it can do rather than apologising vaguely. -->
 
 
-    <!-- "2 of today's 5 tasks are still open. Next up: Brush coat." %1$d is how many are open,
-         %2$d how many the day holds in total, and %3$s the next one's title. The plural form is
-         chosen by the open count, the number the word "tasks" belongs to. -->
+    <!-- "2 of today's 5 tasks are still open. Next up: Brush coat." %1$d is how many are open. -->
 
-    <!-- What the conversation says when a reply could not be produced. One sentence per reason,
-         because the reasons need different things from the user: a connection, a key, a wait, or
-         simply another go. Each is shown as an ordinary assistant message rather than a dialog, so
-         the screen is never blank and nothing is lost from the conversation. -->
+    <!-- What the conversation says when a reply could not be produced. -->
     <string name="assistant_error_no_network">I could not reach the assistant service. Check your connection and try again.</string>
-    <!-- The one failure with a setup fix rather than a retry, so it names the file and the property
-         instead of apologising vaguely. -->
+    <!-- The one failure with a setup fix rather than a retry. -->
     <string name="assistant_error_missing_key">No OpenAI API key is set up, so I cannot answer yet. Add OPENAI_API_KEY to local.properties and rebuild the app.</string>
     <string name="assistant_error_invalid_key">The OpenAI API key was rejected. Check that OPENAI_API_KEY in local.properties is correct and still active.</string>
     <string name="assistant_error_rate_limited">Too many requests just now, or the account is out of credit. Wait a moment and try again.</string>
     <string name="assistant_error_bad_response">I got a reply I could not read. Try asking again.</string>
     <string name="assistant_error_unknown">Something went wrong getting that answer. Try asking again.</string>
 
-    <!-- ============================ Notifications ============================
-         The screen the header's pet-count badge opens: everything the app has noticed, newest first.
-
-         **Every sentence here is a template filled from the user's own records**, because every alert
-         is derived rather than stored — see ui/notifications/NotificationsViewModel.kt. Nothing on
-         this screen is generic copy shown to everybody; a tip about weight only appears for a pet
-         whose weight is genuinely blank. -->
+    <!-- ============================ Notifications ============================ -->
     <string name="nav_notifications">Notifications</string>
 
-    <!-- The headline: "3 new alerts". Counts the unread ones only, which is what makes it a thing to
-         act on rather than a total that never changes. -->
+    <!-- The headline: "3 new alerts". Counts the unread ones only, which is what makes it a thing to act. -->
     <plurals name="notifications_new_alerts">
         <item quantity="one">%1$d new alert</item>
         <item quantity="other">%1$d new alerts</item>
     </plurals>
-    <!-- The headline once everything has been read. Wording it as a state rather than "0 new alerts"
-         means the screen reads as finished instead of broken. -->
+    <!-- The headline once everything has been read. Wording it as a state. -->
     <string name="notifications_all_caught_up">You\'re all caught up</string>
 
     <!-- The outlined pill beside the headline. -->
     <string name="notifications_mark_read">Mark read</string>
     <string name="cd_mark_all_read">Mark every alert as read</string>
 
-    <!-- The two group headings. Upper-cased by the style, so they are written normally here — a
-         translator should never have to type capitals a layout could apply. -->
+    <!-- The two group headings. Upper-cased by the style, so they are written normally here. -->
     <string name="notifications_section_today">Today</string>
     <string name="notifications_section_earlier">Earlier</string>
 
-    <!-- The short code on an alert's square badge. Abbreviations rather than words because the badge
-         is a fixed square with room for about four characters; the full name is always in the line
-         underneath, so nothing depends on decoding them. Care reminders take two: the badge says
-         which *kind* of appointment it is, which is the difference between a jab and a check-up. -->
+    <!-- The short code on an alert's square badge. Abbreviations rather than words. -->
     <string name="alert_badge_medication">VAX</string>
     <string name="alert_badge_vet">VET</string>
     <string name="alert_badge_missed">MISS</string>
@@ -1608,31 +1211,19 @@
     <!-- That line in full: "Care reminder · 2h ago". -->
     <string name="alert_meta_format">%1$s · %2$s</string>
 
-    <!-- ===== Alert titles =====
-         Each is one sentence built from real values. -->
+    <!-- ===== Alert titles ===== -->
 
-    <!-- "Ddjw's rabies booster is due tomorrow". %1$s is the pet, %2$s the task as the user wrote it,
-         and %3$s one of the three due phrases below. -->
+    <!-- "Ddjw's rabies booster is due tomorrow". %1$s is the pet, %2$s the task as the user wrote. -->
     <string name="alert_title_care_reminder">%1$s\'s %2$s is due %3$s</string>
     <string name="alert_due_today">today</string>
     <string name="alert_due_tomorrow">tomorrow</string>
     <!-- Anything further out is named by date: "is due on 22 Sep". -->
     <string name="alert_due_on">on %1$s</string>
 
-    <!--
-        "Morning meds went unchecked".
-
-        **Worded to dodge number agreement, deliberately.** The task's title is whatever the user
-        typed, and it may be singular ("Evening walk") or plural ("Morning meds"). A template cannot
-        inflect the verb to match, so "%1$s was not checked off" would read as "Morning meds was not
-        checked off" for half of all tasks. "Went unchecked" is correct for either.
-    -->
+    <!-- "Morning meds went unchecked". -->
     <string name="alert_title_missed_task">%1$s went unchecked</string>
 
-    <!-- "2 expenses added for Ddjw". The plural form is chosen by the count; %2$s is the pet.
-
-         It names no person, and that is not an omission: the app stores no record of who added
-         anything — see AlertContent.Activity. -->
+    <!-- "2 expenses added for Ddjw". The plural form is chosen by the count; %2$s is the pet. -->
     <plurals name="alert_title_activity">
         <item quantity="one">%1$d expense added for %2$s</item>
         <item quantity="other">%1$d expenses added for %2$s</item>
@@ -1649,45 +1240,33 @@
         <item quantity="other">%1$d years</item>
     </plurals>
 
-    <!-- ===== Tips =====
-         One per gap the screen can actually find in the data. Each says what filling the gap buys
-         rather than instructing the user to fill it, which is the difference between a tip and a
-         nag. The first needs no pet name; the rest read better with one. -->
+    <!-- ===== Tips ===== -->
     <string name="alert_tip_no_weight">Weight logging keeps growth charts accurate</string>
     <string name="alert_tip_no_date_of_birth">Add %1$s\'s birthday to track age and milestones</string>
     <string name="alert_tip_no_routine">A care routine fills %1$s\'s checklist automatically</string>
     <string name="alert_tip_no_photo">Add a photo so %1$s stands out on every card</string>
 
-    <!-- ===== How long ago =====
-         Today's alerts are aged relatively, which is how a notification is read while it is still
-         current; anything older is given its date instead, because "51h ago" is arithmetic the user
-         should not have to do. -->
+    <!-- ===== How long ago ===== -->
     <string name="alert_age_just_now">Just now</string>
     <string name="alert_age_minutes">%1$dm ago</string>
     <string name="alert_age_hours">%1$dh ago</string>
 
-    <!-- The red dot. It is a shape with no text, so its meaning is added to the card's own
-         description instead — see NotificationsAdapter. -->
+    <!-- The red dot. It is a shape with no text, so its meaning is added to the card's own description instead. -->
     <string name="cd_alert_unread">Unread</string>
 
-    <!-- The empty state. Friendly rather than apologetic: an empty notifications screen is good news,
-         and saying so is more use than "No items". -->
+    <!-- The empty state. Friendly rather than apologetic: an empty notifications screen is good news, and saying. -->
     <string name="notifications_empty_title">Nothing needs you</string>
     <string name="notifications_empty_message">Reminders, missed care and milestones for your pets will show up here.</string>
 
-    <!-- ================================ Profile screen ================================
-         The screen the header's monogram opens: who is signed in, how the app behaves for them, and
-         the way out. -->
+    <!-- ================================ Profile screen ================================ -->
 
-    <!-- The header's monogram, which opens this screen. A screen reader announces a description in
-         place of the label, so this has to carry the action rather than the letter "p". -->
+    <!-- The header's monogram. -->
     <string name="cd_open_profile">Open your profile</string>
 
     <!-- ============================ The identity card ============================ -->
 
     <string name="cd_change_photo">Change your profile photo</string>
-    <!-- Spoken in place of the photo well when no photo has been added, so a screen reader says what
-         the empty circle is rather than skipping it. -->
+    <!-- Spoken in place of the photo well when no photo has been added. -->
     <string name="cd_profile_photo_empty">No profile photo</string>
     <string name="cd_profile_photo">Your profile photo</string>
 
@@ -1695,16 +1274,13 @@
     <string name="profile_role_owner">Owner</string>
     <string name="profile_role_carer">Carer</string>
 
-    <!-- The dark pill beside it: "2 PETS". Pluralised because "1 PETS" is wrong in a way users
-         notice immediately. -->
+    <!-- The dark pill beside it: "2 PETS". Pluralised. -->
     <plurals name="profile_pet_count_pill">
         <item quantity="one">%d pet</item>
         <item quantity="other">%d pets</item>
     </plurals>
 
-    <!-- Shown in place of the phone line when no number has been recorded. An invitation rather than
-         a blank, so the empty line explains itself instead of looking like something that failed to
-         load. -->
+    <!-- Shown in place of the phone line when no number has been recorded. -->
     <string name="profile_no_phone">No phone number yet</string>
 
     <!-- ============================== The stat row ============================== -->
@@ -1717,41 +1293,26 @@
 
     <string name="profile_section_account">Account</string>
 
-    <!-- The four rows' badges hold glyphs rather than words — a person, an envelope, a handset, a
-         padlock — so there are no strings for them. They were four-letter codes ("NAME", "MAIL", "PHON",
-         "PASS"); see ic_profile_person.xml for why they are not any more. -->
+    <!-- The four rows' badges hold glyphs rather than words — a person, an envelope, a handset, a padlock. -->
 
     <string name="profile_row_name_title">Name &amp; details</string>
-    <!-- "Prashant Pant · owner account" — the name and the role, so the row summarises what pressing
-         EDIT would let the user change. -->
+    <!-- "Prashant Pant · owner account" — the name and the role. -->
     <string name="profile_row_name_subtitle">%1$s · %2$s account</string>
     <string name="profile_action_edit">Edit</string>
 
     <string name="profile_row_email_title">Email address</string>
     <string name="profile_row_phone_title">Phone number</string>
-    <!-- The phone row's second line. The number, then what it is for — this is the number delegation
-         messages are sent *from*, and saying so is the difference between a stored fact and a fact
-         the user understands the point of. -->
+    <!-- The phone row's second line. The number, then. -->
     <string name="profile_row_phone_subtitle">%1$s · used for delegation SMS</string>
     <string name="profile_row_phone_subtitle_empty">Add one so carers know who is texting</string>
 
-    <!--
-        The pale green pill on the email and phone rows.
-
-        **It is a label, not a claim the app can back up.** Nothing in this app verifies an address or
-        a number — there is no mail server and no SMS round trip — so the pill reports that the value
-        was entered and accepted at sign-up, which is the only thing that is true. It is drawn as a
-        status rather than as a button precisely so it never invites a tap that would have to do
-        nothing. See the note on the security card, which makes the same distinction out loud.
-    -->
+    <!-- The pale green pill on the email and phone rows. -->
     <string name="profile_status_verified">Verified</string>
 
     <string name="profile_row_password_title">Change password</string>
     <!-- "Last changed 3 months ago", worked out from the stored timestamp. -->
     <string name="profile_row_password_subtitle">Last changed %1$s</string>
-    <!-- Shown when the password has never been changed since the account was made. Deliberately not
-         "changed when you signed up": those are different facts, and claiming a change that never
-         happened would be a small lie the user could not check. -->
+    <!-- Shown when the password has never been changed since the account was made. -->
     <string name="profile_row_password_subtitle_never">Not changed since you signed up</string>
     <string name="profile_action_update">Update</string>
 
@@ -1760,15 +1321,7 @@
     <string name="profile_section_security">Security</string>
 
     <string name="profile_row_two_factor_title">Two-factor authentication</string>
-    <!--
-        The subtitle describes what is actually protecting the account, and the "on" version names a
-        live figure because the figure is the only part the user can act on: someone down to their
-        last few recovery codes should turn the feature off and on again for a fresh ten, and the row
-        is the only place they would ever find that out.
-
-        The "off" version says what turning it on would buy rather than repeating the switch's own
-        position, which the user can already see.
-    -->
+    <!-- The subtitle describes what is actually protecting the account, and the "on" version names a live figure. -->
     <string name="profile_row_two_factor_on">On · authenticator app · %1$s</string>
     <string name="profile_row_two_factor_off">Off · add a code from an authenticator app at sign-in</string>
     <plurals name="profile_row_two_factor_codes">
@@ -1776,27 +1329,14 @@
         <item quantity="other">%d recovery codes left</item>
     </plurals>
 
-    <!-- An "Unlock with fingerprint" row and its two subtitles used to sit here. Both are gone: the
-         switch stored a preference that nothing enforced, so the app was offering a lock it did not
-         have. See SettingsStore.forgetFingerprintUnlock. -->
+    <!-- An "Unlock with fingerprint" row and its two subtitles used to sit here. -->
 
     <string name="profile_row_reminders_title">Care reminders</string>
-    <!-- This one *is* wired: ReminderManager reads it and withdraws every alarm when it is off. The
-         subtitle says when a reminder actually arrives — at the task's own time. There is no lead
-         time anywhere in the app, so promising one would be describing a feature that does not
-         exist. -->
+    <!-- This one is wired: ReminderManager reads it and withdraws every alarm when it is off. -->
     <string name="profile_row_reminders_on">On · at each task\'s time</string>
     <string name="profile_row_reminders_off">Off · no reminders will be posted</string>
 
-    <!--
-        The pale note under the switches.
-
-        Every row in this card now does what it says, so the note no longer has to disclaim any of
-        them. What is left is the one thing the rows cannot show: where two-factor protection stops.
-        Codes are checked on this device — the same point TwoFactorRepository makes to whoever reads
-        the code — and a user deciding whether this is enough protection deserves to know that, rather
-        than being left assuming it covers a stolen unlocked phone.
-    -->
+    <!-- The pale note under the switches. -->
     <string name="profile_security_note">Two-factor codes are checked on this device, so they protect your account from someone who knows your password — not from someone holding your unlocked phone.</string>
 
     <!-- ============================== PREFERENCES ============================== -->
@@ -1810,9 +1350,7 @@
     <string name="profile_row_reminder_channel_title">Reminders</string>
     <string name="profile_channel_push">Push</string>
     <string name="profile_channel_sms">SMS</string>
-    <!-- Said out loud on the row, because the choice reaches less than its two words suggest: the app
-         has no number of its own to text from, so care reminders stay notifications and only the
-         delegation messages the user sends by hand go out as SMS. -->
+    <!-- Said out loud on the row, because the choice reaches less than its two words suggest. -->
     <string name="profile_row_reminder_channel_subtitle">Care reminders are always notifications; SMS applies to delegation</string>
 
     <string name="profile_row_week_start_title">Week starts</string>
@@ -1822,14 +1360,10 @@
     <string name="profile_row_currency_title">Currency</string>
     <string name="profile_currency_npr" translatable="false">NPR</string>
     <string name="profile_currency_usd" translatable="false">USD</string>
-    <!-- The honest half of the currency setting. The app has no exchange-rate source, so switching
-         changes the symbol and leaves every digit alone — and a user who was not told that would read
-         a relabelled rupee figure as a dollar one. -->
+    <!-- The honest half of the currency setting. The app has no exchange-rate source. -->
     <string name="profile_row_currency_subtitle">Symbol only, amounts are not converted</string>
 
-    <!-- ========================== DELEGATION CONTACTS ==========================
-         The people the user hands a checklist to. Not a "care team": nobody is invited, nobody signs
-         in, and no access is granted — see DelegationContactStore. -->
+    <!-- ========================== DELEGATION CONTACTS ========================== -->
 
     <string name="profile_section_contacts">Delegation contacts</string>
     <string name="profile_row_contact_subtitle_empty">Tap to text them today\'s checklist</string>
@@ -1869,16 +1403,14 @@
 
     <string name="profile_row_export_title">Export my records</string>
     <string name="profile_row_export_subtitle">Pets, tasks and expenses as CSV</string>
-    <!-- The name offered in the system save dialog. Dated, so exporting twice does not silently
-         suggest overwriting the first file. -->
+    <!-- The name offered in the system save dialog. Dated. -->
     <string name="profile_export_file_name">petcare-records-%1$s.csv</string>
     <string name="profile_export_success">Records saved.</string>
     <string name="profile_export_failed">Could not write the file. Nothing was exported.</string>
     <string name="profile_export_empty">There are no records to export yet.</string>
 
     <string name="profile_row_backup_title">Backup &amp; sync</string>
-    <!-- "Last backup 3 minutes ago", from the same sync status the dashboard reports, so the two can
-         never give differently-worded answers to the same question. -->
+    <!-- "Last backup 3 minutes ago", from the same sync status the dashboard reports. -->
     <string name="profile_row_backup_subtitle">Last backup %1$s</string>
     <string name="profile_row_backup_never">Not backed up yet</string>
     <string name="profile_row_backup_syncing">Backing up now</string>
@@ -1891,27 +1423,16 @@
     <string name="profile_row_delete_title">Delete account</string>
     <string name="profile_row_delete_subtitle">Removes every pet and record permanently</string>
 
-    <!--
-        Deleting the account: two dialogs, not one.
-
-        The first explains and offers a way out. The second asks the user to type the word, which is
-        the standard pattern for an action with no undo — it stops a mis-tap on the first dialog's
-        confirm button from destroying every record on the device, and the typing is a moment in which
-        the user re-reads what they are about to do. It also asks for the password, which Firebase
-        Authentication checks before it deletes the account.
-    -->
+    <!-- Deleting the account: two dialogs, not one. -->
     <string name="profile_delete_title">Delete your account?</string>
     <string name="profile_delete_message">Your account is deleted, along with every pet, routine, task, expense and saved place on this device. This cannot be undone.</string>
     <string name="profile_delete_continue">Continue</string>
     <string name="profile_delete_confirm_title">Type DELETE and your password</string>
     <string name="profile_delete_confirm_hint">DELETE</string>
-    <!-- The password field in the same dialog. Firebase only deletes an account after its password has
-         just been checked, and asking also proves it is the owner, not someone holding an unlocked
-         phone. -->
+    <!-- The password field in the same dialog. Firebase only deletes an account after its password has just been checked. -->
     <string name="profile_delete_password_hint">Password</string>
     <string name="profile_delete_wrong_password">That password is not right, so nothing was deleted.</string>
-    <!-- Not translatable: it is the exact text the field is compared against, and translating one half
-         of that comparison without the other would lock the user out of their own confirmation. -->
+    <!-- Not translatable: it is the exact text the field is compared against. -->
     <string name="profile_delete_confirm_word" translatable="false">DELETE</string>
     <string name="profile_delete_confirm_button">Delete everything</string>
     <string name="profile_delete_mismatch">That did not match, so nothing was deleted.</string>
@@ -1919,8 +1440,7 @@
     <!-- ============================== Footer ============================== -->
 
     <string name="profile_log_out">Log out</string>
-    <!-- "PetCare 1.0 · records stored on this device". The version comes from BuildConfig, so the line
-         cannot claim a version the build is not. -->
+    <!-- "PetCare 1.0 · records stored on this device". The version comes from BuildConfig. -->
     <string name="profile_version_format">PetCare %1$s · records stored on this device</string>
 
     <!-- ========================== Editing the account ========================== -->
@@ -1928,14 +1448,11 @@
     <string name="account_details_title">Name &amp; details</string>
     <string name="account_details_name_label">Full name</string>
     <string name="account_details_phone_label">Phone number</string>
-    <!-- Says what the number is *for*, now that it does something: it is what the account can be
-         found by at sign-in, as well as what carers see. A field whose purpose is stated is one
-         people are willing to fill in. -->
+    <!-- Says what the number is for, now that it does something. -->
     <string name="account_details_phone_helper">Optional. You can sign in with this number, and carers see it on your profile.</string>
     <string name="account_details_role_label">Your role</string>
     <string name="account_details_role_helper">Owner if the pets are yours; carer if you look after someone else\'s.</string>
-    <!-- The email is shown but not editable, and the screen says why rather than leaving a greyed-out
-         field to be puzzled over. -->
+    <!-- The email is shown but not editable, and the screen says why. -->
     <string name="account_details_email_label">Email address</string>
     <string name="account_details_email_helper">Your sign-in address, and where your backup is filed. It cannot be changed here.</string>
     <string name="account_details_save">Save changes</string>
@@ -1953,21 +1470,11 @@
     <string name="change_password_changed">Password changed.</string>
     <string name="change_password_current_required">Enter your current password.</string>
     <string name="change_password_current_wrong">That is not your current password.</string>
-    <!-- A "change_password_helper" line and a "too short" error used to sit here, both naming the
-         minimum length. Both are gone: length is now one of six rules, the checklist under the field
-         shows all six live, and a rejected password reports whichever rule it broke through the
-         shared messages in the validation section above. Two screens saying the same policy in two
-         different wordings is exactly how they come to disagree. -->
+    <!-- A "change_password_helper" line and a "too short" error used to sit here, both naming the minimum length. -->
     <string name="change_password_mismatch">The two new passwords do not match.</string>
     <string name="change_password_same">That is the password you already have.</string>
 
-    <!-- ================================ "Add a place" ================================
-         The sub-screen reached from "+ ADD PLACE" in the Places tab's "Saved places" heading.
-
-         The device's GPS is the *only* source of a place's position here: the user is standing at the
-         vet, the groomer or the park, and the screen's whole job is to turn that into a saved record
-         in two taps. When there is no fix to be had — permission refused, or no signal — the demo
-         location below lets the flow be walked through anyway. -->
+    <!-- ================================ "Add a place" ================================ -->
 
     <!-- The entry point, and the screen's own header. -->
     <string name="places_add_place_pill">+ Add place</string>
@@ -1977,16 +1484,9 @@
     <string name="add_place_subheading">Standing at the vet, groomer or park? Save it in two taps.</string>
     <string name="cd_add_place_back">Back to places</string>
 
-    <!-- ========================= The shared map location picker =========================
-         Used by both Places forms, which is why these are not named after either of them: the same
-         card chooses a new place's position and corrects a saved one's, so a string that said "add"
-         would be wrong on half the screens it appears on. -->
+    <!-- ========================= The shared map location picker ========================= -->
 
-    <!-- The credit for the map's tiles and cartography, drawn over the bottom-start of every map.
-         Both MapTiler's terms and OpenStreetMap's licence require it to be visible on the map rather
-         than behind a button, and tapping it opens MapTiler's copyright page — see MapStyles.
-
-         Not translatable: these are the two organisations' names, which do not change by locale. -->
+    <!-- The credit for the map's tiles and cartography, drawn over the bottom-start of every map. -->
     <string name="map_attribution" translatable="false">© MapTiler © OpenStreetMap</string>
     <string name="cd_map_attribution">Map data by MapTiler and OpenStreetMap. Opens the copyright page.</string>
 
@@ -1994,91 +1494,56 @@
     <string name="cd_map_picker">Interactive map. Drag it to move the pin, pinch to zoom.</string>
     <string name="cd_map_picker_recentre">Use my current location</string>
 
-    <!-- The two current-location controls. Both run the same action; the pill is the discoverable
-         version and the corner crosshair is the shortcut, so only the pill needs a label. Rendered in
-         capitals by the pill's own style, so the string itself stays in ordinary sentence case. -->
+    <!-- The two current-location controls. Both run the same action. -->
     <string name="map_picker_im_here">I\'m here</string>
     <string name="map_picker_locating">Locating…</string>
 
-    <!-- Shown over the card when the map itself could not be loaded — no connection, or the tile
-         service unreachable. It names the way forward rather than only stating the problem, because
-         "I'm here" still works with no map on screen. -->
+    <!-- Shown over the card when the map itself could not be loaded — no connection. -->
     <string name="map_picker_unavailable">The map could not be loaded. Check your connection — you can still tap “I\'m here” to save where you are.</string>
-    <!-- The other reason a map can be missing, and the only one the person reading it can do nothing
-         about from inside the app: this build has no MapTiler key. It names the file rather than
-         saying "check your connection", which would send somebody to their Wi-Fi settings over a
-         line missing from local.properties. See app/build.gradle.kts and MapStyles. -->
+    <!-- The other reason a map can be missing. -->
     <string name="map_picker_no_key">No map key in this build. Add MAPTILER_API_KEY to local.properties and rebuild — “I\'m here” still works without it.</string>
 
-    <!-- The line under the map. Present on arrival rather than only after a first drag: a map that can
-         be moved to choose a point looks exactly like one that cannot, so the screen has to say so.
-         It names all three routes, because each one is the quickest for a different place: a search
-         for anything with a name, the pin for anything without, and "I'm here" for where you stand. -->
+    <!-- The line under the map. Present on arrival rather than only after a first drag. -->
     <string name="map_picker_hint">Search for a place by name, drag the map to put the pin on it, or tap “I\'m here” to use your own position</string>
 
     <!-- ~~~~~~~~~~ Searching for a place by name ~~~~~~~~~~ -->
 
-    <!-- The search field's placeholder. Examples rather than an instruction: "Search for a place"
-         would not tell the user that a hospital's name works as well as a neighbourhood's, and that
-         is the one thing about this field worth knowing. -->
+    <!-- The search field's placeholder. Examples rather than an instruction. -->
     <string name="place_search_hint">Search a hospital, park or area…</string>
     <!-- The ✕ inside the field. TalkBack announces it as a button, so the label is the action. -->
     <string name="cd_place_search_clear">Clear the search</string>
-    <!-- While a request is in flight. The panel says this rather than sitting blank, which would read
-         as a rendering fault over the map. -->
+    <!-- While a request is in flight. The panel says this rather than sitting blank. -->
     <string name="place_search_searching">Searching…</string>
-    <!-- And when the search came back with nothing. It names the way forward, because the place may
-         genuinely not be in the map data and the pin is how it gets saved anyway. -->
+    <!-- And when the search came back with nothing. It names the way forward. -->
     <string name="place_search_empty">No places found. Try fewer words, or drag the map to the spot.</string>
 
-    <!-- The map-type control and its menu. Two named layers, each shown by name rather than as "the
-         other one", so the control says what the map is showing as well as what it can change to.
-         "Satellite" is MapTiler's Satellite Hybrid — imagery with the streets and names still on it,
-         which is what the word turns on in every mainstream maps app. See MapType. -->
+    <!-- The map-type control and its menu. Two named layers, each shown by name rather than as "the other. -->
     <string name="map_type_button">Map type</string>
     <string name="map_type_normal">Normal</string>
     <string name="map_type_satellite">Satellite</string>
 
-    <!-- ===================== The map / satellite toggle =====================
-         Shared by the Places tab's map and the Add a place map, because it is the same control on the
-         same object and a layer button that said different things in two corners of the app would be
-         two controls rather than one.
-
-         **The label names where the tap leads, not where the map already is.** "SATELLITE" on a drawn
-         map means "press for satellite" — the reading a two-state toggle gets when its face is an
-         action. The content descriptions below then say both halves out loud, because a screen reader
-         user cannot see which layer is underneath the button to infer the other one from. -->
+    <!-- ===================== The map / satellite toggle ===================== -->
     <string name="map_layer_switch_to_satellite">Satellite</string>
     <string name="map_layer_switch_to_map">Map</string>
     <string name="cd_map_layer_showing_map">Showing the drawn map. Switch to satellite imagery.</string>
     <string name="cd_map_layer_showing_satellite">Showing satellite imagery. Switch to the drawn map.</string>
 
-    <!-- ===================== The "Selected location" card =====================
-         What the centre pin is pointing at, under the map on both Places forms. -->
+    <!-- ===================== The "Selected location" card ===================== -->
     <string name="selected_location_label">Selected location</string>
-    <!-- Before anything has been chosen. An instruction rather than "None selected", because the user
-         is not being told a value is missing — they are being told what to do next. -->
+    <!-- Before anything has been chosen. An instruction rather than "None selected". -->
     <string name="selected_location_empty">Move the map to put the pin on the place, or tap “I\'m here”.</string>
     <string name="selected_location_resolving">Finding address…</string>
-    <!-- When the lookup succeeded but this point simply has no name — the middle of a field, a track
-         with no address. Said plainly, because it is an ordinary answer and the place is perfectly
-         saveable: the coordinates under it are the thing actually stored. -->
+    <!-- When the lookup succeeded but this point simply has no name — the middle of a field. -->
     <string name="selected_location_unnamed">Dropped pin</string>
 
-    <!-- The coordinate pair: "27.6771° N, 85.3132° E". The hemisphere letters are arguments rather
-         than fixed text, because a place saved south of the equator or west of Greenwich would
-         otherwise be labelled with the wrong one — see SelectedLocationCard.formatCoordinates. -->
+    <!-- The coordinate pair: "27.6771° N, 85.3132° E". The hemisphere letters are arguments. -->
     <string name="map_coordinates_format">%1$s° %2$s, %3$s° %4$s</string>
     <string name="coordinate_north" translatable="false">N</string>
     <string name="coordinate_south" translatable="false">S</string>
     <string name="coordinate_east" translatable="false">E</string>
     <string name="coordinate_west" translatable="false">W</string>
 
-    <!-- ===================== When the current position cannot be used =====================
-         Four separate messages rather than one, because the user can act on three of them and the
-         actions are different: grant the permission, turn the master switch on, or step outside. A
-         single "couldn't get your location" would send somebody to the window when what they needed
-         was one tap in quick settings. None of them is a dead end — the map is still there to move. -->
+    <!-- ===================== When the current position cannot be used ===================== -->
     <string name="location_error_permission">Location permission is needed to use your current position. You can still move the map to choose the place.</string>
     <string name="location_error_services_off">Turn on location services to use “I\'m here”.</string>
     <string name="location_error_no_fix">Couldn\'t get your current location. Try again near a window or outdoors.</string>
@@ -2091,89 +1556,66 @@
     <string name="add_place_note_label">Note</string>
     <string name="add_place_note_hint">e.g. Ask for Dr. Shrestha</string>
 
-    <!-- The rest of the form, brought over so that everything a saved place can be edited to hold can
-         also be given when it is created — see requirement 15. The labels are the full place form's
-         own, reused rather than reworded, so the same field is called the same thing on both screens. -->
+    <!-- The rest of the form, brought. -->
     <string name="add_place_area_hint">e.g. Pulchowk, Lalitpur</string>
     <string name="add_place_phone_hint">Phone number</string>
 
-    <!-- The save button says what is missing rather than only greying out, so a user who cannot press
-         it knows whether to keep typing or to choose a point on the map. -->
+    <!-- The save button says what is missing rather than only greying out. -->
     <string name="add_place_save">Save place</string>
     <string name="add_place_save_needs_name">Name this place</string>
     <string name="add_place_save_needs_location">Choose a location on the map</string>
 
-    <!-- The summary card: what will be saved on the first line, where its position came from on the
-         second. The two lines are joined with a newline by the fragment. -->
+    <!-- The summary card: what will be saved on the first line, where its position came from on the second. -->
     <string name="add_place_summary_untitled">Untitled place</string>
-    <!-- The middle dot is the separator the rest of the app uses between a name and what it is
-         ("Vet clinic · Pulchowk"), so the summary reads in the same voice as the card it becomes. -->
+    <!-- The middle dot is the separator the rest of the app uses between a name. -->
     <string name="add_place_summary_line">%1$s · %2$s</string>
     <string name="add_place_summary_geotagged">Geotagged at %1$s</string>
     <string name="add_place_summary_waiting">No location chosen yet</string>
 
-    <!-- The note that stands in when the user left the note box empty.
-
-         The "saved by you" provenance that used to be written into the place's *area* field alongside
-         it has gone: that field now carries the real address the map resolved, which is both more
-         useful on the saved-place row and no longer a placeholder standing where a value should be. -->
+    <!-- The note that stands in when the user left the note box empty. -->
     <string name="add_place_default_note">Saved on site. Add hours and a phone number any time.</string>
 
-    <!-- The confirmation on the Places tab once the new place is in the list. The quotes are curly on
-         purpose: they are the typographic ones the design uses. -->
+    <!-- The confirmation on the Places tab once the new place is in the list. -->
     <string name="places_saved_snackbar">“%1$s” saved to places</string>
     <string name="places_saved_undo">Undo</string>
     <string name="places_saved_undone">“%1$s” was not saved</string>
 
-    <!-- ============================== Vaccination history ==============================
-         The card on a pet's detail screen, and the screen that adds a record to it. -->
+    <!-- ============================== Vaccination history ============================== -->
 
     <string name="vaccination_card_title">Vaccination history</string>
     <string name="vaccination_add_record">+ Record</string>
     <string name="cd_add_vaccination">Record a vaccination</string>
 
-    <!-- The status pill. Five states worked out from the due date every time the card is drawn — see
-         ui/pet/VaccinationStatus.kt. Upper-cased by the pill's own style rather than being written in
-         capitals here, so a translation is not forced into a case its language may not have. -->
+    <!-- The status pill. Five states worked out from the due date every time the card is drawn. -->
     <string name="vaccination_status_done">Done</string>
     <string name="vaccination_status_overdue">Overdue</string>
     <string name="vaccination_status_due_today">Due today</string>
-    <!-- "Due in 11d". The day count is abbreviated because the pill is the narrowest element in the
-         row and "Due in 11 days" would either wrap or push the pet's vaccine name out of the way. -->
+    <!-- "Due in 11d". The day count is abbreviated. -->
     <string name="vaccination_status_due_in">Due in %1$dd</string>
     <string name="vaccination_status_up_to_date">Up to date</string>
 
-    <!-- A row's second line. The middle dot is the separator the app uses throughout between a fact
-         and where it came from ("Vet clinic · Pulchowk"). The second form covers a one-off dose, which
-         has no next date to name. -->
+    <!-- A row's second line. The middle dot is the separator the app uses throughout between a fact and where it came. -->
     <string name="vaccination_meta_next_due">Next due %1$s · %2$s</string>
     <string name="vaccination_meta_one_off">One-off dose · %1$s</string>
-    <!-- The same two lines when no clinic was recorded: the dot would otherwise dangle with nothing
-         after it. -->
+    <!-- The same two lines when no clinic was recorded: the dot would otherwise dangle with nothing after it. -->
     <string name="vaccination_meta_next_due_no_clinic">Next due %1$s</string>
     <string name="vaccination_meta_one_off_no_clinic">One-off dose</string>
 
-    <!-- Shown in the list's place when a pet has no records. It says what to do and why, rather than
-         only "none yet" — the same reasoning as the empty routines message above. -->
+    <!-- Shown in the list's place when a pet has no records. -->
     <string name="vaccination_empty">No vaccinations recorded yet. Add past shots so the next due date is tracked.</string>
 
-    <!-- How TalkBack reads one row. The four views that make up a row are hidden from it individually
-         (see item_vaccination.xml) and replaced by this one sentence, because "22", "SEP 25",
-         "FVRCP (core)" and "Overdue" read out separately say much less than the three facts joined
-         up. -->
+    <!-- How TalkBack reads one row. The four views that make up a row are hidden from it individually. -->
     <string name="vaccination_row_description">%1$s, given %2$s, %3$s</string>
 
     <!-- ~~~~~~~~~~ "Record a vaccination" ~~~~~~~~~~ -->
 
-    <!-- The shared header's title. One word, because the header has room for one beside its two
-         controls — the same treatment the pet detail screen gives a pet's name. -->
+    <!-- The shared header's title. One word, because the header has room for one beside its two controls. -->
     <string name="vaccination_header_title">Vaccination</string>
     <string name="record_vaccination_heading">Record a vaccination</string>
     <string name="record_vaccination_for_pet">for %1$s</string>
     <string name="cd_record_vaccination_back">Back to pet</string>
 
-    <!-- The preset chips. Species-aware: a cat is never offered DHPP and a dog is never offered
-         FVRCP, because a shortcut that fills in the wrong vaccine is worse than no shortcut. -->
+    <!-- The preset chips. Species-aware: a cat is never offered DHPP and a dog is never offered FVRCP. -->
     <string name="record_preset_fvrcp">FVRCP</string>
     <string name="record_preset_rabies">Rabies</string>
     <string name="record_preset_felv">FeLV</string>
@@ -2186,8 +1628,7 @@
     <string name="record_vaccine_hint">e.g. Rabies</string>
     <string name="record_date_given_label">Date given</string>
     <string name="record_next_due_label">Next due</string>
-    <!-- Shown in the "next due" field when the interval is "Once": the field is empty because there is
-         no next dose, which is a different thing from the user not having filled it in yet. -->
+    <!-- Shown in the "next due" field when the interval is "Once": the field is empty. -->
     <string name="record_next_due_none">No repeat</string>
     <string name="record_date_given_picker_title">Date given</string>
     <string name="record_next_due_picker_title">Next due</string>
@@ -2205,8 +1646,7 @@
     <string name="record_checklist_meta">Creates a vet-visit task on the due date</string>
     <string name="cd_record_checklist_toggle">Add the next dose to the checklist</string>
 
-    <!-- The readback above the save button, as three lines joined with newlines by the fragment. The
-         third appears only when a clinic was typed. -->
+    <!-- The readback above the save button, as three lines joined with newlines by the fragment. -->
     <string name="record_summary_untitled">Unnamed vaccine</string>
     <string name="record_summary_name">%1$s — %2$s</string>
     <string name="record_summary_dates">Given %1$s · next due %2$s</string>
@@ -2214,8 +1654,7 @@
 
     <string name="record_save">Save record</string>
 
-    <!-- The task created for the due date when the checklist toggle is on. "Vaccine card" is what the
-         owner has to bring to the appointment, which is exactly what the supplies field is for. -->
+    <!-- The task created for the due date when the checklist toggle is on. -->
     <string name="record_task_title">%1$s due</string>
     <string name="record_task_supplies">Vaccine card</string>
 

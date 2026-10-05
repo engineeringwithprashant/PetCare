@@ -1,9 +1,4 @@
-<!--
-    Bin icon drawn behind a checklist row as it is swiped left to delete a task.
-
-    Drawn onto the RecyclerView's canvas by ChecklistSwipeCallback rather than placed in a layout,
-    so it carries no tint here — the callback tints it from the Material 3 theme.
--->
+<!-- Bin icon drawn behind a checklist row as it is swiped left to delete a task. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

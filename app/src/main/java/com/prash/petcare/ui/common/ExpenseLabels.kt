@@ -11,17 +11,7 @@ import java.text.NumberFormat
 import kotlin.math.abs
 import kotlin.math.round
 
-/**
- * Turns spending values into text for the screen.
- *
- * The companion to [CareLabels.kt][labelRes] for the expense side of the app — category names,
- * badges, colours and money — and it exists for the same reason: labels and icons belong to the UI layer, so the data layer stays free of Android
- * resource references and can be unit-tested on a plain JVM.
- *
- * [ExpenseCategory] is deliberately kept separate from `TaskCategory` even though a few names
- * overlap, so these mappings are separate too — sharing them would couple two enums that answer
- * different questions.
- */
+/** Turns spending values into text for the screen. */
 
 /** Display name for a spending category, e.g. MEDICATION becomes "Medication". */
 @StringRes
@@ -37,15 +27,7 @@ fun ExpenseCategory.labelRes(): Int = when (this) {
     ExpenseCategory.OTHER -> R.string.expense_category_other
 }
 
-/**
- * Icon for a spending category.
- *
- * Pairs with [labelRes] so a category can be shown as a symbol alongside its name, which is read
- * far faster than a word when scanning the breakdown for where the money went.
- *
- * Like the labels, this `when` has no `else` branch: Kotlin then requires every constant to be
- * listed, so adding a category will not compile until an icon has been chosen for it.
- */
+/** Icon for a spending category. */
 @DrawableRes
 fun ExpenseCategory.iconRes(): Int = when (this) {
     ExpenseCategory.FOOD -> R.drawable.ic_category_feeding
@@ -59,20 +41,7 @@ fun ExpenseCategory.iconRes(): Int = when (this) {
     ExpenseCategory.OTHER -> R.drawable.ic_category_other
 }
 
-/**
- * The emoji that stands for a spending category: 💊 for medication, 🍖 for food, 🎾 for toys.
- *
- * What the badge on an expense card shows, in place of the "MED" / "GRM" abbreviations it used to
- * carry — see the note in strings.xml for why a picture beats three capitals in a 44dp square, and
- * why these particular emoji were picked.
- *
- * A `@StringRes` rather than a Kotlin constant so it is set the same way as any other text — an
- * emoji is characters, not a drawable, which is exactly what makes it free to place in a badge, a
- * chip or a dropdown row with no artwork and no dark-mode variant.
- *
- * Like the labels, this `when` has no `else`: adding a category will not compile until it has been
- * given a symbol.
- */
+/** The emoji that stands for a spending category: 💊 for medication, 🍖 for food, 🎾 for toys. */
 @StringRes
 fun ExpenseCategory.emojiRes(): Int = when (this) {
     ExpenseCategory.FOOD -> R.string.expense_emoji_food
@@ -86,29 +55,14 @@ fun ExpenseCategory.emojiRes(): Int = when (this) {
     ExpenseCategory.OTHER -> R.string.expense_emoji_other
 }
 
-/**
- * The category as it appears where it is *chosen* — "💊  Medication".
- *
- * The emoji alone is enough on a card, where the row beneath already names the category in words.
- * In the form's dropdown it is not: the user is picking between nine options and must be able to
- * read what each one is, so the symbol leads and the name follows. Showing the same pair in the
- * closed field is what makes the chosen category recognisable at a glance afterwards.
- */
+/** The category as it appears where it is chosen — "💊 Medication". */
 fun ExpenseCategory.emojiLabel(context: Context): String = context.getString(
     R.string.category_emoji_label,
     context.getString(emojiRes()),
     context.getString(labelRes())
 )
 
-/**
- * The colour that stands for a spending category: its segment in the total card's stacked bar, and
- * the dot beside it in the legend.
- *
- * Fixed per category rather than handed out by rank, so "green is grooming" stays true from one
- * month to the next and between pets — a colour that meant medication in September and food in
- * October would make the bar impossible to read at a glance. See the category section of colors.xml
- * for how the values were chosen.
- */
+/** The colour that stands for a spending category: its segment in the total card's stacked bar. */
 @ColorRes
 fun ExpenseCategory.colorRes(): Int = when (this) {
     ExpenseCategory.FOOD -> R.color.expense_category_food
@@ -122,42 +76,10 @@ fun ExpenseCategory.colorRes(): Int = when (this) {
     ExpenseCategory.OTHER -> R.color.expense_category_other
 }
 
-/**
- * Builds the prefix written before every amount: the chosen symbol and a non-breaking space.
- *
- * A symbol chosen by the app rather than `NumberFormat.getCurrencyInstance()`, which picks the
- * currency from the device's *region*. The app records what the user spent in one currency; a phone
- * set to English (United States) would otherwise relabel every one of those amounts as dollars
- * without changing a digit — the same numbers, silently claiming to be a different currency.
- *
- * **Which symbol is a setting, not a conversion.** The user chooses it on the profile screen and the
- * digits are left exactly as stored: there is no exchange-rate source anywhere in the app, so turning
- * rupees into dollars would mean inventing a rate that goes stale the day it is written. See
- * [com.prash.petcare.data.local.CurrencyPreference], and the note the profile row carries so nobody
- * reads a relabelled figure as a converted one.
- *
- * The space is non-breaking, so a line that wraps can never leave "Rs" stranded at the end of one
- * line and the number at the start of the next.
- */
+/** Builds the prefix written before every amount: the chosen symbol and a non-breaking space. */
 private fun prefixFor(symbol: String): String = symbol + " "
 
-/**
- * Formats a stored amount as money for display: "Rs 4,665", or "Rs 425.50".
- *
- * **Minor units only when there are any.** Most pet spending is in whole rupees, and ".00" on every
- * row of a list is noise that makes the figures harder to compare; an amount that does have them
- * shows both digits so "Rs 425.5" never appears. The total card always shows them — see
- * [splitCurrency].
- *
- * The digits follow the device's locale for grouping and the decimal separator. The formatter is
- * created per call on purpose: [NumberFormat] is not thread-safe, and a formatter cached for the old
- * locale would survive the user changing language.
- *
- * @param symbol Which symbol to write in front, from
- *   [com.prash.petcare.data.local.CurrencyPreference.symbol]. Passed in rather than read here, so this
- *   file stays a pure function of its arguments — which is what lets a screen re-render from a flow
- *   when the setting changes, instead of having to be told to refresh.
- */
+/** Formats a stored amount as money for display: "Rs 4,665", or "Rs 425.50". */
 fun formatCurrency(amount: Double, symbol: String): String {
     val isWhole = abs(amount - round(amount)) < HALF_PAISA
     val format = NumberFormat.getNumberInstance().apply {
@@ -168,15 +90,7 @@ fun formatCurrency(amount: Double, symbol: String): String {
     return prefixFor(symbol) + format.format(amount)
 }
 
-/**
- * An amount split into the part before the decimal separator and the part from it onwards:
- * ("Rs 5,240", ".00").
- *
- * For the total card, where the minor units are drawn smaller than the major ones. The split is done on the
- * *formatted* string, at the locale's own separator, so rounding is settled first — 5,239.999 becomes
- * "5,240" and ".00" rather than "5,239" and ".100" — and a locale that writes "5.240,00" splits at
- * the comma.
- */
+/** An amount split into the part before the decimal separator and the part from it onwards: ("Rs 5,240", ".00"). */
 fun splitCurrency(amount: Double, symbol: String): Pair<String, String> {
     val formatted = NumberFormat.getNumberInstance().apply {
         minimumFractionDigits = 2
@@ -195,23 +109,7 @@ fun splitCurrency(amount: Double, symbol: String): Pair<String, String> {
 /** Anything closer to a whole rupee than half a paisa prints as one. */
 private const val HALF_PAISA = 0.005
 
-/**
- * Formats a stored amount for an editable text field, e.g. 24.5 becomes "24.5" or "24,5".
- *
- * Separate from [formatCurrency] because a form field has different needs from a label. A currency
- * symbol and thousands separators are helpful when reading a total, but in a field they are text
- * the user has to delete before they can correct the figure — so grouping is switched off and no
- * symbol is added.
- *
- * It is still locale-aware, which is the point of not simply calling [Double.toString]: that always
- * emits a full stop, while the `numberDecimal` keypad offers whichever separator the locale uses.
- * A German user would otherwise be shown "24.5" in a field whose keyboard has no full stop on it.
- * It also avoids [Double.toString]'s scientific notation, which would turn a large amount into
- * something like "1.0E7".
- *
- * The two-decimal ceiling matches how money is written; a stored value with more precision than
- * that could only have come from arithmetic the app never does.
- */
+/** Formats a stored amount for an editable text field, e.g. 24.5 becomes "24.5" or "24,5". */
 fun formatAmountForInput(amount: Double): String {
     val formatter = NumberFormat.getNumberInstance().apply {
         isGroupingUsed = false

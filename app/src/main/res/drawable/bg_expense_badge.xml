@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The rounded grey square behind the category abbreviation ("MED", "FOOD") on a Money-tab expense
-    card.
-
-    Filled from ?attr/colorSurfaceVariant — the quieter surface — so it reads as a soft tile set into
-    the white card in light mode and a slightly raised one on the charcoal card in dark mode, with no
-    second drawable. Deliberately grey for every category rather than in the category's colour: the
-    colours belong to the chart at the top, and repeating them on every card would turn the list into
-    a second, noisier chart.
--->
+<!-- The rounded grey square behind the category abbreviation ("MED", "FOOD") on a Money-tab expense card. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 

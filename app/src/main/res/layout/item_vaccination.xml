@@ -1,29 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One row of a pet's vaccination history card: the date it was given in a narrow column, a coloured
-    bar, the vaccine's name with its next due date and clinic beneath, and the status pill.
-
-    **A ConstraintLayout** for the reason item_coming_up.xml uses one — the pieces relate to each other
-    in both directions. The text block has to sit between the bar and the pill and leave room for both,
-    while the date column and the pill centre on that text block whatever height it takes.
-
-    **The bar is the one thing that does not centre: it stretches.** Its top and bottom are constrained
-    to the text block's, with a height of 0dp, so it grows to exactly the height of the row's tallest
-    content — which is what the design's `align-self: stretch` means. A fixed height would leave it
-    short beside a two-line clinic name and over-long beside a one-line row.
-
-    **The date column has a fixed width** rather than wrapping its contents. That is what puts every
-    row's bar at the same x-position down the card: left to wrap, a row dated "4" would sit its bar
-    further left than one dated "22", and the card would look ragged.
-
-    The hairline comes at the *top* of every row, the first included, because in the design a line also
-    separates the first row from the card's header — so each row simply brings its own line with it,
-    and the empty state brings the same one. That is simpler than an ItemDecoration for a list a pet
-    realistically keeps to a handful of rows.
-
-    Not clickable: the history is read-only in this pass, and a ripple on a row that does nothing
-    when pressed would promise an action that is not there.
--->
+<!-- One row of a pet's vaccination history card: the date it was given in a narrow column, a coloured bar. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -41,12 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- The date column: "22" over "SEP 25".
-
-         importantForAccessibility="noHideDescendants" hides both from TalkBack, because the adapter
-         puts the whole row — date, vaccine, status and all — into one spoken description on the root.
-         Left visible they would be read out as two meaningless fragments, "22" and "SEP 25", before
-         the sentence that actually explains them. -->
+    <!-- The date column: "22" over "SEP 25". -->
     <LinearLayout
         android:id="@+id/dateColumn"
         android:layout_width="@dimen/vaccination_date_width"
@@ -75,9 +46,7 @@
 
     </LinearLayout>
 
-    <!-- The status bar. bg_pill turns a 3dp-wide rectangle into a capsule, exactly as it does for the
-         dashboard's category bars; the adapter tints it with the row's status colour. Height 0dp
-         between the text block's edges is what makes it stretch — see the note above. -->
+    <!-- The status bar. bg_pill turns a 3dp-wide rectangle into a capsule. -->
     <View
         android:id="@+id/statusBar"
         android:layout_width="@dimen/vaccination_bar_width"
@@ -89,11 +58,7 @@
         app:layout_constraintStart_toEndOf="@id/dateColumn"
         app:layout_constraintTop_toTopOf="@id/textBlock" />
 
-    <!-- The vaccine's name over its meta line. Width 0dp between the bar and the pill means "fill what
-         is left", which is what lets a long clinic name wrap instead of pushing the pill off the card.
-
-         The vertical padding lives here, on the tallest element, so the row's height follows its text
-         rather than being fixed. -->
+    <!-- The vaccine's name over its meta line. Width 0dp between the bar and the pill means "fill what is left". -->
     <LinearLayout
         android:id="@+id/textBlock"
         android:layout_width="0dp"
@@ -126,9 +91,7 @@
 
     </LinearLayout>
 
-    <!-- The status pill, centred on the text block. Its own width, so the text block above yields to
-         it rather than the other way round — a pill that shrank to fit a long vaccine name would
-         truncate the one word that says how urgent the row is. -->
+    <!-- The status pill, centred on the text block. Its own width, so the text block above yields. -->
     <TextView
         android:id="@+id/statusPill"
         style="@style/PetCare.Vaccination.StatusPill"

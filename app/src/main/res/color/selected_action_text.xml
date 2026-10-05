@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Label of the Delegate button, with the Material-standard 38% strength when disabled. Paired with
-     selected_action_background.xml. -->
+<!-- Label of the Delegate button, with the Material-standard 38% strength when disabled. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:alpha="0.38" android:color="?attr/colorOnSurface" android:state_enabled="false" />
     <item android:color="?attr/colorOnSelectedContainerNeutral" />

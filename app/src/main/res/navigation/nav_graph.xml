@@ -1,84 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The app's navigation graph: a single place describing every screen and every route between
-    them. The NavHostFragment in activity_main.xml hosts this graph and swaps fragments in and
-    out, which is why the app needs only one Activity.
-
-    Declaring routes here rather than calling FragmentTransactions by hand means the back stack,
-    animations and argument passing are all handled consistently, and the whole flow can be seen
-    at a glance in Android Studio's design view.
-
-    **The shape of the graph.** It is in two halves.
-
-    *Authentication* — authFragment (log in and register, one screen with a toggle), the two-factor
-    check, and the two password-reset screens (request, then confirmation). The graph starts at authFragment, and every route from
-    here into the app clears the whole graph behind it so that "back" from the app cannot return to a
-    form the user has already completed.
-
-    *The signed-in app* — five **top-level** destinations (homeFragment, petsFragment,
-    checklistFragment, placesFragment, expensesFragment), each named by an entry in the NavTab table
-    in ui/common/FloatingNavBar.kt, plus the detail and form screens reached from them. Top-level
-    here has a precise meaning: these five are peers of one another rather than ancestors, so moving between them is a switch
-    and not a journey — which is why none of them shows a back arrow and why none has an `action`
-    pointing at another. The bottom bar moves between them by destination id alone.
-
-    **Which destinations carry a userId, and which do not.** None of them. The signed-in account
-    used to be a navigation argument on the home screen, but a bottom bar navigates by destination
-    id with no arguments attached, so the tabs could never have been handed one. The account is
-    held instead by SessionViewModel, scoped to the Activity and therefore shared by every screen —
-    see that class for why it survives both rotation and the process being killed.
-
-    **checklistFragment and expensesFragment serve two jobs each.** Reached from the bottom bar they
-    arrive with no arguments, default `petId` to NO_PET_ID, and show a row of pet chips to choose
-    between. Reached from a pet's detail screen they arrive with a real `petId` and show that pet
-    alone. One screen with a conditional rather than two near-identical ones — which is what keeps
-    delegation, shake-to-reset and swipe-to-delete existing in exactly one place.
--->
+<!-- The app's navigation graph: a single place describing every screen and every route between them. -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/authFragment">
 
-    <!--
-        ======================== Global actions ========================
-
-        An action declared as a direct child of <navigation> rather than of a <fragment> is a **global
-        action**: it can be taken from any destination in the graph. That is exactly what the profile
-        screen needs — the app's monogram in the shared header opens it, and seven different screens
-        draw that header. Seven ordinary actions would say the same thing seven times and give seven
-        chances for one to drift out of step.
-
-        Nothing is popped. The profile screen is a step sideways out of whichever tab the user is on,
-        like the assistant and the notifications screen, so back returns them to where they were.
-    -->
+    <!-- ======================== Global actions ======================== -->
     <action
         android:id="@+id/action_global_to_profile"
         app:destination="@id/profileFragment" />
 
     <!-- ============================== Authentication ============================== -->
 
-    <!-- Log in / register. Entry point of the app. The two forms are one destination with a toggle,
-         so switching between them is not navigation at all and adds nothing to the back stack. -->
+    <!-- Log in / register. Entry point of the app. The two forms are one destination with a toggle. -->
     <fragment
         android:id="@+id/authFragment"
         android:name="com.prash.petcare.ui.auth.AuthFragment"
         android:label="@string/login_title"
         tools:layout="@layout/fragment_auth">
 
-        <!-- Successful log in or sign-up.
-
-             popUpTo the graph itself with popUpToInclusive removes every auth screen from the
-             back stack. Without it, pressing back from the home screen would return the user to
-             the form they have just completed, which looks like being signed out. -->
+        <!-- Successful log in or sign-up. -->
         <action
             android:id="@+id/action_auth_to_home"
             app:destination="@id/homeFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
 
-        <!-- The password was right but the account needs its second factor. An ordinary forward step:
-             back (or "use a different account") returns here with the form as it was. -->
+        <!-- The password was right but the account needs its second factor. -->
         <action
             android:id="@+id/action_auth_to_two_factor"
             app:destination="@id/twoFactorFragment" />
@@ -89,8 +38,7 @@
             app:destination="@id/resetRequestFragment" />
     </fragment>
 
-    <!-- Two-factor check: step 2 of logging in. The account is not signed in until this screen says
-         so, which is why its id travels as an argument rather than through SessionViewModel. -->
+    <!-- Two-factor check: step 2 of logging in. The account is not signed in until this screen says. -->
     <fragment
         android:id="@+id/twoFactorFragment"
         android:name="com.prash.petcare.ui.auth.twofactor.TwoFactorFragment"
@@ -108,16 +56,13 @@
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
 
-        <!-- "LOST ACCESS?" — enter a recovery code instead. An ordinary forward step, so back
-             returns here with the digits as they were, in case the phone turns up after all. -->
+        <!-- "LOST ACCESS?" — enter a recovery code instead. An ordinary forward step. -->
         <action
             android:id="@+id/action_two_factor_to_recovery_code"
             app:destination="@id/recoveryCodeFragment" />
     </fragment>
 
-    <!-- Recovery code entry: the way in when the authenticator app is gone. Reached only from the
-         two-factor screen, and carrying the same account id for the same reason — the account is
-         still not signed in until this screen says so. -->
+    <!-- Recovery code entry: the way in when the authenticator app is gone. -->
     <fragment
         android:id="@+id/recoveryCodeFragment"
         android:name="com.prash.petcare.ui.auth.twofactor.RecoveryCodeFragment"
@@ -128,8 +73,7 @@
             android:name="userId"
             app:argType="long" />
 
-        <!-- Code accepted: into the app, clearing every auth screen, exactly as the two-factor
-             screen's own route does. -->
+        <!-- Code accepted: into the app, clearing every auth screen. -->
         <action
             android:id="@+id/action_recovery_code_to_home"
             app:destination="@id/homeFragment"
@@ -137,19 +81,14 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- Password reset: type the account's email and ask Firebase for a reset link. Takes no
-         arguments, and the field starts empty. Reset is by email only, and there is no code or
-         new-password screen: Firebase's own web page, opened from the email, sets the new password.
-         "BACK TO LOG IN" on both reset screens pops back to authFragment rather than navigating to
-         it, so a second log in screen is never stacked. -->
+    <!-- Password reset: type the account's email and ask Firebase for a reset link. -->
     <fragment
         android:id="@+id/resetRequestFragment"
         android:name="com.prash.petcare.ui.auth.reset.ResetRequestFragment"
         android:label="@string/reset_request_title"
         tools:layout="@layout/fragment_reset_request">
 
-        <!-- Firebase accepted the request. The request screen stays on the back stack, so system
-             back from the confirmation returns to the address as typed, ready to correct a typo. -->
+        <!-- Firebase accepted the request. The request screen stays on the back stack. -->
         <action
             android:id="@+id/action_reset_request_to_reset_sent"
             app:destination="@id/resetSentFragment" />
@@ -162,21 +101,15 @@
         android:label="@string/reset_sent_title"
         tools:layout="@layout/fragment_reset_sent">
 
-        <!-- The address the link went to, as typed. Required: the screen names it and resends to
-             it. -->
+        <!-- The address the link went to, as typed. Required: the screen names it and resends to it. -->
         <argument
             android:name="email"
             app:argType="string" />
     </fragment>
 
-    <!-- ========================= Top-level: the bottom bar =========================
-         These five are the bottom navigation bar's destinations. They are listed here in the same
-         order as the NavTab table in ui/common/FloatingNavBar.kt, and each id appears there — that
-         id is the only thing tying a tab to a screen, so a tab naming a destination this file does
-         not declare is a tab that silently fails to navigate. -->
+    <!-- ========================= Top-level: the bottom bar ========================= -->
 
-    <!-- Tab 1. The dashboard: greeting, clock and sync status, three stat cards, the next task,
-         today's care and streak, the pets, an insight, the week ahead and quick actions. -->
+    <!-- Tab 1. The dashboard: greeting, clock and sync status, three stat cards, the next task. -->
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.prash.petcare.ui.home.HomeFragment"
@@ -193,8 +126,7 @@
             android:id="@+id/action_home_to_add_edit_pet"
             app:destination="@id/addEditPetFragment" />
 
-        <!-- A "coming up this week" row opens the routine its task belongs to — the screen where that
-             task can be seen alongside its siblings, edited or rescheduled. -->
+        <!-- A "coming up this week" row opens the routine its task belongs. -->
         <action
             android:id="@+id/action_home_to_routine_detail"
             app:destination="@id/routineDetailFragment" />
@@ -205,16 +137,7 @@
             app:destination="@id/assistantFragment" />
     </fragment>
 
-    <!--
-        The assistant. Reached from the dashboard rather than from the bottom bar, so it has no tab
-        of its own — which is deliberate: it is a thing you go and ask, not a section of the app you
-        live in. Because no bottom-navigation item shares its id, NavigationUI leaves whichever tab
-        was selected (Home) highlighted while it is open, which is the right reading: the user has
-        stepped sideways out of Home, not into a sixth tab.
-
-        It draws the shared header rather than the app bar, like the tabs and the pet detail screen —
-        see MainActivity.updateChromeFor.
-    -->
+    <!-- The assistant. Reached from the dashboard rather than from the bottom bar, so it has no tab of its own. -->
     <fragment
         android:id="@+id/assistantFragment"
         android:name="com.prash.petcare.ui.assistant.AssistantFragment"
@@ -228,50 +151,36 @@
         android:label="@string/nav_pets"
         tools:layout="@layout/fragment_pets">
 
-        <!-- The "+ Add a pet" row at the end of the list (or in the empty state) goes straight to an
-             empty form, passing petId = -1. -->
+        <!-- The "+ Add a pet" row at the end of the list (or in the empty state) goes straight to an empty form. -->
         <action
             android:id="@+id/action_pets_to_add_edit_pet"
             app:destination="@id/addEditPetFragment" />
 
-        <!-- Tapping a pet opens its detail screen rather than the edit form: viewing an animal and
-             changing its record are different intentions, and the detail screen is also the way in
-             to that pet's routines. -->
+        <!-- Tapping a pet opens its detail screen rather than the edit form. -->
         <action
             android:id="@+id/action_pets_to_pet_detail"
             app:destination="@id/petDetailFragment" />
     </fragment>
 
-    <!-- Tab 3. Today's care checklist. Also reachable from a pet's detail screen — see the note at
-         the top of this file on why one destination serves both. -->
+    <!-- Tab 3. Today's care checklist. Also reachable from a pet's detail screen. -->
     <fragment
         android:id="@+id/checklistFragment"
         android:name="com.prash.petcare.ui.checklist.ChecklistFragment"
         android:label="@string/nav_tasks"
         tools:layout="@layout/fragment_checklist">
 
-        <!-- Which pet to show. The default of -1 means "none chosen", which is how the screen knows
-             it arrived from the bottom bar and should offer the pet chips. Long literals in a nav
-             graph need the L suffix, or the value is parsed as an Int and rejected. -->
+        <!-- Which pet to show. The default of -1 means "none chosen". -->
         <argument
             android:name="petId"
             android:defaultValue="-1L"
             app:argType="long" />
 
-        <!-- "+ Add task" opens the existing task form for a routine the user picks, passing
-             taskId = -1. Routines themselves are still created only from a pet's detail page. -->
+        <!-- "+ Add task" opens the existing task form for a routine the user picks, passing taskId = -1. -->
         <action
             android:id="@+id/action_checklist_to_add_edit_task"
             app:destination="@id/addEditTaskFragment" />
 
-        <!-- Who to delegate today's care to, sent by tapping a saved contact on the profile screen.
-
-             Both are nullable and default to null, so every other route into this screen is
-             unaffected and simply arrives with no recipient chosen. When they *are* supplied, the
-             screen skips the channel dialog and the system contact picker and goes straight to the
-             confirmation preview — the contact has already been chosen, and asking again would be
-             asking a question the user has just answered. The message is still never sent without
-             that confirmation. -->
+        <!-- Who to delegate today's care to, sent by tapping a saved contact on the profile screen. -->
         <argument
             android:name="delegateToName"
             android:defaultValue="@null"
@@ -284,36 +193,30 @@
             app:nullable="true" />
     </fragment>
 
-    <!-- Tab 4. The user's saved vets, groomers, parks and shops, laid out by distance from home, with
-         directions handed off to a maps app. Takes no arguments: places belong to the account, which
-         comes from SessionViewModel like every other tab's. -->
+    <!-- Tab 4. The user's saved vets, groomers, parks and shops, laid out by distance from home. -->
     <fragment
         android:id="@+id/placesFragment"
         android:name="com.prash.petcare.ui.place.PlacesFragment"
         android:label="@string/nav_places"
         tools:layout="@layout/fragment_places">
 
-        <!-- A long press on a saved place opens the full form with its real id, to change or delete
-             it. Adding is no longer this route's job — see action_places_to_add_place below. -->
+        <!-- A long press on a saved place opens the full form with its real id, to change or delete it. -->
         <action
             android:id="@+id/action_places_to_add_edit_place"
             app:destination="@id/addEditPlaceFragment" />
 
-        <!-- "+ ADD PLACE" in the saved-places heading. Takes no arguments: the screen only ever
-             creates, and the account comes from SessionViewModel like every other screen's. -->
+        <!-- "+ ADD PLACE" in the saved-places heading. Takes no arguments: the screen only ever creates. -->
         <action
             android:id="@+id/action_places_to_add_place"
             app:destination="@id/addPlaceFragment" />
 
-        <!-- "Book a visit" opens the ordinary task form, prefilled with the place — see the prefill
-             arguments on addEditTaskFragment below. -->
+        <!-- "Book a visit" opens the ordinary task form, prefilled with the place. -->
         <action
             android:id="@+id/action_places_to_add_edit_task"
             app:destination="@id/addEditTaskFragment" />
     </fragment>
 
-    <!-- Tab 5. One pet's spending: the total, the breakdown by category, and every recorded
-         expense. Reached the same two ways as the checklist above. -->
+    <!-- Tab 5. One pet's spending: the total, the breakdown by category, and every recorded expense. -->
     <fragment
         android:id="@+id/expensesFragment"
         android:name="com.prash.petcare.ui.expense.ExpensesFragment"
@@ -325,8 +228,7 @@
             android:defaultValue="-1L"
             app:argType="long" />
 
-        <!-- One action serves both recording and editing: the floating action button passes
-             expenseId = -1, and tapping an expense in the list passes its real id. -->
+        <!-- One action serves both recording and editing: the floating action button passes expenseId = -1. -->
         <action
             android:id="@+id/action_expenses_to_add_edit_expense"
             app:destination="@id/addEditExpenseFragment" />
@@ -334,26 +236,14 @@
 
     <!-- ============================== Account screens ============================== -->
 
-    <!--
-        The signed-in account: who they are, how the app behaves for them, and the way out.
-
-        **Reached from the app's monogram** in the shared header, through the global action at the top
-        of this file, from every screen that draws that header. The toolbar's overflow menu still
-        leads here as well, for the screens that show a toolbar instead.
-
-        Like the assistant and the notifications screen it is not a tab and has no bottom-bar item of
-        its own, so NavigationUI leaves whichever tab the user came from highlighted while it is open:
-        opening and closing it cannot move them between tabs. It draws the shared header rather than
-        the app bar — see MainActivity.updateChromeFor.
-    -->
+    <!-- The signed-in account: who they are, how the app behaves for them, and the way out. -->
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.prash.petcare.ui.profile.ProfileFragment"
         android:label="@string/menu_profile"
         tools:layout="@layout/fragment_profile">
 
-        <!-- The "EDIT" pill on the "Name & details" row: the form for the account's own name, phone
-             number and role. -->
+        <!-- The "EDIT" pill on the "Name & details" row: the form for the account's own name. -->
         <action
             android:id="@+id/action_profile_to_account_details"
             app:destination="@id/accountDetailsFragment" />
@@ -363,16 +253,12 @@
             android:id="@+id/action_profile_to_change_password"
             app:destination="@id/changePasswordFragment" />
 
-        <!-- Turning the two-factor switch on. Turning it *off* is a dialog on the profile screen
-             itself and needs no route, because it is one field and a confirm. -->
+        <!-- Turning the two-factor switch on. Turning it off is a dialog on the profile screen itself and needs no route. -->
         <action
             android:id="@+id/action_profile_to_two_factor_setup"
             app:destination="@id/twoFactorSetupFragment" />
 
-        <!-- Tapping a saved delegation contact opens the Tasks tab with that person already chosen,
-             so the checklist goes straight to its confirmation preview — see the two prefill
-             arguments on checklistFragment. No petId is passed, so the checklist arrives at its
-             default of -1 and offers the pet chips exactly as it does from the bottom bar. -->
+        <!-- Tapping a saved delegation contact opens the Tasks tab with that person already chosen. -->
         <action
             android:id="@+id/action_profile_to_checklist"
             app:destination="@id/checklistFragment" />
@@ -383,57 +269,34 @@
             app:destination="@id/assistantFragment" />
     </fragment>
 
-    <!-- Edit the signed-in account's own name, contact number and role. The email is deliberately not
-         editable here — it is the login identifier and the key the Firestore sync files this account's
-         data under, so changing it would strand everything already uploaded. See UserRepository. -->
+    <!-- Edit the signed-in account's own name, contact number and role. -->
     <fragment
         android:id="@+id/accountDetailsFragment"
         android:name="com.prash.petcare.ui.profile.AccountDetailsFragment"
         android:label="@string/account_details_title"
         tools:layout="@layout/fragment_account_details" />
 
-    <!-- Set a new password, after confirming the current one. Takes no arguments: the account is the
-         signed-in one, read from SessionViewModel like every other screen's. -->
+    <!-- Set a new password, after confirming the current one. -->
     <fragment
         android:id="@+id/changePasswordFragment"
         android:name="com.prash.petcare.ui.profile.ChangePasswordFragment"
         android:label="@string/change_password_title"
         tools:layout="@layout/fragment_change_password" />
 
-    <!--
-        Two-factor setup, step 1 and 2: scan the QR code, then type a code back to prove the scan
-        worked.
-
-        Takes no arguments, like every other screen inside the app: the account is the signed-in one
-        from SessionViewModel. It is *not* one of the authentication destinations at the top of this
-        file, even though it is about signing in — those are the screens shown to somebody who is not
-        yet signed in, and this one is a setting changed by somebody who is. That distinction is what
-        MainActivity uses to decide whether to draw the bottom navigation bar.
-    -->
+    <!-- Two-factor setup, step 1 and 2: scan the QR code, then type a code back to prove the scan worked. -->
     <fragment
         android:id="@+id/twoFactorSetupFragment"
         android:name="com.prash.petcare.ui.auth.twofactor.TwoFactorSetupFragment"
         android:label="@string/two_factor_setup_title"
         tools:layout="@layout/fragment_two_factor_setup">
 
-        <!-- Step 3: the recovery codes, shown once. The setup screen stays on the back stack, so
-             system back from the codes returns to the QR code — which is what the user wants if they
-             decide to re-scan rather than finish. -->
+        <!-- Step 3: the recovery codes, shown once. The setup screen stays on the back stack. -->
         <action
             android:id="@+id/action_two_factor_setup_to_recovery_codes"
             app:destination="@id/recoveryCodesFragment" />
     </fragment>
 
-    <!--
-        The ten recovery codes, shown once at the end of setup, and the screen that actually turns
-        two-factor authentication on — see RecoveryCodesViewModel for why the write waits until here.
-
-        **Both arguments are required and neither has a default**, because there is no sensible
-        "none" for either: a screen reached without the secret could not switch anything on, and one
-        reached without the codes would have nothing to show. `string[]` is the nav type for an array
-        of strings, which is what a Bundle carries and what survives the process being killed while
-        the user is writing the codes down.
-    -->
+    <!-- The ten recovery codes, shown once at the end of setup. -->
     <fragment
         android:id="@+id/recoveryCodesFragment"
         android:name="com.prash.petcare.ui.auth.twofactor.RecoveryCodesFragment"
@@ -449,40 +312,19 @@
             app:argType="string[]" />
     </fragment>
 
-    <!--
-        Everything the app has noticed about the user's pets: care coming up, care that was missed,
-        recent activity, milestones and tips.
-
-        Reached from the pet-count badge in the header the tabs, the pet detail screen and the
-        assistant all share — from seven screens, by destination id, with no arguments. Like the
-        assistant it is not a tab and has no bottom-bar item of its own, so NavigationUI leaves
-        whichever tab the user came from highlighted while it is open: opening and closing it cannot
-        move them between tabs.
-
-        It draws the shared header rather than the app bar, like the tabs, the pet detail screen and
-        the assistant — see MainActivity.updateChromeFor.
-
-        Nothing here is stored. Every alert is derived from tasks, routines, expenses and pet records
-        on the fly — see ui/notifications/NotificationsViewModel.kt — which is why this destination
-        takes no arguments at all: there is no alert id to pass, because there are no alert rows.
-    -->
+    <!-- Everything the app has noticed about the user's pets: care coming up, care that was missed. -->
     <fragment
         android:id="@+id/notificationsFragment"
         android:name="com.prash.petcare.ui.notifications.NotificationsFragment"
         android:label="@string/nav_notifications"
         tools:layout="@layout/fragment_notifications">
 
-        <!-- Tapping an alert about the animal itself — a milestone, recent activity, a tip — opens
-             that pet's detail screen. -->
+        <!-- Tapping an alert about the animal itself — a milestone, recent activity, a tip. -->
         <action
             android:id="@+id/action_notifications_to_pet_detail"
             app:destination="@id/petDetailFragment" />
 
-        <!-- Tapping an alert about care — a reminder or a missed task — opens the Tasks tab.
-
-             No petId is passed, so the checklist arrives at its default of -1 and shows the pet chips,
-             exactly as it does from the bottom bar; NavigationUI highlights the Tasks tab because the
-             destination ids match. See the note at the top of this file on that screen's two jobs. -->
+        <!-- Tapping an alert about care — a reminder or a missed task — opens the Tasks tab. -->
         <action
             android:id="@+id/action_notifications_to_checklist"
             app:destination="@id/checklistFragment" />
@@ -493,13 +335,9 @@
             app:destination="@id/assistantFragment" />
     </fragment>
 
-    <!-- ========================== Detail and form screens ==========================
-         Everything below is pushed *on top of* a tab rather than being one, so each shows a back
-         arrow and returns to wherever it was opened from. -->
+    <!-- ========================== Detail and form screens ========================== -->
 
-    <!-- A single pet: its photo card, details and care routines. It draws its own header and back
-         button over the photo, so MainActivity hides the shared app bar here — see
-         MainActivity.updateChromeFor. -->
+    <!-- A single pet: its photo card, details and care routines. -->
     <fragment
         android:id="@+id/petDetailFragment"
         android:name="com.prash.petcare.ui.pet.PetDetailFragment"
@@ -522,8 +360,7 @@
             android:id="@+id/action_pet_detail_to_routine_detail"
             app:destination="@id/routineDetailFragment" />
 
-        <!-- Opens the checklist scoped to this pet, by passing a real petId — which is what
-             suppresses the pet chips the tab version shows. -->
+        <!-- Opens the checklist scoped to this pet, by passing a real petId. -->
         <action
             android:id="@+id/action_pet_detail_to_checklist"
             app:destination="@id/checklistFragment" />
@@ -532,27 +369,20 @@
             android:id="@+id/action_pet_detail_to_expenses"
             app:destination="@id/expensesFragment" />
 
-        <!-- "+ RECORD" on the vaccination card. One-way: the record screen always creates, so unlike
-             the routine action there is no second id to tell "add" from "edit". -->
+        <!-- "+ RECORD" on the vaccination card. One-way: the record screen always creates. -->
         <action
             android:id="@+id/action_pet_detail_to_add_vaccination"
             app:destination="@id/addVaccinationFragment" />
     </fragment>
 
-    <!-- Record a vaccination the pet has already had, and track when the next one falls due.
-
-         A step *deeper* into the Pets tab rather than a screen of its own: it draws the shared header
-         with "Vaccination" as its title and its own round back button, and the bottom bar keeps Pets
-         lit behind it — see NavTab.PETS and MainActivity.updateChromeFor. The same arrangement as
-         "Add a place" under the Places tab. -->
+    <!-- Record a vaccination the pet has already had, and track when the next one falls due. -->
     <fragment
         android:id="@+id/addVaccinationFragment"
         android:name="com.prash.petcare.ui.pet.AddVaccinationFragment"
         android:label="@string/record_vaccination_heading"
         tools:layout="@layout/fragment_add_vaccination">
 
-        <!-- Required, with no default: a vaccination record with no pet would violate the foreign key
-             on the vaccination_records table. -->
+        <!-- Required, with no default. -->
         <argument
             android:name="petId"
             app:argType="long" />
@@ -565,23 +395,19 @@
         android:label="@string/add_expense_title"
         tools:layout="@layout/fragment_add_edit_expense">
 
-        <!-- Required, with no default: an expense with no pet would violate the foreign key on the
-             expenses table. -->
+        <!-- Required, with no default. -->
         <argument
             android:name="petId"
             app:argType="long" />
 
-        <!-- Which expense to edit. The default of -1 means "none", which is how the screen knows it
-             is recording a new expense rather than changing one. -->
+        <!-- Which expense to edit. The default of -1 means "none". -->
         <argument
             android:name="expenseId"
             android:defaultValue="-1L"
             app:argType="long" />
     </fragment>
 
-    <!-- Create a care routine for a pet, or edit one. The pet detail screen reaches it both ways
-         through the single action_pet_detail_to_add_routine: its "+" button passes only the pet, and
-         the "Edit" item on a routine card's menu passes the routine's id as well. -->
+    <!-- Create a care routine for a pet. -->
     <fragment
         android:id="@+id/addRoutineFragment"
         android:name="com.prash.petcare.ui.routine.AddRoutineFragment"
@@ -592,9 +418,7 @@
             android:name="petId"
             app:argType="long" />
 
-        <!-- Which routine to edit. The default of -1 means "none", which is how the screen knows it
-             is creating a routine rather than changing one — the same convention as the pet, task and
-             expense forms. -->
+        <!-- Which routine to edit. The default of -1 means "none". -->
         <argument
             android:name="routineId"
             android:defaultValue="-1L"
@@ -612,8 +436,7 @@
             android:name="routineId"
             app:argType="long" />
 
-        <!-- One action serves both adding and editing: the floating action button passes
-             taskId = -1, and tapping a task in the list passes its real id. -->
+        <!-- One action serves both adding and editing: the floating action button passes taskId = -1. -->
         <action
             android:id="@+id/action_routine_detail_to_add_edit_task"
             app:destination="@id/addEditTaskFragment" />
@@ -626,23 +449,18 @@
         android:label="@string/add_task_title"
         tools:layout="@layout/fragment_add_edit_task">
 
-        <!-- The pet is read from the routine rather than passed separately, so the two can never
-             disagree about which animal a task belongs to. -->
+        <!-- The pet is read from the routine rather than passed separately. -->
         <argument
             android:name="routineId"
             app:argType="long" />
 
-        <!-- Which task to edit. The default of -1 means "none", which is how the screen knows it
-             is creating a new task rather than changing one. -->
+        <!-- Which task to edit. The default of -1 means "none". -->
         <argument
             android:name="taskId"
             android:defaultValue="-1L"
             app:argType="long" />
 
-        <!-- Suggested starting values for a *new* task, sent by "Book a visit" on the Places tab.
-             All three are nullable and default to null, so every other route into this form is
-             unaffected and simply gets an empty form. The category travels as the enum's name, the
-             same text the database stores. -->
+        <!-- Suggested starting values for a new task, sent by "Book a visit" on the Places tab. -->
         <argument
             android:name="prefillTitle"
             android:defaultValue="@null"
@@ -660,20 +478,7 @@
             app:nullable="true" />
     </fragment>
 
-    <!--
-        Save a place from anywhere: by searching for it, by dropping a pin on the map, or from the
-        device's current position.
-
-        **A step deeper into the Places tab rather than a screen of its own.** It is listed among that
-        tab's sub-destinations (see NavTab.PLACES), so the bottom bar keeps Places lit while it is
-        open, and MainActivity hides the shared app bar here because the screen draws the tabs' own
-        header with "Add place" as its title.
-
-        Takes no arguments. It only ever creates a place — changing or deleting one is
-        addEditPlaceFragment's job — and the owner is the signed-in account from SessionViewModel. It
-        hands the new place's id and name back to the Places tab through the previous back stack
-        entry's SavedStateHandle; see AddPlaceFragment.onSaved.
-    -->
+    <!-- Save a place from anywhere: by searching for it, by dropping a pin on the map. -->
     <fragment
         android:id="@+id/addPlaceFragment"
         android:name="com.prash.petcare.ui.place.AddPlaceFragment"
@@ -687,8 +492,7 @@
         android:label="@string/add_place_title"
         tools:layout="@layout/fragment_add_edit_place">
 
-        <!-- Which place to edit. The default of -1 means "none" — creating a new place. The owner is
-             not an argument: it is the signed-in account, read from SessionViewModel. -->
+        <!-- Which place to edit. The default of -1 means "none" — creating a new place. -->
         <argument
             android:name="placeId"
             android:defaultValue="-1L"
@@ -702,16 +506,13 @@
         android:label="@string/add_pet_title"
         tools:layout="@layout/fragment_add_edit_pet">
 
-        <!-- Which pet to edit. The default of -1 means "none", which is how the screen knows it is
-             creating a new pet rather than changing one. Long literals in a nav graph need the L
-             suffix, or the value is parsed as an Int and rejected. -->
+        <!-- Which pet to edit. The default of -1 means "none". -->
         <argument
             android:name="petId"
             android:defaultValue="-1L"
             app:argType="long" />
 
-        <!-- Who will own a newly created pet. Required, with no default: a pet with no owner
-             would violate the foreign key on the pets table. -->
+        <!-- Who will own a newly created pet. Required, with no default. -->
         <argument
             android:name="ownerId"
             app:argType="long" />

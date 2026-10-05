@@ -1,26 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The locked screen, shown in place of the whole log in form after five wrong passwords.
-
-    Pulled into fragment_auth.xml with <include android:id="@+id/lockedPanel">, under the shared
-    header, and made visible only while AuthViewModel reports a lock. It replaces the form rather than
-    covering it: there is nothing useful the user can do with a password field they are not allowed to
-    submit, and leaving it on screen invites them to keep trying.
-
-    **The shape of the screen**, top to bottom, following design/auth-locked-mockup.png:
-      1. a dark panel carrying the countdown ring, the state, a heading and the explanation;
-      2. two pale rows — what happened, and the reassurance that nothing was reached;
-      3. the two ways out: reset the password now, or wait.
-
-    The dark panel is a MaterialCardView with fixed colours rather than theme roles, because it is
-    dark in *both* themes by design — the same treatment as the dashboard's next-up card and the
-    profile header. See the log in section of colors.xml for why.
-
-    A vertical LinearLayout throughout: this is a single column where each block sits below the last,
-    which is exactly what LinearLayout is for and cheaper to measure than a ConstraintLayout. The one
-    place something is stacked *over* something else is the countdown ring, where the FrameLayout is
-    doing the one thing it expresses in a single attribute.
--->
+<!-- The locked screen, shown in place of the whole log in form after five wrong passwords. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -46,34 +25,14 @@
             android:orientation="vertical"
             android:padding="@dimen/auth_lock_card_padding">
 
-            <!--
-                The countdown ring: the minutes left drawn inside a circular track.
-
-                A FrameLayout so the figure sits *on* the ring rather than beside it — the two are one
-                object, and any other container would need the text positioned by hand. The
-                indicator's size is fixed here and the text centred over it, so the two stay concentric
-                whatever the user's font scale.
-
-                A determinate CircularProgressIndicator rather than a custom View: Material already
-                draws exactly this, and the fragment only has to set a percentage on it each second.
-            -->
-            <!--
-                **Both this frame and the indicator are wrap_content, deliberately.** Sizing either
-                of them to auth_lock_ring_size exactly clips the ring: a CircularProgressIndicator
-                needs indicatorSize *plus* its indicatorInset on each edge, so a box of exactly
-                indicatorSize trims the stroke on whichever side the arc starts. Letting the widget
-                measure itself is what reserves that margin, and it stays correct if the thickness or
-                the inset is ever changed.
-            -->
+            <!-- The countdown ring: the minutes left drawn inside a circular track. -->
+            <!-- Both this frame and the indicator are wrap_content, deliberately. -->
             <FrameLayout
                 android:id="@+id/lockRing"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
-                <!-- indeterminate=false because this ring reports a real, known quantity: how much
-                     of the fifteen minutes is left. trackCornerRadius rounds the ends of the arc, as
-                     the mockup draws them. Hidden from TalkBack: the ring is a picture of the number
-                     in front of it, and the frame above carries the spoken version. -->
+                <!-- indeterminate=false because this ring reports a real, known quantity. -->
                 <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/lockRingProgress"
                     android:layout_width="wrap_content"
@@ -88,20 +47,7 @@
                     app:trackThickness="@dimen/auth_lock_ring_thickness"
                     tools:progress="100" />
 
-                <!--
-                    The figure and its unit, centred as a pair inside the ring.
-
-                    **Fixed to the ring's inscribed square, in both directions.** A square drawn
-                    inside a circle of inner diameter d has sides of about 0.7d, and that square is
-                    the only area where two stacked lines are guaranteed to clear the stroke at every
-                    height. Capping the width alone was not enough: sp sizes grow with the system font
-                    scale, so at 1.5x the pair stayed narrow but grew *taller* than the circle and
-                    "MIN LEFT" crossed the arc at the bottom.
-
-                    Both children are therefore bounded in height as well, which is what lets the
-                    autosizing below shrink them to fit rather than overflow. The caption keeps its
-                    natural height and the figure takes whatever is left (height 0dp + weight 1).
-                -->
+                <!-- The figure and its unit, centred as a pair inside the ring. -->
                 <LinearLayout
                     android:layout_width="@dimen/auth_lock_ring_inner_size"
                     android:layout_height="@dimen/auth_lock_ring_inner_size"
@@ -109,10 +55,7 @@
                     android:gravity="center_vertical"
                     android:orientation="vertical">
 
-                    <!-- autoSizeTextType shrinks the number between the two bounds until it fits the
-                         box the parent gives it. It needs bounded dimensions, which is exactly what
-                         the fixed square above supplies, and works back to API 14 through the
-                         AppCompat attribute. -->
+                    <!-- autoSizeTextType shrinks the number between the two bounds until it fits the box. -->
                     <TextView
                         android:id="@+id/lockMinutesText"
                         style="@style/PetCare.Auth.LockMinutes"
@@ -125,9 +68,7 @@
                         app:autoSizeTextType="uniform"
                         tools:text="15" />
 
-                    <!-- Autosized for the same reason as the figure above, and it matters more here:
-                         this label is a fixed two words, so without shrinking it is simply cut short
-                         ("MIN LEFT" became "MIN" at a 1.5x font scale). -->
+                    <!-- Autosized for the same reason as the figure above, and it matters more here. -->
                     <TextView
                         style="@style/PetCare.Auth.LockRingCaption"
                         android:layout_width="match_parent"
@@ -150,8 +91,7 @@
                 android:layout_marginTop="@dimen/spacing_md"
                 android:text="@string/login_locked_label" />
 
-            <!-- The heading. Marked as a heading for accessibility (API 28+) like every other screen
-                 title in the app, so TalkBack users can jump to it; older versions ignore it. -->
+            <!-- The heading. Marked as a heading for accessibility. -->
             <TextView
                 style="@style/PetCare.Auth.LockTitle"
                 android:layout_width="match_parent"
@@ -161,8 +101,7 @@
                 android:text="@string/login_locked_title"
                 tools:targetApi="p" />
 
-            <!-- How many attempts failed, when sign-in reopens, and the way round the wait. Filled in
-                 by the fragment, which is what turns the unlock time into a clock reading. -->
+            <!-- How many attempts failed, when sign-in reopens, and the way round the wait. -->
             <TextView
                 android:id="@+id/lockBodyText"
                 style="@style/PetCare.Auth.LockBody"
@@ -175,13 +114,7 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- ============================ The two info rows ============================
-         A square code badge, a bold title and a muted line — the same row grammar as an alert card on
-         the notifications screen and an expense on the Money tab, so a badge-title-detail row means
-         the same kind of thing throughout the app.
-
-         These are ordinary surface cards, not dark ones: they are supporting facts read after the
-         panel above, and a second dark block would compete with it. -->
+    <!-- ============================ The two info rows ============================ -->
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
@@ -217,8 +150,7 @@
                     android:layout_height="wrap_content"
                     tools:text="5 failed attempts" />
 
-                <!-- "Last try 5:38 PM · this device, Pixel 7" — when and where, so the account's
-                     owner can tell their own forgotten password from someone else's guessing. -->
+                <!-- "Last try 5:38 PM · this device, Pixel 7". -->
                 <TextView
                     android:id="@+id/lockAttemptsDetail"
                     style="@style/PetCare.Auth.LockInfoDetail"
@@ -232,8 +164,7 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- The reassurance. Entirely static text — nothing here depends on the account — so it carries
-         no ids and the fragment never touches it. -->
+    <!-- The reassurance. Entirely static text — nothing here depends on the account. -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -280,9 +211,7 @@
 
     <!-- ============================ The two ways out ============================ -->
 
-    <!-- The one action that actually ends the wait, so it takes the filled accent button: someone who
-         can reset the password is back in immediately, and the reset also clears this lock (see
-         ResetRequestViewModel). -->
+    <!-- The one action that actually ends the wait, so it takes the filled accent button. -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/lockResetButton"
         style="@style/PetCare.Auth.PrimaryButton"
@@ -290,10 +219,7 @@
         android:layout_marginTop="@dimen/spacing_lg"
         android:text="@string/login_locked_reset" />
 
-    <!-- Waiting it out. Disabled for the whole lock, with the remaining minutes as its label, so the
-         countdown is readable without interpreting the ring. The fragment enables it the moment the
-         lock expires — at which point the form returns anyway, making this a fallback rather than the
-         main route back. -->
+    <!-- Waiting it out. Disabled for the whole lock, with the remaining minutes as its label. -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/lockRetryButton"
         style="@style/PetCare.Auth.SecondaryButton"

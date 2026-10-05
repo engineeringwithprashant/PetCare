@@ -1,35 +1,7 @@
-<!--
-    The app's type scale: Material 3's fifteen text roles, re-pointed at the app's own typefaces.
-
-    Material 3 components never name a font. A button asks the theme for ?attr/textAppearanceLabelLarge,
-    a text field for ?attr/textAppearanceBodyLarge, a toolbar title for ?attr/textAppearanceTitleLarge,
-    and so on. themes.xml points each of those attributes at a style below, which is how *every*
-    button, chip, dialog, snackbar and text field in the app picks up the new typefaces without a
-    single layout changing.
-
-    Each style extends the matching TextAppearance.Material3.* style and overrides only the font (and,
-    for the large display faces, the letter-spacing). Sizes and line heights stay on Material's scale,
-    so the layouts built against it still fit.
-
-    Three typefaces, each with one job:
-
-     - Bricolage Grotesque 800 — Display, Headline and TitleLarge: big headlines, names and numbers.
-       The character font; used sparingly so it keeps its punch.
-     - Schibsted Grotesk 400–700 — Body, TitleMedium/Small and every Label role: body copy, buttons,
-       chips, task titles. The workhorse. Body uses the Regular/Bold family; Title and Label use the
-       Medium/SemiBold family, since Material draws those roles a step heavier.
-     - IBM Plex Mono 500–600 — not a Material role at all. It is applied by the individual widget
-       styles in styles.xml that play the "micro-label" part (section labels, times, distances), because
-       Material has no role that means "upper-case meta text".
-
-    Both android:fontFamily and fontFamily are set: the first is read by Android 8.0+, the second by
-    AppCompat on the API 24–25 devices this app still supports.
--->
+<!-- The app's type scale: Material 3's fifteen text roles, re-pointed at the app's own typefaces. -->
 <resources>
 
-    <!-- ================================ Bricolage roles ================================
-         The large roles. Bricolage's ExtraBold is dense, so the letters are pulled in slightly at
-         display sizes — at Material's default spacing a heavy 36sp+ word looks loose and gappy. -->
+    <!-- ================================ Bricolage roles ================================ -->
 
     <style name="TextAppearance.PetCare.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
         <item name="android:fontFamily">@font/bricolage_grotesque</item>
@@ -118,16 +90,7 @@
         <item name="fontFamily">@font/schibsted_grotesk_ui</item>
     </style>
 
-    <!--
-        The fallback for a TextView that names no text appearance or style at all.
-
-        Setting android:fontFamily directly on the theme would look simpler, but a theme-level value
-        for a TextView attribute is treated as if the view had set it itself — which outranks the font
-        in its textAppearance, and would quietly turn every Bricolage headline back into Schibsted.
-        Pointing the theme's *default text appearance* here instead sits below any textAppearance a
-        view does name, so it only fills the gap. The parent is the AppCompat default the theme would
-        otherwise use, so sizes and colours of such views are unchanged.
-    -->
+    <!-- The fallback for a TextView that names no text appearance or style at all. -->
     <style name="TextAppearance.PetCare.Default" parent="TextAppearance.AppCompat">
         <item name="android:fontFamily">@font/schibsted_grotesk</item>
         <item name="fontFamily">@font/schibsted_grotesk</item>

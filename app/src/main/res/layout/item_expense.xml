@@ -1,21 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One expense card on the Money tab: a grey category badge holding that category's emoji (💊), the
-    title in bold over "Medication · Sep 12, 2026", and the amount right-aligned.
-
-    The badge is a symbol rather than the "MED" abbreviation it used to show: the subtitle beneath
-    already writes the category out, so the badge earns its space by being recognised instead of
-    read. ExpenseAdapter sets which emoji; see ui/common/ExpenseLabels.kt.
-
-    A clickable MaterialCardView, so the whole card is one touch target with a ripple following its
-    rounded corners; tapping opens the expense's edit screen, and swiping it left deletes it with an
-    undo (ExpensesFragment). The pet cards' softer corner, as in the design.
-
-    Kept shallow — a card, one row, one column — because this layout is inflated per visible row and
-    rebound constantly as the list scrolls. Inside, a horizontal LinearLayout with the text column
-    taking the leftover width (weight 1), so a long title ellipsises instead of pushing the amount off
-    the card and every amount lines up in a column down the list.
--->
+<!-- One expense card on the Money tab: a grey category badge holding that category's emoji (💊). -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"

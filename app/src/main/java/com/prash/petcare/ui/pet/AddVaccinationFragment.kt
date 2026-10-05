@@ -25,25 +25,7 @@ import com.prash.petcare.ui.session.SessionViewModel
 import com.prash.petcare.util.formatDate
 import kotlinx.coroutines.launch
 
-/**
- * "Record a vaccination": the form reached from "+ RECORD" on a pet's vaccination card.
- *
- * In MVVM this is the **View**. [AddVaccinationViewModel] holds the form, derives the next due date
- * from the chosen interval and writes both the record and the optional checklist task; this class
- * draws that state, formats its text (which needs a Context) and owns the two things that genuinely
- * need one — the date pickers and navigation.
- *
- * **Why this screen draws the shared tab header rather than taking the app bar's title**, the same
- * reasoning as "Add a place": it is a step *deeper* into the Pets tab rather than a step sideways out
- * of it. The bottom bar keeps Pets lit the whole time (see NavTab.PETS) and the header carrying
- * "Vaccination" is what makes that read as one journey rather than as two screens. MainActivity hides
- * the shared app bar here for the same reason it does on the tabs — see its updateChromeFor.
- *
- * **On save the screen closes and hands its result back** through the previous destination's
- * SavedStateHandle, which is how the pet detail screen knows to show the confirmation and offer the
- * undo. The new row needs no help to appear: that screen observes Room, so the history has already
- * redrawn by the time the Snackbar goes up. See [PetDetailFragment.observeSavedVaccinationResult].
- */
+/** "Record a vaccination": the form reached from "+ RECORD" on a pet's vaccination card. */
 class AddVaccinationFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
@@ -71,8 +53,7 @@ class AddVaccinationFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // The same header the Pets tab and the pet detail screen draw, with this screen's name. The
-        // badge and monogram lead where they do everywhere else.
+        // The same header the Pets tab and the pet detail screen draw, with this screen's name.
         binding.header.setUp(
             title = R.string.vaccination_header_title,
             onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
@@ -85,22 +66,9 @@ class AddVaccinationFragment : Fragment() {
         observeViewModel()
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Wiring
-    // ---------------------------------------------------------------------------------------
+    // Wiring.
 
-    /**
-     * Attaches the two text boxes and the two date boxes.
-     *
-     * Each text box reports what was typed to the ViewModel, which is where the value lives — the
-     * summary and the save button both react to it, and neither could if the only copy were in the
-     * field.
-     *
-     * The date boxes have their soft keyboard suppressed and open a picker instead, the same
-     * treatment the pet and expense forms give theirs: they are focusable so they can still be
-     * reached by keyboard, D-pad or switch access, but focusing one must not pop up a keyboard for a
-     * field nobody types into.
-     */
+    /** Attaches the two text boxes and the two date boxes. */
     private fun setUpFields() {
         binding.vaccineInput.doOnTextChanged { text, _, _, _ ->
             viewModel.onVaccineNameChanged(text?.toString().orEmpty())
@@ -125,9 +93,7 @@ class AddVaccinationFragment : Fragment() {
     private fun setUpControls() {
         binding.backButton.setOnClickListener { findNavController().navigateUp() }
 
-        // Each segment reports the interval it stands for. Written out rather than looped over
-        // RepeatInterval.entries because the four views are named in the layout, and pairing them
-        // here is what keeps "which view is which option" in one readable place.
+        // Each segment reports the interval it stands for. Written out rather than looped over RepeatInterval.entries.
         binding.repeatSixMonths.setOnClickListener {
             viewModel.onIntervalSelected(RepeatInterval.SIX_MONTHS)
         }
@@ -147,15 +113,7 @@ class AddVaccinationFragment : Fragment() {
         binding.saveRecordButton.setOnClickListener { save() }
     }
 
-    /**
-     * Saves, passing in the two strings the checklist task is built from.
-     *
-     * They are handed over rather than looked up in the ViewModel because they come from string
-     * resources, and a ViewModel holds no Context to resolve one with — the same arrangement the
-     * "Add a place" screen uses. The title goes over as an *unfilled* format string, so the ViewModel
-     * fills it with the name it has already trimmed rather than this class trimming it a second time
-     * and the two having to agree.
-     */
+    /** Saves, passing in the two strings the checklist task is built from. */
     private fun save() {
         viewModel.save(
             taskTitleFormat = getString(R.string.record_task_title),
@@ -163,9 +121,7 @@ class AddVaccinationFragment : Fragment() {
         )
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Date pickers
-    // ---------------------------------------------------------------------------------------
+    // Date pickers.
 
     /** Opens the picker for the date given, starting from the date already chosen. */
     private fun showDateGivenPicker() {
@@ -177,13 +133,7 @@ class AddVaccinationFragment : Fragment() {
         )
     }
 
-    /**
-     * Opens the picker for the next due date.
-     *
-     * It starts from today rather than from the date given when there is no due date yet — which is
-     * the "Once" case. Opening a year in the past would be a strange place to begin choosing a
-     * *future* appointment from.
-     */
+    /** Opens the picker for the next due date. */
     private fun showDueDatePicker() {
         showDatePicker(
             titleRes = R.string.record_next_due_picker_title,
@@ -194,15 +144,7 @@ class AddVaccinationFragment : Fragment() {
         )
     }
 
-    /**
-     * The shared picker call.
-     *
-     * The tag matters: the FragmentManager uses it to restore an open picker after a rotation, and
-     * two pickers sharing one tag would restore as the same dialog reporting to the wrong field.
-     *
-     * The selection Material hands back is midnight **UTC** on the chosen day, which is exactly the
-     * form every date in this app is stored in — see [com.prash.petcare.util.VaccinationDates].
-     */
+    /** The shared picker call. */
     private fun showDatePicker(
         titleRes: Int,
         selection: Long,
@@ -218,9 +160,7 @@ class AddVaccinationFragment : Fragment() {
         picker.show(childFragmentManager, tag)
     }
 
-    // ---------------------------------------------------------------------------------------
-    // State
-    // ---------------------------------------------------------------------------------------
+    // State.
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -246,8 +186,7 @@ class AddVaccinationFragment : Fragment() {
 
         bindPresetChips(state)
 
-        // The two dates. Written every time rather than only on a change, because they are not typed
-        // into — there is no cursor to disturb and no keystroke to race.
+        // The two dates. Written every time rather than only on a change, because they are not typed.
         binding.dateGivenInput.setText(formatDate(state.dateGiven))
         binding.dateDueInput.setText(
             state.dateDue?.let { formatDate(it) } ?: getString(R.string.record_next_due_none)
@@ -256,8 +195,7 @@ class AddVaccinationFragment : Fragment() {
         bindRepeatSegments(state.interval)
 
         binding.checklistSwitch.isChecked = state.isChecklistOn
-        // The checked state goes on the *row*, since that is the control TalkBack announces — see the
-        // accessibility note in the layout.
+        // The checked state goes on the row, since that is the control TalkBack announces.
         binding.checklistToggleRow.isSelected = state.isChecklistOn
 
         binding.summaryText.text = summaryFor(state)
@@ -265,16 +203,7 @@ class AddVaccinationFragment : Fragment() {
         binding.saveRecordButton.isEnabled = state.canSave
     }
 
-    /**
-     * Fills the preset row, and marks the chip matching what is currently in the vaccine field.
-     *
-     * The chips are keyed on the string resource id rather than on the label, so the tapped chip maps
-     * back to a resource rather than to displayed text — which would break the moment the app was
-     * translated. That is the same reasoning as the expense form's category dropdown.
-     *
-     * The row hides itself entirely for a species the app has no presets for; see
-     * [VaccinationFormState.presets] for why that is better than offering a generic list.
-     */
+    /** Fills the preset row, and marks the chip matching what is currently in the vaccine field. */
     private fun bindPresetChips(state: VaccinationFormState) {
         binding.presetChipScroll.isVisible = state.presets.isNotEmpty()
         if (state.presets.isEmpty()) return
@@ -283,10 +212,7 @@ class AddVaccinationFragment : Fragment() {
             ChipOption(key = labelRes.toString(), label = getString(labelRes))
         }
 
-        // The chosen chip is whichever one's label equals what is in the field — so typing "Rabies"
-        // by hand lights the Rabies chip, and editing one character un-lights it. The chip row
-        // reports the *state* of the field rather than a separate choice of its own, which is what
-        // stops the two disagreeing.
+        // The chosen chip is whichever one's label equals what is in the field.
         val selectedKey = state.presets
             .firstOrNull { getString(it).equals(state.vaccineName.trim(), ignoreCase = true) }
             ?.toString()
@@ -301,27 +227,14 @@ class AddVaccinationFragment : Fragment() {
         }
     }
 
-    /**
-     * Puts a preset's name into the vaccine field.
-     *
-     * The field is written directly as well as the ViewModel being told, because this is the one
-     * route by which the name changes *without* the user typing — and [render] deliberately does not
-     * write into the field on every state emission, which would move the cursor of someone mid-word.
-     * [setSelection] leaves the caret at the end, where it would be if they had typed it.
-     */
+    /** Puts a preset's name into the vaccine field. */
     private fun setVaccineName(name: String) {
         binding.vaccineInput.setText(name)
         binding.vaccineInput.setSelection(name.length)
         viewModel.onVaccineNameChanged(name)
     }
 
-    /**
-     * Lights the chosen repeat and leaves the other three plain.
-     *
-     * One boolean per segment, and nothing else: the fill (bg_profile_segment.xml) and the text
-     * colour (res/color/profile_segment_text.xml) are both state lists keyed on `state_selected`, so
-     * no colour is set in code here.
-     */
+    /** Lights the chosen repeat and leaves the other three plain. */
     private fun bindRepeatSegments(interval: RepeatInterval) {
         binding.repeatSixMonths.isSelected = interval == RepeatInterval.SIX_MONTHS
         binding.repeatOneYear.isSelected = interval == RepeatInterval.ONE_YEAR
@@ -329,15 +242,7 @@ class AddVaccinationFragment : Fragment() {
         binding.repeatOnce.isSelected = interval == RepeatInterval.ONCE
     }
 
-    /**
-     * Builds the readback above the save button.
-     *
-     * Two lines, or three when a clinic has been typed. The clinic line is added rather than left
-     * blank, so an empty clinic does not leave a gap in the panel that reads as text failing to load.
-     *
-     * "Unnamed vaccine" stands in before anything is typed, which is more use than an empty first
-     * line: it shows the shape of what will be saved while saying plainly what is still missing.
-     */
+    /** Builds the readback above the save button. */
     private fun summaryFor(state: VaccinationFormState): String {
         val name = state.vaccineName.trim().takeIf { it.isNotBlank() }
             ?: getString(R.string.record_summary_untitled)
@@ -355,17 +260,7 @@ class AddVaccinationFragment : Fragment() {
         return lines.joinToString(separator = "\n")
     }
 
-    /**
-     * The record is in the database. Hands its details back to the pet detail screen and closes.
-     *
-     * The values travel through the *previous* back stack entry's SavedStateHandle, which is the
-     * Navigation component's way of returning a result: it belongs to the destination being returned
-     * to, survives that screen being recreated, and needs neither a shared ViewModel nor a fragment
-     * result listener. The same route "Add a place" uses to confirm a save on the Places tab.
-     *
-     * The three supporting values are written *before* the record id, because the pet detail screen
-     * watches the id — writing them the other way round would wake it before the rest had arrived.
-     */
+    /** The record is in the database. Hands its details back to the pet detail screen and closes. */
     private fun handleEvent(event: AddVaccinationEvent) {
         when (event) {
             is AddVaccinationEvent.Saved -> {
@@ -390,11 +285,7 @@ class AddVaccinationFragment : Fragment() {
         /** Navigation argument name; must match the one declared in nav_graph.xml. */
         const val ARG_PET_ID = "petId"
 
-        /**
-         * The keys the saved record travels back to the pet detail screen under. Named here, beside
-         * the code that writes them, and read by PetDetailFragment — one definition, so the two
-         * cannot drift.
-         */
+        /** The keys the saved record travels back to the pet detail screen under. */
         const val RESULT_RECORD_ID = "savedVaccinationId"
         const val RESULT_VACCINE_NAME = "savedVaccinationName"
         const val RESULT_PET_NAME = "savedVaccinationPetName"

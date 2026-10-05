@@ -8,26 +8,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-/**
- * Turns the signed-in account's pets, care tasks and expenses into a single CSV document — what the
- * profile screen's "Export my records" row produces.
- *
- * **Why one file with a `record_type` column, rather than three files.** The obvious shape is a
- * pets.csv, a tasks.csv and an expenses.csv in a zip. But the point of the export is that the user can
- * open it — in a spreadsheet, on a phone, without unpacking anything — and a zip is a worse answer to
- * that than a single file they can tap. The first column names what each row is, so the three kinds
- * stay separable by sorting or filtering, which is the operation a spreadsheet is best at anyway.
- *
- * It sits in `util` beside the app's other pure helpers rather than in the data layer: it reads no
- * database and holds no state, it is handed rows that a repository has already fetched, and it hands
- * back a string. That is what makes it testable without a device.
- *
- * **Dates are written as ISO-8601 in UTC**, not in the device's locale. A CSV is read by machines at
- * least as often as by people, and "12/09/2026" is genuinely ambiguous between two continents, while
- * "2026-09-12" is not. UTC matches how the app stores these values (see [Pet] on why dates are epoch
- * milliseconds), so the exported text is exactly the stored fact with no time-zone shift invented on
- * the way out.
- */
+/** Turns the signed-in account's pets, care tasks and expenses into a single CSV document. */
 object RecordsCsv {
 
     /** The record-type values in the first column. */
@@ -35,27 +16,11 @@ object RecordsCsv {
     private const val TYPE_TASK = "task"
     private const val TYPE_EXPENSE = "expense"
 
-    /**
-     * The header row.
-     *
-     * One set of columns covers all three record types, so a column means different things depending
-     * on the row's type — `name` is the pet's name on a pet row and the task's title on a task row.
-     * The alternative, a union of every field under its own name, would produce a sheet of thirty
-     * mostly-empty columns. Naming the columns generically and letting `record_type` disambiguate is
-     * what keeps the file readable.
-     */
+    /** The header row. */
     private const val HEADER =
         "record_type,id,pet_name,name,category,detail,amount,date"
 
-    /**
-     * Builds the whole document.
-     *
-     * @param pets Every pet on the account.
-     * @param tasksByPetId That pet's care tasks, keyed by pet id.
-     * @param expensesByPetId That pet's expenses, keyed by pet id.
-     * @return the CSV text, or null when there is nothing at all to export — which the caller reports
-     *   rather than writing an empty file the user would have to open to discover was empty.
-     */
+    /** Builds the whole document. */
     fun build(
         pets: List<Pet>,
         tasksByPetId: Map<Long, List<CareTask>>,
@@ -87,9 +52,7 @@ object RecordsCsv {
                         category = task.category.name,
                         detail = task.notes.orEmpty(),
                         amount = "",
-                        // When it was last done, which is the fact worth exporting about a task: the
-                        // schedule lives on its routine and would not survive being flattened into a
-                        // row anyway.
+                        // When it was last done, which is the fact worth exporting about a task.
                         date = task.completedAt
                     )
                 }
@@ -102,8 +65,7 @@ object RecordsCsv {
                         name = expense.title,
                         category = expense.category.name,
                         detail = expense.notes.orEmpty(),
-                        // The bare number, with no currency symbol and no grouping separators. A
-                        // spreadsheet has to be able to add these up, and "Rs 4,665" is text.
+                        // The bare number, with no currency symbol and no grouping separators.
                         amount = expense.amount.toString(),
                         date = expense.incurredOn
                     )
@@ -123,8 +85,7 @@ object RecordsCsv {
         amount: String,
         date: Long?
     ) {
-        // Newline *before* each row rather than after, so the document does not end with a blank line
-        // that some spreadsheet importers read as an empty final record.
+        // Newline before each row rather.
         append("\n")
         append(
             listOf(type, id.toString(), petName, name, category, detail, amount, formatDate(date))
@@ -132,17 +93,7 @@ object RecordsCsv {
         )
     }
 
-    /**
-     * Escapes one field for CSV.
-     *
-     * The rule from RFC 4180, and each part of it earns its place with real data from this app: a
-     * **comma** appears in notes constantly, a **newline** whenever someone writes a multi-line note,
-     * and a **double quote** in a name like `Max "Buddy" Sharma`. A field containing any of them is
-     * wrapped in quotes, and any quote inside it is doubled.
-     *
-     * Fields without those characters are left bare, so the common case stays readable in a text
-     * editor rather than every cell being needlessly quoted.
-     */
+    /** Escapes one field for CSV. */
     private fun escape(value: String): String =
         if (value.any { it == ',' || it == '"' || it == '\n' || it == '\r' }) {
             "\"" + value.replace("\"", "\"\"") + "\""
@@ -150,14 +101,7 @@ object RecordsCsv {
             value
         }
 
-    /**
-     * An epoch timestamp as `2026-09-12`, or an empty field when there is none.
-     *
-     * The formatter is built per call: [SimpleDateFormat] is not thread-safe, and a cached one would
-     * be shared across whatever thread the export happens to run on. [Locale.US] fixes the digits to
-     * Western Arabic numerals — a formatter following the device's locale would write Devanagari
-     * digits on a Nepali phone, which no spreadsheet would parse as a date.
-     */
+    /** An epoch timestamp as `2026-09-12`, or an empty field when there is none. */
     private fun formatDate(millis: Long?): String {
         if (millis == null) return ""
 

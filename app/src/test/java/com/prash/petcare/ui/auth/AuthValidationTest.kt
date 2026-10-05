@@ -7,25 +7,13 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Unit tests for [AuthValidation], the rules behind every inline error on the sign-in screens.
- *
- * Plain JVM tests, possible because the rules use no Android classes. They guard the cases a quick
- * manual check misses — a password exactly at the minimum length, one that meets every variety rule
- * but is still a straight run — where a wrong rule would either lock a real user out or let a bad
- * value through.
- *
- * Phone numbers are no longer tested here: they moved to `PhoneNumbersTest`, alongside the rules
- * themselves.
- */
+/** Unit tests for [AuthValidation], the rules behind every inline error on the sign-in screens. */
 class AuthValidationTest {
 
     /** A password satisfying all six rules, used wherever the test is about something else. */
     private val goodPassword = "Biscuits1!"
 
-    // ---------------------------------------------------------------------------------------
-    // Email
-    // ---------------------------------------------------------------------------------------
+    // Email.
 
     @Test
     fun `a normal address is accepted`() {
@@ -43,9 +31,7 @@ class AuthValidationTest {
             .forEach { assertEquals(it, R.string.error_email_invalid, AuthValidation.validateEmail(it)) }
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Passwords: the whole rule
-    // ---------------------------------------------------------------------------------------
+    // Passwords: the whole rule.
 
     @Test
     fun `a password meeting every rule is accepted`() {
@@ -95,14 +81,11 @@ class AuthValidationTest {
         }
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Passwords: repeated and sequential runs
-    // ---------------------------------------------------------------------------------------
+    // Passwords: repeated and sequential runs.
 
     @Test
     fun `a whole password that is one repeated or sequential run is rejected`() {
-        // Each of these fails the variety rules too, which is why the *length* rule is checked first
-        // and the variety rule second — so the message names the nearest problem, not this one.
+        // Each of these fails the variety rules too.
         listOf("aaaaaaaa", "88888888", "abcdefgh", "87654321", "ABCDEFGH").forEach {
             assertFalse(it, AuthValidation.requirementsFor(it).isNotPredictable)
         }
@@ -110,16 +93,14 @@ class AuthValidationTest {
 
     @Test
     fun `a run inside an otherwise good password is not treated as a pattern`() {
-        // "Abcd1234!" contains two runs, and is accepted: judging fragments rather than the whole
-        // password would start rejecting ordinary passwords for merely containing "123".
+        // "Abcd1234!" contains two runs, and is accepted: judging fragments.
         assertTrue(AuthValidation.requirementsFor("Abcd1234!").isNotPredictable)
         assertNull(AuthValidation.validateNewPassword("Abcd1234!"))
     }
 
     @Test
     fun `an untouched form has no rule already ticked`() {
-        // The checklist is a list of things still to do, so a line ticked before a key has been
-        // pressed would read as progress the user has not made.
+        // The checklist is a list of things still to do.
         val requirements = AuthValidation.requirementsFor("")
 
         assertFalse(requirements.hasLength)
@@ -136,9 +117,7 @@ class AuthValidationTest {
         assertTrue(AuthValidation.requirementsFor("Bis").isNotPredictable)
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Passwords: the checklist's measurements
-    // ---------------------------------------------------------------------------------------
+    // Passwords: the checklist's measurements.
 
     @Test
     fun `requirements report each rule separately`() {
@@ -155,8 +134,7 @@ class AuthValidationTest {
 
     @Test
     fun `allMet agrees with the rule the form enforces`() {
-        // The checklist and the submit must never disagree — six green ticks over a form that then
-        // refuses the password would be worse than no checklist at all.
+        // The checklist and the submit must never disagree.
         listOf(goodPassword, "short1!A", "biscuits", "", "Aa1!aaaa").forEach { password ->
             assertEquals(
                 password,
@@ -168,15 +146,12 @@ class AuthValidationTest {
 
     @Test
     fun `a symbol from outside the ASCII set still counts as one`() {
-        // The rule is "not a letter, digit or space" rather than a list of allowed symbols, so a
-        // password using a currency sign or a dash from another keyboard is not wrongly refused.
+        // The rule is "not a letter, digit or space" rather than a list of allowed symbols.
         assertTrue(AuthValidation.requirementsFor("Biscuits1£").hasSpecial)
         assertTrue(AuthValidation.requirementsFor("Biscuits1—").hasSpecial)
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Confirmation
-    // ---------------------------------------------------------------------------------------
+    // Confirmation.
 
     @Test
     fun `the confirmation must be present and match exactly`() {

@@ -17,15 +17,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * What the recovery-codes screen draws.
- *
- * @property codes The ten codes, in plain text, as generated on the previous screen.
- * @property hasConfirmedSaved Whether the user has ticked "I have saved these". The finish button
- *   waits on it — see [RecoveryCodesViewModel].
- * @property isFinishing True while the switch-on is being written, so a second tap cannot start a
- *   second one.
- */
+/** What the recovery-codes screen draws. */
 data class RecoveryCodesUiState(
     val codes: List<String> = emptyList(),
     val hasConfirmedSaved: Boolean = false,
@@ -46,38 +38,7 @@ sealed interface RecoveryCodesEvent {
     data object Failed : RecoveryCodesEvent
 }
 
-/**
- * The ViewModel behind the recovery-codes screen (RecoveryCodesFragment) — the last step of setting
- * two-factor authentication up.
- *
- * ## This screen is where the feature is actually switched on
- *
- * Both halves are written together, here, in [onFinish]: the authenticator secret proved on the
- * previous screen, and the hashes of the codes shown on this one. Nothing before this point touched
- * the database.
- *
- * Splitting it that way is what lets the flow insist on the confirmation. If the secret had been
- * stored as soon as the code was confirmed, someone who closed the app on this screen would be left
- * with an account protected by an authenticator on one phone and no way back if that phone were
- * lost — the precise situation recovery codes exist to prevent, created by the screen that hands them
- * out. Waiting until the tick means walking away costs nothing: two-factor authentication is still
- * off, and setup can be started again from the profile screen.
- *
- * ## Why the codes arrive as an argument
- *
- * They are generated on the setup screen, at the moment the code was confirmed, and travel here in
- * the navigation arguments. Generating them here instead would be a second set — the one shown and
- * the one stored could not then be guaranteed to be the same set, which is a bug the user would only
- * discover on the day they needed a code.
- *
- * Arguments live in the [SavedStateHandle], so the list survives the process being killed while the
- * user is photographing the screen or writing the codes down — which is exactly what they are being
- * asked to go and do.
- *
- * @param savedStateHandle Carries the secret and the codes, and the tick across a rotation.
- * @param twoFactorRepository Where the secret and the hashed codes are written.
- * @param userId Which account is being protected.
- */
+/** The ViewModel behind the recovery-codes screen (RecoveryCodesFragment). */
 class RecoveryCodesViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val twoFactorRepository: TwoFactorRepository,
@@ -92,8 +53,7 @@ class RecoveryCodesViewModel(
             codes = savedStateHandle.get<Array<String>>(RecoveryCodesFragment.ARG_CODES)
                 ?.toList()
                 .orEmpty(),
-            // Restored from the handle, so turning the phone while reading the codes does not silently
-            // untick a box the user has already ticked and re-disable the finish button.
+            // Restored from the handle, so turning the phone.
             hasConfirmedSaved = savedStateHandle[KEY_CONFIRMED] ?: false
         )
     )
@@ -108,13 +68,7 @@ class RecoveryCodesViewModel(
         _uiState.update { it.copy(hasConfirmedSaved = isConfirmed) }
     }
 
-    /**
-     * "FINISH SETUP": stores the secret and the hashed codes, turning two-factor authentication on.
-     *
-     * Guarded by [RecoveryCodesUiState.canFinish] rather than trusting the button's enabled state:
-     * a disabled button can still be reached by an accessibility action or a stray click during a
-     * transition, and this is the one call in the flow that changes how the account signs in.
-     */
+    /** "FINISH SETUP": stores the secret and the hashed codes, turning two-factor authentication on. */
     fun onFinish() {
         val state = _uiState.value
         if (!state.canFinish || secret.isEmpty()) return

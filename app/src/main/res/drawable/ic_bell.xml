@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The bell in the shared header, and the way in to the notifications screen.
-
-    **Why a bell replaced a number.** The badge used to show how many pets the account had, while
-    tapping it opened the notifications screen — a control labelled with one thing and leading to
-    another. A bell is the one glyph that needs no explaining for "what am I being told about?", and it
-    lets the number on its corner mean what a number on a bell always means: how many are waiting.
-
-    Drawn as a solid silhouette rather than an outline because it is small and sits inside a tinted
-    well; at 18dp an outlined bell reads as a smudge. The clapper is a separate path so the shape stays
-    recognisable as a bell rather than a dome.
-
-    No tint here: the header tints it to match the theme toggle beside it, so the right-hand controls
-    stay one family — see PetCare.Header.BellIcon in styles.xml.
--->
+<!-- The bell in the shared header, and the way in to the notifications screen. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

@@ -10,14 +10,7 @@ import com.prash.petcare.data.local.entity.Expense
 import com.prash.petcare.data.local.entity.ExpenseCategory
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Database access for the `expenses` table.
- *
- * As well as ordinary CRUD, this DAO exposes SUM queries so spending totals are calculated by
- * SQLite rather than by loading every row into memory and adding them up in Kotlin.
- *
- * See [UserDao] for the reasoning behind the [Flow] versus `suspend` return types used here.
- */
+/** Database access for the `expenses` table. */
 @Dao
 interface ExpenseDao {
 
@@ -108,12 +101,7 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE id = :expenseId")
     suspend fun getById(expenseId: Long): Expense?
 
-    /**
-     * Total spent on one pet.
-     *
-     * The return type is nullable because SQL's `SUM` yields NULL, not 0, when no rows match.
-     * Callers coerce that to zero; the repository does it so the UI never has to.
-     */
+    /** Total spent on one pet. */
     @Query("SELECT SUM(amount) FROM expenses WHERE petId = :petId")
     fun observeTotalForPet(petId: Long): Flow<Double?>
 
@@ -121,12 +109,7 @@ interface ExpenseDao {
     @Query("SELECT SUM(amount) FROM expenses WHERE petId = :petId AND incurredOn BETWEEN :fromMillis AND :toMillis")
     fun observeTotalForPetBetween(petId: Long, fromMillis: Long, toMillis: Long): Flow<Double?>
 
-    /**
-     * Total spent across every pet an owner has.
-     *
-     * Joins through `pets` because an expense records which animal it was for, not which
-     * account — the owner is reached via the pet, keeping that fact stored in exactly one place.
-     */
+    /** Total spent across every pet an owner has. */
     @Query(
         """
         SELECT SUM(expenses.amount) FROM expenses

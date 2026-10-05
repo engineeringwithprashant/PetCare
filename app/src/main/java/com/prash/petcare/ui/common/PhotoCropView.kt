@@ -14,43 +14,14 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-/**
- * A fixed-shape window onto a photograph that the user can slide and pinch to frame.
- *
- * **The problem it solves.** A pet card is a fixed shape and a photograph almost never shares it, so
- * something has to be trimmed. Left to `centerCrop` the decision is made by arithmetic — keep the
- * middle — and the middle of a photo of a dog is very often its ribcage. This view hands that
- * decision to the person who knows which part matters, and [croppedBitmap] then bakes their choice
- * into the image that is actually stored, so every card in the app shows what they framed rather
- * than guessing again from scratch.
- *
- * **Why a custom View rather than a library or an ImageView.** `ImageView.ScaleType.MATRIX` would
- * give somewhere to put the transform but nothing that produces one from touches, and the gesture
- * handling, the clamping and the export are the whole feature. Written out here it is also readable:
- * roughly a hundred lines of Matrix arithmetic, against a dependency whose behaviour would have to
- * be taken on trust.
- *
- * **The one rule everything else serves:** the photo must always cover the window completely. There
- * must never be a gap at an edge, because a gap would be stored as blank pixels in the saved image.
- * Both [clampScale] and [clampTranslation] exist to enforce it, and they are applied after every
- * gesture rather than trusting the gesture to behave.
- *
- * Part of the **View** layer. It holds no repository and knows nothing about pets — it frames a
- * bitmap and hands one back, which is what makes it reusable for any photo the app ever crops.
- */
+/** A fixed-shape window onto a photograph that the user can slide and pinch to frame. */
 class PhotoCropView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    /**
-     * The shape of the window, as width ÷ height.
-     *
-     * Defaults to the app's pet-photo shape so the crop the user sees is exactly the shape every pet
-     * card draws — see `pet_photo_aspect_*` in dimens.xml, which the three card layouts use too.
-     * Changing it here without changing them would break the promise the whole feature rests on.
-     */
+    /** The shape of the window, as width ÷ height. */
     var aspectRatio: Float = PET_PHOTO_ASPECT
         set(value) {
             field = value
@@ -60,13 +31,7 @@ class PhotoCropView @JvmOverloads constructor(
     /** The photograph being framed, at whatever size it was decoded. */
     private var bitmap: Bitmap? = null
 
-    /**
-     * Maps bitmap pixels onto view pixels: the user's framing, expressed as a transform.
-     *
-     * Keeping the framing *as a matrix* rather than as a crop rectangle is what makes panning and
-     * zooming composable — each gesture simply post-multiplies its own change onto it, and the view
-     * never has to reason about what the previous gestures did.
-     */
+    /** Maps bitmap pixels onto view pixels: the user's framing, expressed as a transform. */
     private val imageMatrix = Matrix()
 
     /** Scratch objects, reused so that no allocation happens during a drag or inside onDraw. */
@@ -80,14 +45,7 @@ class PhotoCropView @JvmOverloads constructor(
     private var lastTouchX = 0f
     private var lastTouchY = 0f
 
-    /**
-     * Pinch-to-zoom.
-     *
-     * The zoom is applied **around the pinch's focal point** rather than the view's centre, which is
-     * what makes it feel like the photo is being stretched under the fingers instead of sliding away
-     * from them. [clampScale] caps the change first, so a fast pinch cannot overshoot the limits and
-     * then be yanked back.
-     */
+    /** Pinch-to-zoom. */
     private val scaleDetector = ScaleGestureDetector(
         context,
         object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -101,50 +59,26 @@ class PhotoCropView @JvmOverloads constructor(
         }
     )
 
-    /**
-     * Sizes the window to [aspectRatio].
-     *
-     * The width is taken from the parent — the view is always laid out at `match_parent` — and the
-     * height derived from it, so the window is the right shape on a narrow phone and a wide one
-     * alike without any dimension being hard-coded.
-     */
+    /** Sizes the window to [aspectRatio]. */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = MeasureSpec.getSize(widthMeasureSpec)
         setMeasuredDimension(width, (width / aspectRatio).roundToInt())
     }
 
-    /**
-     * Re-frames the photo whenever the window's size changes.
-     *
-     * Also covers the first time the view is measured, which is the only moment the initial framing
-     * *can* be worked out: [setBitmap] may well be called before the view has a width, and a scale
-     * computed against a width of zero would be meaningless.
-     */
+    /** Re-frames the photo whenever the window's size changes. */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         resetFraming()
     }
 
-    /**
-     * Puts a photograph in the window, framed to cover it.
-     *
-     * Replacing the bitmap deliberately discards the previous framing: the new photo is a different
-     * picture, and keeping the old pan and zoom would open it at some arbitrary corner.
-     */
+    /** Puts a photograph in the window, framed to cover it. */
     fun setBitmap(bitmap: Bitmap?) {
         this.bitmap = bitmap
         resetFraming()
         invalidate()
     }
 
-    /**
-     * Frames the photo as `centerCrop` would: scaled so the *smaller* overflow just covers the
-     * window, and centred.
-     *
-     * Starting where the old behaviour ended is deliberate. The user opens the cropper already
-     * looking at what the card would have shown, so their work is only to correct it — and a photo
-     * that was framed acceptably by accident needs no work at all.
-     */
+    /** Frames the photo as `centerCrop` would: scaled so the smaller overflow just covers the window, and centred. */
     private fun resetFraming() {
         val photo = bitmap ?: return
         if (width == 0 || height == 0 || photo.width == 0 || photo.height == 0) return
@@ -165,18 +99,7 @@ class PhotoCropView @JvmOverloads constructor(
         bitmap?.let { canvas.drawBitmap(it, imageMatrix, paint) }
     }
 
-    /**
-     * Turns touches into framing.
-     *
-     * The scale detector is offered every event first and is *not* allowed to consume them, because
-     * it needs to keep watching for a second finger throughout. A drag is then applied only while a
-     * single finger is down — moving the photo during a pinch as well would fight the focal-point
-     * zoom and make it drift.
-     *
-     * `requestDisallowInterceptTouchEvent` is what lets this work inside a scrolling dialog: without
-     * it the first vertical drag would be stolen by the scroll container and the photo would never
-     * move.
-     */
+    /** Turns touches into framing. */
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (bitmap == null) return false
 
@@ -197,8 +120,7 @@ class PhotoCropView @JvmOverloads constructor(
                 invalidate()
             }
 
-            // A finger lifting during a pinch leaves the other one somewhere new; re-recording the
-            // position stops the photo jumping when the drag resumes from it.
+            // A finger lifting during a pinch leaves the other one somewhere new.
             MotionEvent.ACTION_POINTER_UP -> {
                 lastTouchX = event.x
                 lastTouchY = event.y
@@ -208,18 +130,11 @@ class PhotoCropView @JvmOverloads constructor(
                 parent?.requestDisallowInterceptTouchEvent(false)
         }
 
-        // Always true: this view handles its own gestures and must keep receiving the stream after
-        // the initial DOWN, which returning false would end.
+        // Always true: this view handles its own gestures and must keep receiving the stream after the initial DOWN.
         return true
     }
 
-    /**
-     * Limits a pinch so the photo can neither shrink below covering the window nor be magnified past
-     * [MAX_ZOOM].
-     *
-     * It returns an adjusted *factor* rather than rejecting the gesture, so a pinch that runs into a
-     * limit stops there smoothly instead of the photo freezing while the fingers keep moving.
-     */
+    /** Limits a pinch so the photo can neither shrink below covering the window nor be magnified past [MAX_ZOOM]. */
     private fun clampScale(factor: Float): Float {
         val photo = bitmap ?: return factor
 
@@ -237,15 +152,7 @@ class PhotoCropView @JvmOverloads constructor(
         return matrixValues[Matrix.MSCALE_X]
     }
 
-    /**
-     * Slides the photo back if a gesture has pulled an edge inside the window.
-     *
-     * This is the guarantee the whole view rests on, and it is enforced here — once, after every
-     * gesture — rather than by trying to predict each gesture's effect. For each axis: if the photo
-     * overflows the window, its edges are pushed back to the boundary they crossed; if it somehow
-     * does not, it is centred, which cannot happen while [clampScale] is doing its job but leaves no
-     * undefined case if it ever failed to.
-     */
+    /** Slides the photo back if a gesture has pulled an edge inside the window. */
     private fun clampTranslation() {
         val photo = bitmap ?: return
 
@@ -269,18 +176,7 @@ class PhotoCropView @JvmOverloads constructor(
         else -> 0f
     }
 
-    /**
-     * Renders what the window currently shows as a new bitmap.
-     *
-     * The same [imageMatrix] the view draws with is reused, scaled up to the output size, so the
-     * result is by construction the picture the user was looking at — there is no second, subtly
-     * different crop calculation that could disagree with the preview. That is what makes the
-     * feature trustworthy: what they framed is what is saved.
-     *
-     * @param targetWidthPx Width of the returned image. The height follows from [aspectRatio], so
-     *   the output is always the shape the cards expect.
-     * @return The cropped photo, or null when there is nothing framed.
-     */
+    /** Renders what the window currently shows as a new bitmap. */
     fun croppedBitmap(targetWidthPx: Int): Bitmap? {
         val photo = bitmap ?: return null
         if (width == 0 || height == 0) return null
@@ -290,8 +186,7 @@ class PhotoCropView @JvmOverloads constructor(
 
         val output = Bitmap.createBitmap(outputWidth, outputHeight, Bitmap.Config.ARGB_8888)
         val exportMatrix = Matrix(imageMatrix).apply {
-            // View pixels to output pixels. Both axes use the same factor because the output has the
-            // view's aspect ratio, so scaling is uniform and the photo cannot be stretched.
+            // View pixels to output pixels. Both axes use the same factor.
             postScale(outputWidth.toFloat() / width, outputHeight.toFloat() / height)
         }
 
@@ -301,26 +196,13 @@ class PhotoCropView @JvmOverloads constructor(
 
     companion object {
 
-        /**
-         * The shape every pet photo is stored and displayed in: 4:3 landscape.
-         *
-         * **Why one shape for the whole app.** The promise is that what the user frames is what the
-         * cards show, and that can only hold if the cards all draw the same shape they were asked to
-         * frame — a card with a different ratio would have to crop the crop, and the user's choice
-         * would be second-guessed after all. 4:3 is chosen because it is close to what the Pets card
-         * and the detail hero already were, so honouring it cost those two screens almost no change
-         * in height. See the three card layouts, which all derive their photo frame from this.
-         */
+        /** The shape every pet photo is stored and displayed in: 4:3 landscape. */
         const val PET_PHOTO_ASPECT = 4f / 3f
 
         /** How far in the user may pinch, as a multiple of the "just covers the window" scale. */
         private const val MAX_ZOOM = 5f
 
-        /**
-         * Ceiling on the stored image's width. Matches PetPhotoStorage's own limit: a crop is saved
-         * as a file like any other photo, and there is no point storing more pixels than a phone
-         * screen can show.
-         */
+        /** Ceiling on the stored image's width. Matches PetPhotoStorage's own limit. */
         private const val MAX_OUTPUT_WIDTH_PX = 1024
     }
 }

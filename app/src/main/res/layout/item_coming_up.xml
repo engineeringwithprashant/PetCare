@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    One row of the dashboard's "Coming up this week" card: the date and weekday in a narrow column, a
-    thin bar in the care category's colour, the task's title with its location or routine and time
-    beneath, and an arrow. Tapping the row opens the routine the task belongs to.
-
-    **A ConstraintLayout** because the pieces relate to one another in both directions: the title and
-    subtitle sit between the bar and the arrow and must leave room for both, while the date column, bar
-    and arrow all centre vertically on the text block whatever its height. Chains of LinearLayouts could
-    express it, but only by nesting three deep; constraints say it flat.
-
-    The hairline is a divider view at the top of *every* row, the first included: in the design a line
-    also separates the first row from the card's header, so each row simply brings its own line with it.
-    That is simpler than an ItemDecoration for a list never more than four rows long.
--->
+<!-- One row of the dashboard's "Coming up this week" card: the date and weekday in a narrow column. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -31,8 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- The date column: "12" over "FRI", in a fixed width so every row's bar lines up down the card
-         whether the date has one digit or two. Centred on the text block beside it. -->
+    <!-- The date column: "12" over "FRI", in a fixed width. -->
     <LinearLayout
         android:id="@+id/dateColumn"
         android:layout_width="@dimen/coming_up_date_width"
@@ -72,9 +58,7 @@
         app:layout_constraintStart_toEndOf="@id/dateColumn"
         app:layout_constraintTop_toTopOf="@id/textBlock" />
 
-    <!-- Title over subtitle. Width 0dp between the bar and the arrow is "fill what is left", which is
-         what lets a long title ellipsize instead of pushing the arrow off the card. The vertical
-         padding lives here, on the tallest element, so the row's height follows the text. -->
+    <!-- Title over subtitle. Width 0dp between the bar and the arrow is "fill what is left". -->
     <LinearLayout
         android:id="@+id/textBlock"
         android:layout_width="0dp"
@@ -106,8 +90,7 @@
 
     </LinearLayout>
 
-    <!-- The arrow, in the text colour as the design draws it. Decorative: the row's description
-         already ends "Open routine", so TalkBack skips the image. -->
+    <!-- The arrow, in the text colour as the design draws it. -->
     <ImageView
         android:id="@+id/arrowIcon"
         android:layout_width="@dimen/coming_up_arrow_size"

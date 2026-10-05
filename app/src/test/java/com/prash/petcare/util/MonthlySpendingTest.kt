@@ -8,12 +8,7 @@ import org.junit.Test
 import java.util.Calendar
 import java.util.TimeZone
 
-/**
- * Unit tests for [MonthlySpending], the arithmetic behind the Money tab's total card and legend.
- *
- * The cases concentrate on the edges that fail quietly: which month an expense on the 1st belongs
- * to, time zones either side of Greenwich, the year boundary, and a previous month with nothing in it.
- */
+/** Unit tests for [MonthlySpending], the arithmetic behind the Money tab's total card and legend. */
 class MonthlySpendingTest {
 
     private val utc = TimeZone.getTimeZone("UTC")
@@ -78,8 +73,7 @@ class MonthlySpendingTest {
 
     @Test
     fun `an expense dated the 1st belongs to that month in a zone behind UTC`() {
-        // In New York, local midnight on 1 Sept is 04:00 UTC — after the stored 00:00 UTC. A local
-        // boundary would push this expense into August.
+        // In New York, local midnight on 1 Sept is 04:00 UTC — after the stored 00:00 UTC.
         val onTheFirst = expense(100.0, ExpenseCategory.FOOD, storedDate(2026, 9, 1))
         val summary = MonthlySpending.summarise(listOf(onTheFirst), localMoment(newYork, 2026, 9, 1, 9), newYork)
 

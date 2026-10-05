@@ -2,85 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!--
-        Permissions for the care delegation feature, which hands a pet's checklist to whoever is
-        looking after them.
-
-        These cover its SMS channel only, where the app sends the message itself: READ_CONTACTS to
-        look up the chosen contact's phone number, and SEND_SMS to deliver it. Nothing is read or
-        sent until the user has picked a recipient and confirmed the exact message on a preview
-        screen.
-
-        Declaring them here is only half the job: both are "dangerous" permissions, so on API 23
-        and above the app must also ask for them at runtime and keep working if the user says no.
-        ChecklistFragment does that, showing a rationale dialog before each request.
-
-        The email channel needs no permission of its own and so appears nowhere in this file. It
-        sends nothing: it asks another app to open a draft, and the user addresses and sends it from
-        there — which is exactly why no permission is warranted for it.
-    -->
+    <!-- Permissions for the care delegation feature. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
 
-    <!--
-        Permissions for the care reminder feature, which sets an alarm for each task's time of day
-        and posts a notification when it comes due.
-
-        POST_NOTIFICATIONS became a runtime permission in Android 13 (API 33). Below that, declaring
-        it here is all that is needed and notifications work at install time; from 33 the user must
-        also grant it, or notify() is silently ignored. AddEditTaskFragment asks for it at the moment
-        the user first gives a task a time, which is the point at which a reminder starts to make
-        sense to them.
-
-        SCHEDULE_EXACT_ALARM lets a reminder fire at the exact minute it is due. It is granted
-        automatically on Android 12, and from Android 13 the user can revoke it, so
-        ReminderScheduler checks before every use and falls back to an inexact alarm rather than
-        failing. Google reserves the always-granted USE_EXACT_ALARM for clock and calendar apps, so
-        it is deliberately not requested here.
-
-        RECEIVE_BOOT_COMPLETED is what allows BootReceiver to be started after a restart. The system
-        discards every registered alarm on reboot, so without this the reminders would quietly stop
-        for good the first time the user restarted their phone.
-    -->
-    <!--
-        Lets the app see whether the device is online, which the Firestore sync uses to retry the
-        moment connectivity returns — see data.sync.NetworkMonitor. Without it, a change made with
-        no signal would wait for the user to edit something else or reopen the app.
-
-        A normal permission rather than a dangerous one: it is granted at install and there is
-        nothing to ask the user at runtime, because it reveals whether there is a connection, not
-        anything about what travels over it.
-    -->
+    <!-- Permissions for the care reminder feature. -->
+    <!-- Lets the app see whether the device is online. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!--
-        Lets the app open network connections: the Firestore sync, and the Open-Meteo forecast behind
-        the home screen's walk-window temperature (see data.remote.weather.WeatherApi).
-
-        A normal permission, granted at install with nothing to ask the user at runtime. It was not
-        needed until now only because the Firestore SDK declares it in its own manifest and manifest
-        merging folded it in; declaring it here states the app's own requirement rather than relying
-        on a library's, which would vanish if that library ever did.
-    -->
+    <!-- Lets the app open network connections: the Firestore sync. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!--
-        Permissions for the Places tab, which geotags each saved vet, groomer, park or shop.
-
-        ACCESS_FINE_LOCATION is what capturing a place's position really needs: GPS accuracy, so the
-        geotag marks the clinic's door rather than the neighbourhood. ACCESS_COARSE_LOCATION is
-        declared alongside it because from Android 12 the system will only show the prompt when both
-        are requested, and lets the user choose "Approximate" instead — which the app accepts, with a
-        note that the geotag may be off.
-
-        Both are "dangerous" permissions, asked for at runtime and only at the moment they are used:
-        pressing "Capture current location" in the place form, or "Allow location" on the Places tab
-        to see distances. Each shows a rationale first, and the app keeps working if refused — see
-        ui.place.LocationPermissionRequester.
-
-        No background location is requested. The position is only ever read while one of those two
-        screens is open.
-    -->
+    <!-- Permissions for the Places tab, which geotags each saved vet, groomer, park or shop. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
@@ -88,29 +21,17 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!--
-        The app is useful without a SIM — only delegation needs telephony — so the feature is
-        declared as not required. Without this, Google Play would hide the app from tablets and
-        other devices that cannot send SMS.
-    -->
+    <!-- The app is useful without a SIM — only delegation needs telephony. -->
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
 
-    <!--
-        The shake-to-reset gesture needs an accelerometer, but it is only a shortcut — every task
-        can still be un-ticked by hand — so the feature is not required. Without this declaration
-        Google Play would hide the app from the handful of devices that have no accelerometer.
-    -->
+    <!-- The shake-to-reset gesture needs an accelerometer, but it is only a shortcut. -->
     <uses-feature
         android:name="android.hardware.sensor.accelerometer"
         android:required="false" />
 
-    <!--
-        Declaring the location permissions above makes Google Play assume the app needs GPS hardware
-        and hide it from devices without it. Places work without GPS — Wi-Fi and cell positioning give
-        a usable fix, and every other tab needs no location at all — so both features are optional.
-    -->
+    <!-- Both optional: Places works on Wi-Fi or cell positioning, and no other tab needs location. -->
     <uses-feature
         android:name="android.hardware.location"
         android:required="false" />
@@ -118,12 +39,7 @@
         android:name="android.hardware.location.gps"
         android:required="false" />
 
-    <!--
-        android:name points at the custom Application class, which creates the Room database and
-        the repositories, and starts the care reminders. Without this attribute Android would use
-        the default Application and none of that wiring would exist — which would also mean the
-        reminder receivers below had nothing to hand their work to.
-    -->
+    <!-- android:name points at the custom Application class, which creates the Room database and the repositories. -->
     <application
         android:name=".PetCareApplication"
         android:allowBackup="true"
@@ -134,28 +50,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PetCare">
-        <!--
-            adjustResize, so an open keyboard shrinks the layout rather than being allowed to draw
-            over it — which is what lets a form's ScrollView re-measure and scroll the focused field
-            into view. The alternative, adjustPan, slides the whole window up instead and would take
-            the app bar off the top of the screen.
-
-            **This declaration is necessary but not sufficient here**, and the difference is worth
-            knowing: the Activity calls enableEdgeToEdge, and from Android 11 a window that does not
-            fit system windows is no longer resized for the keyboard at all — the keyboard arrives as
-            an inset the app has to make room for itself. MainActivity.applyWindowInsets does that.
-            Removing this line would still break older devices and any future non-edge-to-edge path,
-            so both halves are kept.
-        -->
-        <!--
-            android:theme overrides the application theme above for this Activity's *launch* only.
-            The system paints a placeholder window from this theme's windowBackground before the app
-            has started running, and Theme.PetCare.Splash makes that first frame the cream the opening
-            animation sits on, in both light and dark — without it the dark theme opens on a
-            near-black window and the animation arrives as a flash. MainActivity.onCreate swaps back
-            to Theme.PetCare immediately; see the note on that style in themes.xml for why the two
-            cannot be one theme.
-        -->
+        <!-- adjustResize, so an open keyboard shrinks the layout rather than being allowed to draw. -->
+        <!-- android:theme overrides the application theme above for this Activity's launch only. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -168,36 +64,12 @@
             </intent-filter>
         </activity>
 
-        <!--
-            Receives a care task's alarm when it comes due, shows the notification and schedules the
-            next occurrence.
-
-            Declared here rather than registered in code with registerReceiver, and that distinction
-            is the whole point: a manifest-declared receiver can be started by the system when the
-            app is not running, which is the normal case for a reminder. A code-registered one only
-            exists while the component that registered it is alive, so every reminder would be
-            missed the moment the user left the app.
-
-            exported="false" because only this app's own alarms ever target it. Leaving a receiver
-            exported would let any other app on the device fire fake reminders at the user.
-        -->
+        <!-- Receives a care task's alarm when it comes due. -->
         <receiver
             android:name=".reminder.ReminderReceiver"
             android:exported="false" />
 
-        <!--
-            Re-registers every reminder after an event that invalidates the app's alarms.
-
-            exported="true" is required here, unlike above: these broadcasts come from the system
-            rather than from this app, and a receiver that is not exported cannot be sent one. It is
-            still not open to other apps — the intent filter only matches protected system
-            broadcasts, which ordinary apps are not allowed to send.
-
-            BOOT_COMPLETED covers a restart and MY_PACKAGE_REPLACED an app update, both of which
-            clear every registered alarm. TIMEZONE_CHANGED and TIME_SET cover the alarms surviving
-            but now pointing at the wrong moment: a task due at 07:30 means 07:30 wherever the user
-            is, so the times have to be recalculated against the new clock.
-        -->
+        <!-- Re-registers every reminder after an event that invalidates the app's alarms. -->
         <receiver
             android:name=".reminder.BootReceiver"
             android:enabled="true"

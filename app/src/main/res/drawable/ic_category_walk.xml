@@ -1,6 +1,4 @@
-<!--
-    Paw print, marking the WALK task category — the app's exercise grouping.
--->
+<!-- Paw print, marking the WALK task category — the app's exercise grouping. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

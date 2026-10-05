@@ -17,37 +17,12 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-/**
- * Unit tests for [CareSchedule], the date arithmetic behind "what is due today" and "when does this
- * come round next".
- *
- * These run on a plain JVM with no emulator, which is possible only because [CareSchedule] is pure:
- * every function is a function of its arguments with no Android dependencies. That is worth having
- * tests for precisely *because* it is date logic — the failures here are the quiet kind. A reminder
- * that arrives an hour late twice a year, or a fortnightly routine that skips a week in March, looks
- * like nothing at all in a screenshot and would never be noticed by clicking through the app.
- *
- * The cases below fall into four groups:
- *  - the day boundaries [CareSchedule.startOfDay] and [CareSchedule.endOfDay] everything else rests on;
- *  - [CareSchedule.occursOn], which decides whether a routine runs on a given day;
- *  - [CareSchedule.nextOccurrence], which turns a repeating routine into the single moment an alarm
- *    is set for;
- *  - [CareSchedule.isDoneOn], which decides whether a repeating task counts as done *today*.
- */
+/** Unit tests for [CareSchedule]. */
 class CareScheduleTest {
 
-    // -------------------------------------------------------------------------------------------
-    // Time zone control
-    // -------------------------------------------------------------------------------------------
+    // Time zone control.
 
-    /**
-     * The device's real time zone, put back after each test.
-     *
-     * [CareSchedule] reads the default zone through [Calendar.getInstance], so these tests would
-     * otherwise pass or fail depending on where the machine running them happens to be — the worst
-     * kind of test, green locally and red on a marker's laptop. Fixing the zone makes every
-     * expectation below an exact, reproducible value.
-     */
+    /** The device's real time zone, put back after each test. */
     private lateinit var realTimeZone: TimeZone
 
     @Before
@@ -61,19 +36,12 @@ class CareScheduleTest {
         TimeZone.setDefault(realTimeZone)
     }
 
-    /**
-     * Switches to another zone for the daylight-saving tests.
-     *
-     * Called at the very start of a test, before any timestamp is built, because [at] and [format]
-     * both read whatever the default zone is at the moment they run.
-     */
+    /** Switches to another zone for the daylight-saving tests. */
     private fun useZone(id: String) {
         TimeZone.setDefault(TimeZone.getTimeZone(id))
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Day boundaries
-    // -------------------------------------------------------------------------------------------
+    // Day boundaries.
 
     @Test
     fun `startOfDay is local midnight`() {
@@ -85,14 +53,11 @@ class CareScheduleTest {
         val endOfDay = CareSchedule.endOfDay(at(2026, 9, 12, 14, 37))
 
         assertEquals("2026-09-12 23:59", format(endOfDay))
-        // The exact millisecond matters: the checklist tests completion with `in dayStart..dayEnd`,
-        // so a boundary one millisecond out would drop a task ticked off at the very end of the day.
+        // The exact millisecond matters: the checklist tests completion with `in dayStart..dayEnd`.
         assertEquals(at(2026, 9, 13) - 1, endOfDay)
     }
 
-    // -------------------------------------------------------------------------------------------
     // occursOn — does this routine run on this day?
-    // -------------------------------------------------------------------------------------------
 
     @Test
     fun `a paused routine never runs`() {
@@ -145,9 +110,7 @@ class CareScheduleTest {
         assertTrue(CareSchedule.occursOn(start, 2, RepeatUnit.WEEK, at(2026, 9, 15)))
     }
 
-    // -------------------------------------------------------------------------------------------
     // nextOccurrence — when should the alarm be set for?
-    // -------------------------------------------------------------------------------------------
 
     @Test
     fun `nextOccurrence returns today when the time is still ahead`() {
@@ -175,14 +138,7 @@ class CareScheduleTest {
         assertEquals("2026-09-13 07:30", format(next))
     }
 
-    /**
-     * The property that stops a reminder firing in a loop.
-     *
-     * An alarm is rescheduled the instant it goes off, so this is asked at exactly the moment the
-     * occurrence is due. If it answered "now", [com.prash.petcare.reminder.ReminderManager] would
-     * register an alarm for the current millisecond, the system would deliver it immediately, and
-     * the two would spin until the process was killed.
-     */
+    /** The property that stops a reminder firing in a loop. */
     @Test
     fun `nextOccurrence is strictly after the moment it is given`() {
         val dueNow = at(2026, 9, 12, 7, 30)
@@ -213,8 +169,7 @@ class CareScheduleTest {
 
     @Test
     fun `nextOccurrence follows an every-other-day schedule`() {
-        // 06:00 on the 12th: today's 07:30 has not passed, so only the repeat interval can push the
-        // answer to the 13th — which is what makes this test about the schedule rather than the clock.
+        // 06:00 on the 12th: today's 07:30 has not passed.
         val next = CareSchedule.nextOccurrence(
             routineStartDate = at(2026, 9, 1),
             repeatInterval = 2,
@@ -239,13 +194,7 @@ class CareScheduleTest {
         assertEquals("2026-09-08 07:30", format(next))
     }
 
-    /**
-     * The search is capped, so it always ends.
-     *
-     * Asked to look only one day ahead on a day whose time has already gone, there is nothing left
-     * to find. In the app the cap is a year, and returning null rather than looping forever is what
-     * protects it from a schedule that can never match a real date.
-     */
+    /** The search is capped, so it always ends. */
     @Test
     fun `nextOccurrence returns null when nothing falls inside the search window`() {
         val next = CareSchedule.nextOccurrence(
@@ -260,18 +209,9 @@ class CareScheduleTest {
         assertNull(next)
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Daylight saving
-    // -------------------------------------------------------------------------------------------
+    // Daylight saving.
 
-    /**
-     * A reminder keeps its wall-clock time when the clocks go forward.
-     *
-     * New York moves from 02:00 to 03:00 on 8 March 2026, making that day 23 hours long. The
-     * tempting implementation — midnight plus 450 minutes — would land on 08:30 that morning,
-     * because the hour it adds no longer exists. Setting the hour and minute on a calendar instead
-     * asks for 07:30 on that date and lets the calendar resolve it, which is what this pins down.
-     */
+    /** A reminder keeps its wall-clock time when the clocks go forward. */
     @Test
     fun `nextOccurrence keeps its time of day across a spring forward`() {
         useZone(DST_ZONE)
@@ -287,15 +227,7 @@ class CareScheduleTest {
         assertEquals("2026-03-08 07:30", format(next))
     }
 
-    /**
-     * A repeat interval still counts whole days across a spring forward.
-     *
-     * From 1 March, an every-other-day routine runs on the 3rd, 5th, 7th, 9th and so on. Reaching
-     * the 9th crosses the 23-hour day, so a plain millisecond division gives 7.96 days, truncates to
-     * 7, and reports an odd-numbered day — the routine would silently skip from the 7th to the 11th.
-     * Rounding to the nearest whole day is what keeps the count honest, and this is the case that
-     * proves it: an interval of 1 would pass either way, so only an even interval can catch it.
-     */
+    /** A repeat interval still counts whole days across a spring forward. */
     @Test
     fun `an alternating routine does not skip a day across a spring forward`() {
         useZone(DST_ZONE)
@@ -306,9 +238,7 @@ class CareScheduleTest {
         assertTrue(CareSchedule.occursOn(start, 2, RepeatUnit.DAY, at(2026, 3, 9)))
     }
 
-    // -------------------------------------------------------------------------------------------
     // isDoneOn — does this task count as done today?
-    // -------------------------------------------------------------------------------------------
 
     @Test
     fun `a task that has never been completed is not done`() {
@@ -328,13 +258,7 @@ class CareScheduleTest {
         assertTrue(CareSchedule.isDoneOn(completedThisMorning, dayStart, dayEnd))
     }
 
-    /**
-     * The behaviour that makes a repeating checklist reset itself overnight.
-     *
-     * The task's `isCompleted` flag is still true here — it was genuinely ticked off — but the
-     * completion belongs to yesterday, so it must not count today. This is why the checklist tests
-     * the timestamp rather than the flag, and why nothing has to run at midnight to clear it.
-     */
+    /** The behaviour that makes a repeating checklist reset itself overnight. */
     @Test
     fun `a task completed yesterday is not done today`() {
         val dayStart = at(2026, 9, 12)
@@ -346,14 +270,9 @@ class CareScheduleTest {
         assertFalse(CareSchedule.isDoneOn(completedYesterday, dayStart, dayEnd))
     }
 
-    // -------------------------------------------------------------------------------------------
-    // tasksDueOn — the shared "what runs on this day" rule used by the Home, Pets and Tasks tabs
-    // -------------------------------------------------------------------------------------------
+    // tasksDueOn — the shared "what runs on this day" rule used by the Home, Pets and Tasks tabs.
 
-    /**
-     * A task counts on a day only when its routine does. 11 September 2026 is a Friday, so a weekly
-     * routine started on a Friday contributes its task then and not on the Saturday after.
-     */
+    /** A task counts on a day only when its routine does. */
     @Test
     fun `tasksDueOn keeps only tasks whose routine runs that day`() {
         val weekly = routine(startDate = at(2026, 9, 11), repeatUnit = RepeatUnit.WEEK)
@@ -382,9 +301,7 @@ class CareScheduleTest {
         )
     }
 
-    // -------------------------------------------------------------------------------------------
-    // weekContaining — the Tasks tab's week strip
-    // -------------------------------------------------------------------------------------------
+    // weekContaining — the Tasks tab's week strip.
 
     /** Thursday 10 September 2026 in a Monday-first week: Monday the 7th through Sunday the 13th. */
     @Test
@@ -420,30 +337,16 @@ class CareScheduleTest {
         )
     }
 
-    // -------------------------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------------------------
+    // Helpers.
 
-    /**
-     * Epoch milliseconds for a local date and time in whatever zone the test is running in.
-     *
-     * [Calendar.clear] first, so the seconds and milliseconds are zero rather than inherited from
-     * the moment the test happened to run — otherwise an exact-equality assertion would fail at
-     * random. Note the month is written the way a human would (9 for September); [Calendar] counts
-     * them from zero, which is corrected here so no test has to remember it.
-     */
+    /** Epoch milliseconds for a local date and time in whatever zone the test is running in. */
     private fun at(year: Int, month: Int, day: Int, hour: Int = 0, minute: Int = 0): Long =
         Calendar.getInstance().apply {
             clear()
             set(year, month - 1, day, hour, minute, 0)
         }.timeInMillis
 
-    /**
-     * Renders a timestamp as local "yyyy-MM-dd HH:mm".
-     *
-     * Assertions read as dates rather than as thirteen-digit numbers, so a failure message says
-     * which day and time came back instead of leaving the difference to be worked out by hand.
-     */
+    /** Renders a timestamp as local "yyyy-MM-dd HH:mm". */
     private fun format(millis: Long?): String =
         SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.UK).format(Date(requireNotNull(millis)))
 
@@ -462,13 +365,7 @@ class CareScheduleTest {
         isActive = isActive
     )
 
-    /**
-     * A task carrying a given completion timestamp.
-     *
-     * `isCompleted` is derived from that timestamp rather than passed separately, so the two can
-     * never be set to contradict each other — which is also the invariant the repository maintains
-     * when it writes them.
-     */
+    /** A task carrying a given completion timestamp. */
     private fun task(completedAt: Long?) = CareTask(
         petId = 1L,
         title = "Morning meal",
@@ -479,13 +376,7 @@ class CareScheduleTest {
     )
 
     private companion object {
-        /**
-         * A zone with no daylight saving, used for every test that is not about DST.
-         *
-         * Kathmandu deliberately: its +05:45 offset is not a whole number of hours, so any accidental
-         * assumption that a day boundary falls on a round UTC hour shows up here rather than in
-         * production.
-         */
+        /** A zone with no daylight saving, used for every test that is not about DST. */
         private const val FIXED_ZONE = "Asia/Kathmandu"
 
         /** A zone that does observe daylight saving; it springs forward on 8 March 2026. */

@@ -41,74 +41,29 @@ import com.prash.petcare.util.PetPhotoStorage
 import java.text.NumberFormat
 import kotlinx.coroutines.launch
 
-/**
- * The profile screen: who is signed in, how the app behaves for them, and the way out.
- *
- * Reached from the **monogram** in the shared header, from every screen that draws it — see
- * [com.prash.petcare.ui.common.openProfile]. The toolbar's overflow menu still leads here too, for the
- * screens that show a toolbar instead.
- *
- * In MVVM this is the **View**: it renders what [ProfileViewModel] publishes and forwards what the
- * user does. It decides three things of its own, and each is genuinely a screen's job rather than a
- * ViewModel's:
- *
- *  - **the wording**, because every one of these lines is a string resource and a ViewModel holding a
- *    Context to resolve them would stop being testable;
- *  - **the dialogs**, because confirming a destructive action is an interaction, not state;
- *  - **writing the exported file**, because it needs a `ContentResolver` and a URI the user chose
- *    through the system's save dialog — the ViewModel builds the text and stops there.
- *
- * **Why the screen is a single long layout rather than a list.** Its content is fixed: these cards,
- * these rows, in this order. The one variable-length part is the contacts card, which this class fills
- * by inflating a row per contact — see [renderContacts].
- */
+/** The profile screen: who is signed in, how the app behaves for them, and the way out. */
 class ProfileFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
     private var _binding: FragmentProfileBinding? = null
     private val binding get() = _binding!!
 
-    /**
-     * Which account is signed in — the one to display, and the one logging out clears.
-     *
-     * `by activityViewModels` so this is the Activity's instance, shared with every other screen.
-     */
+    /** Which account is signed in — the one to display, and the one logging out clears. */
     private val sessionViewModel: SessionViewModel by activityViewModels { SessionViewModel.Factory }
 
     private val viewModel: ProfileViewModel by viewModels {
         ProfileViewModel.factory(sessionViewModel.userId.value)
     }
 
-    /**
-     * The CSV waiting to be written, held between asking the system for a location and being handed
-     * one back.
-     *
-     * The save dialog is another app's Activity, and this one can be destroyed and recreated while it
-     * is in front — so the text has to survive that gap. It is a field rather than a captured lambda
-     * because [registerForActivityResult] must be called during construction, long before there is
-     * anything to write.
-     */
+    /** The CSV waiting to be written, held between asking the system for a location and being handed one back. */
     private var pendingExportCsv: String? = null
 
-    /**
-     * Picks a new profile photo.
-     *
-     * The photo picker rather than a storage permission: it hands back exactly the one image the user
-     * chose, needs no permission at all, and on Android 13 and above is the system's own component.
-     * The same contract the pet form uses, so choosing a picture works identically in both places.
-     */
+    /** Picks a new profile photo. */
     private val pickPhotoLauncher = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri -> if (uri != null) savePhoto(uri) }
 
-    /**
-     * Asks the system where to save the exported CSV.
-     *
-     * `CreateDocument` — the Storage Access Framework — rather than writing to a folder the app picked
-     * and sharing it through a FileProvider. The user chooses the destination, the app receives a URI
-     * it may write once, and **no storage permission is involved at all**, which matters for an export
-     * that is by definition the user's own data leaving the app.
-     */
+    /** Asks the system where to save the exported CSV. */
     private val createExportFileLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument(CSV_MIME_TYPE)
     ) { uri -> writeExport(uri) }
@@ -131,24 +86,16 @@ class ProfileFragment : Fragment() {
         observeViewModel()
     }
 
-    /**
-     * The shared header, with its monogram unhooked.
-     *
-     * Passing null is what removes the tap, the ripple, the focus stop and the label — a monogram that
-     * reopened the screen already being looked at would be a dead end. The notifications screen does
-     * exactly this with its badge, and for the same reason; see TabHeader.kt.
-     */
+    /** The shared header, with its monogram unhooked. */
     private fun setUpHeader() {
         binding.header.setUp(
             title = R.string.menu_profile,
-            // The badge still opens the notifications screen, as on every other screen that draws
-            // this header — only the monogram is unhooked here.
+            // The badge still opens the notifications screen, as on every other screen that draws this header.
             onBadgeClick = { findNavController().navigate(R.id.notificationsFragment) },
             onMonogramClick = null
         )
 
-        // Keeps the header's mark showing the user's profile photo, falling back to the app's
-        // monogram when there is none. See TabHeader.bindHeaderFromSession.
+        // Keeps the header's mark showing the user's profile photo, falling back to the app's monogram.
         bindHeaderFromSession(binding.header, sessionViewModel)
 
         binding.header.showAssistantPill {
@@ -157,9 +104,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setUpClickListeners() {
-        // The row and its pill do the same thing, so they share one listener rather than two that
-        // could drift. The pill is there as a visible affordance; the row is there because a 64dp
-        // target is easier to hit than a 34dp one.
+        // The row and its pill do the same thing, so they share one listener rather than two that could drift.
         val openDetails = View.OnClickListener {
             findNavController().navigate(R.id.action_profile_to_account_details)
         }
@@ -192,20 +137,9 @@ class ProfileFragment : Fragment() {
         binding.logOutButton.setOnClickListener { confirmLogOut() }
     }
 
-    /**
-     * The two security switches.
-     *
-     * `setOnCheckedChangeListener` fires for a programmatic change as well as a tap, which would make
-     * [renderSecurity] writing the stored value back into the switch look like the user having
-     * toggled it — a loop. `isPressed` tells the two apart: it is true only while a real touch is in
-     * progress.
-     */
+    /** The two security switches. */
     private fun setUpSwitches() {
-        // The two-factor switch is the odd one out: it saves nothing by itself. Turning it on takes a
-        // QR code, an authenticator app and a proof that the two agree; turning it off takes a
-        // current code. So the tap opens the screen or the dialog that can actually do the work, and
-        // the switch is put back where it belongs by renderTwoFactor on the next emission — see
-        // there for why it is deliberately left out of position for a moment rather than moved here.
+        // The two-factor switch is the odd one out: it saves nothing by itself.
         binding.twoFactorSwitch.setOnCheckedChangeListener { button, isChecked ->
             if (!button.isPressed) return@setOnCheckedChangeListener
 
@@ -221,20 +155,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    /**
-     * Asks for a code before turning two-factor authentication off.
-     *
-     * **Why a code and not just a confirmation.** This screen is already unlocked, so a plain "are
-     * you sure?" would mean a phone left on a table for a minute is all it takes to strip the
-     * protection its owner set up. A code proves whoever is turning it off is the person who turned
-     * it on. A recovery code is accepted too, for the user who has switched phones and is tidying up
-     * — it is spent in the process, which is fine, since every code is about to be deleted anyway.
-     *
-     * Cancel is listed first and does nothing, so the safe choice is the easy one. The empty-field
-     * case is caught here because it is a typing check with nothing to ask the data layer about;
-     * whether the code is *right* is emphatically not decided here — see
-     * [ProfileViewModel.onTwoFactorDisableConfirmed].
-     */
+    /** Asks for a code before turning two-factor authentication off. */
     private fun confirmDisableTwoFactor() {
         val dialogBinding = com.prash.petcare.databinding.DialogTwoFactorDisableBinding
             .inflate(LayoutInflater.from(requireContext()))
@@ -254,23 +175,13 @@ class ProfileFragment : Fragment() {
                 }
             }
             .setOnDismissListener {
-                // Whatever happens next, the switch must go back to describing the account rather
-                // than the tap. Cancelling, dismissing, or a code that turns out to be wrong all end
-                // here with two-factor authentication still on, and a switch left sitting in the off
-                // position would be claiming otherwise.
+                // Whatever happens next, the switch must go back to describing the account rather than the tap.
                 renderTwoFactor(viewModel.twoFactor.value)
             }
             .show()
     }
 
-    /**
-     * The four two-option toggles.
-     *
-     * Each half simply reports the choice it stands for. Nothing is toggled here and no state is read:
-     * the tap goes to the store, the store publishes, and [renderPreferences] draws the result — so
-     * what is on screen is always what is saved, and a write that failed could not leave the control
-     * showing a choice that was not made.
-     */
+    /** The four two-option toggles. */
     private fun setUpPreferenceToggles() {
         binding.weightMetricSegment.setOnClickListener {
             viewModel.onWeightUnitChosen(WeightUnit.METRIC)
@@ -301,14 +212,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    /**
-     * Subscribes to the ViewModel's state.
-     *
-     * `repeatOnLifecycle(STARTED)` begins collecting when the screen becomes visible and cancels when
-     * it stops, so the fragment never does work in the background or touches views after they have
-     * been destroyed. Each flow gets its own coroutine, because `collect` never returns and a second
-     * call after the first would never run.
-     */
+    /** Subscribes to the ViewModel's state. */
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -322,16 +226,13 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Rendering
-    // ---------------------------------------------------------------------------------------------
+    // Rendering.
 
     private fun render(state: ProfileUiState) {
         renderStats(state)
         renderContacts(state.contacts)
 
-        // Null only for the instant before the first database read returns. The account's fields are
-        // left as they are rather than filled with a placeholder, which would flash and be replaced.
+        // Null only for the instant before the first database read returns.
         val user = state.user ?: return
 
         renderIdentityCard(user, state.petCount)
@@ -344,8 +245,7 @@ class ProfileFragment : Fragment() {
         binding.profileNameText.text = user.fullName
         binding.profileEmailText.text = user.email
 
-        // The prompt rather than a blank line when no number has been recorded, so an empty row
-        // explains itself instead of looking like something that failed to load.
+        // The prompt rather than a blank line when no number has been recorded.
         binding.profilePhoneText.text = user.phone ?: getString(R.string.profile_no_phone)
 
         binding.profileRolePill.setText(user.role.labelRes())
@@ -355,16 +255,7 @@ class ProfileFragment : Fragment() {
         loadPhoto(user.photoPath)
     }
 
-    /**
-     * Draws the profile photo, or leaves the empty well showing.
-     *
-     * The image is decoded off the main thread and the view is only touched afterwards, inside the
-     * view's own lifecycle scope — so a decode still running when the user leaves is cancelled rather
-     * than completing and writing into a destroyed view.
-     *
-     * The content description changes with the outcome, because "Your profile photo" spoken over an
-     * empty circle would be describing something that is not there.
-     */
+    /** Draws the profile photo, or leaves the empty well showing. */
     private fun loadPhoto(path: String?) {
         if (path == null) {
             binding.profilePhoto.setImageDrawable(null)
@@ -375,8 +266,7 @@ class ProfileFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             val bitmap = PetPhotoStorage.load(path)
 
-            // The file can be missing — deleted from under the app, or the row updated while the read
-            // was in flight — so the empty well is the fallback rather than a broken-image mark.
+            // The file can be missing — deleted from under the app, or the row updated while the read was in flight.
             binding.profilePhoto.setImageBitmap(bitmap)
             binding.profilePhoto.contentDescription = getString(
                 if (bitmap == null) R.string.cd_profile_photo_empty else R.string.cd_profile_photo
@@ -384,13 +274,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    /**
-     * The three stat cards.
-     *
-     * [NumberFormat] rather than `toString()`, as everywhere else a count is drawn in this app (see
-     * TabHeader.showPetCount): `toString()` always produces Western Arabic digits, where a device set
-     * to Bengali, Persian or Nepali expects the number in its own numerals.
-     */
+    /** The three stat cards. */
     private fun renderStats(state: ProfileUiState) {
         val format = NumberFormat.getInstance()
 
@@ -409,9 +293,7 @@ class ProfileFragment : Fragment() {
 
         binding.accountEmailSubtitle.text = user.email
 
-        // The number and what it is for, or an invitation to add one. The "VERIFIED" pill goes with
-        // it: beside "Add one so carers know who is texting" it would be confirming something that
-        // does not exist.
+        // The number and what it is for, or an invitation to add one.
         val phone = user.phone
         binding.accountPhoneSubtitle.text = if (phone == null) {
             getString(R.string.profile_row_phone_subtitle_empty)
@@ -420,9 +302,7 @@ class ProfileFragment : Fragment() {
         }
         binding.phoneVerifiedPill.isVisible = phone != null
 
-        // "Last changed 3 months ago", or the plain truth that it never has been. Those are different
-        // facts, and reporting a change that never happened would be a small lie the user could not
-        // check.
+        // "Last changed 3 months ago", or the plain truth that it never has been.
         binding.accountPasswordSubtitle.text = user.passwordChangedAt?.let { changedAt ->
             getString(
                 R.string.profile_row_password_subtitle,
@@ -459,34 +339,13 @@ class ProfileFragment : Fragment() {
         )
     }
 
-    /**
-     * Marks one half of a toggle as chosen and the other as not.
-     *
-     * `isSelected` is the only thing set: the fill comes from bg_profile_segment.xml and the text
-     * colour from res/color/profile_segment_text.xml, both state lists keyed on exactly that. Nothing
-     * about how the control looks is decided in Kotlin.
-     *
-     * Both halves are set on every call, in both directions, so a choice can never leave two halves
-     * filled or none.
-     */
+    /** Marks one half of a toggle as chosen and the other as not. */
     private fun select(first: TextView, second: TextView, isFirstChosen: Boolean) {
         first.isSelected = isFirstChosen
         second.isSelected = !isFirstChosen
     }
 
-    /**
-     * The two-factor row: its switch and the subtitle that says what is actually protecting the
-     * account.
-     *
-     * The subtitle earns its place by being specific. "On" alone tells the user nothing they could
-     * act on; "On · authenticator app · 3 recovery codes left" tells someone down to their last few
-     * codes that they should turn it off and on again to get a fresh ten, which is the one piece of
-     * maintenance this feature ever needs. The "off" line says what turning it on would buy, rather
-     * than just naming the state the user can already see from the switch.
-     *
-     * The switch is set from the account's real state on every emission, which is what puts it back
-     * after a tap that opened a screen the user then backed out of.
-     */
+    /** The two-factor row: its switch and the subtitle that says what is actually protecting the account. */
     private fun renderTwoFactor(status: TwoFactorStatus) {
         binding.twoFactorSwitch.isChecked = status.isEnabled
 
@@ -516,21 +375,14 @@ class ProfileFragment : Fragment() {
         )
     }
 
-    /**
-     * The "Backup & sync" subtitle.
-     *
-     * The same wording the dashboard and the old profile screen used, from the same source,
-     * deliberately: this is the screen a user opens after glimpsing that line, and a second
-     * differently-worded answer would invite the question of which one is right.
-     */
+    /** The "Backup & sync" subtitle. */
     private fun renderBackupStatus(status: SyncStatus) {
         binding.backupSubtitle.text = when (status) {
             is SyncStatus.Idle -> getString(R.string.profile_row_backup_never)
 
             is SyncStatus.Syncing -> getString(R.string.profile_row_backup_syncing)
 
-            // getQuantityString picks the right plural form for the device's language: the first
-            // argument selects the form, the second fills the placeholder.
+            // getQuantityString picks the right plural form for the device's language.
             is SyncStatus.Pending -> resources.getQuantityString(
                 R.plurals.profile_row_backup_pending,
                 status.changeCount,
@@ -550,19 +402,11 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    /**
-     * The delegation contacts card.
-     *
-     * The container is emptied and refilled rather than diffed. That would be the wrong trade in a
-     * RecyclerView, but this list is two or three rows that change only when the user adds or removes
-     * one — so the simplest correct thing is also the right one, and it means there is no adapter
-     * whose state could disagree with the store's.
-     */
+    /** The delegation contacts card. */
     private fun renderContacts(contacts: List<DelegationContact>) {
         binding.contactsContainer.removeAllViews()
 
-        // The explanation replaces the rows when there are none: an empty card cannot say what it is
-        // for, and "None yet" alone does not either.
+        // The explanation replaces the rows when there are none: an empty card cannot say.
         binding.contactsEmptyText.isVisible = contacts.isEmpty()
 
         binding.contactsStatusPill.text = if (contacts.isEmpty()) {
@@ -578,8 +422,7 @@ class ProfileFragment : Fragment() {
         val inflater = LayoutInflater.from(requireContext())
 
         contacts.forEachIndexed { index, contact ->
-            // A hairline before every row but the first, so the rows read as one grouped list exactly
-            // as the fixed cards above do.
+            // A hairline before every row but the first.
             if (index > 0) {
                 inflater.inflate(R.layout.view_profile_row_divider, binding.contactsContainer, true)
             }
@@ -594,10 +437,7 @@ class ProfileFragment : Fragment() {
     private fun bindContact(row: ItemProfileContactBinding, contact: DelegationContact) {
         row.contactName.text = contact.name
 
-        // Their first initial. uppercaseChar rather than uppercase() on the whole name, so only one
-        // character is allocated; the blank case cannot normally happen — the store rejects a contact
-        // with no name — but a stored file can be hand-edited, and a crash here would be a poor way to
-        // find that out.
+        // Their first initial. uppercaseChar rather than uppercase() on the whole name.
         row.contactInitial.text = contact.name.firstOrNull()?.uppercaseChar()?.toString().orEmpty()
 
         // What they help with, or a prompt saying what tapping the row does.
@@ -616,23 +456,9 @@ class ProfileFragment : Fragment() {
             getString(R.string.profile_version_format, BuildConfig.VERSION_NAME)
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Delegation
-    // ---------------------------------------------------------------------------------------------
+    // Delegation.
 
-    /**
-     * Hands today's checklist to a saved contact.
-     *
-     * It opens the **Tasks tab** with the recipient already chosen, rather than reimplementing
-     * delegation here. Everything that makes delegating safe already lives there — the message is
-     * built from the tasks actually outstanding, the SMS permission is requested with a rationale, and
-     * the exact text is shown on a preview the user must confirm before a single message is sent. A
-     * second path that skipped any of that would be the dangerous one.
-     *
-     * What the two arguments save is only the part the user has already answered: which channel, and
-     * who. See the `delegateToName` and `delegateToPhone` arguments on checklistFragment in
-     * nav_graph.xml.
-     */
+    /** Hands today's checklist to a saved contact. */
     private fun delegateTo(contact: DelegationContact) {
         findNavController().navigate(
             R.id.action_profile_to_checklist,
@@ -643,16 +469,7 @@ class ProfileFragment : Fragment() {
         )
     }
 
-    /**
-     * Asks before forgetting a contact.
-     *
-     * A dialog because the number is not recoverable from inside the app once it is gone — it would
-     * have to be found in the address book again. The message says what is *not* affected, since that
-     * is the actual worry: removing someone from a list headed by the user's pets could plausibly look
-     * like it changes something about the pets.
-     *
-     * Cancel is listed first and does nothing, so the safe choice is the easy one.
-     */
+    /** Asks before forgetting a contact. */
     private fun confirmRemoveContact(contact: DelegationContact) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.profile_remove_contact_title, contact.name))
@@ -664,22 +481,12 @@ class ProfileFragment : Fragment() {
             .show()
     }
 
-    /**
-     * The add-contact dialog: a name, a number and an optional note.
-     *
-     * A dialog rather than a screen of its own, because it is three short fields and a save — a whole
-     * destination with a toolbar and a back stack entry would be more ceremony than the task deserves.
-     *
-     * The layout is inflated here rather than being a permanent part of the screen, so the fields only
-     * exist while the dialog is up.
-     */
+    /** The add-contact dialog: a name, a number and an optional note. */
     private fun showAddContactDialog() {
         val dialogBinding = com.prash.petcare.databinding.DialogAddContactBinding
             .inflate(LayoutInflater.from(requireContext()))
 
-        // The number's two boxes behave as one control — the country chooser, the per-country length
-        // cap and the international form all come from here. No onChanged callback: the dialog shows
-        // its failures as a message rather than as an inline error, so there is nothing to clear.
+        // The number's two boxes behave as one control — the country chooser.
         val phoneInput = PhoneNumberInput(
             countryLayout = dialogBinding.contactPhoneCountryLayout,
             countryInput = dialogBinding.contactPhoneCountryInput,
@@ -692,10 +499,7 @@ class ProfileFragment : Fragment() {
             .setView(dialogBinding.root)
             .setNegativeButton(R.string.delegate_cancel, null)
             .setPositiveButton(R.string.profile_add_contact_save) { _, _ ->
-                // Whether the fields are acceptable is the ViewModel's decision, not this dialog's —
-                // it reports back through ProfileEvent, which handleEvent turns into a message. The
-                // country and the digits go over separately, for the reason given on every other
-                // phone form: assembling them is what the rules do after checking them.
+                // Whether the fields are acceptable is the ViewModel's decision, not this dialog's.
                 viewModel.onContactAdded(
                     name = dialogBinding.contactNameInput.text?.toString().orEmpty(),
                     phoneRegion = phoneInput.regionCode(),
@@ -706,26 +510,11 @@ class ProfileFragment : Fragment() {
             .show()
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Photo
-    // ---------------------------------------------------------------------------------------------
+    // Photo.
 
-    /**
-     * Copies the chosen image into the app's own storage and records its path.
-     *
-     * The picked `content://` URI grants read access only temporarily and stops working once the app
-     * restarts, so a copy the app owns is what makes the photo still be there tomorrow — see
-     * [PetPhotoStorage], which does exactly this for pets and is reused unchanged here.
-     *
-     * Unlike the pet form there is no cropping step. A pet's photo is drawn at 4:3 across a whole card,
-     * where what was framed matters; this one is masked to a small circle and centre-cropped, so
-     * offering a rectangular cropper before a circular mask would be asking the user to frame something
-     * they will not get.
-     */
+    /** Copies the chosen image into the app's own storage and records its path. */
     private fun savePhoto(uri: Uri) {
-        // The application context, not the fragment's: the work outlives neither, but holding a
-        // fragment's context in a coroutine that might finish after the view is gone is the habit
-        // worth not forming.
+        // The application context, not the fragment's: the work outlives.
         val appContext = requireContext().applicationContext
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -741,15 +530,12 @@ class ProfileFragment : Fragment() {
                 return@launch
             }
 
-            // The previous file is deleted by the repository, which is the only place that knows what
-            // the old path was — see UserRepository.updatePhoto.
+            // The previous file is deleted by the repository.
             viewModel.onPhotoChosen(savedPath)
         }
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Export, delete and log out
-    // ---------------------------------------------------------------------------------------------
+    // Export, delete and log out.
 
     private fun handleEvent(event: ProfileEvent) {
         when (event) {
@@ -762,10 +548,7 @@ class ProfileFragment : Fragment() {
 
             is ProfileEvent.ExportEmpty -> showMessage(getString(R.string.profile_export_empty))
 
-            // The add-contact dialog has already closed by the time either of these arrives, so its
-            // fields are gone and there is nowhere to put an inline error — a message is what is
-            // left. The two are separate cases because "you left something out" and "that number is
-            // not valid for that country" send the user back for different reasons.
+            // The add-contact dialog has already closed by the time either of these arrives.
             is ProfileEvent.ContactIncomplete ->
                 showMessage(getString(R.string.profile_add_contact_incomplete))
 
@@ -776,29 +559,16 @@ class ProfileFragment : Fragment() {
             // Nothing was deleted. Say why and stay on the profile screen.
             is ProfileEvent.AccountDeletionFailed -> showMessage(getString(event.messageRes))
 
-            // The switch is already right: the row observes the database rows the turn-off just
-            // changed, so renderTwoFactor has run with the new state before this arrives. All that is
-            // left is to say what happened, because a switch moving on its own is easy to miss.
+            // The switch is already right: the row observes the database rows the turn-off just changed.
             is ProfileEvent.TwoFactorDisabled ->
                 showMessage(getString(R.string.two_factor_disable_done))
 
-            // The code was refused, so it is still on. The dialog's dismiss listener has already put
-            // the switch back; this says which refusal it was.
+            // The code was refused, so it is still on. The dialog's dismiss listener has already put the switch back.
             is ProfileEvent.TwoFactorDisableFailed -> showMessage(getString(event.messageRes))
         }
     }
 
-    /**
-     * Writes the pending CSV to the location the user picked.
-     *
-     * A null URI means they backed out of the save dialog, which is not a failure and deserves no
-     * message — they know they cancelled. The pending text is cleared either way, so a later export
-     * cannot write a stale document.
-     *
-     * `use` closes the stream even if writing throws, and the write is wrapped because a URI can stop
-     * being writable between being granted and being used — a removed SD card, a provider that has
-     * gone away. Reporting that is much better than crashing on the user's own data.
-     */
+    /** Writes the pending CSV to the location the user picked. */
     private fun writeExport(uri: Uri?) {
         val csv = pendingExportCsv
         pendingExportCsv = null
@@ -818,16 +588,7 @@ class ProfileFragment : Fragment() {
         )
     }
 
-    /**
-     * Deleting the account: two dialogs, not one.
-     *
-     * The first explains what goes and offers a way out. The second asks the user to type the word,
-     * which is the standard pattern for an action with no undo — it stops a mis-tap on the first
-     * dialog's confirm button from destroying every record on the device, and the typing itself is a
-     * moment in which the user re-reads what they are about to do.
-     *
-     * Cancel is listed first in both and does nothing.
-     */
+    /** Deleting the account: two dialogs, not one. */
     private fun confirmDeleteAccount() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.profile_delete_title)
@@ -837,12 +598,7 @@ class ProfileFragment : Fragment() {
             .show()
     }
 
-    /**
-     * The second gate: the user types DELETE and their password, or nothing happens.
-     *
-     * The word is checked here, since it is only a typing exercise. The password is passed on
-     * untouched: Firebase checks it, through the ViewModel and the repository.
-     */
+    /** The second gate: the user types DELETE and their password, or nothing happens. */
     private fun askForDeleteWord() {
         val dialogBinding = com.prash.petcare.databinding.DialogConfirmDeleteBinding
             .inflate(LayoutInflater.from(requireContext()))
@@ -854,10 +610,7 @@ class ProfileFragment : Fragment() {
             .setPositiveButton(R.string.profile_delete_confirm_button) { _, _ ->
                 val typed = dialogBinding.confirmInput.text?.toString().orEmpty().trim()
 
-                // Compared case-insensitively against a non-translatable constant. The word is fixed
-                // rather than localised because it is one half of a comparison, and translating one
-                // half without the other would lock the user out of their own confirmation.
-                // The password is not trimmed: a space can be part of a real password.
+                // Compared case-insensitively against a non-translatable constant.
                 val password = dialogBinding.passwordInput.text?.toString().orEmpty()
 
                 when {
@@ -873,13 +626,7 @@ class ProfileFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Asks before logging out.
-     *
-     * A dialog because the action is not reversible from where the user is standing: the way back is
-     * typing a password. The message says what is *not* lost, since that is the actual worry at this
-     * point — an app that keeps everything locally could plausibly be discarding it.
-     */
+    /** Asks before logging out. */
     private fun confirmLogOut() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.profile_sign_out_dialog_title)
@@ -889,15 +636,7 @@ class ProfileFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Clears the session and returns to the sign-in screen — what both logging out and deleting the
-     * account end with.
-     *
-     * `popUpTo` the graph itself with `inclusive` empties the entire back stack on the way, which is
-     * what makes leaving final: without it the system back button from the sign-in screen would walk
-     * straight back into the account just left — into a *deleted* account, in the delete case, where
-     * every query would return nothing.
-     */
+    /** Clears the session and returns to the sign-in screen. */
     private fun leaveForSignIn() {
         sessionViewModel.signOut()
 
@@ -921,12 +660,7 @@ class ProfileFragment : Fragment() {
 
     companion object {
 
-        /**
-         * The delegation prefill arguments, as declared on checklistFragment in nav_graph.xml.
-         *
-         * Named here rather than built with generated Directions, because this screen navigates by
-         * destination id through a plain Bundle — see [delegateTo].
-         */
+        /** The delegation prefill arguments, as declared on checklistFragment in nav_graph.xml. */
         const val ARG_DELEGATE_NAME = "delegateToName"
         const val ARG_DELEGATE_PHONE = "delegateToPhone"
 
@@ -935,13 +669,7 @@ class ProfileFragment : Fragment() {
     }
 }
 
-/**
- * The words for a role — "Owner", "Carer".
- *
- * An extension in the View layer rather than a property on the enum, so
- * [com.prash.petcare.data.local.entity.UserRole] stays a plain data type with no Android resource ids
- * in it. The app's other enums are labelled the same way; see ui/common/SpeciesLabel.kt.
- */
+/** The words for a role — "Owner", "Carer". */
 private fun UserRole.labelRes(): Int = when (this) {
     UserRole.OWNER -> R.string.profile_role_owner
     UserRole.CARER -> R.string.profile_role_carer

@@ -11,11 +11,7 @@ import com.prash.petcare.data.local.entity.CareRoutine
 import com.prash.petcare.data.local.relation.CareRoutineWithTasks
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Database access for the `care_routines` table.
- *
- * See [UserDao] for the reasoning behind the [Flow] versus `suspend` return types used here.
- */
+/** Database access for the `care_routines` table. */
 @Dao
 interface CareRoutineDao {
 
@@ -25,13 +21,7 @@ interface CareRoutineDao {
     @Update
     suspend fun update(routine: CareRoutine)
 
-    /**
-     * Deletes a routine permanently.
-     *
-     * Tasks this routine already generated are *not* deleted — their `routineId` is set to null
-     * by the SET_NULL rule on [com.prash.petcare.data.local.entity.CareTask], preserving the
-     * care history. To stop a routine without losing the schedule, prefer [setActive].
-     */
+    /** Deletes a routine permanently. */
     @Delete
     suspend fun delete(routine: CareRoutine)
 
@@ -39,13 +29,7 @@ interface CareRoutineDao {
     @Upsert
     suspend fun upsertAll(routines: List<CareRoutine>)
 
-    /**
-     * One snapshot of every routine belonging to an owner, for the sync layer.
-     *
-     * Joins through `pets` for the same reason [observeActiveByOwner] does, and unlike that query
-     * it deliberately includes paused routines: a paused routine is still the user's data and
-     * losing it on a reinstall would be no better than losing an active one.
-     */
+    /** One snapshot of every routine belonging to an owner, for the sync layer. */
     @Query(
         """
         SELECT care_routines.* FROM care_routines
@@ -75,13 +59,7 @@ interface CareRoutineDao {
     )
     suspend fun getIdsNotOwnedBy(ownerId: Long): List<Long>
 
-    /**
-     * Marks this owner's routines as uploaded — see [PetDao.clearPendingSync].
-     *
-     * The owner is reached with a subquery rather than a join, because SQLite's UPDATE has no FROM
-     * clause: `UPDATE ... INNER JOIN` is not valid SQL here, whereas `petId IN (SELECT ...)` is and
-     * expresses exactly the same restriction.
-     */
+    /** Marks this owner's routines as uploaded — see [PetDao.clearPendingSync]. */
     @Query(
         """
         UPDATE care_routines SET isPendingSync = 0
@@ -109,13 +87,7 @@ interface CareRoutineDao {
     @Query("SELECT * FROM care_routines WHERE petId = :petId AND isActive = 1 ORDER BY title ASC")
     fun observeActiveByPet(petId: Long): Flow<List<CareRoutine>>
 
-    /**
-     * Every active routine across all of an owner's pets.
-     *
-     * The join reaches `pets` because a routine only knows its pet, not the owner; storing the
-     * owner id on the routine as well would duplicate a fact the pet row already holds and
-     * risk the two disagreeing.
-     */
+    /** Every active routine across all of an owner's pets. */
     @Query(
         """
         SELECT care_routines.* FROM care_routines
@@ -132,16 +104,7 @@ interface CareRoutineDao {
     @Query("SELECT * FROM care_routines WHERE id = :routineId")
     suspend fun getById(routineId: Long): CareRoutine?
 
-    /**
-     * Pauses or resumes a routine.
-     *
-     * A targeted UPDATE rather than read-modify-write of the whole row: it is one statement, so
-     * a concurrent edit to the routine's title cannot be undone by this toggle.
-     *
-     * [updatedAt] moves in the same statement. Pausing is a change like any other and has to be
-     * visible to the sync layer, and setting it here rather than in a second UPDATE keeps the row
-     * from ever existing in a state where its data has changed but its timestamp says otherwise.
-     */
+    /** Pauses or resumes a routine. */
     @Query(
         """
         UPDATE care_routines SET isActive = :isActive, updatedAt = :updatedAt, isPendingSync = 1

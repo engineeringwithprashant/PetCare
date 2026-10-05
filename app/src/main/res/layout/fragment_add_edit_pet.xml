@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Add / edit pet form.
-
-    One layout serves both modes. The fragment changes the title and shows or hides the delete
-    button; every field is otherwise identical, so a second near-duplicate layout would only be
-    another file to keep in step.
-
-    The form is long, so the whole thing sits in a ScrollView — without it the lower fields would
-    be unreachable once the keyboard appears.
--->
+<!-- Add / edit pet form. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -17,9 +8,7 @@
     android:fillViewport="true"
     tools:context=".ui.pet.AddEditPetFragment">
 
-    <!-- The bottom padding is deeper than the other three sides because the floating navigation bar
-         is drawn *over* this form — see form_scroll_padding_bottom. Without it the last button on the
-         page comes to rest behind the bar, which then takes the tap meant for it. -->
+    <!-- The bottom padding is deeper than the other three sides. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -29,14 +18,7 @@
         android:paddingEnd="@dimen/screen_padding"
         android:paddingBottom="@dimen/form_scroll_padding_bottom">
 
-        <!--
-            Photo preview.
-
-            A ShapeableImageView rather than an ImageView inside a rounded card: it clips the bitmap
-            itself to the rounded outline, where a card would leave the photo's square corners
-            painted over its own. The same treatment the pet detail screen's header gets, one step
-            shorter, because here the photo is an input rather than the subject of the screen.
-        -->
+        <!-- Photo preview. -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/petPhotoImage"
             android:layout_width="match_parent"
@@ -73,14 +55,7 @@
                 android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!--
-            Species picker. The ExposedDropdownMenu style turns a text field into a Material 3
-            dropdown, and MaterialAutoCompleteTextView supplies the popup list.
-
-            inputType="none" makes the field un-typeable, so the only way to change it is by
-            choosing one of the fixed options — the value has to map back to a PetSpecies enum
-            constant, which free text could not guarantee.
-        -->
+        <!-- Species picker. The ExposedDropdownMenu style turns a text field into a Material 3 dropdown. -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/speciesInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
@@ -96,23 +71,7 @@
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!--
-            Gender picker: Male, Female or Unknown.
-
-            A MaterialButtonToggleGroup rather than a third dropdown like species. There are only
-            three choices, and all of them fit on one line, so showing them side by side lets the
-            user see and change the answer with a single tap instead of opening a menu to find out
-            what the options are.
-
-            singleSelection="true" makes the group behave like radio buttons — choosing one clears
-            the others — and selectionRequired="true" stops the user tapping the highlighted option
-            off and leaving nothing chosen. Together they guarantee the value always maps to exactly
-            one PetGender constant. "Unknown" is a real option rather than "nothing selected" for
-            the same reason: see PetGender.UNKNOWN.
-
-            The small heading above it takes the place of the floating hint the text fields have,
-            which a button group has no slot for.
-        -->
+        <!-- Gender picker: Male, Female or Unknown. -->
         <TextView
             style="@style/PetCare.SectionLabel"
             android:layout_width="match_parent"
@@ -128,8 +87,7 @@
             app:selectionRequired="true"
             app:singleSelection="true">
 
-            <!-- Equal thirds via layout_weight, so the three options are the same size whatever
-                 the length of each word in a given language. -->
+            <!-- Equal thirds via layout_weight. -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/genderMaleButton"
                 style="?attr/materialButtonOutlinedStyle"
@@ -173,11 +131,7 @@
                 android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!--
-            Date of birth. focusable="false" stops the keyboard appearing and stops the user typing
-            a date the app would then have to parse; the field is a button in disguise, and tapping
-            it opens the Material date picker.
-        -->
+        <!-- Date of birth. focusable="false" stops the keyboard appearing and stops the user typing a date. -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/dateOfBirthInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -197,8 +151,7 @@
                 android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- numberDecimal gives a numeric keypad with a decimal point and blocks letters, so the
-             value the ViewModel parses is far less likely to be malformed. -->
+        <!-- numberDecimal gives a numeric keypad with a decimal point and blocks letters. -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/weightInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -216,8 +169,7 @@
                 android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- The three free-text care fields. inputType="textMultiLine" with minLines gives room
-             for more than one line, since these are notes rather than short values. -->
+        <!-- The three free-text care fields. inputType="textMultiLine" with minLines gives room for more than one line. -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/dietaryNotesInputLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -277,8 +229,7 @@
             android:layout_marginTop="@dimen/spacing_lg"
             android:text="@string/pet_save" />
 
-        <!-- Only shown in edit mode. Coloured with the theme's error role, the Material 3 signal
-             for a destructive action, so it reads differently from the save button above. -->
+        <!-- Only shown in edit mode. Coloured with the theme's error role. -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/deleteButton"
             style="@style/Widget.Material3.Button.OutlinedButton"

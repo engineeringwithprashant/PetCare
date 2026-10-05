@@ -1,26 +1,9 @@
-<!--
-    The app's light theme.
-
-    A theme maps raw colours onto Material 3's *role* attributes. Every widget in the app asks for
-    a role — ?attr/colorPrimary, ?attr/colorSurface — rather than a colour, so restyling the whole
-    app means editing this one file. values-night/themes.xml declares the same roles with the dark
-    values, which is the entire mechanism behind dark mode: no layout knows which is in use.
-
-    The theme also sets the app's **default component styles** — materialCardViewStyle and the shape
-    scale. That is what makes the redesign hold: a card added to a new screen next month is rounded,
-    white and softly shadowed because the theme says every card is, not because whoever wrote it
-    remembered to name a style.
-
-    The parent is Theme.Material3.DayNight.NoActionBar. "NoActionBar" is required because the app
-    supplies its own MaterialToolbar in activity_main.xml — with the platform action bar still in
-    place there would be two title bars stacked on top of each other.
--->
+<!-- The app's light theme. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="Base.Theme.PetCare" parent="Theme.Material3.DayNight.NoActionBar">
 
-        <!-- Primary: the bright yellow accent. Carries the main actions — the FAB, filled buttons,
-             the selected navigation tab. -->
+        <!-- Primary: the bright yellow accent. Carries the main actions — the FAB, filled buttons. -->
         <item name="colorPrimary">@color/md_theme_light_primary</item>
         <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_light_primaryContainer</item>
@@ -44,12 +27,7 @@
         <item name="colorErrorContainer">@color/md_theme_light_errorContainer</item>
         <item name="colorOnErrorContainer">@color/md_theme_light_onErrorContainer</item>
 
-        <!-- Surfaces: the backgrounds content sits on, and the text colours guaranteed legible
-             against them.
-
-             colorBackground (cream) and colorSurface (white) are deliberately *different* values
-             here. That one separation is the backbone of the redesign: it is what lets a white card
-             read as lifted off the page before its shadow is even drawn. -->
+        <!-- Surfaces: the backgrounds content sits on, and the text colours guaranteed legible against them. -->
         <item name="android:colorBackground">@color/md_theme_light_background</item>
         <item name="colorOnBackground">@color/md_theme_light_onBackground</item>
         <item name="colorSurface">@color/md_theme_light_surface</item>
@@ -57,15 +35,7 @@
         <item name="colorSurfaceVariant">@color/md_theme_light_surfaceVariant</item>
         <item name="colorOnSurfaceVariant">@color/md_theme_light_onSurfaceVariant</item>
 
-        <!-- Material 3 tints an elevated surface towards the primary colour to signal height — the
-             "elevation overlay". With a yellow primary that turns every raised card faintly
-             mustard, which fights the clean cream-and-white scheme. Switching it off leaves depth
-             to be carried by the shadow alone, which is what the reference direction asks for.
-
-             Safe to disable in *both* themes only because this app's palette already separates the
-             page from the cards by colour — see colors.xml. In a scheme where background and
-             surface were the same value, the overlay is the only thing making a raised card
-             visible in dark mode, and turning it off would flatten the whole app. -->
+        <!-- Material 3 tints an elevated surface towards the primary colour to signal height. -->
         <item name="elevationOverlayEnabled">false</item>
 
         <!-- Outlines: text field borders and the stroke on outlined buttons. -->
@@ -77,12 +47,10 @@
         <item name="colorOnSurfaceInverse">@color/md_theme_light_inverseOnSurface</item>
         <item name="colorPrimaryInverse">@color/md_theme_light_inversePrimary</item>
 
-        <!-- The accent as a foreground colour. Deeper than colorPrimary so it is legible as text —
-             see attrs.xml for why this role has to exist at all. -->
+        <!-- The accent as a foreground colour. Deeper than colorPrimary so it is legible as text. -->
         <item name="colorAccentText">@color/accent_text_light</item>
 
-        <!-- The "chosen" fill on the Tasks tab: near-black with yellow on it in this theme. See
-             attrs.xml. -->
+        <!-- The "chosen" fill on the Tasks tab: near-black with yellow on it in this theme. -->
         <item name="colorSelectedContainer">@color/selected_container_light</item>
         <item name="colorOnSelectedContainer">@color/on_selected_container_light</item>
         <item name="colorOnSelectedContainerNeutral">@color/on_selected_container_neutral_light</item>
@@ -90,9 +58,7 @@
         <item name="colorDisabledContainer">@color/disabled_container_light</item>
         <item name="colorOnDisabledContainer">@color/on_disabled_container_light</item>
 
-        <!-- ======================== Pastel stat pill roles ========================
-             The app's own colour roles, declared in attrs.xml. See the note there for why a stat
-             pill needs a family of *equal* colours that the Material roles cannot express. -->
+        <!-- ======================== Pastel stat pill roles ======================== -->
         <item name="colorPillMint">@color/pill_light_mint</item>
         <item name="colorOnPillMint">@color/pill_light_on_mint</item>
         <item name="colorPillSky">@color/pill_light_sky</item>
@@ -105,18 +71,14 @@
         <item name="colorPillVerified">@color/verified_pill_light</item>
         <item name="colorOnPillVerified">@color/on_verified_pill_light</item>
 
-        <!-- The log in screen's wrong-password warning cards — see attrs.xml. Pale washes of the
-             accent and the error hue on the cream page. -->
+        <!-- The log in screen's wrong-password warning cards — see attrs.xml. -->
         <item name="colorAuthAlertWarning">@color/auth_alert_warning_fill_light</item>
         <item name="colorAuthAlertWarningEdge">@color/auth_alert_warning_edge_light</item>
         <item name="colorAuthAlertDanger">@color/auth_alert_danger_fill_light</item>
         <item name="colorAuthAlertDangerEdge">@color/auth_alert_danger_edge_light</item>
         <item name="colorOnAuthAlertDanger">@color/auth_alert_danger_title_light</item>
 
-        <!-- The floating navigation bar — see attrs.xml for why it needs roles of its own, and the
-             bottom-navigation section of colors.xml for the values. In this theme the slab is white
-             at 86% over the cream page and the active tab is a near-black pill with the accent
-             written on it: the strongest mark available on a light page. -->
+        <!-- The floating navigation bar — see attrs.xml for why it needs roles of its own. -->
         <item name="colorNavBarSurface">@color/nav_bar_surface_light</item>
         <item name="colorNavTabActive">@color/nav_tab_active_light</item>
         <item name="colorOnNavTabActive">@color/on_nav_tab_active_light</item>
@@ -124,12 +86,10 @@
         <item name="colorNavBadgeActive">@color/nav_badge_active_light</item>
         <item name="colorOnNavBadgeActive">@color/on_nav_badge_active_light</item>
 
-        <!-- The ground a map card shows while its map loads — see attrs.xml. In this theme a pale
-             sage, which is the colour map paper reads as before any tiles are on it. -->
+        <!-- The ground a map card shows while its map loads — see attrs.xml. -->
         <item name="colorMapGround">@color/map_ground_light</item>
 
-        <!-- The vaccination status pills — see attrs.xml. Pale washes with dark ink in this theme;
-             the night theme inverts that relationship for the first two. -->
+        <!-- The vaccination status pills — see attrs.xml. Pale washes with dark ink in this theme. -->
         <item name="colorVaccinationClear">@color/vaccination_clear_light</item>
         <item name="colorOnVaccinationClear">@color/on_vaccination_clear_light</item>
         <item name="colorVaccinationOverdue">@color/vaccination_overdue_light</item>
@@ -137,19 +97,12 @@
         <item name="colorVaccinationDue">@color/vaccination_due</item>
         <item name="colorOnVaccinationDue">@color/on_vaccination_due</item>
 
-        <!-- ============================== Shape scale ==============================
-             Material components read their corner radius from these three attributes. Overriding
-             them here rounds *everything* — dialogs, menus, text fields, bottom sheets — in one
-             move, rather than each layout setting a radius the next screen forgets to match. -->
+        <!-- ============================== Shape scale ============================== -->
         <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.PetCare.Small</item>
         <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.PetCare.Medium</item>
         <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.PetCare.Large</item>
 
-        <!-- ================================ Type scale ================================
-             Material components ask the theme for a text *role* rather than naming a font, so
-             re-pointing the fifteen roles at the styles in type.xml changes the typeface of every
-             button, chip, dialog and text field in one place. See type.xml for which typeface plays
-             which role and why. -->
+        <!-- ================================ Type scale ================================ -->
         <item name="textAppearanceDisplayLarge">@style/TextAppearance.PetCare.DisplayLarge</item>
         <item name="textAppearanceDisplayMedium">@style/TextAppearance.PetCare.DisplayMedium</item>
         <item name="textAppearanceDisplaySmall">@style/TextAppearance.PetCare.DisplaySmall</item>
@@ -168,105 +121,29 @@
         <!-- The fallback for a TextView with no text appearance of its own. -->
         <item name="android:textAppearance">@style/TextAppearance.PetCare.Default</item>
 
-        <!-- ========================== Default component styles ==========================
-             Pointing these theme attributes at the app's own styles is what applies the redesign
-             to every instance of a component without a single layout naming a style. -->
-        <!-- The bottom bar has no entry here. It is a MaterialCardView naming PetCare.NavBar
-             explicitly in activity_main.xml, because it is one view rather than a component class
-             the app uses repeatedly — pointing materialCardViewStyle at it would restyle every card
-             in the app. -->
+        <!-- ========================== Default component styles ========================== -->
+        <!-- The bottom bar has no entry here. It is a MaterialCardView naming PetCare.NavBar explicitly in activity_main.xml. -->
         <item name="materialCardViewStyle">@style/PetCare.Card</item>
 
-        <!-- The status and navigation bar icons. The app's page is a light cream in this theme, so
-             the system icons drawn over it must be dark to be visible at all. The night theme sets
-             both to false for the same reason in reverse. -->
+        <!-- The status and navigation bar icons. The app's page is a light cream in this theme. -->
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
     </style>
 
     <style name="Theme.PetCare" parent="Base.Theme.PetCare" />
 
-    <!--
-        The theme MainActivity is *launched* with, and wears for a fraction of a second only.
-
-        **What problem it solves.** Between the launcher icon being tapped and the app having any
-        code running at all, the system draws a placeholder window filled with the theme's
-        `android:windowBackground`. The app cannot influence that moment by any other means: there is
-        no process yet to influence it with. Left to the ordinary theme, that background resolves to
-        `?android:colorBackground` — the cream page in the light theme, which is fine, but the
-        near-black page in the dark theme, which is the black flash the opening animation then has to
-        replace. Pinning it to the animation's own ground here means the window opens in the same
-        cream the overlay holds, so the handover is invisible in both themes.
-
-        **Why it is a separate theme rather than one more item on Theme.PetCare.** windowBackground
-        belongs to the window for the app's whole life, not just its first frame. Setting cream there
-        would put a cream ground behind every screen in the dark theme — visible under every fragment
-        transition, which animates one screen out before the next is opaque. So the Activity is
-        launched with this and swaps to the real theme in onCreate, which is the standard Android
-        pattern for exactly this; see MainActivity.onCreate.
-
-        **The bar icons.** Inherited from Theme.PetCare, those follow the *theme*, so in the dark
-        theme they would be light icons drawn over this cream ground — invisible. Forced dark here for
-        the same reason the light theme forces them dark: what they are drawn on is light. The
-        Activity puts them back under the real theme's control when the animation ends.
-    -->
+    <!-- The theme MainActivity is launched with, and wears for a fraction of a second only. -->
     <style name="Theme.PetCare.Splash" parent="Theme.PetCare">
         <!-- Up to Android 11, the placeholder window is filled with windowBackground. -->
         <item name="android:windowBackground">@color/splash_ground</item>
 
-        <!-- From Android 12 it is not. The platform draws its own launch screen — the app icon on a
-             ground of its own — and takes that ground from this attribute alone, falling back to
-             ?android:colorBackground and ignoring windowBackground entirely. So the line above,
-             correct as it is, has no effect whatsoever on a modern phone, and without this one the
-             app opens on the near-black of the dark theme before the animation has a frame to show.
-             **This was found by running it, not by reading it**: the launch window was still black on
-             a device in dark mode with windowBackground set and apparently correct.
-
-             Both lines are kept because they cover different versions, and minSdk is 24. -->
+        <!-- From Android 12 it is not. The platform draws its own launch screen. -->
         <item name="android:windowSplashScreenBackground" tools:targetApi="s">@color/splash_ground</item>
 
-        <!-- And the one that actually did it on the device this was tested on.
-
-             Neither line above changed anything there: the launch window kept coming up near-black in
-             the dark theme with both set and both verified present in the built resources. What it
-             was really reading is colorBackground — the attribute the other two are *documented* to
-             override. Vendor launchers substitute their own starting-window implementation and this
-             one evidently resolves the ground that way.
-
-             So all three are set to the same colour. That is not redundancy for its own sake: the
-             three are read by different Android versions and different vendors' launchers, none of
-             them can be relied on alone, and agreeing on one value is what makes the launch cream
-             wherever the app is installed rather than only where it was tested.
-
-             Safe to set here precisely because this theme's life is over by the end of onCreate.
-             colorBackground is the app's page colour and half the UI is drawn against it — but
-             MainActivity swaps to Theme.PetCare before any of that UI is inflated, so nothing in the
-             app ever reads this value. -->
+        <!-- And the one that actually did it on the device this was tested on. -->
         <item name="android:colorBackground">@color/splash_ground</item>
 
-        <!-- **What this theme does and does not achieve, as measured rather than assumed.**
-
-             All three lines above are genuinely honoured. That was established by temporarily setting
-             splash_ground to magenta and relaunching: the launch window came up magenta, in the light
-             theme and the dark theme alike. So the app's declared launch colour does reach the
-             window.
-
-             With the *cream* back, though, the launch window is cream only while the system is in its
-             light theme. In dark mode the device repaints it to a near-black of its own choosing
-             (#201E18 — not this colour, and not the app's own dark page colour either). The magenta
-             run showed why: that came back slightly darkened too (#DF00E1), which is the signature of
-             the platform's automatic dark treatment — it barely touches a saturated colour and
-             inverts a light neutral like cream almost completely.
-
-             **It cannot be declined from here.** android:forceDarkAllowed="false" is the documented
-             opt-out and was tried: it changed nothing, because it governs the *app's* view hierarchy,
-             and this window is drawn by the system before the app has one. So on a device whose
-             system theme is dark there is still a brief dark frame before the animation appears. The
-             app's own theme defaults to following the system, so the two agree — what the user sees
-             is a dark frame, then the animation, then a dark app.
-
-             Left as it is deliberately: it is correct wherever the platform allows it to be, and the
-             remaining case is a vendor behaviour, not a missing line here. -->
+        <!-- What this theme does and does not achieve, as measured rather than assumed. -->
 
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>

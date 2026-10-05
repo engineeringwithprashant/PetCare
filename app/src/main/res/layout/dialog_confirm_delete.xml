@@ -1,27 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The body of the second delete-account dialog: a field the user types DELETE into, and a field for
-    their password.
-
-    **Why a second dialog at all.** The first explains what is destroyed and offers a way out, which is
-    the normal confirmation. This one exists because the action has no undo whatsoever — the account and
-    every pet, routine, task, expense and saved place on the device go with it — and a plain confirm
-    button is one mis-tap away from all of it. Typing the word cannot be done by accident, and the few
-    seconds it takes are a moment in which the user re-reads what they are about to do. It is the
-    pattern GitHub, Stripe and every other tool with an irreversible destroy action settles on, for
-    exactly this reason.
-
-    **Why the password as well.** Firebase Authentication only deletes an account right after its
-    password has been checked (see FirebaseAuthService.deleteAccount). Asking for it here is also what
-    stops someone holding an unlocked phone from deleting the owner's account.
-
-    The dialog's title and its two buttons come from MaterialAlertDialogBuilder, so this file is only
-    the fields between them. A vertical LinearLayout, because the two fields simply stack.
-
-    `textCapCharacters` puts the keyboard straight into capitals, since the word to type is written in
-    capitals — the comparison itself ignores case (see ProfileFragment.askForDeleteWord), so this is a
-    convenience rather than a requirement.
--->
+<!-- The body of the second delete-account dialog: a field the user types DELETE. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -46,9 +24,7 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- The account's password. endIconMode="password_toggle" adds the eye icon that shows or hides
-         what was typed, as on the change-password screen. The autofill hint lets a password manager
-         fill it in. -->
+    <!-- The account's password. endIconMode="password_toggle" adds the eye icon that shows or hides what was typed. -->
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"

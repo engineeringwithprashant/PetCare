@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The circle holding a delegation contact's initial, on the profile screen's contacts card.
-
-    A circle rather than the rounded square the account rows use, and the difference carries meaning:
-    a square code badge labels a *kind of thing* ("MAIL", "PASS"), while a circle with a letter in it
-    is how a **person** is drawn everywhere — in mail apps, chat apps and contact lists alike. The two
-    shapes sitting on the same screen is what tells the two kinds of row apart at a glance.
-
-    The quieter surface with the muted text colour on it, so a row of contacts reads as a list of
-    people rather than as a row of buttons. Both are theme roles, so one file serves both modes.
--->
+<!-- The circle holding a delegation contact's initial, on the profile screen's contacts card. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 

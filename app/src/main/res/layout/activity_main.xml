@@ -1,39 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The single Activity layout for the whole app: a top app bar, the window every screen is swapped
-    into, and a bottom navigation bar.
-
-    Having one toolbar and one bottom bar here rather than one per fragment means the title, the
-    back arrow and the selected tab are handled in a single place, by NavigationUI, from the labels
-    and ids already declared in res/navigation/nav_graph.xml. Twelve fragments each managing their
-    own chrome would be twelve chances for them to drift apart.
-
-    **Why a vertical LinearLayout with a FrameLayout in it.** The top app bar *reserves* its space:
-    it is opaque and sits above the content, so a LinearLayout with the screen area weighted
-    expresses that directly and is cheaper to measure than a ConstraintLayout doing the same job.
-
-    The bottom bar is the opposite — a translucent control floating *over* the page rather than a
-    band cut out of the foot of it, which is what the FrameLayout around the screen area provides:
-    the NavHostFragment fills it, and the navigation bar is laid over the top of that, anchored to
-    the bottom with margins on three sides.
-
-    The top bar is deliberately fixed rather than scrolling away with the content: the app's screens
-    are short forms and lists, and a title that disappears on a flick is more distracting than useful
-    at that size.
--->
-<!--
-    The outermost frame exists for one thing: the opening video has to be able to cover *everything*,
-    system bars included.
-
-    The app's screens live in the LinearLayout below, and that is the view the window insets are
-    applied to — it keeps the id `main` for exactly that reason, see MainActivity.applyWindowInsets —
-    so its content stays clear of the status and navigation bars. The video overlay is this frame's
-    second child instead, outside that padding, which is what lets it play corner to corner. Anything
-    else would leave a pale band across the top of the first thing the user ever sees.
-
-    This frame deliberately has no id. Nothing addresses it; it is structure, not a view the code
-    talks to.
--->
+<!-- The single Activity layout for the whole app: a top app bar, the window every screen is swapped. -->
+<!-- The outermost frame exists for one thing: the opening video has to be able to cover everything. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -47,19 +14,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!--
-        AppBarLayout provides the elevation and surface treatment Material 3 expects behind a top
-        app bar. MainActivity hides the whole thing on the sign-in screens, which carry their own
-        large headings and need no navigation chrome — and on the dashboard, which supplies its own
-        header with the monogram, theme toggle and pet count in it. See MainActivity.updateChromeFor,
-        and the note at the top of fragment_home.xml on why that header belongs to the fragment
-        rather than to this shared toolbar.
-
-        Its background is the app's cream page colour rather than a white surface, and its elevation
-        is zero. That is what makes the bar read as part of the window's frame — the content below
-        it is a cream page with white cards on it, and a white bar with a shadow would look like one
-        more card that happened to be stuck to the top.
-    -->
+    <!-- AppBarLayout provides the elevation and surface treatment Material 3 expects behind a top app bar. -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
@@ -68,11 +23,7 @@
         app:elevation="0dp"
         app:liftOnScroll="false">
 
-        <!-- No app:menu here, deliberately. MainActivity makes this toolbar the Activity's action
-             bar, and the overflow menu is inflated in onCreateOptionsMenu instead — which is what
-             routes taps to onOptionsItemSelected and lets onPrepareOptionsMenu hide the account
-             actions on the sign-in screens. Declaring the menu in both places risks the items being
-             added twice. -->
+        <!-- No app:menu here, deliberately. MainActivity makes this toolbar the Activity's action bar. -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/topAppBar"
             android:layout_width="match_parent"
@@ -81,24 +32,13 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!--
-        The screen area, and the navigation bar floating over the bottom of it.
-
-        layout_height="0dp" with layout_weight="1" makes this take all the room the app bar does not.
-        Its two children are stacked: the screen fills the frame, the bar is drawn on top of it.
-    -->
+    <!-- The screen area, and the navigation bar floating over the bottom of it. -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <!--
-            The NavHostFragment: the window the Navigation Component swaps screens into. Every actual
-            screen is a fragment declared in res/navigation/nav_graph.xml.
-
-            app:defaultNavHost="true" lets this host intercept the system back button, so back moves
-            through the navigation history rather than closing the app straight away.
-        -->
+        <!-- The NavHostFragment: the window the Navigation Component swaps screens into. -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/nav_host_fragment"
             android:name="androidx.navigation.fragment.NavHostFragment"
@@ -107,24 +47,7 @@
             app:defaultNavHost="true"
             app:navGraph="@navigation/nav_graph" />
 
-        <!--
-            The bottom navigation bar: the app's five top-level destinations.
-
-            **A genuine overlay, not a reserved row.** The bar is translucent and the page is meant
-            to be seen moving underneath it — that is the whole of the design, and it only works if
-            the content really does pass behind. So it is a child of this FrameLayout pinned to the
-            bottom with margins on three sides, rather than a fourth row of the LinearLayout above.
-
-            The slab is an ordinary M3 card: PetCare.NavBar gives it the shape, the translucent fill,
-            the hairline edge and the app's standard card shadow, and 7dp of content padding that
-            together with the 46dp tabs makes the bar 60dp tall. The row of tabs inside it is a
-            custom view, because no Material bar can widen one item and write its name in it — see
-            FloatingNavBar for the whole of that argument.
-
-            The bar carries no click listeners of its own. MainActivity supplies the tap handler and
-            tells it which tab is current on every destination change, so navigation stays described
-            in one place.
-        -->
+        <!-- The bottom navigation bar: the app's five top-level destinations. -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/bottomNav"
             style="@style/PetCare.NavBar"
@@ -146,33 +69,7 @@
 
 </LinearLayout>
 
-    <!--
-        The opening animation: res/raw/splash_animation.mp4, played once over the app while it starts.
-
-        **Why the video lives here rather than in a splash theme or an Activity of its own.** A
-        window's splash can only ever be a colour and a still drawable — the system paints it before
-        the app exists, so there is nothing running that could play anything. And a separate
-        SplashActivity, the other usual answer, would put a second Activity in front of the app's
-        single-Activity structure and a second entry in the back stack. Playing it here keeps the
-        whole app one Activity with one navigation graph, exactly as the rest of the project is
-        built, and keeps the video in the only place that can actually run it.
-
-        **Why a TextureView and not a VideoView.** A VideoView is a SurfaceView underneath, and a
-        SurfaceView is a separate window punched through the app's: it cannot be faded, so the video
-        could only ever be cut away rather than dissolved, and it flashes black for a frame as it is
-        created. A TextureView is an ordinary view drawn in the app's own window, so it fades like
-        anything else and the frame before playback is whatever this overlay's background is.
-
-        The background is the app's cream page colour, so there is no black frame before the decoder
-        produces a picture and none behind the closing fade. It is never seen *during* playback: the
-        clip is scaled to cover the view, so no band is left at any screen shape. See splash_ground in
-        colors.xml, and MainActivity.fillVideoToView for what covering costs at the edges.
-
-        clickable and focusable so it swallows anything aimed at the screen beneath while it is up;
-        without them a tap during playback would land on whatever happened to be underneath. The tap
-        is not merely swallowed, though — MainActivity attaches a listener that skips the rest of the
-        animation, so the overlay is dismissed rather than endured.
-    -->
+    <!-- The opening animation: res/raw/splash_animation.mp4, played once over the app while it starts. -->
     <FrameLayout
         android:id="@+id/splashOverlay"
         android:layout_width="match_parent"

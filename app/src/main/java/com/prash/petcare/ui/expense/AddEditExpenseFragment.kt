@@ -24,17 +24,7 @@ import com.prash.petcare.ui.common.formatStoredDate
 import com.prash.petcare.ui.common.setToolbarTitle
 import kotlinx.coroutines.launch
 
-/**
- * Form for recording a new expense against a pet, or changing an existing one.
- *
- * Which mode it runs in depends on the `expenseId` navigation argument:
- * [AddEditExpenseViewModel.NO_EXPENSE_ID] means add, anything else means edit. The distinction is
- * the ViewModel's to interpret — this fragment renders whatever state comes back.
- *
- * As the **View** in MVVM it owns no logic: parsing the amount, validation and persistence all live
- * in [AddEditExpenseViewModel]. What it owns are the things that genuinely need a Context or a view
- * — the date picker and the confirmation dialog.
- */
+/** Form for recording a new expense against a pet, or changing an existing one. */
 class AddEditExpenseFragment : Fragment() {
 
     /** Nulled in [onDestroyView] to avoid leaking the destroyed view hierarchy. */
@@ -67,17 +57,9 @@ class AddEditExpenseFragment : Fragment() {
         observeViewModel()
     }
 
-    /**
-     * Fills the category dropdown.
-     *
-     * The labels and [ExpenseCategory.entries] are built from the same list in the same order, so
-     * the tapped position maps straight back to an enum constant. Reading the category back from
-     * the displayed text would break the moment the app is translated.
-     */
+    /** Fills the category dropdown. */
     private fun setUpCategoryDropdown() {
-        // Each row is "💊  Medication": the emoji is what the expense's badge will show once this is
-        // saved, so the user sees the symbol they are choosing at the moment they choose it rather
-        // than meeting it for the first time on the card afterwards.
+        // Each row is "💊 Medication": the emoji is what the expense's badge will show once this is saved.
         val labels = ExpenseCategory.entries
             .map { it.emojiLabel(requireContext()) }
             .toTypedArray()
@@ -89,9 +71,7 @@ class AddEditExpenseFragment : Fragment() {
     }
 
     private fun setUpClickListeners() {
-        // Focusable so it can be reached by keyboard, D-pad or switch access, with the soft keyboard
-        // suppressed so focusing does not pop one up for a field nobody types into. The same
-        // treatment the pet form gives its date of birth field.
+        // Focusable so it can be reached by keyboard, D-pad or switch access, with the soft keyboard suppressed.
         binding.dateInput.showSoftInputOnFocus = false
         binding.dateInput.setOnClickListener { showDatePicker() }
 
@@ -105,8 +85,7 @@ class AddEditExpenseFragment : Fragment() {
 
         binding.deleteExpenseButton.setOnClickListener { showDeleteConfirmation() }
 
-        // Clearing an error as soon as the user starts correcting it, rather than making them save
-        // again to find out whether they have fixed it.
+        // Clearing an error as soon as the user starts correcting.
         binding.expenseTitleInput.doOnTextChanged { _, _, _, _ -> viewModel.clearTitleError() }
         binding.amountInput.doOnTextChanged { _, _, _, _ -> viewModel.clearAmountError() }
     }
@@ -127,12 +106,7 @@ class AddEditExpenseFragment : Fragment() {
         picker.show(childFragmentManager, DATE_PICKER_TAG)
     }
 
-    /**
-     * Asks before deleting.
-     *
-     * Removing an expense changes the pet's total and its breakdown, and cannot be undone from this
-     * screen, so the dialog names the expense rather than asking a generic "are you sure?".
-     */
+    /** Asks before deleting. */
     private fun showDeleteConfirmation() {
         val title = binding.expenseTitleInput.text?.toString()?.trim().orEmpty()
 
@@ -174,9 +148,7 @@ class AddEditExpenseFragment : Fragment() {
         binding.amountInputLayout.error = state.amountError?.let { getString(it) }
         binding.dateInputLayout.error = state.dateError?.let { getString(it) }
 
-        // The same "💊  Medication" pair the dropdown rows show, so the closed field reads as the row
-        // that was picked. `false` stops the dropdown treating this as typed input and filtering its
-        // own list.
+        // The same "💊 Medication" pair the dropdown rows show, so the closed field reads as the row that was picked.
         binding.categoryInput.setText(state.category.emojiLabel(requireContext()), false)
 
         binding.dateInput.setText(state.incurredOn?.let { formatStoredDate(it) }.orEmpty())
@@ -192,8 +164,7 @@ class AddEditExpenseFragment : Fragment() {
         when (event) {
             is AddEditExpenseEvent.PrefillForm -> prefillForm(event.expense)
 
-            // Both outcomes simply close the screen. The expenses screen behind it already observes
-            // the database, so its list, total and breakdown all update themselves.
+            // Both outcomes simply close the screen. The expenses screen behind it already observes the database.
             is AddEditExpenseEvent.Saved,
             is AddEditExpenseEvent.Deleted -> findNavController().navigateUp()
 
@@ -204,18 +175,7 @@ class AddEditExpenseFragment : Fragment() {
         }
     }
 
-    /**
-     * Writes a loaded expense's values into the text fields.
-     *
-     * Deliberately called once, from a one-shot event, rather than on every state update — writing
-     * into an EditText the user is typing in would move their cursor and undo their edits. After a
-     * rotation these fields restore themselves from Android's own saved instance state, so there is
-     * nothing to repeat.
-     *
-     * The amount goes through [formatAmountForInput] rather than the app's currency formatter:
-     * this is an editable field, and a currency symbol and grouping separators would only be text
-     * the user has to delete before they can correct the figure.
-     */
+    /** Writes a loaded expense's values into the text fields. */
     private fun prefillForm(expense: Expense) {
         binding.expenseTitleInput.setText(expense.title)
         binding.amountInput.setText(formatAmountForInput(expense.amount))

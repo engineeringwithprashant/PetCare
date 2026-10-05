@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The header every sign-in screen opens with: the logo, "PetCare", "DAILY PET TRACKING", then that
-    screen's own heading and subtitle.
-
-    Pulled into each screen with <include android:id="@+id/header">. Because the include has an id,
-    ViewBinding gives the screen a nested `binding.header` of type ViewAuthHeaderBinding, and the
-    fragment fills in the two lines that differ (title, subtitle) through it — see
-    ui/auth/AuthScreens.kt. The three lines above them are identical everywhere, so they are written
-    once here and the four sign-in screens cannot drift apart.
-
-    A vertical LinearLayout with every child centred: the header is a simple stack with nothing beside
-    anything, which is exactly what LinearLayout is for and cheaper to measure than a ConstraintLayout.
--->
+<!-- The header every sign-in screen opens with: the logo, "PetCare", "DAILY PET TRACKING". -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -21,14 +9,7 @@
     android:orientation="vertical"
     tools:background="?android:attr/colorBackground">
 
-    <!--
-        The PetCare logo (res/drawable-nodpi/logo_petcare.png).
-
-        The artwork is a full-bleed square with sharp corners, but the design shows it as a rounded
-        tile. A Material ShapeableImageView clips the image to the rounded shape named in
-        shapeAppearanceOverlay, so the rounding lives in one style rather than being baked into the
-        PNG. centerCrop fills the whole tile, which is what makes the clipped corners visible.
-    -->
+    <!-- The PetCare logo (res/drawable-nodpi/logo_petcare.png). -->
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/brandMark"
         android:layout_width="@dimen/auth_brand_mark_size"
@@ -38,8 +19,7 @@
         android:src="@drawable/logo_petcare"
         app:shapeAppearanceOverlay="@style/ShapeAppearance.PetCare.AuthBrandMark" />
 
-    <!-- The wordmark. Hidden from TalkBack because the logo above already announces "PetCare";
-         hearing it twice in a row adds nothing. -->
+    <!-- The wordmark. Hidden from TalkBack because the logo above already announces "PetCare". -->
     <TextView
         android:id="@+id/brandName"
         style="@style/PetCare.Auth.BrandName"
@@ -57,8 +37,7 @@
         android:layout_marginTop="2dp"
         android:text="@string/auth_brand_tagline" />
 
-    <!-- The screen's heading. Marked as a heading for accessibility (API 28+), so TalkBack users can
-         jump straight to it; older versions simply ignore the attribute. Text is set by the fragment. -->
+    <!-- The screen's heading. Marked as a heading for accessibility (API 28+). -->
     <TextView
         android:id="@+id/title"
         style="@style/PetCare.Auth.Title"

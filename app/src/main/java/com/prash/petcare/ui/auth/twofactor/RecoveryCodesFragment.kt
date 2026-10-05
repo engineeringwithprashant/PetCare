@@ -20,25 +20,7 @@ import com.prash.petcare.databinding.ItemRecoveryCodeBinding
 import com.prash.petcare.ui.session.SessionViewModel
 import kotlinx.coroutines.launch
 
-/**
- * The recovery codes, shown once: ten single-use codes, a warning, a tick and a finish button.
- *
- * The last step of setting two-factor authentication up, reached from [TwoFactorSetupFragment] once
- * a code from the authenticator has been typed back correctly. The **View** in MVVM: it draws the
- * codes [RecoveryCodesViewModel] was given, reports the tick, and leaves when the ViewModel says the
- * account is protected.
- *
- * **"Once" is literal.** The database stores only hashes — see
- * [com.prash.petcare.data.local.entity.RecoveryCode] — so there is no screen anywhere in the app that
- * can show these again, and this one cannot either once it is left. That is why the finish button
- * waits on a tick and why leaving early asks first: both are the app taking seriously that this is
- * the user's only chance to write them down.
- *
- * **Why the rows are inflated rather than put in a RecyclerView.** There are exactly ten, they never
- * change, and nothing scrolls past them — the same reasoning the profile screen's contacts card
- * gives. A RecyclerView would add an adapter, a view holder and a diff for a list that is fixed in
- * length and lifetime.
- */
+/** The recovery codes, shown once: ten single-use codes, a warning, a tick and a finish button. */
 class RecoveryCodesFragment : Fragment() {
 
     private var _binding: FragmentRecoveryCodesBinding? = null
@@ -62,9 +44,7 @@ class RecoveryCodesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // isPressed tells a real tap from this screen writing the restored value back into the box,
-        // exactly as the profile screen's switches do — without it, rendering state would look like
-        // the user having ticked it.
+        // isPressed tells a real tap from this screen writing the restored value back into the box.
         binding.savedCheckbox.setOnCheckedChangeListener { button, isChecked ->
             if (button.isPressed) viewModel.onConfirmedSavedChanged(isChecked)
         }
@@ -75,24 +55,7 @@ class RecoveryCodesFragment : Fragment() {
         observeViewModel()
     }
 
-    /**
-     * Asks before leaving with the codes unsaved.
-     *
-     * **Why this screen intercepts back when no other in the app does.** Everywhere else, backing out
-     * of a form loses some typing. Backing out of here loses ten codes that cannot be shown again, on
-     * the one screen whose entire purpose is to hand them over. Leaving is still allowed — it is the
-     * user's account and there is a legitimate "actually, not now" — but it is worth one sentence
-     * first, and the sentence says what is really at stake: two-factor authentication will simply not
-     * be turned on, so nothing is broken and nothing is half-done.
-     *
-     * Once the tick is in, the dialog stops appearing: the user has said they have the codes, and
-     * asking again would be doubting an answer the app just took. Leaving at that point still does
-     * not turn two-factor authentication on — only "FINISH SETUP" does — which is the right way
-     * round: having the codes and having decided to go ahead are two different statements.
-     *
-     * `OnBackPressedCallback` on the *view* lifecycle owner, so the interception ends with the view
-     * rather than outliving it and swallowing back presses meant for another screen.
-     */
+    /** Asks before leaving with the codes unsaved. */
     private fun interceptBack() {
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
@@ -118,14 +81,7 @@ class RecoveryCodesFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Abandons setup and returns to the profile screen.
-     *
-     * Nothing has to be undone. The secret was never stored and the codes were never stored — see
-     * [RecoveryCodesViewModel] — so two-factor authentication is exactly as off as it was before the
-     * user opened the setup screen. `popBackStack` to the profile destination clears both setup
-     * screens at once, so back from the profile does not walk into a half-finished flow.
-     */
+    /** Abandons setup and returns to the profile screen. */
     private fun leaveWithoutEnabling() {
         findNavController().popBackStack(R.id.profileFragment, false)
     }
@@ -146,14 +102,7 @@ class RecoveryCodesFragment : Fragment() {
         renderCodes(state.codes)
     }
 
-    /**
-     * Fills the two columns of codes.
-     *
-     * The container is emptied and refilled rather than diffed — as on the profile screen's contacts
-     * card, and for the same reason: the list is fixed, and the simplest correct thing is also the
-     * right one. Odd-numbered rows go in the left column and even in the right, so the codes read
-     * **down** each column in the order they are numbered rather than snaking across.
-     */
+    /** Fills the two columns of codes. */
     private fun renderCodes(codes: List<String>) {
         binding.codesLeftColumn.removeAllViews()
         binding.codesRightColumn.removeAllViews()
@@ -167,8 +116,7 @@ class RecoveryCodesFragment : Fragment() {
                 if (index < perColumn) binding.codesLeftColumn else binding.codesRightColumn
 
             val row = ItemRecoveryCodeBinding.inflate(inflater, column, false)
-            // Numbered from one, so "the third code" means the same thing to the user reading the
-            // screen and to the user reading what they wrote down.
+            // Numbered from one.
             row.codeIndex.text = getString(R.string.recovery_codes_index, index + 1)
             row.codeValue.text = code
             column.addView(row.root)
@@ -177,8 +125,7 @@ class RecoveryCodesFragment : Fragment() {
 
     private fun handleEvent(event: RecoveryCodesEvent) {
         when (event) {
-            // Back to the profile screen, whose two-factor row will already be reading "On" — it
-            // observes the same database rows this write just changed.
+            // Back to the profile screen, whose two-factor row will already be reading.
             is RecoveryCodesEvent.Enabled -> {
                 findNavController().popBackStack(R.id.profileFragment, false)
             }

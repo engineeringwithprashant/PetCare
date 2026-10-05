@@ -12,21 +12,7 @@ import com.prash.petcare.util.CareSchedule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
-/**
- * Supplies care tasks to the ViewModel layer.
- *
- * See [UserRepository] for why this layer exists and how it fits the MVVM chain, and
- * [PetRepository] for why the sync timestamps and tombstones are maintained in this layer.
- *
- * **Completion history.** This repository also owns the `care_completions` table. Every tick and
- * un-tick made anywhere in the app passes through [setTaskCompleted], so writing the history *here* —
- * rather than asking each screen to remember to — is what guarantees the dashboard's care streak can
- * never disagree with what was actually ticked. See [CareCompletion].
- *
- * @property careTaskDao Injected through the constructor so tests can substitute a fake.
- * @property syncDeletionDao Where deletions are recorded for the sync layer to send on.
- * @property careCompletionDao Where each day's ticks are kept once the task itself has moved on.
- */
+/** Supplies care tasks to the ViewModel layer. */
 class CareTaskRepository(
     private val careTaskDao: CareTaskDao,
     private val syncDeletionDao: SyncDeletionDao,
@@ -44,23 +30,11 @@ class CareTaskRepository(
     fun observePendingCountForPet(petId: Long): Flow<Int> =
         careTaskDao.observePendingCountByPet(petId)
 
-    /**
-     * Observes every task belonging to an owner, unfiltered.
-     *
-     * For callers that have to project a repeat schedule to decide what falls due on a given day —
-     * a repeating task's stored date is the day it began, not the day it next runs, so the question
-     * cannot be answered by a date filter in SQL. See [CareTaskDao.observeByOwner], and
-     * [com.prash.petcare.util.CareSchedule.tasksDueOn] for the projection itself.
-     */
+    /** Observes every task belonging to an owner, unfiltered. */
     fun observeTasksForOwner(ownerId: Long): Flow<List<CareTask>> =
         careTaskDao.observeByOwner(ownerId)
 
-    /**
-     * Observes an owner's outstanding tasks falling inside a time window.
-     *
-     * The caller supplies the window — typically the start and end of today, worked out in the
-     * device's own time zone — rather than the query assuming what "today" means.
-     */
+    /** Observes an owner's outstanding tasks falling inside a time window. */
     fun observePendingTasksForOwnerBetween(
         ownerId: Long,
         fromMillis: Long,
@@ -68,12 +42,7 @@ class CareTaskRepository(
     ): Flow<List<CareTask>> =
         careTaskDao.observePendingForOwnerBetween(ownerId, fromMillis, toMillis)
 
-    /**
-     * Observes all of an owner's tasks in a time window, completed ones included.
-     *
-     * Used for the home screen's "done so far today" summary, which needs the full picture rather
-     * than only what is outstanding.
-     */
+    /** Observes all of an owner's tasks in a time window, completed ones included. */
     fun observeTasksForOwnerBetween(
         ownerId: Long,
         fromMillis: Long,
@@ -90,22 +59,10 @@ class CareTaskRepository(
     fun observeTasksForRoutine(routineId: Long): Flow<List<CareTask>> =
         careTaskDao.observeByRoutine(routineId)
 
-    /**
-     * Observes every task that can carry a reminder, together with its pet and repeat schedule.
-     *
-     * Collected for the lifetime of the process by
-     * [com.prash.petcare.reminder.ReminderManager], which re-plans the alarms on each emission.
-     */
+    /** Observes every task that can carry a reminder, together with its pet and repeat schedule. */
     fun observeReminders(): Flow<List<TaskReminder>> = careTaskDao.observeReminders()
 
-    /**
-     * One snapshot of the same data, for callers with no lifetime to observe over — the boot
-     * receiver, and the alarm receiver rescheduling itself.
-     *
-     * Taken as the first emission of [observeReminders] rather than declared as a second `suspend`
-     * query, so the SQL exists in exactly one place. `first()` runs the query once and then stops
-     * collecting, so nothing is left listening for changes afterwards.
-     */
+    /** One snapshot of the same data, for callers with no lifetime to observe over — the boot receiver. */
     suspend fun getReminders(): List<TaskReminder> = careTaskDao.observeReminders().first()
 
     fun observeTask(taskId: Long): Flow<CareTask?> = careTaskDao.observeById(taskId)
@@ -118,9 +75,7 @@ class CareTaskRepository(
 
     /** Adds several tasks in one transaction — used when a routine generates its occurrences. */
     suspend fun addTasks(tasks: List<CareTask>): List<Long> {
-        // One timestamp for the whole batch rather than one per row: they are being written by a
-        // single action, and reading the clock repeatedly would give rows from the same save
-        // slightly different "last changed" moments for no reason.
+        // One timestamp for the whole batch rather than one per row: they are being written by a single action.
         val now = System.currentTimeMillis()
         return careTaskDao.insertAll(
             tasks.map { it.copy(updatedAt = now, isPendingSync = true) }
@@ -139,18 +94,7 @@ class CareTaskRepository(
         careTaskDao.delete(task)
     }
 
-    /**
-     * Removes every task belonging to a routine, used when that routine is being deleted.
-     *
-     * See [com.prash.petcare.data.local.dao.CareTaskDao.deleteByRoutine] for why this is explicit
-     * rather than left to the database's own cascade rules.
-     *
-     * Because the rows are removed by a single DELETE rather than one at a time, their ids have to
-     * be read first — afterwards there is nothing left to record. Each gets its own tombstone,
-     * unlike the children of a deleted pet: those are covered by the pet's tombstone, but a task
-     * whose routine is deleted has no deleted parent to be covered by, since the routine's own
-     * removal does not imply the pet has gone anywhere.
-     */
+    /** Removes every task belonging to a routine, used when that routine is being deleted. */
     suspend fun deleteTasksForRoutine(routineId: Long) {
         val taskIds = careTaskDao.getIdsByRoutine(routineId)
 
@@ -163,13 +107,7 @@ class CareTaskRepository(
         careTaskDao.deleteByRoutine(routineId)
     }
 
-    /**
-     * Clears every completion a pet recorded inside a time window, leaving the tasks themselves
-     * untouched. Used to start a day's checklist over.
-     *
-     * The history rows for the same window go too, so a day that was reset no longer counts as a
-     * full day in the care streak.
-     */
+    /** Clears every completion a pet recorded inside a time window, leaving the tasks themselves untouched. */
     suspend fun clearCompletionsForPet(petId: Long, fromMillis: Long, toMillis: Long) {
         careTaskDao.clearCompletionsForPet(
             petId = petId,
@@ -180,35 +118,21 @@ class CareTaskRepository(
         careCompletionDao.deleteForPetBetween(petId, fromMillis, toMillis)
     }
 
-    /**
-     * Observes an owner's completion history from [fromMillis] onwards — what the dashboard's care
-     * streak is drawn from.
-     */
+    /** Observes an owner's completion history from [fromMillis] onwards. */
     fun observeCompletionsForOwnerSince(ownerId: Long, fromMillis: Long): Flow<List<CareCompletion>> =
         careCompletionDao.observeForOwnerSince(ownerId, fromMillis)
 
-    /**
-     * Ticks a task off, or clears it again.
-     *
-     * The completion timestamp is decided here rather than by the UI so that every screen
-     * records it the same way, and so un-ticking always clears the timestamp instead of leaving
-     * a stale "completed at" behind on an outstanding task.
-     */
+    /** Ticks a task off, or clears it again. */
     suspend fun setTaskCompleted(taskId: Long, isCompleted: Boolean) {
-        // Read before writing: the history row needs the task's pet, and un-ticking needs to know
-        // which day the tick being undone was recorded against. A task that has just been deleted
-        // elsewhere has nothing to tick, so there is nothing to do.
+        // Read before writing: the history row needs the task's pet.
         val task = careTaskDao.getById(taskId) ?: return
 
         val now = System.currentTimeMillis()
-        // completedAt is cleared when un-ticking, but updatedAt still moves: the row changed, and
-        // that is what the sync layer is asking about.
+        // completedAt is cleared when un-ticking, but updatedAt still moves: the row changed.
         val completedAt = if (isCompleted) now else null
         careTaskDao.setCompleted(taskId, isCompleted, completedAt, now)
 
-        // Then the history. Two separate statements rather than one transaction: if the second were
-        // ever lost, the worst outcome is one streak box drawn wrongly for a day — the checklist
-        // itself, which is what the user acts on, is already correct.
+        // Then the history. Two separate statements rather than one transaction: if the second were ever lost.
         if (isCompleted) {
             careCompletionDao.insert(
                 CareCompletion(
@@ -219,16 +143,13 @@ class CareTaskRepository(
                 )
             )
         } else {
-            // The day of the tick being undone, not today: un-ticking at 00:05 a task done at 23:55
-            // must remove yesterday's row, which is the one that tick created.
+            // The day of the tick being undone, not today.
             val tickedDay = CareSchedule.startOfDay(task.completedAt ?: now)
             careCompletionDao.deleteForTaskOnDay(taskId, tickedDay)
         }
     }
 
-    // -------------------------------------------------------------------------------------------
     // Used by the sync layer — see the equivalent section of PetRepository.
-    // -------------------------------------------------------------------------------------------
 
     /** Every task belonging to an owner, as a one-off read. */
     suspend fun getTasksForOwner(ownerId: Long): List<CareTask> = careTaskDao.getByOwner(ownerId)
@@ -249,14 +170,7 @@ class CareTaskRepository(
     fun observePendingTaskCount(ownerId: Long): Flow<Int> =
         careTaskDao.observePendingSyncCount(ownerId)
 
-    /**
-     * Writes tasks pulled from Firestore into Room, keeping the timestamps they arrived with.
-     *
-     * A task ticked on another device arrives carrying its `completedAt`, and that tick is added to
-     * the local history as well, so the care streak on this phone counts care done on the other one.
-     * Only additions are made — see [CareCompletionDao.insertAllIfAbsent] for why an existing row is
-     * kept. The tasks are written first because each history row has a foreign key to its task.
-     */
+    /** Writes tasks pulled from Firestore into Room, keeping the timestamps they arrived with. */
     suspend fun upsertTasksFromSync(tasks: List<CareTask>) {
         careTaskDao.upsertAll(tasks)
 

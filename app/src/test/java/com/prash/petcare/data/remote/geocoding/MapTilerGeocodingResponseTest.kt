@@ -5,28 +5,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/**
- * Unit tests for the two decisions a MapTiler reply is read for: *is there a named place under the
- * pin?* and *what is the address here?*
- *
- * Plain JVM tests with no device and no network, possible because the functions under test are pure
- * and take only the parsed reply plus a coordinate — which is most of why that logic lives in
- * MapTilerGeocodingResponse.kt rather than inside the repository that calls it.
- *
- * They matter for the same reason GeoDistanceTest does: every failure in this logic produces a
- * confident, plausible-looking line on the card. A pin on a hospital reported as "Lalitpur" is the bug
- * this code was written to fix, and a pin on somebody's front door reported as "Patan Hospital" is the
- * worse bug it could introduce — neither looks wrong on screen, so neither would be caught by clicking
- * through the app.
- */
+/** Unit tests for the two decisions a MapTiler reply is read for: is there a named place under the pin? */
 class MapTilerGeocodingResponseTest {
 
     // Patan Hospital's gate, give or take — the coordinate standing in for the centre pin throughout.
     private val pin = Coordinates(latitude = 27.6681, longitude = 85.3157)
 
-    // ---------------------------------------------------------------------------------------
-    // nearestPoiNameWithin: only a POI that is genuinely there
-    // ---------------------------------------------------------------------------------------
+    // nearestPoiNameWithin: only a POI that is genuinely there.
 
     @Test
     fun `a POI on the pin is named`() {
@@ -37,9 +22,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `a POI a street away is not named`() {
-        // MapTiler's nearest-neighbour search reaches about a kilometre, so this is an ordinary reply
-        // rather than an odd one — and accepting it would label a user's front door as the clinic
-        // across the junction.
+        // MapTiler's nearest-neighbour search reaches about a kilometre, so this is an ordinary reply.
         val response = response(poi("Patan Hospital", pin.movedNorthBy(metres = 300.0)))
 
         assertNull(response.nearestPoiNameWithin(pin, maxMetres = 40.0))
@@ -47,8 +30,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `the closest POI wins rather than the first one returned`() {
-        // MapTiler ranks by prominence as well as distance, so the big hospital can be listed above
-        // the shop the pin is actually inside. Measuring every candidate is what finds the shop.
+        // MapTiler ranks by prominence as well as distance.
         val response = response(
             poi("Patan Hospital", pin.movedNorthBy(metres = 120.0)),
             poi("Lagankhel Pet Supplies", pin.movedNorthBy(metres = 15.0))
@@ -71,8 +53,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `a POI with no coordinates is ignored rather than guessed at`() {
-        // Unmeasurable, so it cannot be known to be the place under the pin — and this feature's one
-        // rule is that an unverified name is worse than no name.
+        // Unmeasurable, so it cannot be known to be the place under the pin.
         val response = response(
             GeocodedFeature(id = "poi.1", text = "Patan Hospital", placeTypes = listOf("poi"))
         )
@@ -96,8 +77,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `an unnamed POI is not treated as a name`() {
-        // Observed in real replies: MapTiler returns unnamed features — a bench, a gate, an
-        // unlabelled building — with a text of "-". Shown as the headline it would read as a bug.
+        // Observed in real replies: MapTiler returns unnamed features — a bench, a gate, an unlabelled building.
         val response = response(
             poi("-", pin),
             poi("Lagankhel Pet Supplies", pin.movedNorthBy(metres = 20.0))
@@ -124,9 +104,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `longitude and latitude are not transposed`() {
-        // The GeoJSON order is [longitude, latitude], the reverse of this app's own. Read the wrong
-        // way round, this POI sits in the Arctic Ocean and would never match — so the test is a guard
-        // on the unpacking rather than on the distance maths.
+        // The GeoJSON order is [longitude, latitude], the reverse of this app's own.
         val response = response(
             GeocodedFeature(
                 id = "poi.1",
@@ -139,9 +117,7 @@ class MapTilerGeocodingResponseTest {
         assertEquals("Patan Hospital", response.nearestPoiNameWithin(pin, maxMetres = 40.0))
     }
 
-    // ---------------------------------------------------------------------------------------
-    // placeNamesByScale: the address chain, narrowest first
-    // ---------------------------------------------------------------------------------------
+    // placeNamesByScale: the address chain, narrowest first.
 
     @Test
     fun `names come back narrowest first whatever order they arrived in`() {
@@ -200,9 +176,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `the POI headline is not repeated underneath itself`() {
-        // The address reply can carry the same word as the matched POI — a clinic that is also an
-        // addressed building. Shown in both lines it would read "Patan Hospital / Patan Hospital,
-        // Lalitpur".
+        // The address reply can carry the same word as the matched POI — a clinic that is also an addressed building.
         val response = response(
             GeocodedFeature(
                 id = "address.1",
@@ -235,10 +209,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `a real Lalitpur reply reads as an address a person would recognise`() {
-        // Copied field for field from a live reverse lookup, which is the point of the test: it is
-        // the shape that produced the bug this feature fixes, and it carries three things no
-        // hand-written fixture would have thought of — a postcode, a ward number ("Lalitpur-05") and
-        // the continent.
+        // Copied field for field from a live reverse lookup, which is the point of the test.
         val response = response(
             GeocodedFeature(
                 id = "address.12101683",
@@ -261,8 +232,7 @@ class MapTilerGeocodingResponseTest {
 
         val names = response.placeNamesByScale()
 
-        // Narrowest first, the postcode and the continent-scale features gone, and the city ahead of
-        // the ward number it contains.
+        // Narrowest first, the postcode and the continent-scale features gone.
         assertEquals(
             listOf(
                 "Man bhawan Marga",
@@ -285,8 +255,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `an unrecognised kind is kept but sorts last`() {
-        // Forward compatibility: a feature type this code has never heard of can still be shown if
-        // nothing better came back, but must never displace a name that was understood.
+        // Forward compatibility.
         val response = response(
             GeocodedFeature(
                 id = "something_new.1",
@@ -313,15 +282,11 @@ class MapTilerGeocodingResponseTest {
         assertEquals(listOf("Lalitpur"), response.placeNamesByScale())
     }
 
-    // ---------------------------------------------------------------------------------------
-    // GeocodedFeature.namesByScale: one search result's own address
-    // ---------------------------------------------------------------------------------------
+    // GeocodedFeature.namesByScale: one search result's own address.
 
     @Test
     fun `a search result is described from its own context`() {
-        // Copied from a live forward search for "Patan Hosp". Note what place_name holds for a POI:
-        // "Patan Hospital, Nepal" — the name and the country, nothing in between — which is why the
-        // row's second line is built from the context instead.
+        // Copied from a live forward search for "Patan Hosp".
         val feature = GeocodedFeature(
             id = "poi.9372216",
             text = "Patan Hospital",
@@ -341,8 +306,7 @@ class MapTilerGeocodingResponseTest {
 
         val names = feature.namesByScale(excluding = "Patan Hospital")
 
-        // The POI's own name is not in the address chain, the postcode and the continent are gone,
-        // and the first two are what the row shows under the name.
+        // The POI's own name is not in the address chain, the postcode and the continent are gone.
         assertEquals(
             listOf(
                 "Kumaripati First lane Marga",
@@ -357,9 +321,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `a search result that is its own narrowest name does not repeat it`() {
-        // "Jawalakhel" searched for and returned as a neighbourhood: the headline and the first link
-        // of its own address chain are the same word, which would read "Jawalakhel / Jawalakhel,
-        // Lalitpur" on the row.
+        // "Jawalakhel" searched for and returned as a neighbourhood.
         val feature = GeocodedFeature(
             id = "place.4573321",
             text = "Jawalakhel",
@@ -379,8 +341,7 @@ class MapTilerGeocodingResponseTest {
 
     @Test
     fun `one result's context cannot leak into another's`() {
-        // The guard against describing search rows from the whole reply: these two features are
-        // unrelated places, and reading them together would put Nepal under the Thai clinic.
+        // The guard against describing search rows from the whole reply: these two features are unrelated places.
         val nepal = GeocodedFeature(
             id = "poi.1",
             text = "Animal Hospital",
@@ -412,9 +373,7 @@ class MapTilerGeocodingResponseTest {
         assertEquals(emptyList<String>(), feature.namesByScale(excluding = "Central Zoo"))
     }
 
-    // ---------------------------------------------------------------------------------------
-    // fullPlaceName: the last resort
-    // ---------------------------------------------------------------------------------------
+    // fullPlaceName: the last resort.
 
     @Test
     fun `the full place name is available when nothing could be classified`() {
@@ -425,9 +384,7 @@ class MapTilerGeocodingResponseTest {
         assertEquals("Lagankhel, Lalitpur, Nepal", response.fullPlaceName())
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Builders
-    // ---------------------------------------------------------------------------------------
+    // Builders.
 
     private fun response(vararg features: GeocodedFeature) =
         MapTilerGeocodingResponse(features = features.toList())
@@ -441,13 +398,7 @@ class MapTilerGeocodingResponseTest {
         center = listOf(at.longitude, at.latitude)
     )
 
-    /**
-     * A point a given number of metres due north of this one.
-     *
-     * Northward only, so the conversion is the simple one: a degree of latitude is the same length
-     * everywhere on a sphere, unlike a degree of longitude. That keeps the test fixtures honest about
-     * distance without reimplementing the distance formula they are used to exercise.
-     */
+    /** A point a given number of metres due north of this one. */
     private fun Coordinates.movedNorthBy(metres: Double) =
         copy(latitude = latitude + metres / METRES_PER_DEGREE_LATITUDE)
 

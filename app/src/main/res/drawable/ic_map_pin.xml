@@ -1,27 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    The pin that hangs over the middle of the map while the user is dragging it, on "Add a place".
-
-    **Why a pin rather than a crosshair.** The point being chosen is where a *place* will be, and a
-    teardrop pin is how every maps app draws that. A crosshair would read as "aiming", which is what a
-    camera does.
-
-    **Why the shape has a point at the bottom.** The tip is the coordinate. The layout offsets the whole
-    drawable upwards by half its height so that tip — not the middle of the balloon — sits exactly on
-    the map's centre, which is the point AddPlaceFragment saves. See fragment_add_place.xml.
-
-    Drawn in two paths so it reads against both light tiles and dark ones: the accent teardrop, and a
-    hole punched through it in the app's dark ink. A single flat silhouette would disappear into a dark
-    park or a motorway.
--->
+<!-- The pin that hangs over the middle of the map while the user is dragging it, on "Add a place". -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- The teardrop: a circle at the top drawn down to a point at (12, 22), which is the tip the
-         layout aligns with the map's centre. -->
+    <!-- The teardrop: a circle at the top drawn down to a point at (12, 22). -->
     <path
         android:fillColor="@color/map_pin_fill"
         android:pathData="M12,1.5c-4.14,0 -7.5,3.36 -7.5,7.5 0,5.25 7.5,13.5 7.5,13.5s7.5,-8.25 7.5,-13.5c0,-4.14 -3.36,-7.5 -7.5,-7.5z"
